@@ -9,6 +9,16 @@ import lombok.Data;
 @Table(name = "task")
 @Data
 public class Task {
+
+    @Id
+    private int id;
+    private String user_story;
+    private String acceptance_criteria;
+    private String story_points;
+    private int sprint_id;
+    private int user_id;
+    private int task_status_id;
+    private char attachment_flag;
     public int getId() {
         return id;
     }
@@ -17,8 +27,6 @@ public class Task {
         this.id = id;
     }
 
-    @Id
-    private int id;
 
     public String getUser_story() {
         return user_story;
@@ -76,12 +84,6 @@ public class Task {
         this.attachment_flag = attachment_flag;
     }
 
-    private String user_story;
-    private String acceptance_criteria;
-    private String story_points;
-    private int sprint_id;
-    private int user_id;
-    private int task_status_id;
-    private char attachment_flag;
+
 
 }

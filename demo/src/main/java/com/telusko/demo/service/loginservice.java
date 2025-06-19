@@ -5,11 +5,16 @@ import com.telusko.demo.repo.userrepo;
 import org.springframework.beans.factory.annotation.Autowired;
 //import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 //import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -24,10 +29,10 @@ public class loginservice {
         return repo.findAll();
     }
 
-    public User register(User user){
-        user.setPassword(encoder.encode(user.getPassword()));
-        return repo.save(user);
-    }
+//    public Register register(Register user){
+//        user.setPassword(encoder.encode(user.getPassword()));
+//        return repo.save(user);
+//    }
 
     public boolean deleteUserById(int id) {
         if (repo.existsById((long) id)) {
@@ -36,10 +41,17 @@ public class loginservice {
         }
         return false;
     }
-    public boolean checkPassword(int userId, String rawPassword) {
-        Optional<String> encryptedPassword = repo.findById((long) userId)
+    public boolean checkPassword(String email, String rawPassword) {
+        Optional<String> encryptedPassword = repo.findByEmail(email)
                 .map(User::getPassword);
 
         return encryptedPassword.isPresent() && encoder.matches(rawPassword, encryptedPassword.get());
+    }
+
+
+
+    public User register(User user) {
+        user.setPassword(encoder.encode(user.getPassword()));
+        return repo.save(user);
     }
 }

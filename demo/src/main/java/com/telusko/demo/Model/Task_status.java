@@ -37,4 +37,7 @@ public class Task_status {
     public void setId(int id) {
         this.id = id;
     }
+    public enum Status {
+        TODO, IN_PROGRESS, REVIEW, DONE
+    }
 }

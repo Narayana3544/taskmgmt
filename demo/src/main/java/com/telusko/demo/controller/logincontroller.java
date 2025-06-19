@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/api")
 public class logincontroller {
 
     @Autowired
@@ -34,17 +34,28 @@ public class logincontroller {
         }
 
     }
-    @PostMapping("/login")
-    public ResponseEntity<Map<String, String>> login(@RequestParam int id,
-                                                     @RequestParam String password) {
-        boolean success = service.checkPassword(id, password);
+//    @PostMapping("/login")
+//    public ResponseEntity<Map<String, String>> login(@RequestParam String email,
+//                                                     @RequestParam String password) {
+//        boolean success = service.checkPassword(email, password);
+//
+//        if (success) {
+//            return ResponseEntity.ok(Map.of("message", "Login successful"));
+//        } else {
+//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+//                    .body(Map.of("message", "Invalid credentials"));
+//        }
+//    }
+@PostMapping("/login")
+public ResponseEntity<String> login(@RequestBody Map<String, String> payload) {
+    String email = payload.get("email");
+    String password = payload.get("password");
 
-        if (success) {
-            return ResponseEntity.ok(Map.of("message", "Login successful"));
-        } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("message", "Invalid credentials"));
-        }
+    if (service.checkPassword(email, password)) {
+        return ResponseEntity.ok("Login successful");
+    } else {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
     }
+}
 
 }

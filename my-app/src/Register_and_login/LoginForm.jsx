@@ -2,11 +2,10 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
+import { FaEnvelope, FaLock, FaUserCircle } from 'react-icons/fa';
 import './LoginForm.css';
 
-import { FaUserCircle, FaEnvelope, FaLock } from 'react-icons/fa';
-
-const LoginForm = ({ onToggle }) => {
+const LoginForm = ({ onLogin }) => {
   const navigate = useNavigate();
   const [loginData, setLoginData] = useState({
     email: '',
@@ -23,23 +22,23 @@ const LoginForm = ({ onToggle }) => {
       const res = await axios.post('http://localhost:8080/api/login', loginData);
 
       if (res.status === 200) {
-        toast.success('Login Successful!');
+        toast.success('✅ Login Successful!');
+        onLogin(); // ✅ Update parent login state
         setTimeout(() => navigate('/home'), 1000);
       }
     } catch (err) {
-      toast.error('Invalid credentials');
+      toast.error('❌ Invalid credentials');
       console.error(err);
     }
   };
 
   return (
+    
     <div className="auth-container">
-      <div className="top-toggle">
-        <button onClick={onToggle} className="top-toggle-button">Register</button>
-      </div>
-
       <form className="auth-form" onSubmit={handleSubmit}>
-        <div className="login-icon"><FaUserCircle size={48} /></div>
+        <div className="login-icon">
+          <FaUserCircle size={48} />
+        </div>
         <h4>Welcome Back</h4>
         <h2>Login</h2>
 
@@ -69,6 +68,12 @@ const LoginForm = ({ onToggle }) => {
 
         <button type="submit">Login</button>
       </form>
+      <div className="top-toggle">
+  <button onClick={() => navigate('/register')} className="top-toggle-button">
+    Register
+  </button>
+</div>
+
     </div>
   );
 };

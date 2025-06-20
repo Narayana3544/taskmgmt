@@ -3,8 +3,13 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import { FaUser, FaEnvelope, FaLock, FaUserCircle, FaRegUser } from 'react-icons/fa';
 import './RegisterForm.css';
+import { useNavigate } from 'react-router-dom';
+
+
+
 
 const RegisterForm = ({ onToggle }) => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
@@ -18,6 +23,8 @@ const RegisterForm = ({ onToggle }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+  
 
     try {
       const res = await axios.post('http://localhost:8080/api/register', formData);
@@ -48,10 +55,14 @@ const RegisterForm = ({ onToggle }) => {
   };
 
   return (
+    
     <div className="auth-container">
-      <div className="top-toggle">
-        <button onClick={onToggle} className="top-toggle-button">Log in</button>
-      </div>
+     <div className="top-toggle">
+  <button onClick={() => navigate('/')} className="top-toggle-button">
+    Login
+  </button>
+</div>
+
 
       <form className="auth-form" onSubmit={handleSubmit}>
         <div className="login-icon"><FaUserCircle size={48} /></div>

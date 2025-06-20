@@ -1,10 +1,11 @@
 /* src/Register_and_login/LoginForm.css */
 .auth-container {
-  background-color: #1e1f2f;
-  height: 100vh;
+    min-height: 100vh;
+  background-color: #1e1e2f;
   display: flex;
   justify-content: center;
   align-items: center;
+  color: white;
 }
 
 .auth-form {

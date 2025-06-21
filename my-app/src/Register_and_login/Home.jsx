@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import './Home.css';
 import { useNavigate } from 'react-router-dom';
-import Sidebar from '../components/Sidebar';
 
 const initialTasks = {
   todo: [
@@ -15,8 +14,6 @@ const initialTasks = {
 
 const Home = () => {
   const [tasks, setTasks] = useState(initialTasks);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const navigate = useNavigate();
 
   const onDragEnd = (result) => {
     const { source, destination } = result;
@@ -41,7 +38,6 @@ const Home = () => {
   return (
     <>
       {/* <Sidebar onToggle={setSidebarCollapsed} /> */}
-      <div className={`home-container ${sidebarCollapsed ? 'full' : ''}`}>
         <h2 className="board-title">🗂️ Project Task Board</h2>
         <DragDropContext onDragEnd={onDragEnd}>
           <div className="columns">
@@ -75,7 +71,6 @@ const Home = () => {
             ))}
           </div>
         </DragDropContext>
-      </div>
     </>
   );
 };

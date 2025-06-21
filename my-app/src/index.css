@@ -11,9 +11,16 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
-html, body {
+* {
   margin: 0;
   padding: 0;
-  background-color: #1e1e2f;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
   overflow-x: hidden;
+  background-color: #1e1e2f;
+  font-family: 'Segoe UI', sans-serif;
 }

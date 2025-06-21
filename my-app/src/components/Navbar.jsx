@@ -17,18 +17,18 @@ const Navbar = ({collapsed, onToggleSidebar }) => {
     <nav className={`main-navbar ${collapsed ? 'collapsed' : ''}`}>
 
       <div className="navbar-left">
-        <div className="hamburger-left" onClick={onToggleSidebar}>
+        {/* <div className="hamburger-left" onClick={onToggleSidebar}>
           <FaBars />
-        </div>
+        </div> */}
         <div className="logo">
          TaskBoard
         </div>
       </div>
       
 
-      <div className="hamburger" onClick={handleToggle}>
+      {/* <div className="hamburger" onClick={handleToggle}>
         <FaBars />
-      </div>
+      </div> */}
 
       <ul className={`nav-links ${isOpen ? 'open' : ''}`}>
         <li><Link to="/home" onClick={() => setIsOpen(false)}>Home</Link></li>

@@ -22,6 +22,7 @@ const Sidebar = ({ onToggle }) => {
       <div className="sidebar-toggle" onClick={handleToggle}>
         <FaBars />
       </div>
+      
 
       <div className={`sidebar-content ${collapsed ? 'collapse-anim' : 'expand-anim'}`}>
         {!collapsed && (
@@ -47,8 +48,10 @@ const Sidebar = ({ onToggle }) => {
                 </div>
               )}
 
-              <div className="nav-item"><FaFileInvoiceDollar /><span>Invoices</span></div>
-              <div className="nav-item"><FaWallet /><span>Wallet</span></div>
+              {/* ✅ Updated navigation to pages */}
+              <div className="nav-item" onClick={() => navigate('/project')}><FaFileInvoiceDollar /><span>Projects</span></div>
+              <div className="nav-item" onClick={() => navigate('/features')}><FaWallet /><span>Features</span></div>
+
               <div className="nav-item"><FaBell /><span>Notifications</span></div>
               <div className="nav-item" onClick={() => navigate('/profile')}><FaUser /><span>Profile</span></div>
             </div>
@@ -66,7 +69,7 @@ const Sidebar = ({ onToggle }) => {
 
             <div className="bottom-section">
               <div className="nav-item"><FaCog /><span>Settings</span></div>
-              <div className="nav-item" onClick={() => navigate('/') }><FaSignOutAlt /><span>Logout</span></div>
+              <div className="nav-item" onClick={() => navigate('/')}><FaSignOutAlt /><span>Logout</span></div>
             </div>
           </>
         )}

@@ -71,7 +71,7 @@
     position: absolute;
     top: 60px;
     left: 0;
-    right: 0;
+    right: 60px;
     background-color: #2a2a3a;
     flex-direction: column;
     align-items: center;

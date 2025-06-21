@@ -1,13 +1,20 @@
+
 .sidebar {
+  width: 240px;
+  height: 100vh;
+  background-color: #11121a;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1.5rem 1rem;
+  font-family: 'Segoe UI', sans-serif;
   position: fixed;
   top: 0;
   left: 0;
-  width: 240px;
-  height: 100vh;
-  background-color: #1e1e2f;
-  color: white;
-  transition: width 0.3s ease;
-  z-index: 998;
+  z-index: 998; /* below navbar */
+  border-right: 1px solid #222;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
 }
 
 .sidebar.collapsed {
@@ -130,23 +137,7 @@
   margin-top: 0.5rem;
   color: #ccc;
 }
-.sidebar {
-  width: 240px;
-  height: 100vh;
-  background-color: #11121a;
-  color: white;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 1.5rem 1rem;
-  font-family: 'Segoe UI', sans-serif;
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 998; /* below navbar */
-  border-right: 1px solid #222;
-  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
-}
+
 
 .nav-item, .nav-subitem, .message-item {
   padding: 8px 12px;

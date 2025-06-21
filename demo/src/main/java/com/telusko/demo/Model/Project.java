@@ -1,8 +1,6 @@
 package com.telusko.demo.Model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Data;
 
 @Entity
@@ -26,6 +24,16 @@ public class Project {
     }
 
     @Id
+    @GeneratedValue
     private int id;
+    private String name;
     private String description;
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
 }

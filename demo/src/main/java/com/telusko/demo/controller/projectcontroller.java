@@ -23,4 +23,13 @@ public class projectcontroller {
     public List<Project> viewprojects(){
         return service.viewprojects();
     }
+
+    @DeleteMapping("/projects/{id}")
+    public void deleteproject(@PathVariable int id){
+         service.deleteproject(id);
+    }
+    @PutMapping("/projects/{id}")
+    public void updateproject(Project project,@PathVariable int id){
+        service.updateproject(project,id);
+    }
 }

@@ -50,6 +50,17 @@ const Sidebar = ({ onToggle }) => {
 
               {/* ✅ Updated navigation to pages */}
               <div className="nav-item" onClick={() => navigate('/project')}><FaFileInvoiceDollar /><span>Projects</span></div>
+              
+                          <div className="nav-item" onClick={() => navigate('/create-project')}>
+                                 <FaPlusCircle /><span>Create Project</span>
+                                  </div>
+
+            <div className="nav-item" onClick={() => navigate('/manage-projects')}>
+              <FaFileInvoiceDollar /><span>Manage Projects</span>
+              </div>
+              <div className="nav-item" onClick={() => navigate('/edit-projects')}>
+              <FaFileInvoiceDollar /><span>Edit Project</span>
+              </div>
               <div className="nav-item" onClick={() => navigate('/features')}><FaWallet /><span>Features</span></div>
 
               <div className="nav-item"><FaBell /><span>Notifications</span></div>
@@ -66,7 +77,6 @@ const Sidebar = ({ onToggle }) => {
             <div className="task-button">
               <button><FaPlusCircle /> Add New Task</button>
             </div>
-
             <div className="bottom-section">
               <div className="nav-item"><FaCog /><span>Settings</span></div>
               <div className="nav-item" onClick={() => navigate('/')}><FaSignOutAlt /><span>Logout</span></div>

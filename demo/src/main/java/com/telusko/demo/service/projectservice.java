@@ -2,7 +2,6 @@ package com.telusko.demo.service;
 
 import com.telusko.demo.Model.Project;
 import com.telusko.demo.repo.ProjectRepository;
-import com.telusko.demo.repo.userrepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -20,5 +19,13 @@ public class projectservice {
 
     public List<Project> viewprojects() {
         return (List<Project>) repo.findAll();
+    }
+
+    public void deleteproject(int id) {
+        repo.deleteById((long) id);
+    }
+
+    public Project updateproject(Project project, int id) {
+        return repo.save(project);
     }
 }

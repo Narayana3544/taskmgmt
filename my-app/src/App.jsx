@@ -8,7 +8,11 @@ import Profile from './Pages/Profile';
 import LoginForm from './Register_and_login/LoginForm';
 import RegisterForm from './Register_and_login/RegisterForm';
 import Project from './Pages/Project';
-// import FeaturesPage from './Pages/Features'; // ✅ new import
+// import FeaturesPage from './Pages/Features';
+  import CreateProject from './Pages/CreateProject';
+import ManageProjects from './Pages/ManageProjects';
+import EditProject from './Pages/EditProject';
+import Features from './Features/Features';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -31,6 +35,12 @@ function App() {
               <Route path="/project" element={<Project />} />
               {/* <Route path="/features" element={<FeaturesPage />} /> ✅ new route */}
               {/* <Route path="*" element={<Navigate to="/home" />} /> */}
+  <Route path="/create-project" element={<CreateProject />} />    
+  <Route path="/manage-projects" element={<ManageProjects />} />
+  <Route path="/features" element={<Features />} />
+  <Route path="/projects/:projectId/features" element={<Features />} />
+<Route path="/edit-project/:id" element={<EditProject />} />
+
             </Routes>
           </div>
         </>

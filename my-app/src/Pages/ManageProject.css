@@ -1,0 +1,175 @@
+.manage-projects-page {
+  display: flex;
+  height: 100vh;
+  margin-left: 90px;
+  background-color: #f8fafc;
+}
+
+.manage-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.manage-container {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.manage-title {
+  font-size: 28px;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  color: #1e293b;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  font-size: 1rem;
+}
+
+.project-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.project-card {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.07);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.project-card h3 {
+  font-size: 20px;
+  margin-bottom: 0.5rem;
+  color: #334155;
+}
+
+.project-card p {
+  color: #64748b;
+  font-size: 0.95rem;
+  margin-bottom: 1rem;
+}
+
+.project-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.delete-btn {
+  background-color: #ef4444;
+  color: white;
+  border: none;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.delete-btn:hover {
+  background-color: #dc2626;
+}
+.search-bar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 1.5rem;
+}
+
+.search-btn {
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.search-btn:hover {
+  background-color: #2563eb;
+}
+
+.project-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.view-btn,
+.edit-btn,
+.delete-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.view-btn {
+  background-color: #06b6d4;
+  color: white;
+}
+.view-btn:hover {
+  background-color: #0891b2;
+}
+
+.edit-btn {
+  background-color: #f59e0b;
+  color: white;
+}
+.edit-btn:hover {
+  background-color: #d97706;
+}
+
+.delete-btn {
+  background-color: #ef4444;
+  color: white;
+}
+.delete-btn:hover {
+  background-color: #dc2626;
+}
+.status-tag {
+  display: inline-block;
+  margin-top: 0.5rem;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: white;
+  background-color: #9ca3af; /* default gray */
+}
+
+.status-tag.inprogress {
+  background-color: #3b82f6; /* blue */
+}
+
+.status-tag.completed {
+  background-color: #10b981; /* green */
+}
+
+.status-tag.pending {
+  background-color: #f59e0b; /* amber */
+}
+
+.status-select {
+  margin-top: 0.5rem;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 0.85rem;
+  width: 100%;
+}

@@ -1,0 +1,33 @@
+.edit-container {
+  padding: 2rem;
+  background: #fff;
+  border-radius: 10px;
+  max-width: 600px;
+  margin: 2rem auto;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.edit-form input,
+.edit-form textarea,
+.edit-form select {
+  width: 100%;
+  padding: 10px;
+  margin: 0.75rem 0;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+.edit-form .update-btn {
+  background-color: #3b82f6;
+  color: white;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.edit-form .char-count {
+  font-size: 0.8rem;
+  color: #555;
+  text-align: right;
+}

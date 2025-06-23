@@ -25,8 +25,8 @@ export default function Project() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (project.description.length < 100 || project.description.length > 250) {
-      alert('Description must be between 100 and 250 characters.');
+    if (project.description.length < 0 || project.description.length > 250) {
+      alert('Description must be between 0 and 250 characters.');
       return;
     }
 

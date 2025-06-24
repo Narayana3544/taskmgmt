@@ -25,10 +25,10 @@ public class projectcontroller {
 
     @DeleteMapping("/projects/{id}")
     public void deleteproject(@PathVariable int id){
-         service.deleteproject(id);
+        service.deleteproject(id);
     }
     @PutMapping("/projects/{id}")
-    public void updateproject(Project project,@PathVariable int id){
-        service.updateproject(project,id);
+    public void updateproject(Project project){
+        service.updateproject(project);
     }
 }

@@ -18,9 +18,4 @@ public class profilecontroller {
 
     public userrepo repo;
 
-    @GetMapping("/profile")
-    public User getLoggedUser(User user) {
-            return repo.findById(user);
-    }
-
 }

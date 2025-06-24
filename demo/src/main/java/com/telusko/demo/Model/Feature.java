@@ -1,9 +1,6 @@
 package com.telusko.demo.Model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Data;
 
 @Entity
@@ -15,9 +12,10 @@ public class Feature {
     @GeneratedValue
     private int id;
     private String descriptor;
-    private int project_id;
+    private int projectId;
     private String name;
     private String status;
+
 
     public String getStatus() {
         return status;
@@ -43,12 +41,12 @@ public class Feature {
         this.descriptor = descriptor;
     }
 
-    public int getProject_id() {
-        return project_id;
+    public int getProjectId() {
+        return projectId;
     }
 
-    public void setProject_id(int project_id) {
-        this.project_id = project_id;
+    public void setProjectId(int projectId) {
+        this.projectId = projectId;
     }
 
     public String getName() {

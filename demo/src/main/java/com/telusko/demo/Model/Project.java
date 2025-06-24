@@ -3,6 +3,8 @@ package com.telusko.demo.Model;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.util.List;
+
 @Entity
 @Data
 @Table
@@ -28,6 +30,7 @@ public class Project {
     private int id;
     private String name;
     private String description;
+  
 
     public String getName() {
         return name;

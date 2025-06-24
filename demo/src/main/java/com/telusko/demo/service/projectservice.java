@@ -25,7 +25,7 @@ public class projectservice {
         repo.deleteById((long) id);
     }
 
-    public Project updateproject(Project project, int id) {
+    public Project updateproject(Project project) {
         return repo.save(project);
     }
 }

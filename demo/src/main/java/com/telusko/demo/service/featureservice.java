@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class featureservice {
@@ -20,7 +21,7 @@ public class featureservice {
         return repo.save(feature);
     }
 
-    public List<Feature> viewfeatures() {
-        return (List<Feature>) repo.findAll();
+    public Optional<Feature> viewfeatures(int id) {
+        return  repo.findByProjectId(id);
     }
 }

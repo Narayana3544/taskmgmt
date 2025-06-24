@@ -1,11 +1,13 @@
 package com.telusko.demo.controller;
 
 import com.telusko.demo.Model.Feature;
+import com.telusko.demo.repo.featurerepo;
 import com.telusko.demo.service.featureservice;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
 
 @RestController
 @CrossOrigin(origins = "http://localhost:3000")
@@ -15,12 +17,15 @@ public class featurecontroller {
 
     public featureservice service;
 
+
     @PostMapping("/projects/{project_id}/addfeature")
     public Feature addfeature(@RequestBody Feature feature){
         return service.addfeature(feature);
     }
-    @GetMapping("/projects/{project_id}/features")
-    public List<Feature> viewfeatures(){
-        return service.viewfeatures();
-    }
+//    @GetMapping("/projects/{project_id}/features")
+//    public List<Feature> viewfeatures(){
+//        return service.viewfeatures();
+//    }
+
+
 }

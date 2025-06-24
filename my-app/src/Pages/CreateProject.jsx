@@ -13,7 +13,7 @@ export default function CreateProject() {
     e.preventDefault();
     const { name, description } = project;
 
-    if (description.length < 250 || description.length > 300) {
+    if (description.length < 0 || description.length > 300) {
       setErrorMessage('Description must be between 250 and 300 characters.');
       return;
     }

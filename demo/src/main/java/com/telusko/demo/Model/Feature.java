@@ -6,13 +6,15 @@ import lombok.Data;
 @Entity
 @Data
 @Table(name = "feature")
-public class Feature {
+public class Feature  {
 
     @Id
     @GeneratedValue
     private int id;
     private String descriptor;
-    private int projectId;
+    @ManyToOne
+    @JoinColumn(name = "project_id", nullable = false)
+    private Project project;
     private String name;
     private String status;
 
@@ -41,12 +43,12 @@ public class Feature {
         this.descriptor = descriptor;
     }
 
-    public int getProjectId() {
-        return projectId;
+    public Project getProject() {
+        return project;
     }
 
-    public void setProjectId(int projectId) {
-        this.projectId = projectId;
+    public void setProject(Project project) {
+        this.project = project;
     }
 
     public String getName() {

@@ -9,8 +9,8 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface featurerepo extends JpaRepository<Feature, Long>{
-    Optional<Feature> findById(int id);
-    Optional<Feature> findByProjectId(int project_id);
-
+    public interface featurerepo extends JpaRepository<Feature, Integer> {
+    List<Feature> findByProjectId(int projectId);
 }
+
+

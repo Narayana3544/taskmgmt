@@ -1,0 +1,88 @@
+/* Base layout */
+.features-list-page {
+  padding: 2rem;
+  background-color: #f0f4f8;
+  margin-left: 140px;
+  min-height: 100vh;
+  color: #333;
+}
+
+.features-list-page h2 {
+  font-size: 28px;
+  margin-bottom: 1rem;
+  color: #2c3e50;
+}
+
+/* Feature List */
+.feature-list {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 1rem;
+}
+
+/* Each feature card */
+.feature-list li {
+  background-color: #ffffff;
+  border-left: 6px solid #3b82f6; /* Blue bar for visual */
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
+}
+
+.feature-list li:hover {
+  transform: translateY(-2px);
+}
+
+/* Feature Title */
+.feature-list h4 {
+  margin: 0 0 0.5rem;
+  font-size: 20px;
+  color: #1e293b;
+}
+
+/* Feature Description */
+.feature-list p {
+  margin: 0.25rem 0;
+  color: #475569;
+  font-size: 15px;
+}
+
+.feature-list strong {
+  color: #0f172a;
+}
+.horizontal-buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.action-btn {
+  background-color: #4A90E2;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.action-btn:hover {
+  background-color: #357ABD;
+}
+.edit-btn{
+    background-color: #3b82f6;
+}
+.view-btn{
+     background-color: #3b82f6;
+}
+.add-btn{
+     background-color: #3b82f6;
+   color: #f0f4f8;
+}
+.delete-btn{
+    background-color: #3b82f6;
+}

@@ -1,0 +1,35 @@
+.view-features-page {
+  padding: 20px;
+  max-width: 900px;
+  margin-left: 140px;
+}
+
+.project-search-form {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.project-search-form input {
+  flex: 1;
+  padding: 8px;
+  font-size: 16px;
+}
+
+.project-search-form button {
+  padding: 8px 16px;
+  background-color: #4A90E2;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.project-search-form button:hover {
+  background-color: #357ABD;
+}
+
+.error-msg {
+  color: red;
+  margin-top: 10px;
+}

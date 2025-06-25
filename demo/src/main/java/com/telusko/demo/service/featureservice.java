@@ -21,7 +21,7 @@ public class featureservice {
         return repo.save(feature);
     }
 
-    public Optional<Feature> viewfeatures(int id) {
-        return  repo.findByProjectId(id);
-    }
+//    public Optional<Feature> viewfeatures(int id) {
+//        return  repo.findByProjectId(id);
+//    }
 }

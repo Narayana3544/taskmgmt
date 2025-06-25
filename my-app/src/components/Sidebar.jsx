@@ -49,6 +49,7 @@ const Sidebar = ({ onToggle }) => {
               )}
 
               {/* ✅ Updated navigation to pages */}
+
               <div className="nav-item" onClick={() => navigate('/project')}><FaFileInvoiceDollar /><span>Projects</span></div>
               
                           <div className="nav-item" onClick={() => navigate('/create-project')}>
@@ -62,6 +63,9 @@ const Sidebar = ({ onToggle }) => {
               <FaFileInvoiceDollar /><span>Edit Project</span>
               </div>
               <div className="nav-item" onClick={() => navigate('/features')}><FaWallet /><span>Features</span></div>
+                <div className="nav-item" onClick={() => navigate('/view-features')}>
+              <FaFileInvoiceDollar /><span>view Features</span>
+              </div>
 
               <div className="nav-item"><FaBell /><span>Notifications</span></div>
               <div className="nav-item" onClick={() => navigate('/profile')}><FaUser /><span>Profile</span></div>

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import './Features.css';
+import { useNavigate } from 'react-router-dom';
 
 const Features = () => {
   const [projects, setProjects] = useState([]);
@@ -12,7 +13,8 @@ const Features = () => {
     status: 'In Progress'
   });
 
-  // ✅ Fetch all projects
+  const navigate = useNavigate(); // ✅ Add navigation hook
+
   useEffect(() => {
     axios.get('http://localhost:8080/api/projects')
       .then(res => setProjects(res.data))
@@ -33,25 +35,15 @@ const Features = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
     if (!selectedProjectId) {
       alert('Please select a project first.');
       return;
     }
 
-    const dataToSend = {
-      ...feature,
-      project_id: selectedProjectId
-    };
-
-    axios.post(`http://localhost:8080/api/projects/${selectedProjectId}/addfeature`, dataToSend)
+    axios.post(`http://localhost:8080/api/projects/${selectedProjectId}/addfeature`, feature)
       .then(() => {
         alert('Feature added successfully!');
-        setFeature({
-          name: '',
-          descriptor: '',
-          status: 'In Progress'
-        });
+        navigate(`/features/${selectedProjectId}`); // ✅ Redirect to feature list for this project
       })
       .catch(err => {
         console.error('Failed to save feature:', err);
@@ -64,10 +56,9 @@ const Features = () => {
       <h2 className="features-header">Add Feature</h2>
 
       <form onSubmit={handleSubmit} className="feature-form">
-        {/* Project Selection */}
         <div className="form-group">
           <label>Select Project</label>
-          <select value={selectedProjectId} onChange={handleProjectSelect} required>
+          <select value={selectedProjectId} onChange={handleProjectSelect}>
             <option value="">-- Select a project --</option>
             {projects.map(project => (
               <option key={project.id} value={project.id}>
@@ -84,23 +75,13 @@ const Features = () => {
             </div>
 
             <div className="form-group">
-              <label>Feature Name</label>
-              <input
-                name="name"
-                value={feature.name}
-                onChange={handleChange}
-                required
-              />
+              <label>Feature name</label>
+              <input name="name" value={feature.name} onChange={handleChange} required />
             </div>
 
             <div className="form-group">
               <label>Description</label>
-              <textarea
-                name="descriptor"
-                value={feature.descriptor}
-                onChange={handleChange}
-                required
-              />
+              <textarea name="descriptor" value={feature.descriptor} onChange={handleChange} required />
             </div>
 
             <div className="form-group">

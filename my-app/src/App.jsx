@@ -14,6 +14,7 @@ import EditProject from './Pages/EditProject';
 import Features from './Features/Features';
 import FeatureList from './Features/FeatureList';
 import ViewFeaturesPage from './Features/ViewFeaturesPage';
+import UserStories from './userstories/UserStories';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -42,6 +43,7 @@ function App() {
   <Route path="/projects/:projectId/features" element={<Features />} />
   <Route path="/features/:projectId" element={<FeatureList />} />
   <Route path="/view-features" element={<ViewFeaturesPage />} />
+<Route path="/userstories" element={<UserStories />} />
 
 
 <Route path="/edit-project/:id" element={<EditProject />} />

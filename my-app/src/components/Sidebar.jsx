@@ -30,7 +30,7 @@ const Sidebar = ({ onToggle }) => {
             <div className="profile-section">
               <FaUserCircle className="profile-icon" />
               <div>
-                <p className="profile-name">Andrew Smith</p>
+                <p className="profile-name">Narayana</p>
                 <p className="profile-role">Product Designer</p>
               </div>
             </div>
@@ -65,6 +65,9 @@ const Sidebar = ({ onToggle }) => {
               <div className="nav-item" onClick={() => navigate('/features')}><FaWallet /><span>Features</span></div>
                 <div className="nav-item" onClick={() => navigate('/view-features')}>
               <FaFileInvoiceDollar /><span>view Features</span>
+              </div>
+              <div className="nav-item" onClick={() => navigate('/userstories')}>
+              <FaFileInvoiceDollar /><span>User Story</span>
               </div>
 
               <div className="nav-item"><FaBell /><span>Notifications</span></div>

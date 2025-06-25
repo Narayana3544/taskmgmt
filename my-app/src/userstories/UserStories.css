@@ -1,0 +1,74 @@
+/* UserStories.css */
+
+.user-stories-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.user-stories-container h2 {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  color: #7de45e;
+}
+
+.user-stories-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.user-stories-form .form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-stories-form label {
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+  color: #444;
+}
+
+.user-stories-form input,
+.user-stories-form textarea,
+.user-stories-form select {
+  padding: 0.6rem 1rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1rem;
+  outline: none;
+  background-color: #f9f9f9;
+}
+
+.user-stories-form input:focus,
+.user-stories-form textarea:focus,
+.user-stories-form select:focus {
+  border-color: #4a90e2;
+  background-color: #fff;
+}
+
+.user-stories-form .user-search {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.submit-btn {
+  background-color: #4a90e2;
+  color: #fff;
+  padding: 0.8rem 1.2rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  align-self: flex-start;
+  transition: background-color 0.3s;
+}
+
+.submit-btn:hover {
+  background-color: #357ABD;
+}

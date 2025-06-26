@@ -2,7 +2,8 @@
 
 .user-stories-container {
   max-width: 800px;
-  margin: 0 auto;
+  /* margin: 0 auto; */
+  margin-left: 140px;
   padding: 2rem;
   background-color: #ffffff;
   border-radius: 12px;

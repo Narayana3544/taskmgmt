@@ -98,6 +98,7 @@ public class User {
     private String preffered_name;
     private String email;
     private String password;
+    
 
 
     public int getId() {

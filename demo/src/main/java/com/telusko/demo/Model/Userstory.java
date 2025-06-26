@@ -17,7 +17,16 @@ public class Userstory {
 @ManyToOne
 @JoinColumn(name = "user_id", nullable = false)
 private User userstory;
-@ManyToOne
+
+    public Feature getFeature() {
+        return feature;
+    }
+
+    public void setFeature(Feature feature) {
+        this.feature = feature;
+    }
+
+    @ManyToOne
 @JoinColumn(name="feature_id",nullable=false)
 private Feature feature;
 //    private int task_status_id;

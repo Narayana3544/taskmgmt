@@ -11,8 +11,8 @@ const UserStories = () => {
 
   const [story, setStory] = useState({
     description: '',
-    acceptanceCriteria: '',
-    storyPoints: '',
+    acceptancecriteria: '',
+    storypoints: '',
     assignedTo: '',
     status: 'To Do'
   });
@@ -43,13 +43,19 @@ const UserStories = () => {
 
   const handleStorySubmit = (e) => {
     e.preventDefault();
-    axios.post(`http://localhost:8080/api/features/${featureId}/add-userstory`, story)
-      .then(() => {
+    axios.post(`http://localhost:8080/api/features/${featureId}/adduserstory`, {
+  description: story.description,
+  acceptancecriteria: story.acceptancecriteria,
+  storypoints: story.storypoints,
+  status: story.status,
+  userstory: { id: story.assignedTo }
+}).
+then(() => {
         alert('User story added successfully!');
         setStory({
           description: '',
-          acceptanceCriteria: '',
-          storyPoints: '',
+          acceptancecriteria: '',
+          storypoints: '',
           assignedTo: '',
           status: 'To Do'
         });
@@ -79,12 +85,12 @@ const UserStories = () => {
 
           <div className="form-group">
             <label>Acceptance Criteria</label>
-            <textarea name="acceptanceCriteria" value={story.acceptanceCriteria} onChange={handleStoryChange} required />
+            <textarea name="acceptancecriteria"  value={story.acceptancecriteria} onChange={handleStoryChange} required  />
           </div>
 
           <div className="form-group">
             <label>Story Points</label>
-            <input name="storyPoints" type="number" value={story.storyPoints} onChange={handleStoryChange} required />
+            <input name="storypoints" type="number" value={story.storypoints} onChange={handleStoryChange} required />
           </div>
 
           <div className="form-group">

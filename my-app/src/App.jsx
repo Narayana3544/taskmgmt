@@ -3,7 +3,6 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Sidebar from './components/Sidebar';
 import Navbar from './components/Navbar';
 import Home from './Register_and_login/Home';
-// import Tasks from './Pages/Tasks';
 import Profile from './Pages/Profile';
 import LoginForm from './Register_and_login/LoginForm';
 import RegisterForm from './Register_and_login/RegisterForm';
@@ -15,6 +14,7 @@ import Features from './Features/Features';
 import FeatureList from './Features/FeatureList';
 import ViewFeaturesPage from './Features/ViewFeaturesPage';
 import UserStories from './userstories/UserStories';
+import ViewUserStories from './userstories/ViewUserStories';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -44,6 +44,7 @@ function App() {
   <Route path="/features/:projectId" element={<FeatureList />} />
   <Route path="/view-features" element={<ViewFeaturesPage />} />
 <Route path="/userstories" element={<UserStories />} />
+<Route path="/view-stories" element={<ViewUserStories />} />
 
 
 <Route path="/edit-project/:id" element={<EditProject />} />

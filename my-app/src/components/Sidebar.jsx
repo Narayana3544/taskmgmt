@@ -67,7 +67,10 @@ const Sidebar = ({ onToggle }) => {
               <FaFileInvoiceDollar /><span>view Features</span>
               </div>
               <div className="nav-item" onClick={() => navigate('/userstories')}>
-              <FaFileInvoiceDollar /><span>User Story</span>
+              <FaFileInvoiceDollar /><span>Add User Story</span>
+              </div>
+               <div className="nav-item" onClick={() => navigate('/view-stories')}>
+              <FaFileInvoiceDollar /><span>view User Stories</span>
               </div>
 
               <div className="nav-item"><FaBell /><span>Notifications</span></div>

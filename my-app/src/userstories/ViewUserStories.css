@@ -1,0 +1,45 @@
+.view-stories-container {
+  padding: 2rem;
+  background: #04381c;
+}
+
+.search-form {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.search-form input {
+  padding: 8px;
+  border: 1px solid #0e0303;
+  border-radius: 4px;
+}
+
+.search-form button {
+  background-color: #007bff;
+  color: rgb(7, 2, 2);
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.search-form button:hover {
+  background-color: #0056b3;
+}
+
+.story-list {
+  background: white;
+  padding: 1rem;
+  border-radius: 6px;
+  box-shadow: 0 0 5px rgba(0,0,0,0.1);
+}
+
+.story-card {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  border-left: 4px solid #007bff;
+  background: #205a94;
+  border-radius: 4px;
+}

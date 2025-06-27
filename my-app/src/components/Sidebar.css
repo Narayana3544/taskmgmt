@@ -169,3 +169,17 @@
   opacity: 0;
   transform: translateX(-20px);
 }
+.sidebar-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar-content::-webkit-scrollbar-thumb {
+  background-color: rgba(100, 100, 100, 0.3);
+  border-radius: 4px;
+}
+.sidebar-content {
+  overflow-y: auto;
+  max-height: 100vh;
+  padding-right: 8px; /* Optional: add spacing for scrollbar */
+}
+

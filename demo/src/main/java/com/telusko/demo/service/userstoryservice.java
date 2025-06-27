@@ -1,6 +1,6 @@
 package com.telusko.demo.service;
 
-import com.telusko.demo.Model.Userstory;
+import com.telusko.demo.Model.story;
 import com.telusko.demo.repo.userstoryrepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -9,9 +9,9 @@ import org.springframework.stereotype.Service;
 public class userstoryservice {
 
     @Autowired
-    public userstoryrepo repo;
+    private userstoryrepo repo;
 
-    public Userstory adduserstory(Userstory story) {
+    public story adduserstory(story story) {
         return repo.save(story);
     }
 }

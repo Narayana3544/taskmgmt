@@ -67,4 +67,23 @@
   border-radius: 5px;
   cursor: pointer;
 }
+.view-stories-table-wrapper {
+  overflow-x: auto;
+  width: 100%;
+  position: relative;
+}
+
+.view-stories-table {
+  min-width: 1000px; /* force scroll if content is wide */
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.view-stories-table th,
+.view-stories-table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #ccc;
+  white-space: nowrap;
+}
 

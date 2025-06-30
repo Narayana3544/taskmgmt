@@ -26,11 +26,11 @@ const Profile = () => {
       <div className="profile-card">
         <div className="profile-field">
           <label>Full Name</label>
-          <p>{user.firstname} {user.lastname}</p>
+          <p>{user.first_name} {user.last_name}</p>
         </div>
         <div className="profile-field">
           <label>Preferred Name</label>
-          <p>{user.preferredName}</p>
+          <p>{user.preferred_name}</p>
         </div>
         <div className="profile-field">
           <label>Email</label>

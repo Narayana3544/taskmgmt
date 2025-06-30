@@ -57,4 +57,12 @@ public List<Feature> getFeaturesByProjectId(@PathVariable int projectId) {
 }
 
 
+@GetMapping("/features")
+    public List<Feature> getfeatures(){
+        return service.repo.findAll();
+}
+   @DeleteMapping("/features/{id}")
+    public void deletefeature(@PathVariable int id){
+        repo.deleteById(id);
+   }
 }

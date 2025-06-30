@@ -1,0 +1,64 @@
+.dashboard-container {
+  padding: 2rem;
+  background-color: #f1f2f7;
+  min-height: 100vh;
+  color: #000000;
+}
+
+.dashboard-header {
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  font-weight: bold;
+  color: #00ff88;
+}
+
+.metrics-grid {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+  margin-bottom: 2rem;
+}
+
+.metric-card {
+  flex: 1;
+  min-width: 200px;
+  background: #2a2d3e;
+  padding: 1rem;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 0 10px #00000055;
+}
+
+.metric-card h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #a0a0a0;
+}
+
+.metric-card p {
+  font-size: 2rem;
+  margin-top: 0.5rem;
+  font-weight: bold;
+  color: #ffffff;
+}
+
+.charts-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+}
+
+.chart-card {
+  flex: 1;
+  min-width: 300px;
+  background: #2a2d3e;
+  padding: 1rem;
+  border-radius: 12px;
+  box-shadow: 0 0 10px #00000055;
+}
+
+.chart-card h3 {
+  text-align: center;
+  margin-bottom: 1rem;
+  color: #00ffcc;
+}

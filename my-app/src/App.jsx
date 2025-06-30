@@ -15,6 +15,7 @@ import FeatureList from './Features/FeatureList';
 import ViewFeaturesPage from './Features/ViewFeaturesPage';
 import UserStories from './userstories/UserStories';
 import ViewUserStories from './userstories/ViewUserStories';
+import Dashboard from './dashboard/Dashboard';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -42,9 +43,11 @@ function App() {
   <Route path="/features" element={<Features />} />
   <Route path="/projects/:projectId/features" element={<Features />} />
   <Route path="/features/:projectId" element={<FeatureList />} />
-  <Route path="/view-features" element={<ViewFeaturesPage />} />
+  <Route path="/view-features" element={<FeatureList />} />
 <Route path="/userstories" element={<UserStories />} />
 <Route path="/view-stories" element={<ViewUserStories />} />
+<Route path="/dashboard" element={<Dashboard />} />
+
 
 
 <Route path="/edit-project/:id" element={<EditProject />} />

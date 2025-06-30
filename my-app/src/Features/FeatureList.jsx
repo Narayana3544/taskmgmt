@@ -1,54 +1,107 @@
-// src/pages/FeatureList.jsx
-
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { useParams } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import './FeatureList.css';
 
-
-  
-const FeatureList = ({ onEdit, onDelete }) => {
-  const { projectId } = useParams();
+const FeatureList = () => {
   const [features, setFeatures] = useState([]);
+  const [filteredFeatures, setFilteredFeatures] = useState([]);
+  const [searchProjectId, setSearchProjectId] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
-    axios.get(`http://localhost:8080/api/features/project/${projectId}`)
+    axios.get('http://localhost:8080/api/features')
       .then(res => {
         setFeatures(res.data);
+        setFilteredFeatures(res.data);
       })
       .catch(err => {
         console.error('Error fetching features:', err);
       });
-  }, [projectId]);
+  }, []);
+
+  const handleSearch = () => {
+    if (searchProjectId.trim() === '') {
+      setFilteredFeatures(features);
+    } else {
+      const filtered = features.filter(
+        feature => feature.project_id?.toString() === searchProjectId.trim()
+      );
+      setFilteredFeatures(filtered);
+    }
+  };
+
+  const handleEdit = (id) => {
+    navigate(`/edit-feature/${id}`);
+  };
+
+  const handleDelete = (id) => {
+    if (window.confirm('Are you sure you want to delete this feature?')) {
+      axios.delete(`http://localhost:8080/api/features/${id}`)
+        .then(() => {
+          const updated = features.filter(f => f.id !== id);
+          setFeatures(updated);
+          setFilteredFeatures(updated);
+        })
+        .catch(err => console.error('Error deleting feature:', err));
+    }
+  };
 
   return (
     <div className="features-list-page">
-      <h2>Features for Project ID: {projectId}</h2>
-      {features.length === 0 ? (
-        <p>No features found for this project.</p>
+      <div className="header-bar">
+        <h2>📋 All Features</h2>
+        <button className="create-feature-btn" onClick={() => navigate('/features')}>+ Create Feature</button>
+      </div>
+
+      <div className="search-bar">
+        <input
+          type="text"
+          placeholder="Search by Project ID"
+          value={searchProjectId}
+          onChange={(e) => setSearchProjectId(e.target.value)}
+        />
+        <button onClick={handleSearch}>Search</button>
+      </div>
+
+      {filteredFeatures.length === 0 ? (
+        <p>No features found.</p>
       ) : (
-        <ul className="feature-list">
-          {features.map((feature) => (
-            <li key={feature.id}>
-                <h4>Feature id:{feature.id}</h4> 
-              <h4>Feature Name:{feature.name}</h4>
-              <p>Description:{feature.descriptor}</p>
-              <p><strong>Status:</strong> {feature.status}</p>
-               <div className="feature-actions horizontal-buttons">
-                <button onClick={() => onEdit(feature.id)} className="edit-btn">Edit</button>
-                <button onClick={() => onDelete(feature.id)} className="delete-btn">Delete</button>
-                <button onClick={() => navigate(`/features/${feature.id}/userstories`)} className="view-btn">
-                  View User Stories
-                </button>
-                <button onClick={() => navigate(`/features/${feature.id}/add-userstory`)} className="add-btn">
-                  Add User Story
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
+        <table className="features-table">
+          <thead>
+            <tr>
+              <th>Feature ID</th>
+              <th>Project ID</th>
+              <th>Feature Name</th>
+              <th>Description</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredFeatures.map((feature) => (
+              <tr key={feature.id}>
+                <td>{feature.id}</td>
+                <td>{feature.project?.id}</td>
+                <td>{feature.name}</td>
+                <td>{feature.descriptor}</td>
+                <td>
+                  <span className={`status-tag ${feature.status?.toLowerCase().replace(/\s+/g, '-')}`}>
+                    {feature.status}
+                  </span>
+                </td>
+                <td>
+                  <div className="button-group">
+                    <button className="edit-btn" onClick={() => handleEdit(feature.id)}>Edit</button>
+                    <button className="delete-btn" onClick={() => handleDelete(feature.id)}>Delete</button>
+                    <button className="view-btn" onClick={() => navigate(`/features/${feature.id}/userstories`)}>View Stories</button>
+                    <button className="add-btn" onClick={() => navigate(`/features/${feature.id}/add-userstory`)}>Add Story</button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       )}
     </div>
   );

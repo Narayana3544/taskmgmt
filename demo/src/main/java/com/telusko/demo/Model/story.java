@@ -3,6 +3,8 @@ package com.telusko.demo.Model;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.sql.Date;
+
 @Entity
 @Table(name = "userstory")
 @Data
@@ -16,6 +18,25 @@ public class story {
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User userstory;
+
+    private Date startdate;
+    private Date enddate;
+
+    public Date getStartdate() {
+        return startdate;
+    }
+
+    public void setStartdate(Date startdate) {
+        this.startdate = startdate;
+    }
+
+    public Date getEnddate() {
+        return enddate;
+    }
+
+    public void setEnddate(Date enddate) {
+        this.enddate = enddate;
+    }
 
     public String getStatus() {
         return status;

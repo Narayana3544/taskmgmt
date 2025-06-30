@@ -1,45 +1,70 @@
 .view-stories-container {
-  padding: 2rem;
-  background: #04381c;
+  max-width: 1100px;
+  margin: auto;
+  padding: 20px;
+  background: #e5ebe6;
+  color: black;
+  border-radius: 10px;
 }
 
 .search-form {
   display: flex;
-  gap: 1rem;
-  align-items: center;
-  margin-bottom: 1rem;
+  gap: 10px;
+  margin-bottom: 20px;
 }
 
 .search-form input {
+  flex: 1;
   padding: 8px;
-  border: 1px solid #0e0303;
-  border-radius: 4px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
 }
 
 .search-form button {
+  padding: 8px 14px;
   background-color: #007bff;
-  color: rgb(7, 2, 2);
+  color: white;
   border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
+  border-radius: 5px;
   cursor: pointer;
 }
 
-.search-form button:hover {
-  background-color: #0056b3;
+.story-table-section {
+  overflow-x: auto;
 }
 
-.story-list {
-  background: white;
-  padding: 1rem;
-  border-radius: 6px;
-  box-shadow: 0 0 5px rgba(0,0,0,0.1);
+.story-table {
+  width: 100%;
+  border-collapse: collapse;
 }
 
-.story-card {
-  margin-bottom: 1rem;
-  padding: 1rem;
-  border-left: 4px solid #007bff;
-  background: #205a94;
-  border-radius: 4px;
+.story-table th,
+.story-table td {
+  padding: 10px;
+  border: 1px solid #ddd;
+  text-align: left;
 }
+
+.story-table th {
+  background-color: #184124;
+}
+
+.error {
+  color: red;
+}
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.create-btn {
+  padding: 8px 14px;
+  background-color: #28a745;
+  border: none;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+}
+

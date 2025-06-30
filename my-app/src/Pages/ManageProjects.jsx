@@ -1,10 +1,8 @@
-// src/Pages/ManageProjects.jsx
-
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import Navbar from '../components/Navbar';
 import './ManageProject.css';
-import { FaEye, FaEdit } from 'react-icons/fa';
+import { FaEye, FaEdit, FaPlus } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 
 export default function ManageProjects() {
@@ -32,7 +30,6 @@ export default function ManageProjects() {
 
   const handleEdit = (id) => {
     navigate(`/edit-project/${id}`);
-    axios.put(`http://localhost:8080/api/projects/${id}`)
   };
 
   const handleView = (project) => {
@@ -46,7 +43,7 @@ export default function ManageProjects() {
   };
 
   const filteredProjects = projects.filter(project =>
-    (project.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    (project.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
      project.id?.toString() === searchTerm.trim())
   );
 
@@ -55,7 +52,12 @@ export default function ManageProjects() {
       <div className="manage-main">
         <Navbar />
         <div className="manage-container">
-          <h1 className="manage-title">Manage Projects</h1>
+          <div className="manage-header">
+            <h1 className="manage-title">Manage Projects</h1>
+            <button className="create-btn" onClick={() => navigate('/create-project')}>
+              <FaPlus /> Create Project
+            </button>
+          </div>
 
           <div className="search-bar">
             <input
@@ -68,33 +70,52 @@ export default function ManageProjects() {
             <button className="search-btn" onClick={fetchProjects}>Search</button>
           </div>
 
-          <div className="project-grid">
-            {filteredProjects.map(project => (
-              <div className="project-card" key={project.id}>
-                <h3>ID: {project.id}</h3>
-                <h3>{project.name}</h3>
-                <p>{project.description}</p>
-                <span className={`status-tag ${project.status?.toLowerCase() || 'inprogress'}`}>
-                  {project.status || 'In Progress'}
-                </span>
-                <select
-                  className="status-select"
-                  value={project.status || 'In Progress'}
-                  onChange={(e) => handleStatusChange(project.id, e.target.value)}
-                >
-                  <option>In Progress</option>
-                  <option>Completed</option>
-                  <option>Pending</option>
-                </select>
-                <div className="project-actions">
-                  <button className="view-btn" onClick={() => handleView(project)}><FaEye /></button>
-                  <button className="edit-btn" onClick={() => handleEdit(project.id)}><FaEdit /> Edit</button>
-                  <button className="delete-btn" onClick={() => deleteProject(project.id)}>Delete</button>
-                </div>
-              </div>
-            ))}
-            {filteredProjects.length === 0 && <p>No projects found.</p>}
-          </div>
+          <table className="projects-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Status</th>
+                <th>Change Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredProjects.length === 0 ? (
+                <tr><td colSpan="6">No projects found.</td></tr>
+              ) : (
+                filteredProjects.map(project => (
+                  <tr key={project.id}>
+                    <td>{project.id}</td>
+                    <td>{project.name}</td>
+                    <td>{project.description}</td>
+                    <td>
+                      <span className={`status-tag ${project.status?.toLowerCase() || 'inprogress'}`}>
+                        {project.status || 'In Progress'}
+                      </span>
+                    </td>
+                    <td>
+                      <select
+                        className="status-select"
+                        value={project.status || 'In Progress'}
+                        onChange={(e) => handleStatusChange(project.id, e.target.value)}
+                      >
+                        <option>In Progress</option>
+                        <option>Completed</option>
+                        <option>Pending</option>
+                      </select>
+                    </td>
+                    <td className="action-buttons">
+                      <button onClick={() => handleView(project)} className="view-btn"><FaEye /></button>
+                      <button onClick={() => handleEdit(project.id)} className="edit-btn"><FaEdit /> Edit</button>
+                      <button onClick={() => deleteProject(project.id)} className="delete-btn">Delete</button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

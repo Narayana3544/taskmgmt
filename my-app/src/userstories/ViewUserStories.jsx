@@ -1,68 +1,131 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './ViewUserStories.css';
+import { useNavigate } from 'react-router-dom';
 
 const ViewStories = () => {
-  const [featureId, setFeatureId] = useState('');
-  const [stories, setStories] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [allStories, setAllStories] = useState([]);
+  const [filteredStories, setFilteredStories] = useState([]);
+  const [featureIdSearch, setFeatureIdSearch] = useState('');
   const [error, setError] = useState('');
+  const navigate = useNavigate();
 
-  const fetchStories = () => {
-    if (!featureId.trim()) {
-      alert('Please enter a valid Feature ID.');
-      return;
-    }
+  useEffect(() => {
+    fetchAllStories();
+  }, []);
 
-    setLoading(true);
-    axios.get(`http://localhost:8080/api/features/${featureId}/userstories`)
-      .then((res) => {
-        setStories(res.data);
-        setError('');
+  const fetchAllStories = () => {
+    axios.get('http://localhost:8080/api/features/userstories')
+      .then(res => {
+        setAllStories(res.data);
+        setFilteredStories(res.data);
       })
-      .catch((err) => {
+      .catch(err => {
         console.error('Error fetching stories:', err);
-        setError('Failed to fetch stories. Please check the Feature ID.');
-        setStories([]);
-      })
-      .finally(() => {
-        setLoading(false);
+        setError('Failed to load user stories.');
       });
+  };
+
+  const handleSearch = () => {
+    if (!featureIdSearch.trim()) {
+      setFilteredStories(allStories);
+    } else {
+      const filtered = allStories.filter(
+        story => story.feature?.id?.toString() === featureIdSearch.trim()
+      );
+      setFilteredStories(filtered);
+    }
+  };
+
+  const handleStatusChange = (storyId, newStatus) => {
+    axios.patch(`http://localhost:8080/api/userstories/${storyId}/status`, { status: newStatus })
+      .then(() => {
+        const updated = filteredStories.map(story =>
+          story.id === storyId ? { ...story, status: newStatus } : story
+        );
+        setFilteredStories(updated);
+      })
+      .catch(err => {
+        console.error('Failed to update status:', err);
+        alert('Error updating status');
+      });
+  };
+
+  const handleDelete = (id) => {
+    if (window.confirm('Are you sure you want to delete this story?')) {
+      axios.delete(`http://localhost:8080/api/userstories/${id}`)
+        .then(() => fetchAllStories())
+        .catch(err => console.error('Error deleting story:', err));
+    }
   };
 
   return (
     <div className="view-stories-container">
-      <h2>📋 View User Stories by Feature ID</h2>
-
-      <div className="search-form">
-        <label>Enter Feature ID:</label>
-        <input
-          type="text"
-          value={featureId}
-          onChange={(e) => setFeatureId(e.target.value)}
-          placeholder="Feature ID"
-        />
-        <button onClick={fetchStories}>Fetch Stories</button>
+      <div className="header-row">
+        <h2>📋 All User Stories</h2>
+        <button className="create-btn" onClick={() => navigate('/userstories')}>
+          + Create User Story
+        </button>
       </div>
 
-      {loading && <p>Loading stories...</p>}
+      <div className="search-form">
+        <input
+          type="text"
+          placeholder="Search by Feature ID"
+          value={featureIdSearch}
+          onChange={(e) => setFeatureIdSearch(e.target.value)}
+        />
+        <button onClick={handleSearch}>Search</button>
+      </div>
+
       {error && <p className="error">{error}</p>}
 
-      {stories.length > 0 && (
-        <div className="story-list">
-          <h3>Stories for Feature ID: {featureId}</h3>
-          <ul>
-            {stories.map((story) => (
-              <li key={story.id} className="story-card">
-                <p><strong>Description:</strong> {story.description}</p>
-                <p><strong>Acceptance Criteria:</strong> {story.acceptancecriteria}</p>
-                <p><strong>Story Points:</strong> {story.storypoints}</p>
-                <p><strong>Status:</strong> {story.status}</p>
-                <p><strong>Assigned To:</strong> {story.userstory?.name || 'N/A'}</p>
-              </li>
-            ))}
-          </ul>
+      {filteredStories.length > 0 ? (
+        <div className="story-table-section">
+          <table className="story-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Description</th>
+                <th>Acceptance Criteria</th>
+                <th>Story Points</th>
+                <th>Status</th>
+                <th>Feature ID</th>
+                <th>Assigned To</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredStories.map((story) => (
+                <tr key={story.id}>
+                  <td>{story.id}</td>
+                  <td>{story.description}</td>
+                  <td>{story.acceptancecriteria}</td>
+                  <td>{story.storypoints}</td>
+                  <td>
+                    <select
+                      value={story.status}
+                      onChange={(e) => handleStatusChange(story.id, e.target.value)}
+                    >
+                      <option>To Do</option>
+                      <option>In Progress</option>
+                      <option>Done</option>
+                    </select>
+                  </td>
+                  <td>{story.feature?.id || 'N/A'}</td>
+                  <td>{story.userstory?.preffered_name || 'N/A'}</td>
+                  <td>
+                    <button className="view-btn" onClick={() => alert(JSON.stringify(story, null, 2))}>👁</button>
+                    <button className="edit-btn" onClick={() => navigate(`/edit-userstory/${story.id}`)}>✏️</button>
+                    <button className="delete-btn" onClick={() => handleDelete(story.id)}>🗑</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
+      ) : (
+        <p>No user stories found.</p>
       )}
     </div>
   );

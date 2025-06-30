@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -59,5 +60,21 @@ public class userstorycontroller {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User story not found.");
         }
     }
+    @GetMapping("/features/userstories")
+    public List<story> userstories(){
+        return service.viewstories();
+    }
+    @PatchMapping("/userstories/{id}/status")
+    public ResponseEntity<?> updateStatus(@PathVariable int id, @RequestBody Map<String, String> body) {
+        Optional<story> optional = repo.findById((long) id);
+        if (optional.isEmpty()) return ResponseEntity.notFound().build();
+
+        story s = optional.get();
+        s.setStatus(body.get("status"));
+        repo.save(s);
+
+        return ResponseEntity.ok("Status updated");
+    }
+
 
 }

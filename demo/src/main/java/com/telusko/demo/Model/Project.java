@@ -30,6 +30,15 @@ public class Project {
     private int id;
     private String name;
     private String description;
+    private String status;
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
 
     public String getName() {
         return name;

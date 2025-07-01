@@ -50,19 +50,9 @@ const Sidebar = ({ onToggle }) => {
 
               {/* ✅ Updated navigation to pages */}
 
-              <div className="nav-item" onClick={() => navigate('/project')}><FaFileInvoiceDollar /><span>Projects</span></div>
-              
-                          <div className="nav-item" onClick={() => navigate('/create-project')}>
-                                 <FaPlusCircle /><span>Create Project</span>
-                                  </div>
-
             <div className="nav-item" onClick={() => navigate('/manage-projects')}>
               <FaFileInvoiceDollar /><span>Manage Projects</span>
               </div>
-              <div className="nav-item" onClick={() => navigate('/edit-projects')}>
-              <FaFileInvoiceDollar /><span>Edit Project</span>
-              </div>
-              <div className="nav-item" onClick={() => navigate('/features')}><FaWallet /><span>Features</span></div>
                 <div className="nav-item" onClick={() => navigate('/view-features')}>
               <FaFileInvoiceDollar /><span>view Features</span>
               </div>

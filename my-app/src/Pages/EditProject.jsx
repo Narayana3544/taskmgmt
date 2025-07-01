@@ -24,7 +24,7 @@ export default function EditProject() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    axios.put(`http://localhost:8080/api/projects/${id}`, project)
+    axios.patch(`http://localhost:8080/api/projects/${id}`, project)
       .then(() => {
         alert('Project updated successfully!');
         navigate('/manage-projects');

@@ -27,7 +27,8 @@ public class projectcontroller {
     public void deleteproject(@PathVariable int id){
         service.deleteproject(id);
     }
-    @PutMapping("/projects/{id}")
+
+    @PatchMapping("/projects/{id}")
     public void updateproject(Project project){
         service.updateproject(project);
     }

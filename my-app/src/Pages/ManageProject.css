@@ -6,7 +6,7 @@
 }
 
 .create-btn {
-  background-color: #2e8b57;
+  background-color: #4388e4;
   color: white;
   border: none;
   padding: 8px 14px;
@@ -20,7 +20,7 @@
 .projects-table {
   width: 100%;
   border-collapse: collapse;
-  background-color: #163a12;
+  background-color: #377edb;
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);

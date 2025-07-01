@@ -5,13 +5,17 @@ import Navbar from '../components/Navbar';
 import './CreateProject.css'; // You'll get this next
 
 export default function CreateProject() {
-  const [project, setProject] = useState({ name: '', description: '' });
+  const [project, setProject] = useState({ name: '', description: '' ,status:''});
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+   const handleChange = (e) => {
+    setProject({ ...project, [e.target.name]: e.target.value });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const { name, description } = project;
+    const { name, description,status } = project;
+    
 
     if (description.length < 0 || description.length > 300) {
       setErrorMessage('Description must be between 250 and 300 characters.');
@@ -22,7 +26,7 @@ export default function CreateProject() {
       await axios.post('http://localhost:8080/api/addproject', project);
       setSuccessMessage('✅ Project created successfully!');
       setErrorMessage('');
-      setProject({ name: '', description: '' });
+      setProject({ name: '', description: '',status:'' });
     } catch (err) {
       console.error('Error creating project:', err);
       setErrorMessage('❌ Failed to create project.');
@@ -50,6 +54,15 @@ export default function CreateProject() {
               onChange={(e) => setProject({ ...project, name: e.target.value })}
               required
             />
+             <label>Status
+            <select name="status" value={project.status} onChange={handleChange}>
+              <option>Select an option</option>
+              <option>In Progress</option>
+              <option>Completed</option>
+              <option>Pending</option>
+               onChange={(e) => setProject({ ...project, status: e.target.value })}
+            </select>
+            </label>
 
             <label>Description (250–300 characters)</label>
             <textarea

@@ -28,4 +28,9 @@ public class projectservice {
     public Project updateproject(Project project) {
         return repo.save(project);
     }
+
+    public Project editproject(int id){
+       Project p= repo.findById(id).get();
+        return repo.save(p);
+    }
 }

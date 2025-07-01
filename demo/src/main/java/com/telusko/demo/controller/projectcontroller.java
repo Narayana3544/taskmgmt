@@ -29,7 +29,7 @@ public class projectcontroller {
     }
 
     @PatchMapping("/projects/{id}")
-    public void updateproject(Project project){
-        service.updateproject(project);
+    public Project updateproject(int project){
+       return service.editproject(project);
     }
 }

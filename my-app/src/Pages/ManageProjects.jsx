@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import Navbar from '../components/Navbar';
+// import Navbar from '../components/Navbar';
 import './ManageProject.css';
 import { FaEye, FaEdit, FaPlus } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
@@ -50,7 +50,7 @@ export default function ManageProjects() {
   return (
     <div className="manage-projects-page">
       <div className="manage-main">
-        <Navbar />
+        {/* <Navbar /> */}
         <div className="manage-container">
           <div className="manage-header">
             <h1 className="manage-title">Manage Projects</h1>

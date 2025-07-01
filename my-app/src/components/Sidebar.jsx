@@ -31,7 +31,7 @@ const Sidebar = ({ onToggle }) => {
               <FaUserCircle className="profile-icon" />
               <div>
                 <p className="profile-name">Narayana</p>
-                <p className="profile-role">Product Designer</p>
+                <p className="profile-role">Software Development engineer-1 </p>
               </div>
             </div>
 
@@ -51,16 +51,13 @@ const Sidebar = ({ onToggle }) => {
               {/* ✅ Updated navigation to pages */}
 
             <div className="nav-item" onClick={() => navigate('/manage-projects')}>
-              <FaFileInvoiceDollar /><span>Manage Projects</span>
+              <FaFileInvoiceDollar /><span>Projects</span>
               </div>
                 <div className="nav-item" onClick={() => navigate('/view-features')}>
-              <FaFileInvoiceDollar /><span>view Features</span>
-              </div>
-              <div className="nav-item" onClick={() => navigate('/userstories')}>
-              <FaFileInvoiceDollar /><span>Add User Story</span>
+              <FaFileInvoiceDollar /><span>Features</span>
               </div>
                <div className="nav-item" onClick={() => navigate('/view-stories')}>
-              <FaFileInvoiceDollar /><span>view User Stories</span>
+              <FaFileInvoiceDollar /><span>User Stories</span>
               </div>
 
               <div className="nav-item"><FaBell /><span>Notifications</span></div>

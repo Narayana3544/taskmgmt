@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import axios from 'axios';
 // import Sidebar from '../components/Sidebar';
 import Navbar from '../components/Navbar';
-import './CreateProject.css'; // You'll get this next
+import './CreateProject.css'; 
+import { useNavigate } from 'react-router-dom';
 
 export default function CreateProject() {
   const [project, setProject] = useState({ name: '', description: '' ,status:''});
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const navigate = useNavigate();
    const handleChange = (e) => {
     setProject({ ...project, [e.target.name]: e.target.value });
   };
@@ -27,10 +29,11 @@ export default function CreateProject() {
       setSuccessMessage('✅ Project created successfully!');
       setErrorMessage('');
       setProject({ name: '', description: '',status:'' });
+      navigate('/manage-projects');
     } catch (err) {
       console.error('Error creating project:', err);
       setErrorMessage('❌ Failed to create project.');
-      setSuccessMessage('');
+      setSuccessMessage();
     }
   };
 

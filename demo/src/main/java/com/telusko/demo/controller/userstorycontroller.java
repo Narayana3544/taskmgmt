@@ -1,8 +1,6 @@
 package com.telusko.demo.controller;
 
 import com.telusko.demo.Model.Feature;
-import com.telusko.demo.Model.Project;
-import com.telusko.demo.Model.Userstory;
 import com.telusko.demo.Model.story;
 import com.telusko.demo.repo.featurerepo;
 import com.telusko.demo.repo.userstoryrepo;

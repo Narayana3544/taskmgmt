@@ -62,6 +62,7 @@ export default function EditProject() {
 
             <label>Status</label>
             <select name="status" value={project.status} onChange={handleChange}>
+               <option>Select an option</option>
               <option>In Progress</option>
               <option>Completed</option>
               <option>Pending</option>

@@ -56,3 +56,38 @@
   background-color: #4caf50;
   color: #fff;
 }
+.task-board {
+  padding: 2rem;
+  color: #fff;
+}
+
+.status-summary {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 1rem;
+  font-weight: bold;
+}
+
+.columns {
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.column {
+  background: #2d2d2d;
+  padding: 1rem;
+  border-radius: 10px;
+  min-height: 300px;
+  width: 30%;
+}
+
+.task-card {
+  background: #444;
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 8px;
+  color: #fff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+

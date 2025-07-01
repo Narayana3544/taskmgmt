@@ -20,8 +20,9 @@
 .projects-table {
   width: 100%;
   border-collapse: collapse;
-  background-color: #377edb;
+  background-color: #346fbd;
   border-radius: 8px;
+  color:white;
   overflow: hidden;
   box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
 }

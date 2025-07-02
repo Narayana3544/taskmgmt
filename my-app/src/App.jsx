@@ -7,15 +7,17 @@ import Profile from './Pages/Profile';
 import LoginForm from './Register_and_login/LoginForm';
 import RegisterForm from './Register_and_login/RegisterForm';
 import Project from './Pages/Project';
-  import CreateProject from './Pages/CreateProject';
+import CreateProject from './Pages/CreateProject';
 import ManageProjects from './Pages/ManageProjects';
 import EditProject from './Pages/EditProject';
 import Features from './Features/Features';
 import FeatureList from './Features/FeatureList';
-import ViewFeaturesPage from './Features/ViewFeaturesPage';
 import UserStories from './userstories/UserStories';
 import ViewUserStories from './userstories/ViewUserStories';
 import Dashboard from './dashboard/Dashboard';
+import CreateSprint from './sprint/CreateSprint';
+import AssignUsersToSprint from './sprint/AssignUsers';
+import ManageSprints from './sprint/ManageSprints';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -47,6 +49,10 @@ function App() {
 <Route path="/userstories" element={<UserStories />} />
 <Route path="/view-stories" element={<ViewUserStories />} />
 <Route path="/dashboard" element={<Dashboard />} />
+<Route path="/create-sprint" element={<CreateSprint />} />
+<Route path="/assign-sprint-users" element={<AssignUsersToSprint />} />
+<Route path="/manage-sprints" element={<ManageSprints />} />
+
 
 
 

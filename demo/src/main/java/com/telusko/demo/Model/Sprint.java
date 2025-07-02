@@ -1,8 +1,6 @@
 package com.telusko.demo.Model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Data;
 
 @Entity
@@ -16,15 +14,6 @@ public class Sprint {
     public void setId(int id) {
         this.id = id;
     }
-
-    public String getDescriptor() {
-        return descriptor;
-    }
-
-    public void setDescriptor(String descriptor) {
-        this.descriptor = descriptor;
-    }
-
     public int getStart_date() {
         return start_date;
     }
@@ -57,21 +46,22 @@ public class Sprint {
         this.achieved_story_points = achieved_story_points;
     }
 
-    public int getFeature_id() {
-        return feature_id;
-    }
-
-    public void setFeature_id(int feature_id) {
-        this.feature_id = feature_id;
-    }
-
     @Id
+    @GeneratedValue
     private int id;
-    private String descriptor;
     private int start_date;
     private int end_date;
     private String targeted_story_points;
     private String achieved_story_points;
-    private int feature_id;
+    @ManyToOne
+    @JoinColumn(name = "feature_id",nullable = false)
+    private Feature feature ;
 
+    public Feature getFeature() {
+        return feature;
+    }
+
+    public void setFeature(Feature feature) {
+        this.feature = feature;
+    }
 }

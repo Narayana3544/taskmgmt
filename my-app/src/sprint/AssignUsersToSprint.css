@@ -1,0 +1,28 @@
+.assign-sprint-container {
+  max-width: 600px;
+  margin: auto;
+  padding: 20px;
+}
+
+.assign-sprint-container input {
+  width: 100%;
+  margin: 10px 0;
+  padding: 8px;
+}
+
+.user-list {
+  list-style: none;
+  padding: 0;
+}
+
+.user-list li {
+  margin: 8px 0;
+}
+
+.assign-btn {
+  background-color: #4caf50;
+  color: white;
+  padding: 10px;
+  border: none;
+  cursor: pointer;
+}

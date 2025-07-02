@@ -7,7 +7,18 @@ import lombok.Data;
 @Data
 @Table(name = "sprint_users")
 public class Sprint_users {
-    @Id
+@Id
+@GeneratedValue
+  private int id ;
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
     @ManyToOne
     @JoinColumn(name = "sprint_id",nullable = false)
     private Sprint sprint;

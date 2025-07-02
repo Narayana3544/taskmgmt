@@ -1,0 +1,22 @@
+.assign-stories-page {
+  padding: 20px;
+}
+
+.story-list {
+  list-style: none;
+  padding-left: 0;
+}
+
+.story-list li {
+  margin-bottom: 10px;
+}
+
+.assign-btn {
+  margin-top: 20px;
+  padding: 10px 16px;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}

@@ -18,24 +18,16 @@ public class story {
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User userstory;
+    @ManyToOne
+    @JoinColumn(name = "sprint_id", nullable = true)
+    private Sprint_users sprint;
 
-    private Date startdate;
-    private Date enddate;
-
-    public Date getStartdate() {
-        return startdate;
+    public Sprint_users getSprint() {
+        return sprint;
     }
 
-    public void setStartdate(Date startdate) {
-        this.startdate = startdate;
-    }
-
-    public Date getEnddate() {
-        return enddate;
-    }
-
-    public void setEnddate(Date enddate) {
-        this.enddate = enddate;
+    public void setSprint(Sprint_users sprint) {
+        this.sprint = sprint;
     }
 
     public String getStatus() {

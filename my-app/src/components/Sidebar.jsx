@@ -59,14 +59,8 @@ const Sidebar = ({ onToggle }) => {
                <div className="nav-item" onClick={() => navigate('/view-stories')}>
               <FaFileInvoiceDollar /><span>User Stories</span>
               </div>
-              <div className="nav-item" onClick={() => navigate('/create-sprint')}>
-  <FaPlusCircle /><span>Create Sprint</span>
-</div>
-<div className="nav-item" onClick={() => navigate('/assign-sprint-users')}>
-  <FaPlusCircle /> <span>Assign Sprint Users</span>
-</div>
 <div className="nav-item" onClick={() => navigate('/manage-sprints')}>
-  <FaChartBar /><span>Manage Sprints</span>
+  <FaChartBar /><span>Sprints</span>
 </div>
 
               <div className="nav-item"><FaBell /><span>Notifications</span></div>

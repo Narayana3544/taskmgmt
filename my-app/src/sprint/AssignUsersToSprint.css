@@ -26,3 +26,31 @@
   border: none;
   cursor: pointer;
 }
+.assign-users-page {
+  padding: 20px;
+  background-color: white;
+  color: black;
+}
+
+h2 {
+  margin-bottom: 20px;
+}
+
+.user-list {
+  list-style: none;
+  padding-left: 0;
+}
+
+.user-list li {
+  margin-bottom: 10px;
+}
+
+.assign-btn {
+  margin-top: 20px;
+  padding: 10px 16px;
+  background-color: #22c55e;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}

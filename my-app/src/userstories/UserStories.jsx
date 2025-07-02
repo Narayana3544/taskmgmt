@@ -94,7 +94,7 @@ then(() => {
           </div>
 
           <div className="form-group">
-            <label>Assigned To (User)</label>
+            <label>Report To (User)</label>
             <input
               type="text"
               placeholder="Search by user ID"

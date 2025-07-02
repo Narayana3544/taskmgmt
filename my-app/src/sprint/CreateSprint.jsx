@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import './CreateSprint.css';
+import { useNavigate } from 'react-router-dom';
 
 const CreateSprint = () => {
   const [features, setFeatures] = useState([]);
+  const navigate = useNavigate();
   const [sprint, setSprint] = useState({
     name: '',
     startDate: '',
@@ -32,7 +34,7 @@ const handleChange = (e) => {
     console.log('Submitting sprint:', sprint);
     axios.post('http://localhost:8080/api/create-sprints', sprint)
       .then(() => {
-        alert('Sprint created successfully!');
+        alert('sprint created sucessfully',navigate('/manage-sprints'));
         setSprint({ name: '', startDate: '', endDate: '', featureId: '' });
       })
       .catch(err => {

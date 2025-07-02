@@ -91,7 +91,7 @@ const ViewStories = () => {
                 <th>Story Points</th>
                 <th>Status</th>
                 <th>Feature ID</th>
-                <th>Assigned To</th>
+                <th>Report To</th>
                 <th>Actions</th>
               </tr>
             </thead>

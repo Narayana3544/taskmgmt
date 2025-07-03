@@ -18,8 +18,14 @@ const LoginForm = ({ onLogin }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    const { email, password } = loginData; // ✅ extract values
+
     try {
-      const res = await axios.post('http://localhost:8080/api/login', loginData);
+      const res = await axios.post(
+        "http://localhost:8080/api/login",
+        { email, password },
+        { withCredentials: true }
+      );
 
       if (res.status === 200) {
         toast.success('✅ Login Successful!');
@@ -33,7 +39,6 @@ const LoginForm = ({ onLogin }) => {
   };
 
   return (
-    
     <div className="auth-container">
       <form className="auth-form" onSubmit={handleSubmit}>
         <div className="login-icon">
@@ -68,12 +73,12 @@ const LoginForm = ({ onLogin }) => {
 
         <button type="submit">Login</button>
       </form>
-      <div className="top-toggle">
-  <button onClick={() => navigate('/register')} className="top-toggle-button">
-    Register
-  </button>
-</div>
 
+      <div className="top-toggle">
+        <button onClick={() => navigate('/register')} className="top-toggle-button">
+          Register
+        </button>
+      </div>
     </div>
   );
 };

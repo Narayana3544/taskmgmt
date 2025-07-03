@@ -15,7 +15,7 @@ export default function ManageProjects() {
   }, []);
 
   const fetchProjects = () => {
-    axios.get('http://localhost:8080/api/projects')
+    axios.get('http://localhost:8080/api/projects', { withCredentials: true })
       .then(res => setProjects(res.data))
       .catch(err => console.error('Error fetching projects:', err));
   };
@@ -37,15 +37,18 @@ export default function ManageProjects() {
   };
 
   const handleStatusChange = (id, newStatus) => {
-    axios.patch(`http://localhost:8080/api/projects/${id}`, { status: newStatus })
+    axios.patch(`http://localhost:8080/api/projects/${id}`, { status: newStatus }, { withCredentials: true })
       .then(() => fetchProjects())
       .catch(err => console.error('Failed to update status:', err));
   };
 
-  const filteredProjects = projects.filter(project =>
-    (project.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-     project.id?.toString() === searchTerm.trim())
-  );
+  const filteredProjects = Array.isArray(projects)
+  ? projects.filter(project =>
+      (project.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+       project.id?.toString() === searchTerm.trim())
+    )
+  : [];
+
 
   return (
     <div className="manage-projects-page">

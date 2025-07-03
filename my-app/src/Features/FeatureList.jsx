@@ -5,31 +5,32 @@ import './FeatureList.css';
 
 const FeatureList = () => {
   const [features, setFeatures] = useState([]);
-  const [filteredFeatures, setFilteredFeatures] = useState([]);
+const [filteredFeatures, setFilteredFeatures] = useState([]);
   const [searchProjectId, setSearchProjectId] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
-    axios.get('http://localhost:8080/api/features')
-      .then(res => {
-        setFeatures(res.data);
-        setFilteredFeatures(res.data);
-      })
-      .catch(err => {
-        console.error('Error fetching features:', err);
-      });
+    axios.get('http://localhost:8080/api/features', { withCredentials: true })
+  .then(res => {
+    console.log("Features from API:", res.data);
+    setFeatures(res.data);
+    setFilteredFeatures(res.data);
+  })
+  .catch(err => {
+    console.error('Error fetching features:', err);
+  });
   }, []);
 
-  const handleSearch = () => {
-    if (searchProjectId.trim() === '') {
-      setFilteredFeatures(features);
-    } else {
-      const filtered = features.filter(
-        feature => feature.project_id?.toString() === searchProjectId.trim()
-      );
-      setFilteredFeatures(filtered);
-    }
-  };
+const handleSearch = () => {
+  if (searchProjectId.trim() === '') {
+    setFilteredFeatures(features);
+  } else {
+    const filtered = features.filter(
+      feature => feature.project?.id?.toString() === searchProjectId.trim()
+    );
+    setFilteredFeatures(filtered);
+  }
+};
 
   const handleEdit = (id) => {
     navigate(`/edit-feature/${id}`);

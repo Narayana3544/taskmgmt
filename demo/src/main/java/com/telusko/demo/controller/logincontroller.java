@@ -2,10 +2,18 @@ package com.telusko.demo.controller;
 
 
 import com.telusko.demo.Model.User;
+import com.telusko.demo.service.CustomUserDetailsService;
 import com.telusko.demo.service.loginservice;
+import jakarta.servlet.http.HttpServletRequest;
+import org.apache.catalina.Authenticator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,6 +24,9 @@ public class logincontroller {
 
     @Autowired
     private loginservice service;
+
+    @Autowired
+    public CustomUserDetailsService Service;
 
     @GetMapping("/users")
     public List<User> getusers() {
@@ -45,16 +56,26 @@ public class logincontroller {
 //                    .body(Map.of("message", "Invalid credentials"));
 //        }
 //    }
-@PostMapping("/login")
-public ResponseEntity<String> login(@RequestBody Map<String, String> payload) {
-    String email = payload.get("email");
-    String password = payload.get("password");
 
-    if (service.checkPassword(email, password)) {
-        return ResponseEntity.ok("Login successful");
-    } else {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
+    @Autowired
+    private AuthenticationManager authenticationManager;
+
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody User request, HttpServletRequest req) {
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+            );
+
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            req.getSession(); // Create session to store authentication
+
+            return ResponseEntity.ok("Login successful");
+        } catch (AuthenticationException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
+        }
     }
-}
 
 }
+
+

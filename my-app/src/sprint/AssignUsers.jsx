@@ -22,21 +22,29 @@ const AssignUsersToSprint = () => {
   };
 
   const handleAssign = () => {
-    if (selectedUserIds.length === 0) {
-      alert('Please select at least one user.');
-      return;
-    }
+  if (selectedUserIds.length === 0) {
+    alert('Please select at least one user.');
+    return;
+  }
 
-    axios.post(`http://localhost:8080/api/sprints/${sprintId}/assign-users`, selectedUserIds)
-      .then(() => {
-        alert('Users assigned successfully!');
-        navigate('/manage-sprints');
-      })
-      .catch(err => {
-        console.error('Error assigning users:', err);
-        alert('Failed to assign users.');
-      });
-  };
+  axios.post(
+    `http://localhost:8080/api/sprints/${sprintId}/assign-users`,
+    JSON.stringify(selectedUserIds),  // ✅ send as stringified JSON
+    {
+      headers: {
+        'Content-Type': 'application/json' // ✅ set header
+      }
+    }
+  )
+  .then(() => {
+    alert('Users assigned successfully!');
+    navigate('/manage-sprints');
+  })
+  .catch(err => {
+    console.error('Error assigning users:', err);
+    alert('Failed to assign users.');
+  });
+};
 
   return (
     <div className="assign-users-page">

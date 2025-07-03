@@ -14,17 +14,18 @@ const ViewStories = () => {
     fetchAllStories();
   }, []);
 
-  const fetchAllStories = () => {
-    axios.get('http://localhost:8080/api/features/userstories')
-      .then(res => {
-        setAllStories(res.data);
-        setFilteredStories(res.data);
-      })
-      .catch(err => {
-        console.error('Error fetching stories:', err);
-        setError('Failed to load user stories.');
-      });
-  };
+ const fetchAllStories = () => {
+  axios.get('http://localhost:8080/api/features/userstories', { withCredentials: true })
+    .then(res => {
+      const stories = Array.isArray(res.data) ? res.data : [];
+      setAllStories(stories);
+      setFilteredStories(stories);
+    })
+    .catch(err => {
+      console.error('Error fetching stories:', err);
+      setError('Failed to load user stories.');
+    });
+};
 
   const handleSearch = () => {
     if (!featureIdSearch.trim()) {
@@ -38,7 +39,7 @@ const ViewStories = () => {
   };
 
   const handleStatusChange = (storyId, newStatus) => {
-    axios.patch(`http://localhost:8080/api/userstories/${storyId}/status`, { status: newStatus })
+    axios.patch(`http://localhost:8080/api/userstories/${storyId}/status`, { status: newStatus }, { withCredentials: true })
       .then(() => {
         const updated = filteredStories.map(story =>
           story.id === storyId ? { ...story, status: newStatus } : story
@@ -53,7 +54,7 @@ const ViewStories = () => {
 
   const handleDelete = (id) => {
     if (window.confirm('Are you sure you want to delete this story?')) {
-      axios.delete(`http://localhost:8080/api/userstories/${id}`)
+      axios.delete(`http://localhost:8080/api/userstories/${id}`, { withCredentials: true })
         .then(() => fetchAllStories())
         .catch(err => console.error('Error deleting story:', err));
     }

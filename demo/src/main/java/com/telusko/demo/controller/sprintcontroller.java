@@ -5,7 +5,7 @@ import com.telusko.demo.Model.Sprint_users;
 import com.telusko.demo.Model.User;
 import com.telusko.demo.Model.createsprint;
 import com.telusko.demo.repo.createsprintrepo;
-import com.telusko.demo.repo.sprintusersrepo;
+//import com.telusko.demo.repo.sprintusersrepo;
 import com.telusko.demo.repo.userrepo;
 import com.telusko.demo.service.sprintservice;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +23,7 @@ public class sprintcontroller {
     public sprintservice service;
 
     @Autowired
-    public sprintusersrepo sprintRepo;
+    public createsprintrepo sprintRepo;
 
     @Autowired
     public userrepo userRepo;
@@ -37,19 +37,30 @@ public class sprintcontroller {
     public List<createsprint> viewsprints(){
         return service.view();
     }
+    @GetMapping("/sprints/{sprintId}")
+    public Optional<createsprint> viewsprintsbyid(@PathVariable int sprintId){
+        return sprintRepo.findById(sprintId);
+    }
+
     @PostMapping("/sprints/{sprintId}/assign-users")
-    public ResponseEntity<String> assignUsersToSprint(@PathVariable int sprintId, @RequestBody List<Integer> userIds) {
-        Optional<Sprint_users> sprintOpt = sprintRepo.findById( sprintId);
+    public ResponseEntity<?> assignUsersToSprint(@PathVariable int sprintId, @RequestBody List<Long> userIds) {
+        Optional<createsprint> sprintOpt = sprintRepo.findById(sprintId);
         if (sprintOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Sprint not found");
         }
 
-        List<User> users = userRepo.findAll();
-        Sprint_users sprint = sprintOpt.get();
-//        sprint.setUsers(users);
-//        sprintRepo.save(sprint);
+        List<User> users = userRepo.findAllById(userIds);
+        if (users.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("No valid users found");
+        }
 
-        return ResponseEntity.ok("Users assigned to sprint!");
+        createsprint sprint = sprintOpt.get();
+        sprint.setUsers(users);
+        sprintRepo.save(sprint);
+
+        return ResponseEntity.ok("Users assigned successfully");
     }
 
 }
+
+

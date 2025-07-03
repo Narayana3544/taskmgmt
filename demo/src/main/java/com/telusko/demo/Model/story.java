@@ -18,17 +18,8 @@ public class story {
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User userstory;
-    @ManyToOne
-    @JoinColumn(name = "sprint_id", nullable = true)
-    private Sprint_users sprint;
 
-    public Sprint_users getSprint() {
-        return sprint;
-    }
 
-    public void setSprint(Sprint_users sprint) {
-        this.sprint = sprint;
-    }
 
     public String getStatus() {
         return status;
@@ -42,7 +33,17 @@ public class story {
     @JoinColumn(name = "feature_id",nullable =false)
     private Feature feature;
     private String status;
+    @ManyToOne
+    @JoinColumn(name = "sprint_id")
+    private createsprint sprint;
 
+    public createsprint getSprint() {
+        return sprint;
+    }
+
+    public void setSprint(createsprint sprint) {
+        this.sprint = sprint;
+    }
 
     public int getId() {
         return id;

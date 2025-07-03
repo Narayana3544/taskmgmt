@@ -25,7 +25,7 @@ export default function CreateProject() {
     }
 
     try {
-      await axios.post('http://localhost:8080/api/addproject', project);
+      await axios.post('http://localhost:8080/api/addproject', project, { withCredentials: true });
       setSuccessMessage('✅ Project created successfully!');
       setErrorMessage('');
       setProject({ name: '', description: '',status:'' });

@@ -13,7 +13,7 @@ export default function EditProject() {
   const [project, setProject] = useState({ name: '', description: '', status: 'In Progress' });
 
   useEffect(() => {
-    axios.get(`http://localhost:8080/api/projects/${id}`)
+    axios.get(`http://localhost:8080/api/projects/${id}`, { withCredentials: true })
       .then(res => setProject(res.data))
       .catch(err => console.error('Failed to load project:', err));
   }, [id]);
@@ -24,7 +24,7 @@ export default function EditProject() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    axios.patch(`http://localhost:8080/api/projects/${id}`, project)
+    axios.patch(`http://localhost:8080/api/projects/${id}`, project, { withCredentials: true })
       .then(() => {
         alert('Project updated successfully!');
         navigate('/manage-projects');

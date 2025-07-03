@@ -12,14 +12,16 @@ export default function Project() {
 
   // ✅ Fetch all projects from backend
   useEffect(() => {
-    axios.get('http://localhost:8080/api/projects')
-      .then((res) => {
-        setProjects(res.data);
-      })
-      .catch((err) => {
-        console.error('Failed to fetch projects:', err);
-      });
-  }, []);
+  axios.get('http://localhost:8080/api/projects')
+    .then(res => {
+      console.log("Projects:", res.data);  // Add this line to debug
+      setProjects(res.data);
+    })
+    .catch(err => {
+      console.error('Error fetching projects:', err);
+      setProjects([]); // fallback to empty array
+    });
+}, []);
   
 
   const handleSubmit = async (e) => {

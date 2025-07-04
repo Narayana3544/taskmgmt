@@ -28,7 +28,7 @@ public class sprintcontroller {
     @Autowired
     public userrepo userRepo;
 
-    @PostMapping("/create-sprints")
+    @PostMapping("/sprints/create-sprints")
     public createsprint create(@RequestBody createsprint sprint){
         return service.create(sprint);
     }

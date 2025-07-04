@@ -14,6 +14,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -58,23 +59,24 @@ public class logincontroller {
 //    }
 
     @Autowired
-    private AuthenticationManager authenticationManager;
+    private AuthenticationManager authManager;
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody User request, HttpServletRequest req) {
-        try {
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
-            );
+        Authentication auth = authManager.authenticate(
+                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+        );
 
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-            req.getSession(); // Create session to store authentication
+        SecurityContextHolder.getContext().setAuthentication(auth);
 
-            return ResponseEntity.ok("Login successful");
-        } catch (AuthenticationException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
-        }
+        req.getSession().setAttribute(
+                HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
+                SecurityContextHolder.getContext()
+        );
+
+        return ResponseEntity.ok("Login successful");
     }
+
 
 }
 

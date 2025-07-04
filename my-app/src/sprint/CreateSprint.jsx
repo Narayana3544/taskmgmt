@@ -14,7 +14,7 @@ const CreateSprint = () => {
   });
 
   useEffect(() => {
-    axios.get('http://localhost:8080/api/features')
+    axios.get('http://localhost:8080/api/features', { withCredentials: true })
       .then(res => setFeatures(res.data))
       .catch(err => console.error('Error fetching features:', err));
   }, []);
@@ -32,7 +32,7 @@ const handleChange = (e) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log('Submitting sprint:', sprint);
-    axios.post('http://localhost:8080/api/create-sprints', sprint)
+    axios.post('http://localhost:8080/api/create-sprints', { withCredentials: true }, sprint)
       .then(() => {
         alert('sprint created sucessfully',navigate('/manage-sprints'));
         setSprint({ name: '', startDate: '', endDate: '', featureId: '' });

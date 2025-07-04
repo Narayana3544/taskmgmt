@@ -10,7 +10,7 @@ const AssignUsersToSprint = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    axios.get('http://localhost:8080/api/users')
+    axios.get('http://localhost:8080/api/users', { withCredentials: true })
       .then((res) => setUsers(res.data))
       .catch((err) => console.error('Error fetching users:', err));
   }, []);
@@ -28,14 +28,11 @@ const AssignUsersToSprint = () => {
   }
 
   axios.post(
-    `http://localhost:8080/api/sprints/${sprintId}/assign-users`,
-    JSON.stringify(selectedUserIds),  // ✅ send as stringified JSON
-    {
-      headers: {
-        'Content-Type': 'application/json' // ✅ set header
-      }
-    }
-  )
+  `http://localhost:8080/api/sprints/${sprintId}/assign-users`,
+  selectedUserIds,
+  { withCredentials: true } // ✅ send cookies (JSESSIONID)
+)
+  
   .then(() => {
     alert('Users assigned successfully!');
     navigate('/manage-sprints');

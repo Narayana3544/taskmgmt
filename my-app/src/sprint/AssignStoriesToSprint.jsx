@@ -41,7 +41,7 @@ const AssignStoriesToSprint = () => {
       return;
     }
 
-    axios.post(`http://localhost:8080/api/sprints/${sprintId}/assign-stories`, selectedStoryIds)
+    axios.post(`http://localhost:8080/api/sprints/${sprintId}/assign-stories`, { withCredentials: true }, selectedStoryIds)
       .then(() => {
         alert('Stories assigned successfully!');
         navigate('/manage-sprints');

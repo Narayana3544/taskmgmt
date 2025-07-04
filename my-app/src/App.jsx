@@ -51,7 +51,7 @@ function App() {
 <Route path="/view-stories" element={<ViewUserStories />} />
 <Route path="/dashboard" element={<Dashboard />} />
 <Route path="/create-sprint" element={<CreateSprint />} />
-<Route path="/assign-sprint-users" element={<AssignUsersToSprint />} />
+{/* <Route path="/assign-sprint-users" element={<AssignUsersToSprint />} /> */}
 <Route path="/manage-sprints" element={<ManageSprints />} />
 <Route path="/sprint/:sprintId/assign-users" element={<AssignUsersToSprint />} />
 <Route path="/sprint/:sprintId/assign-stories" element={<AssignStoriesToSprint />} />

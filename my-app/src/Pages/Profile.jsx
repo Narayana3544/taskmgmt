@@ -30,7 +30,7 @@ const Profile = () => {
         </div>
         <div className="profile-field">
           <label>Preferred Name</label>
-          <p>{user.preferred_name}</p>
+          <p>{user.preffered_name}</p>
         </div>
         <div className="profile-field">
           <label>Email</label>

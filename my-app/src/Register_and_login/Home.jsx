@@ -7,7 +7,7 @@ const Home = () => {
   const [userStories, setUserStories] = useState({ todo: [], inprogress: [], done: [] });
 
   useEffect(() => {
-    axios.get('http://localhost:8080/api/features/userstories') 
+    axios.get('http://localhost:8080/api/features/userstories', { withCredentials: true }) 
       .then((res) => {
         const grouped = {
           todo: [],

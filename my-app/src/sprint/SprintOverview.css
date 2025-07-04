@@ -1,0 +1,25 @@
+.sprint-overview-container {
+  padding: 2rem;
+  background: #f9f9f9;
+  color: black;
+}
+
+.sprint-details p {
+  margin: 4px 0;
+}
+
+.users-section table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.users-section th, .users-section td {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+
+.status-section h4 {
+  margin-top: 1.5rem;
+  color: #444;
+}

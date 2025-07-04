@@ -17,9 +17,9 @@ const Dashboard = () => {
   const fetchStats = async () => {
     try {
       const [projRes, featRes, storyRes] = await Promise.all([
-        axios.get('http://localhost:8080/api/projects'),
-        axios.get('http://localhost:8080/api/features'),
-        axios.get('http://localhost:8080/api/features/userstories')
+        axios.get('http://localhost:8080/api/projects', { withCredentials: true }),
+        axios.get('http://localhost:8080/api/features', { withCredentials: true }),
+        axios.get('http://localhost:8080/api/features/userstories', { withCredentials: true })
       ]);
 
       setCounts({

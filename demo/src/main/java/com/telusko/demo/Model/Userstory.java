@@ -13,8 +13,21 @@ public class Userstory {
     private String description;
     private String acceptance_criteria;
     private String story_points;
-//    private int sprint_id;
-@ManyToOne
+
+
+    @ManyToOne
+    @JoinColumn(name = "sprint_id")
+    private createsprint sprint;
+
+    public createsprint getSprint() {
+        return sprint;
+    }
+
+    public void setSprint(createsprint sprint) {
+        this.sprint = sprint;
+    }
+
+    @ManyToOne
 @JoinColumn(name = "user_id", nullable = false)
 private User userstory;
 

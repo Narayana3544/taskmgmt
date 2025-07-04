@@ -12,11 +12,11 @@ const AssignStoriesToSprint = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    axios.get(`http://localhost:8080/api/userstories/unassigned`)
+    axios.get(`http://localhost:8080/api/userstories`, { withCredentials: true })
       .then((res) => setStories(res.data))
       .catch((err) => console.error('Error fetching user stories:', err));
 
-    axios.get(`http://localhost:8080/api/sprints/${sprintId}/capacity`)
+    axios.get(`http://localhost:8080/api/sprints/${sprintId}`, { withCredentials: true })
       .then(res => setCapacity(res.data))
       .catch(err => console.error('Error getting sprint capacity:', err));
   }, [sprintId]);

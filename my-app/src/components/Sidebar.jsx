@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './Sidebar.css';
 import {
-  FaTachometerAlt, FaWallet, FaBell, FaEnvelope,
+  FaTachometerAlt, FaBell, FaEnvelope,
   FaUserCircle, FaPlusCircle, FaChartBar, FaCog,
   FaSignOutAlt, FaFileInvoiceDollar, FaBars, FaUser, FaThList
 } from 'react-icons/fa';

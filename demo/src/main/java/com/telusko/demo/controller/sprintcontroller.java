@@ -1,12 +1,11 @@
 package com.telusko.demo.controller;
 
-import com.telusko.demo.Model.Sprint;
-import com.telusko.demo.Model.Sprint_users;
-import com.telusko.demo.Model.User;
-import com.telusko.demo.Model.createsprint;
+import com.telusko.demo.Model.*;
+import com.telusko.demo.dto.SprintOverviewDTO;
 import com.telusko.demo.repo.createsprintrepo;
 //import com.telusko.demo.repo.sprintusersrepo;
 import com.telusko.demo.repo.userrepo;
+import com.telusko.demo.repo.userstoryrepo;
 import com.telusko.demo.service.sprintservice;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -15,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 public class sprintcontroller {
@@ -27,6 +27,9 @@ public class sprintcontroller {
 
     @Autowired
     public userrepo userRepo;
+
+    @Autowired
+    public userstoryrepo userStoryRepo;
 
     @PostMapping("/sprints/create-sprints")
     public createsprint create(@RequestBody createsprint sprint){
@@ -60,7 +63,73 @@ public class sprintcontroller {
 
         return ResponseEntity.ok("Users assigned successfully");
     }
+    @GetMapping("/sprints/{sprintId}/overview")
+    public ResponseEntity<?> getSprintOverview(@PathVariable int sprintId) {
+        createsprint sprint = sprintRepo.findById(sprintId).orElse(null);
+        if (sprint == null) {
+            return ResponseEntity.notFound().build();
+        }
 
+        // Fetch user stories linked to this sprint
+        List<story> userStories = userStoryRepo.findBySprintId((long) sprintId);
+
+//        int totalPoints = userStories.stream().mapToInt(userStoryRepo::getStorypoints).sum();
+//        int completedPoints = userStories.stream()
+//                .filter(story -> "Done".equalsIgnoreCase(story.getStatus()))
+//                .mapToInt(userStoryRepo::getStorypoints)
+//                .sum();
+
+        SprintOverviewDTO dto = new SprintOverviewDTO();
+        dto.setSprintId(sprint.getId());
+        dto.setSprintName(sprint.getName());
+        dto.setStartDate(sprint.getStartDate().toString());
+        dto.setEndDate(sprint.getEndDate().toString());
+        dto.setFeatureName(sprint.getFeature().getName());
+        dto.setAssignedUsers(sprint.getUsers());
+        dto.setUserStories(userStories);
+//        dto.setTotalStoryPoints(totalPoints);
+//        dto.setCompletedStoryPoints(completedPoints);
+
+        return ResponseEntity.ok(dto);
+    }
+
+
+    @PostMapping("/{sprintId}/assign-stories")
+    public ResponseEntity<?> assignUserStoriesToSprint(
+            @PathVariable int sprintId,
+            @RequestBody List<Integer> userStoryIds) {
+
+        Optional<createsprint> sprintOpt = sprintRepo.findById(sprintId);
+        if (sprintOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Sprint not found");
+        }
+
+        createsprint sprint = sprintOpt.get();
+
+        // Fetch current assigned user stories
+        List<story> existingStories = userStoryRepo.findBySprintId((long) sprintId);
+        int currentPoints = existingStories.stream().mapToInt(story::getStorypoints).sum();
+
+        // Total capacity: users * 10 story points
+        int userCount = sprint.getUsers() != null ? sprint.getUsers().size() : 0;
+        int maxCapacity = userCount * 10;
+
+        List<story> newStories = userStoryRepo.findAllById(userStoryIds);
+        int newPoints = newStories.stream().mapToInt(story::getStorypoints).sum();
+
+        if (currentPoints + newPoints > maxCapacity) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Capacity exceeded for this sprint");
+        }
+
+        // Assign each story to sprint
+        for (story story : newStories) {
+            story.setSprint(sprint);
+        }
+
+        userStoryRepo.saveAll(newStories);
+        return ResponseEntity.ok("User stories assigned successfully to sprint ID: " + sprintId);
+    }
 }
+
 
 

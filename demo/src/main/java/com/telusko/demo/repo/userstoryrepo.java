@@ -9,11 +9,9 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface userstoryrepo  extends JpaRepository<story,Long> {
+public interface userstoryrepo  extends JpaRepository<story,Integer> {
     List<Feature> findByFeature_Id(int id);
 
     List<story> findByFeatureId(int featureId);
     List<story> findBySprintId(Long sprintId);
-
-    List<story> findAllById(int id);
 }

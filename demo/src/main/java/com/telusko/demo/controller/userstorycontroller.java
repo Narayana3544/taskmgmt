@@ -50,7 +50,7 @@ public class userstorycontroller {
         return ResponseEntity.ok(stories);
     }
     @DeleteMapping("/userstories/{id}")
-    public ResponseEntity<String> deleteStory(@PathVariable Long id) {
+    public ResponseEntity<String> deleteStory(@PathVariable int id) {
         if (repo.existsById(id)) {
             repo.deleteById(id);
             return ResponseEntity.ok("User story deleted.");
@@ -64,7 +64,7 @@ public class userstorycontroller {
     }
     @PatchMapping("/userstories/{id}/status")
     public ResponseEntity<?> updateStatus(@PathVariable int id, @RequestBody Map<String, String> body) {
-        Optional<story> optional = repo.findById((long) id);
+        Optional<story> optional = repo.findById(id);
         if (optional.isEmpty()) return ResponseEntity.notFound().build();
 
         story s = optional.get();

@@ -94,7 +94,7 @@ public class sprintcontroller {
     }
 
 
-    @PostMapping("/{sprintId}/assign-stories")
+    @PostMapping("/sprints/{sprintId}/assign-stories")
     public ResponseEntity<?> assignUserStoriesToSprint(
             @PathVariable int sprintId,
             @RequestBody List<Integer> userStoryIds) {

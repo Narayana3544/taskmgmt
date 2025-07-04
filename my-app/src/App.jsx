@@ -55,7 +55,7 @@ function App() {
 {/* <Route path="/assign-sprint-users" element={<AssignUsersToSprint />} /> */}
 <Route path="/manage-sprints" element={<ManageSprints />} />
 <Route path="/sprint/:sprintId/assign-users" element={<AssignUsersToSprint />} />
-<Route path="/sprint/:sprintId/assign-stories" element={<AssignStoriesToSprint />} />
+<Route path="/sprints/:sprintId/assign-stories" element={<AssignStoriesToSprint />} />
 <Route path="/sprints/:id/overview" element={<SprintOverview />} />
 
 

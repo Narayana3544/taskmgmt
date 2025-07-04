@@ -1,22 +1,83 @@
 .assign-stories-page {
-  padding: 20px;
+  max-width: 900px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: #fefefe;
+  color: black;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  font-family: 'Segoe UI', sans-serif;
+}
+
+h2 {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.sprint-id {
+  color: #1976d2;
+}
+
+.capacity-info {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 1rem;
+  padding: 0.8rem;
+  background-color: #f0f4f8;
+  border-radius: 8px;
+  font-weight: bold;
 }
 
 .story-list {
-  list-style: none;
-  padding-left: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 2rem;
 }
 
-.story-list li {
-  margin-bottom: 10px;
+.story-card {
+  background: #fff;
+  border: 2px solid #ddd;
+  border-radius: 10px;
+  width: 260px;
+  padding: 1rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.07);
+  transition: 0.3s ease;
+}
+
+.story-card:hover {
+  border-color: #1976d2;
+}
+
+.story-card.selected {
+  border-color: #4caf50;
+  background-color: #e8f5e9;
+}
+
+.story-content {
+  margin-left: 0.5rem;
+}
+
+.story-title {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0.5rem;
 }
 
 .assign-btn {
-  margin-top: 20px;
-  padding: 10px 16px;
-  background-color: #3b82f6;
+  background-color: #4caf50;
   color: white;
+  padding: 0.8rem 2rem;
   border: none;
-  border-radius: 6px;
+  font-size: 1rem;
+  border-radius: 8px;
+  display: block;
+  margin: 0 auto;
   cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.assign-btn:hover {
+  background-color: #388e3c;
 }

@@ -59,7 +59,7 @@ const ManageSprints = () => {
               <td>{sprint.feature.id}</td>
               <td>
                 <button onClick={() => navigate(`/sprint/${sprint.id}/assign-users`)}>Add Users</button>
-                <button onClick={() => navigate(`/sprint/${sprint.id}/assign-userstories`)}>Assign Stories</button>
+                <button onClick={() => navigate(`/sprints/${sprint.id}/assign-stories`)}>Assign Stories</button>
                 <button onClick={() => navigate(`/sprints/${sprint.id}/overview`)}>view</button>
               </td>
             </tr>

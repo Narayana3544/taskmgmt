@@ -1,6 +1,7 @@
 package com.telusko.demo.repo;
 
 import com.telusko.demo.Model.User;
+import com.telusko.demo.Model.story;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

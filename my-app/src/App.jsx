@@ -20,6 +20,7 @@ import AssignUsersToSprint from './sprint/AssignUsers';
 import ManageSprints from './sprint/ManageSprints';
 import AssignStoriesToSprint from './sprint/AssignStoriesToSprint';
 import SprintOverview from './sprint/SprintOverview';
+import AssignedStories from './dashboard/AssignedStories';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -57,6 +58,7 @@ function App() {
 <Route path="/sprint/:sprintId/assign-users" element={<AssignUsersToSprint />} />
 <Route path="/sprints/:sprintId/assign-stories" element={<AssignStoriesToSprint />} />
 <Route path="/sprints/:id/overview" element={<SprintOverview />} />
+  <Route path="/my-stories" element={<AssignedStories />} />
 
 
 

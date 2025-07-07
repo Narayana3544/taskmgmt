@@ -32,10 +32,10 @@ const handleChange = (e) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log('Submitting sprint:', sprint);
-    axios.post('http://localhost:8080/api/create-sprints', { withCredentials: true }, sprint)
+    axios.post('http://localhost:8080/api/sprints/create-sprints', sprint, { withCredentials: true })
       .then(() => {
         alert('sprint created sucessfully',navigate('/manage-sprints'));
-        setSprint({ name: '', startDate: '', endDate: '', featureId: '' });
+        setSprint({ name: '', startDate: '', endDate: '', featureId: '',status:'' });
       })
       .catch(err => {
         console.error('Error creating sprint:', err);

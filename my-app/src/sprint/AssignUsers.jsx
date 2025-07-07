@@ -10,7 +10,7 @@ const AssignUsersToSprint = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    axios.get('http://localhost:8080/api/users', { withCredentials: true })
+    axios.get(`http://localhost:8080/api/sprints/${sprintId}/available-users`, { withCredentials: true })
       .then((res) => setUsers(res.data))
       .catch((err) => console.error('Error fetching users:', err));
   }, []);

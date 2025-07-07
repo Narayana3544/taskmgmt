@@ -43,7 +43,7 @@ const Sidebar = ({ onToggle }) => {
               {openDashboard && (
                 <div className="submenu">
                   <div className="nav-subitem" onClick={() => navigate('/dashboard')}><FaThList /> Board</div>
-                  <div className="nav-subitem"><FaChartBar /> Activity</div>
+                  <div className="nav-subitem"onClick={() => navigate('/my-stories')}><FaChartBar /> Activity</div>
                   <div className="nav-subitem"><FaChartBar /> Statistics</div>
                 </div>
               )}

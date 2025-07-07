@@ -10,8 +10,10 @@ import com.telusko.demo.service.sprintservice;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -129,6 +131,38 @@ public class sprintcontroller {
         userStoryRepo.saveAll(newStories);
         return ResponseEntity.ok("User stories assigned successfully to sprint ID: " + sprintId);
     }
+    @GetMapping("/sprints/{sprintId}/available-users")
+    public ResponseEntity<?> getAvailableUsers(@PathVariable int sprintId) {
+        Optional<createsprint> sprintOpt = sprintRepo.findById(sprintId);
+        if (sprintOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Sprint not found");
+        }
+
+        createsprint sprint = sprintOpt.get();
+        List<User> availableUsers = sprintRepo.findAvailableUsersForWeek(sprint.getStartDate(), sprint.getEndDate());
+        return ResponseEntity.ok(availableUsers);
+    }
+    @PatchMapping("/sprints/{id}/complete")
+    public ResponseEntity<?> markSprintComplete(@PathVariable int id) {
+        Optional<createsprint> sprintOpt = sprintRepo.findById(id);
+        if (sprintOpt.isEmpty()) return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Sprint not found");
+
+        createsprint sprint = sprintOpt.get();
+        sprint.setStatus("Completed");
+        sprintRepo.save(sprint);
+
+        return ResponseEntity.ok("Sprint marked as completed");
+    }
+    @GetMapping("/user/assigned-stories")
+    public ResponseEntity<?> getAssignedStories(Principal principal) {
+        String email = principal.getName();
+        User user = userRepo.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        List<story> assignedStories = userStoryRepo.findByAssignedUserInActiveSprints(user.getId());
+        return ResponseEntity.ok(assignedStories);
+    }
+
+
 }
 
 

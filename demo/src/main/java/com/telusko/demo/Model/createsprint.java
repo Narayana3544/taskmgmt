@@ -19,6 +19,17 @@ public class createsprint {
     @ManyToOne
     @JoinColumn(name = "feature_id",nullable = false)
     private Feature feature;
+    @Column(nullable = false)
+    private String status = "Active";
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
     @ManyToMany
     @JoinTable(
             name = "sprint_users",

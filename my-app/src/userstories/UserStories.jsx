@@ -13,7 +13,7 @@ const UserStories = () => {
     description: '',
     acceptancecriteria: '',
     storypoints: '',
-    assignedTo: '',
+    reportedTo: '',
     status: 'To Do'
   });
 
@@ -43,20 +43,20 @@ const UserStories = () => {
 
   const handleStorySubmit = (e) => {
     e.preventDefault();
-    axios.post(`http://localhost:8080/api/features/${featureId}/adduserstory`, { withCredentials: true }, {
+    axios.post(`http://localhost:8080/api/features/${featureId}/adduserstory`, {
   description: story.description,
   acceptancecriteria: story.acceptancecriteria,
   storypoints: story.storypoints,
   status: story.status,
-  userstory: { id: story.assignedTo }
-}).
+  userstory: { id: story.reportedTo }
+}, { withCredentials: true }).
 then(() => {
         alert('User story added successfully!');
         setStory({
           description: '',
           acceptancecriteria: '',
           storypoints: '',
-          assignedTo: '',
+          reportedTo: '',
           status: 'To Do'
         });
       })
@@ -101,10 +101,10 @@ then(() => {
               value={searchUserId}
               onChange={(e) => setSearchUserId(e.target.value)}
             />
-            <select name="assignedTo" value={story.assignedTo} onChange={handleStoryChange} required>
+            <select name="reportedTo" value={story.reportedTo} onChange={handleStoryChange} required>
               <option value="">-- Select a user --</option>
               {filteredUsers.map(user => (
-                <option key={user.id} value={user.id}>{user.name} (ID: {user.id})</option>
+                <option key={user.id} value={user.id}>{user.preffered_name} (ID: {user.id})</option>
               ))}
             </select>
           </div>

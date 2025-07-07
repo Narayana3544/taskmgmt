@@ -78,7 +78,7 @@ const statusGroups = {
           <tbody>
             {userPerformance.map(user => (
               <tr key={user.id}>
-                <td>{user.preferred_name}</td>
+                <td>{user.preffered_name}</td>
                 <td>{user.role}</td>
                 <td>{user.totalStories}</td>
                 <td>{user.doneStories}</td>
@@ -97,7 +97,7 @@ const statusGroups = {
           {data?.assignedUsers?.length > 0 && (
   <ul>
     {data.assignedUsers.map(user => (
-      <li key={user.id}>{user.preferred_name}</li>
+      <li key={user.id}>{user.preffered_name}</li>
     ))}
   </ul>
 )}

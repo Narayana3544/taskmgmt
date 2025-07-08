@@ -23,3 +23,43 @@
   margin-top: 1.5rem;
   color: #444;
 }
+.status-section {
+  margin-top: 2rem;
+}
+
+.story-table-group {
+  margin-bottom: 3rem;
+}
+
+.status-header {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 1rem 0;
+}
+
+.story-status-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.story-status-table th,
+.story-status-table td {
+  padding: 12px 15px;
+  border-bottom: 1px solid #eaeaea;
+  text-align: left;
+}
+
+.story-status-table th {
+  background-color: #f8f8f8;
+  font-weight: 600;
+  color: #333;
+}
+
+.story-status-table tr:hover {
+  background-color: #f1f5f9;
+}
+

@@ -4,6 +4,7 @@ import com.telusko.demo.Model.*;
 import com.telusko.demo.dto.SprintOverviewDTO;
 import com.telusko.demo.repo.createsprintrepo;
 //import com.telusko.demo.repo.sprintusersrepo;
+//import com.telusko.demo.repo.sprintoverviewdto;
 import com.telusko.demo.repo.userrepo;
 import com.telusko.demo.repo.userstoryrepo;
 import com.telusko.demo.service.sprintservice;
@@ -32,6 +33,9 @@ public class sprintcontroller {
 
     @Autowired
     public userstoryrepo userStoryRepo;
+
+//    @Autowired
+//    public sprintoverviewdto overviewrepo;
 
     @PostMapping("/sprints/create-sprints")
     public createsprint create(@RequestBody createsprint sprint){
@@ -75,10 +79,10 @@ public class sprintcontroller {
         // Fetch user stories linked to this sprint
         List<story> userStories = userStoryRepo.findBySprintId((long) sprintId);
 
-//        int totalPoints = userStories.stream().mapToInt(userStoryRepo::getStorypoints).sum();
+//        int totalPoints = userStories.stream().mapToInt(overviewrepo::gettotalStorypoints).sum();
 //        int completedPoints = userStories.stream()
 //                .filter(story -> "Done".equalsIgnoreCase(story.getStatus()))
-//                .mapToInt(userStoryRepo::getStorypoints)
+//                .mapToInt(overviewrepo::getStorypoints)
 //                .sum();
 
         SprintOverviewDTO dto = new SprintOverviewDTO();

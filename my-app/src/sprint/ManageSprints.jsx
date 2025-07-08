@@ -23,7 +23,7 @@ const ManageSprints = () => {
     axios.get('http://localhost:8080/api/user/profile', { withCredentials: true })
       .then(res => {
         const user = res.data;
-        setUserName(user.first_name + ' ' + user.last_name);
+        setUserName(user.preffered_name);
       })
       .catch(err => console.error('Error fetching user profile:', err));
   };

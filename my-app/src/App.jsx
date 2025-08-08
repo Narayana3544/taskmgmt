@@ -22,6 +22,7 @@ import AssignStoriesToSprint from './sprint/AssignStoriesToSprint';
 import SprintOverview from './sprint/SprintOverview';
 import AssignedStories from './dashboard/AssignedStories';
 import EditUserStory from './userstories/EdituserStories';
+import EditFeature from './Features/EditFeature';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -62,6 +63,7 @@ function App() {
                 <Route path="/my-stories" element={<AssignedStories />} />
                 <Route path="/edit-project/:id" element={<EditProject />} />
                 <Route path="/edit-userstory/:id" element={<EditUserStory />} />
+                 <Route path="/edit-feature/:id" element={<EditFeature />} />
           </Routes>
           </div>
         </>

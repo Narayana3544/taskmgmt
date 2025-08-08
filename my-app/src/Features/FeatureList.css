@@ -1,8 +1,10 @@
 .features-list-page {
+ max-width: 1100px;
+  margin: auto;
   padding: 20px;
-  background-color: #f7f9fc;
+  background: hsl(130, 13%, 91%);
   color: black;
-  min-height: 100vh;
+  border-radius: 10px;
 }
 
 .header-bar {
@@ -28,22 +30,19 @@
 }
 
 .features-table {
-  width: 100%;
+ width: 100%;
   border-collapse: collapse;
-  background: white;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
 
 .features-table th,
 .features-table td {
-  padding: 12px 16px;
-  border: 1px solid #e0e0e0;
+padding: 10px;
+  border: 1px solid #ddd;
   text-align: left;
 }
 
 .features-table th {
-  background-color: #f0f0f0;
-  font-weight: bold;
+   background-color: #2875e7;
 }
 
 .status-tag {

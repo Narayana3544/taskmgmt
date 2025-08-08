@@ -61,8 +61,29 @@ public List<Feature> getFeaturesByProjectId(@PathVariable int projectId) {
     public List<Feature> getfeatures(){
         return service.repo.findAll();
 }
+
+    @GetMapping("/features/{id}")
+    public Optional<Feature> getfeaturesbyid(@PathVariable int id){
+        return service.getfeaturesbyid(id);
+    }
    @DeleteMapping("/features/{id}")
     public void deletefeature(@PathVariable int id){
         repo.deleteById(id);
    }
+
+
+    @PutMapping("/features/{id}")
+    public ResponseEntity<Feature> updateFeature(@PathVariable int id, @RequestBody Feature updatedFeature) {
+        Feature feature = repo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Feature not found with id " + id));
+
+        feature.setName(updatedFeature.getName());
+        feature.setDescriptor(updatedFeature.getDescriptor());
+        feature.setStatus(updatedFeature.getStatus());
+
+        Feature savedFeature = repo.save(feature);
+        return ResponseEntity.ok(savedFeature);
+    }
 }
+
+

@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import './FeatureList.css';
+import { FaEdit } from "react-icons/fa";
+
 
 const FeatureList = () => {
   const [features, setFeatures] = useState([]);
@@ -92,12 +94,12 @@ const handleSearch = () => {
                   </span>
                 </td>
                 <td>
-                  <div className="button-group">
-                    <button className="edit-btn" onClick={() => handleEdit(feature.id)}>Edit</button>
-                    <button className="delete-btn" onClick={() => handleDelete(feature.id)}>Delete</button>
-                    <button className="view-btn" onClick={() => navigate(`/features/${feature.id}/userstories`)}>View Stories</button>
-                    <button className="add-btn" onClick={() => navigate(`/features/${feature.id}/add-userstory`)}>Add Story</button>
-                  </div>
+                   <button 
+                    className="edit-btn" 
+                    onClick={() => navigate(`/edit-feature/${feature.id}`)}
+                  > 
+                  <FaEdit />
+                  </button>
                 </td>
               </tr>
             ))}

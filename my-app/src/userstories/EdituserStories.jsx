@@ -116,9 +116,9 @@ const EditUserStory = () => {
         </div>
 
         <div className="button-row">
-          <button className="save-btn" onClick={handleSave}>💾 Save</button>
-          <button className="delete-btn" onClick={handleDelete}>🗑 Delete</button>
-          <button className="cancel-btn" onClick={() => navigate("/view-stories")}>↩ Back</button>
+          <button className="save-btn" onClick={handleSave}> Save</button>
+          <button className="delete-btn" onClick={handleDelete}> Delete</button>
+          <button className="cancel-btn" onClick={() => navigate("/view-stories")}> Back</button>
         </div>
       </div>
     </div>

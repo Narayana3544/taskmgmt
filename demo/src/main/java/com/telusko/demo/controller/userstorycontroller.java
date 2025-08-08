@@ -73,6 +73,35 @@ public class userstorycontroller {
 
         return ResponseEntity.ok("Status updated");
     }
+    // Get user story by ID
+    @GetMapping("/userstories/{id}")
+    public ResponseEntity<story> getUserStoryById(@PathVariable int id) {
+        return repo.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    // Update user story
+    @PutMapping("/userstories/{id}")
+    public ResponseEntity<story> updateUserStory(
+            @PathVariable int id,
+            @RequestBody story updatedStory) {
+        return repo.findById(id)
+                .map(story -> {
+                    story.setDescription(updatedStory.getDescription());
+                    story.setAcceptancecriteria(updatedStory.getAcceptancecriteria());
+                    story.setStorypoints(updatedStory.getStorypoints());
+                    story.setStatus(updatedStory.getStatus());
+
+                    // If updating feature
+                    if (updatedStory.getFeature() != null && updatedStory.getFeature().getId() != 0) {
+                        story.setFeature(updatedStory.getFeature());
+                    }
+
+                    return ResponseEntity.ok(repo.save(story));
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
 
 
 

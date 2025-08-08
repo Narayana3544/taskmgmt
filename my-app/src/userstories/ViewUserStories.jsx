@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './ViewUserStories.css';
 import { useNavigate } from 'react-router-dom';
+import { FaEdit } from "react-icons/fa";
+
 
 const ViewStories = () => {
   const [allStories, setAllStories] = useState([]);
@@ -51,6 +53,7 @@ const ViewStories = () => {
         alert('Error updating status');
       });
   };
+  
 
   const handleDelete = (id) => {
     if (window.confirm('Are you sure you want to delete this story?')) {
@@ -116,10 +119,14 @@ const ViewStories = () => {
                   <td>{story.feature?.id || 'N/A'}</td>
                   <td>{story.userstory?.preffered_name || 'N/A'}</td>
                   <td>
-                    <button className="view-btn" onClick={() => alert(JSON.stringify(story, null, 2))}>👁</button>
-                    <button className="edit-btn" onClick={() => navigate(`/edit-userstory/${story.id}`)}>✏️</button>
-                    <button className="delete-btn" onClick={() => handleDelete(story.id)}>🗑</button>
-                  </td>
+                  <button 
+                    className="edit-btn" 
+                    onClick={() => navigate(`/edit-userstory/${story.id}`)}
+                  > 
+                      <FaEdit />
+                  </button>
+                </td>
+
                 </tr>
               ))}
             </tbody>

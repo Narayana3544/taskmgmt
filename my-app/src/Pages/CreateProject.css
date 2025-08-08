@@ -1,30 +1,29 @@
 .create-project-page {
   display: flex;
+  justify-content: center;
+  align-items: center;
   height: 100vh;
-  margin-left: 150px;
+  /* margin-left: 240px; Matches your sidebar width */
   background-color: #f4f5fa;
+  font-family: 'Segoe UI', sans-serif;
 }
 
 .create-main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.create-container {
-  margin: 2rem;
-  background-color: #ffffff;
+  width: 100%;
+  max-width: 700px;
   padding: 2rem;
-  border-radius: 12px;
-  box-shadow: 0 0 20px rgba(0,0,0,0.1);
-  max-width: 600px;
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.1);
+  position: relative;
 }
 
 .create-title {
-  font-size: 28px;
-  font-weight: 600;
-  margin-bottom: 1rem;
+  font-size: 30px;
+  font-weight: 700;
   color: #1e293b;
+  margin-bottom: 1.5rem;
+  text-align: center;
 }
 
 .create-form {
@@ -34,11 +33,20 @@
 }
 
 .create-form input,
-.create-form textarea {
-  padding: 0.75rem;
+.create-form textarea,
+.create-form select {
+  padding: 0.8rem 1rem;
   border: 1px solid #cbd5e1;
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 1rem;
+  transition: border-color 0.3s ease;
+}
+
+.create-form input:focus,
+.create-form textarea:focus,
+.create-form select:focus {
+  border-color: #4f46e5;
+  outline: none;
 }
 
 .create-form textarea {
@@ -47,24 +55,25 @@
 }
 
 .char-count {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: #64748b;
   text-align: right;
 }
 
 .submit-btn {
-  background-color: #4f46e5;
-  color: white;
-  padding: 0.75rem;
+  background-color: #2563eb;
+  color: #fff;
+  padding: 0.9rem;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   font-weight: 600;
+  font-size: 1rem;
   cursor: pointer;
-  transition: background 0.3s;
+  transition: background 0.3s ease;
 }
 
 .submit-btn:hover {
-  background-color: #4338ca;
+  background-color: #1e40af;
 }
 
 .success-msg {
@@ -81,4 +90,23 @@
   padding: 0.75rem;
   border-radius: 8px;
   margin-bottom: 1rem;
+}
+
+/* Back Button Styling */
+.back-btn {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  background-color: #e5e7eb;
+  color: #1e293b;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.back-btn:hover {
+  background-color: #cbd5e1;
 }

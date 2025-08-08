@@ -21,8 +21,10 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login", "/register").permitAll()
-                        .requestMatchers("/user/profile","/**","/sprints/**","/features/**","/sprints","/projects/**").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/login","/create-task","/register/{id}").permitAll()
+                        .requestMatchers( "/register").permitAll()
+                        .requestMatchers("/user/profile","/**","/sprints/**","/features/**",
+                                "/sprints","/projects/**").authenticated()
                         .requestMatchers(HttpMethod.POST, "/sprints/**/assign-users").authenticated()
                         .anyRequest().authenticated()
                 )

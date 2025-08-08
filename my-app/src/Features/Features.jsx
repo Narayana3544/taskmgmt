@@ -13,10 +13,10 @@ const Features = () => {
     status: 'In Progress'
   });
 
-  const navigate = useNavigate(); // ✅ Add navigation hook
+  const navigate = useNavigate(); 
 
   useEffect(() => {
-    axios.get('http://localhost:8080/api/projects')
+    axios.get('http://localhost:8080/api/projects',{ withCredentials: true })
       .then(res => setProjects(res.data))
       .catch(err => console.error('Error fetching projects:', err));
   }, []);
@@ -38,9 +38,9 @@ const Features = () => {
     if (!selectedProjectId) {
       alert('Please select a project first.');
       return;
-    }
+    };
 
-    axios.post(`http://localhost:8080/api/projects/${selectedProjectId}/addfeature`, feature)
+    axios.post(`http://localhost:8080/api/projects/${selectedProjectId}/addfeature`, feature,{ withCredentials: true })
       .then(() => {
         alert('Feature added successfully!');
         navigate(`/features/${selectedProjectId}`); // ✅ Redirect to feature list for this project
@@ -49,6 +49,9 @@ const Features = () => {
         console.error('Failed to save feature:', err);
         alert('Error saving feature.');
       });
+  };
+    const handleBack = () => {
+    navigate(-1); // Go back to the previous page
   };
 
   return (
@@ -96,6 +99,7 @@ const Features = () => {
             <button type="submit" className="submit-btn">Add Feature</button>
           </>
         )}
+            <button type="button" onClick={handleBack} className="back-btn">Back</button>
       </form>
     </div>
   );

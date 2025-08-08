@@ -2,6 +2,7 @@ package com.telusko.demo.controller;
 
 
 import com.telusko.demo.Model.User;
+import com.telusko.demo.repo.userrepo;
 import com.telusko.demo.service.CustomUserDetailsService;
 import com.telusko.demo.service.loginservice;
 import jakarta.servlet.http.HttpServletRequest;
@@ -17,6 +18,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -25,6 +27,8 @@ public class logincontroller {
 
     @Autowired
     private loginservice service;
+    @Autowired
+    private userrepo repo;
 
     @Autowired
     public CustomUserDetailsService Service;
@@ -78,6 +82,17 @@ public class logincontroller {
     }
 
 
-}
+    @GetMapping("/register/{id}")
+    public ResponseEntity<User> getRegisterById(@PathVariable Long id) {
+        User user = service.getUserById(id); // ✅ Ensure this returns a proper User object
+        if (user != null) {
+            return ResponseEntity.ok(user);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+    }
+
+
 
 

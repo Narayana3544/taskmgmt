@@ -21,6 +21,7 @@ import ManageSprints from './sprint/ManageSprints';
 import AssignStoriesToSprint from './sprint/AssignStoriesToSprint';
 import SprintOverview from './sprint/SprintOverview';
 import AssignedStories from './dashboard/AssignedStories';
+import EditUserStory from './userstories/EdituserStories';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -28,44 +29,40 @@ function App() {
 
   return (
     <Router>
-      {isLoggedIn ? (
-        <>
-          <Sidebar collapsed={sidebarCollapsed} onToggle={setSidebarCollapsed} />
-          <Navbar
-            collapsed={sidebarCollapsed}
-            onToggleSidebar={() => setSidebarCollapsed(prev => !prev)}
-          />
-          <div className={`home-container ${sidebarCollapsed ? 'full' : ''}`}>
-            <Routes>
-              <Route path="/home" element={<Home />} />
-              {/* <Route path="/tasks" element={<Tasks />} /> */}
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/project" element={<Project />} />
-              {/* <Route path="/features" element={<FeaturesPage />} /> ✅ new route */}
-              {/* <Route path="*" element={<Navigate to="/home" />} /> */}
-  <Route path="/create-project" element={<CreateProject />} />    
-  <Route path="/manage-projects" element={<ManageProjects />} />
-  <Route path="/features" element={<Features />} />
-  <Route path="/projects/:projectId/features" element={<Features />} />
-  <Route path="/features/:projectId" element={<FeatureList />} />
-  <Route path="/view-features" element={<FeatureList />} />
-<Route path="/userstories" element={<UserStories />} />
-<Route path="/view-stories" element={<ViewUserStories />} />
-<Route path="/dashboard" element={<Dashboard />} />
-<Route path="/create-sprint" element={<CreateSprint />} />
-{/* <Route path="/assign-sprint-users" element={<AssignUsersToSprint />} /> */}
-<Route path="/manage-sprints" element={<ManageSprints />} />
-<Route path="/sprint/:sprintId/assign-users" element={<AssignUsersToSprint />} />
-<Route path="/sprints/:sprintId/assign-stories" element={<AssignStoriesToSprint />} />
-<Route path="/sprints/:id/overview" element={<SprintOverview />} />
-  <Route path="/my-stories" element={<AssignedStories />} />
-
-
-
-
-<Route path="/edit-project/:id" element={<EditProject />} />
-
-            </Routes>
+    {isLoggedIn ? (
+      <>
+        <Sidebar collapsed={sidebarCollapsed} onToggle={setSidebarCollapsed} />
+        <Navbar
+          collapsed={sidebarCollapsed}
+          onToggleSidebar={() => setSidebarCollapsed(prev => !prev)}
+        />
+        <div className={`home-container ${sidebarCollapsed ? 'full' : ''}`}>
+          <Routes>
+                <Route path="/home" element={<Home />} />
+                {/* <Route path="/tasks" element={<Tasks />} /> */}
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/project" element={<Project />} />
+                {/* <Route path="/features" element={<FeaturesPage />} /> ✅ new route */}
+                {/* <Route path="*" element={<Navigate to="/home" />} /> */}
+                <Route path="/create-project" element={<CreateProject />} />    
+                <Route path="/manage-projects" element={<ManageProjects />} />
+                <Route path="/features" element={<Features />} />
+                <Route path="/projects/:projectId/features" element={<Features />} />
+                <Route path="/features/:projectId" element={<FeatureList />} />
+                <Route path="/view-features" element={<FeatureList />} />
+                <Route path="/userstories" element={<UserStories />} />
+                <Route path="/view-stories" element={<ViewUserStories />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/create-sprint" element={<CreateSprint />} />
+                {/* <Route path="/assign-sprint-users" element={<AssignUsersToSprint />} /> */}
+                <Route path="/manage-sprints" element={<ManageSprints />} />
+                <Route path="/sprint/:sprintId/assign-users" element={<AssignUsersToSprint />} />
+                <Route path="/sprints/:sprintId/assign-stories" element={<AssignStoriesToSprint />} />
+                <Route path="/sprints/:id/overview" element={<SprintOverview />} />
+                <Route path="/my-stories" element={<AssignedStories />} />
+                <Route path="/edit-project/:id" element={<EditProject />} />
+                <Route path="/edit-userstory/:id" element={<EditUserStory />} />
+          </Routes>
           </div>
         </>
       ) : (

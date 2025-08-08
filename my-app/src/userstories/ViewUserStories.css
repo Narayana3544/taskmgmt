@@ -2,7 +2,7 @@
   max-width: 1100px;
   margin: auto;
   padding: 20px;
-  background: #e5ebe6;
+  background: hsl(130, 13%, 91%);
   color: black;
   border-radius: 10px;
 }
@@ -86,4 +86,23 @@
   border-bottom: 1px solid #ccc;
   white-space: nowrap;
 }
+.edit-btn {
+  background-color: transparent; 
+  border: none;                  
+  cursor: pointer;               
+  padding: 4px;              
+  font-size: 16px;               
+  color: #4cafef;                
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.edit-btn:hover {
+  color: #2196f3; 
+  transform: scale(1.2); 
+}
+
+.edit-btn:active {
+  transform: scale(0.95); 
+}
+
 

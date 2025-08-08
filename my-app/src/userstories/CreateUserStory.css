@@ -1,0 +1,170 @@
+/* CreateUserStory.css
+   Clean, minimal, responsive styles for Create/Edit User Story form
+*/
+
+/* Page container */
+.create-user-story-container {
+  max-width: 820px;
+  margin: 36px auto;
+  padding: 22px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 6px 24px rgba(20, 20, 30, 0.06);
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  color: #111827;
+}
+
+/* Heading */
+.create-user-story-container h2 {
+  margin: 0 0 18px;
+  font-size: 20px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Form layout */
+.create-user-story-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 18px;
+  align-items: start;
+}
+
+/* Make certain fields span full width */
+.create-user-story-form .full-width {
+  grid-column: 1 / -1;
+}
+
+/* Labels */
+.create-user-story-form label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #374151;
+}
+
+/* Inputs, textarea, selects */
+.create-user-story-form input[type="text"],
+.create-user-story-form input[type="number"],
+.create-user-story-form textarea,
+.create-user-story-form select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #e6e9ef;
+  background: #fff;
+  font-size: 14px;
+  color: #111827;
+  box-sizing: border-box;
+  transition: border-color .15s ease, box-shadow .15s ease;
+  outline: none;
+  resize: vertical;
+}
+
+/* Textarea extras */
+.create-user-story-form textarea {
+  min-height: 120px;
+  line-height: 1.4;
+}
+
+/* Focus state */
+.create-user-story-form input:focus,
+.create-user-story-form textarea:focus,
+.create-user-story-form select:focus {
+  border-color: #7c3aed; /* subtle purple focus */
+  box-shadow: 0 4px 12px rgba(124,58,237,0.08);
+}
+
+/* Helper / small note text (if needed) */
+.helper {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 6px;
+}
+
+/* Buttons row (span full width) */
+.button-row {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 10px;
+  justify-content: flex-start;
+  margin-top: 6px;
+}
+
+/* Primary save button */
+.save-btn {
+  background: linear-gradient(180deg, #7c3aed, #5b21b6);
+  color: #fff;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(91,33,182,0.18);
+  transition: transform .08s ease, box-shadow .12s ease, opacity .12s ease;
+}
+
+/* Secondary cancel/back button */
+.cancel-btn {
+  background: rgb(42, 122, 189);
+  color: #fff;
+  border: 1px solid #e6e9ef;
+  padding: 10px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+/* Button hover/active */
+.save-btn:hover { transform: translateY(-1px); }
+.save-btn:active { transform: translateY(0); opacity: 0.98; }
+.cancel-btn:hover { background: #145aa0; }
+
+/* Smaller screens: stack fields */
+@media (max-width: 820px) {
+  .create-user-story-form {
+    grid-template-columns: 1fr;
+  }
+  .button-row { justify-content: stretch; }
+  .save-btn, .cancel-btn {
+    width: 100%;
+  }
+}
+
+/* Simple error / success messages */
+.form-error {
+  color: #ef4444;
+  font-size: 13px;
+  margin-top: 8px;
+}
+
+.form-success {
+  color: #059669;
+  font-size: 13px;
+  margin-top: 8px;
+}
+
+/* Optional: small styling for numeric input arrows removed for a cleaner look */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+ .delete-btn {
+  background: #dc2626;
+  color: #fff;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(220,38,38,0.18);
+}
+
+.delete-btn:hover {
+  background: #b91c1c;
+}
+

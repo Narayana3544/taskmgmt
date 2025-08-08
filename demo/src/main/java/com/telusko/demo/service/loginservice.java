@@ -54,4 +54,8 @@ public class loginservice {
         user.setPassword(encoder.encode(user.getPassword()));
         return repo.save(user);
     }
+
+    public User getUserById(Long id) {
+        return repo.findById(id).orElse(null);
+    }
 }

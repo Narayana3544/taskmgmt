@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState ,useEffect} from 'react';
+import axios from 'axios';
 import './Sidebar.css';
 import {
   FaTachometerAlt, FaBell, FaEnvelope,
@@ -17,6 +18,23 @@ const Sidebar = ({ onToggle }) => {
     if (onToggle) onToggle(!collapsed);
   };
 
+
+  const [user, setUser] = useState(null);
+    const [error, setError] = useState('');
+  
+    useEffect(() => {
+      axios.get('http://localhost:8080/api/user/profile', { withCredentials: true })
+        .then(response => {
+          setUser(response.data);
+        })
+        .catch(error => {
+          console.error('Error fetching user profile:', error);
+          setError('Failed to load profile');
+        });
+    }, []);
+    if (error) return <div>{error}</div>;
+  if (!user) return <div>Loading profile...</div>;
+
   return (
     <div className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
       <div className="sidebar-toggle" onClick={handleToggle}>
@@ -30,8 +48,8 @@ const Sidebar = ({ onToggle }) => {
             <div className="profile-section">
               <FaUserCircle className="profile-icon" />
               <div>
-                <p className="profile-name">Narayana</p>
-                <p className="profile-role">Software Development engineer-1 </p>
+                <p className="profile-name">{user.first_name} {user.last_name}</p>
+                <p className="profile-role">{user.role} </p>
               </div>
             </div>
 

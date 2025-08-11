@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 public class projectcontroller {
@@ -28,8 +29,13 @@ public class projectcontroller {
         service.deleteproject(id);
     }
 
-    @PatchMapping("/projects/{id}")
-    public Project updateproject(int project){
-       return service.editproject(project);
+    @PutMapping("/projects/{id}")
+    public Project updateproject(@PathVariable Long id,@RequestBody Project project){
+       return service.updateProject(id,project);
+    }
+
+    @GetMapping("/projects/{id}")
+    public Optional<Project> getProjectByid(long id){
+        return service.getProjectByid(id);
     }
 }

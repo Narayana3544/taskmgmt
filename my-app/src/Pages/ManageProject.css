@@ -2,7 +2,14 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
+  margin-bottom: 20px;
+}
+.manage-projects-page{
+   max-width: 1100px;
+  margin: auto;
+  padding: 20px;
+  background: hsl(130, 13%, 91%);
+  color: black;
   border-radius: 10px;
 }
 
@@ -21,35 +28,35 @@
 .projects-table {
   width: 100%;
   border-collapse: collapse;
-   background: #e5ebe6;
-  border-radius: 8px;
-  color:black;
-  overflow: hidden;
-  box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
 }
 
 .projects-table th,
 .projects-table td {
-  padding: 12px;
+padding: 10px;
+  border: 1px solid #ddd;
   text-align: left;
-  border-bottom: 1px solid #eee;
 }
+
 .projects-table th{
    background-color: #2875e7;
 }
 
 .status-tag {
-  padding: 4px 8px;
+  padding: 4px 10px;
   border-radius: 5px;
-  font-weight: bold;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: capitalize;
 }
 
 .status-tag.in-progress {
-  background-color: #ffe082;
+ background-color: #ffe082;
+  color: #8d6e63;
 }
 
 .status-tag.completed {
-  background-color: #81c784;
+ background-color: #a5d6a7;
+  color: #2e7d32;
 }
 
 .status-tag.pending {
@@ -60,25 +67,31 @@
   padding: 5px;
 }
 
-.action-buttons button {
-  margin-right: 6px;
+.button-group button {
   padding: 6px 10px;
   border: none;
   border-radius: 4px;
+  font-size: 13px;
   cursor: pointer;
-}
-
-.view-btn {
-  background-color: #4fc3f7;
-  color: white;
+  transition: 0.2s;
 }
 
 .edit-btn {
-  background-color: #ffb74d;
-  color: white;
+  background-color: #ffca28;
+  color: #333;
 }
 
 .delete-btn {
-  background-color: #e57373;
+  background-color: #e53935;
+  color: white;
+}
+
+.view-btn {
+  background-color: #42a5f5;
+  color: white;
+}
+
+.add-btn {
+  background-color: #66bb6a;
   color: white;
 }

@@ -35,7 +35,6 @@ export default function EditProject() {
   return (
     <div className="edit-project-page">
       <div className="edit-main">
-        <Navbar />
         <div className="edit-container">
           <h1>Edit Project</h1>
           <form onSubmit={handleSubmit} className="edit-form">

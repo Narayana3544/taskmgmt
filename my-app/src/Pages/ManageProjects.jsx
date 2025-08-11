@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 // import Navbar from '../components/Navbar';
 import './ManageProject.css';
-import { FaEye, FaEdit, FaPlus } from 'react-icons/fa';
+import { FaEdit, FaPlus } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 
 export default function ManageProjects() {
@@ -109,10 +109,13 @@ export default function ManageProjects() {
                         <option>Pending</option>
                       </select>
                     </td>
-                    <td className="action-buttons">
-                      <button onClick={() => handleView(project)} className="view-btn"><FaEye /></button>
-                      <button onClick={() => handleEdit(project.id)} className="edit-btn"><FaEdit /> Edit</button>
-                      <button onClick={() => deleteProject(project.id)} className="delete-btn">Delete</button>
+                     <td>
+                        <button 
+                        className="edit-btn" 
+                        onClick={() => navigate(`/edit-project/${project.id}`)}
+                      > 
+                      <FaEdit />
+                      </button>
                     </td>
                   </tr>
                 ))

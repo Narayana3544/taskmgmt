@@ -2,9 +2,7 @@ package com.telusko.demo.repo;
 
 import com.telusko.demo.Model.Feature;
 import com.telusko.demo.Model.User;
-import com.telusko.demo.Model.Userstory;
 import com.telusko.demo.Model.story;
-import com.telusko.demo.dto.SprintOverviewDTO;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

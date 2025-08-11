@@ -24,13 +24,30 @@ export default function EditProject() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    axios.patch(`http://localhost:8080/api/projects/${id}`, project, { withCredentials: true })
+    axios.put(`http://localhost:8080/api/projects/${id}`, project, { withCredentials: true })
       .then(() => {
         alert('Project updated successfully!');
         navigate('/manage-projects');
       })
       .catch(err => console.error('Failed to update project:', err));
   };
+
+  const handleDelete = () => {
+      if (window.confirm("Are you sure you want to delete this project?")) {
+        axios
+          .delete(`http://localhost:8080/api/projects/${id}`, {
+            withCredentials: true
+          })
+          .then(() => {
+            alert("Project deleted successfully!");
+            navigate("/manage-projects");
+          })
+          .catch((err) => {
+            console.error("Error deleting project:", err);
+            alert("It may be linked to other features");
+          });
+      }
+    };
 
   return (
     <div className="edit-project-page">
@@ -67,7 +84,17 @@ export default function EditProject() {
               <option>Pending</option>
             </select>
 
-            <button type="submit" className="update-btn">Update</button>
+<div className="button-group">
+          <button type="submit" className="save-btn">Save</button>
+          <button type="button" className="delete-btn" onClick={handleDelete}>Delete</button>
+          <button
+            type="button"
+            className="cancel-btn"
+            onClick={() => navigate("/manage-projects")}
+          >
+            Back
+          </button>
+        </div>
           </form>
         </div>
       </div>

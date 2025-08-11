@@ -80,7 +80,7 @@ export default function ManageProjects() {
                 <th>Name</th>
                 <th>Description</th>
                 <th>Status</th>
-                <th>Change Status</th>
+                {/* <th>Change Status</th> */}
                 <th>Actions</th>
               </tr>
             </thead>
@@ -94,11 +94,11 @@ export default function ManageProjects() {
                     <td>{project.name}</td>
                     <td>{project.description}</td>
                     <td>
-                      <span className={`status-tag ${project.status?.toLowerCase() || 'inprogress'}`}>
-                        {project.status || 'In Progress'}
-                      </span>
-                    </td>
-                    <td>
+                  <span className={`status-tag ${project.status?.toLowerCase().replace(/\s+/g, '-')}`}>
+                    {project.status}
+                  </span>
+                </td>
+                    {/* <td>
                       <select
                         className="status-select"
                         value={project.status || 'In Progress'}
@@ -108,7 +108,7 @@ export default function ManageProjects() {
                         <option>Completed</option>
                         <option>Pending</option>
                       </select>
-                    </td>
+                    </td> */}
                      <td>
                         <button 
                         className="edit-btn" 

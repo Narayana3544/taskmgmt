@@ -1,89 +1,97 @@
+/* Features Page Container */
 .features-page {
-  max-width: 700px;
-  margin: 2rem auto;
+  max-width: 600px;
+  margin: auto;
   padding: 20px;
-  background: #f4f6fa;
+  background: hsl(130, 13%, 91%);
+  color: black;
   border-radius: 10px;
-  min-height: 100vh;
-  box-sizing: border-box;
 }
 
+/* Page Header */
 .features-header {
-  font-size: 24px;
-  color: #27ae60;
-  font-weight: bold;
-  margin-bottom: 20px;
   text-align: center;
+  margin-bottom: 20px;
+  font-size: 1.8rem;
+  color: #2875e7;
 }
 
+/* Form Styling */
 .feature-form {
+  max-width: 500px; /* Reduced width */
+  margin: auto; 
   background: white;
   padding: 20px;
   border-radius: 10px;
-  margin-bottom: 30px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
 
+/* Form Group Styling */
 .form-group {
-  margin-bottom: 16px;
+  margin-bottom: 15px;
 }
 
 .form-group label {
   display: block;
+  font-weight: 500;
   margin-bottom: 6px;
-  font-weight: 600;
-  color: #333;
 }
 
 .form-group input,
-.form-group textarea,
-.form-group select {
+.form-group select,
+.form-group textarea {
   width: 100%;
-  padding: 10px 12px;
+  padding: 8px;
+  font-size: 14px;
   border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+/* Project Details Box */
+.project-details {
+  background: #e3f2fd;
+  padding: 8px 12px;
+  border-radius: 5px;
+  margin-bottom: 15px;
+  font-size: 14px;
+}
+
+/* Buttons Container */
+.form-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 15px;
+}
+
+/* Submit Button */
+.submit-btn {
+  background-color: #1976d2;
+  color: white;
+  border: none;
+  padding: 10px 14px;
   border-radius: 6px;
   font-size: 14px;
-  background: #fdfdfd;
-}
-
-.project-details {
-  margin-bottom: 20px;
-  font-size: 16px;
-  color: #2c3e50;
-}
-
-.submit-btn {
-  background-color: #2c7be5;
-  color: white;
-  padding: 10px 16px;
-  border: none;
-  border-radius: 6px;
   cursor: pointer;
-  font-weight: 600;
-  width: 100%;
-  margin-top: 10px;
+  transition: background 0.2s ease;
 }
 
 .submit-btn:hover {
-  background-color: #1a5ed6;
+  background-color: #125aa0;
 }
 
+/* Back Button */
 .back-btn {
-  margin-top: 1rem;
-  background-color: #ddd;
-  padding: 8px 16px;
+  background-color: #e53935;
+  color: white;
   border: none;
-  border-radius: 4px;
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 14px;
   cursor: pointer;
-  align-self: flex-start; /* Use flex-end for right alignment */
-  margin-left: 2rem; /* matches form padding */
+   top: -2rem; 
+  left: 0;
 }
 
 .back-btn:hover {
-  background-color: #ccc;
-}
-
-
-.back-btn:hover {
-  background-color:#1a5ed6;
+  background-color: #b71c1c;
 }

@@ -1,11 +1,5 @@
-.manage-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-.manage-projects-page{
-   max-width: 1100px;
+.manage-projects-page {
+  max-width: 1100px;
   margin: auto;
   padding: 20px;
   background: hsl(130, 13%, 91%);
@@ -13,16 +7,62 @@
   border-radius: 10px;
 }
 
+.manage-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.manage-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: bold;
+}
+
 .create-btn {
-  background-color: #4388e4;
+  background-color: #1976d2;
   color: white;
   border: none;
-  padding: 8px 14px;
-  border-radius: 5px;
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 14px;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
+  transition: background 0.2s ease;
+}
+
+.create-btn:hover {
+  background-color: #125aa0;
+}
+
+.search-bar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.search-input {
+  flex: 1;
+  padding: 8px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.search-btn {
+  padding: 8px 12px;
+  background-color: #1976d2;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.search-btn:hover {
+  background-color: #125aa0;
 }
 
 .projects-table {
@@ -32,13 +72,14 @@
 
 .projects-table th,
 .projects-table td {
-padding: 10px;
+  padding: 10px;
   border: 1px solid #ddd;
   text-align: left;
 }
 
-.projects-table th{
-   background-color: #2875e7;
+.projects-table th {
+  background-color: #2875e7;
+  color: white;
 }
 
 .status-tag {
@@ -50,48 +91,31 @@ padding: 10px;
 }
 
 .status-tag.in-progress {
- background-color: #ffe082;
+  background-color: #ffe082;
   color: #8d6e63;
 }
 
 .status-tag.completed {
- background-color: #a5d6a7;
+  background-color: #a5d6a7;
   color: #2e7d32;
 }
 
 .status-tag.pending {
-  background-color: #90caf9;
+  background-color: #ffab91;
+  color: #bf360c;
 }
 
-.status-select {
-  padding: 5px;
-}
-
-.button-group button {
-  padding: 6px 10px;
+.edit-btn {
+  background-color: #ffca28;
+  color: #333;
   border: none;
+  padding: 6px 10px;
   border-radius: 4px;
   font-size: 13px;
   cursor: pointer;
   transition: 0.2s;
 }
 
-.edit-btn {
-  background-color: #ffca28;
-  color: #333;
-}
-
-.delete-btn {
-  background-color: #e53935;
-  color: white;
-}
-
-.view-btn {
-  background-color: #42a5f5;
-  color: white;
-}
-
-.add-btn {
-  background-color: #66bb6a;
-  color: white;
+.edit-btn:hover {
+  background-color: #f4b400;
 }

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import "./TaskForm.css";
 
@@ -27,6 +28,8 @@ export default function CreateTask() {
   const [reportedTo, setReportedTo] = useState("");
 
   // Fetch dropdown data on mount
+const navigate = useNavigate();
+
   useEffect(() => {
     axios
       .get("http://localhost:8080/api/users", { withCredentials: true })
@@ -88,6 +91,7 @@ export default function CreateTask() {
     axios
       .post("http://localhost:8080/api/create-task", taskData, { withCredentials: true })
       .then(() => {
+        navigate(-1);
         alert("Task created successfully!");
         // Clear form inputs
         setAcceptanceCriteria("");

@@ -1,4 +1,4 @@
-.task-details-page {
+/* .task-details-page {
   max-width: 900px;
   margin: 30px auto;
   padding: 20px;
@@ -49,4 +49,84 @@
   border-radius: 5px;
   cursor: pointer;
   margin-bottom: 15px;
+} */
+.task-form {
+  background-color: #ffffff;
+  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: 0 0 25px rgba(0, 0, 0, 0.08);
+  font-family: 'Segoe UI', sans-serif;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 700px;
+  margin: 2rem auto;
+}
+
+.task-form h2 {
+  text-align: center;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 1rem;
+}
+
+.task-form label {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #334155;
+  margin-bottom: 0.25rem;
+}
+
+.task-form input,
+.task-form textarea,
+.task-form select {
+  padding: 0.8rem 1rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 1rem;
+  width: 100%;
+  transition: border-color 0.3s ease;
+}
+
+.task-form input:focus,
+.task-form textarea:focus,
+.task-form select:focus {
+  border-color: #2563eb;
+  outline: none;
+}
+
+.task-form textarea {
+  resize: none;
+}
+
+.task-form button {
+  background-color: #2563eb;
+  color: #ffffff;
+  padding: 0.8rem 1rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.task-form button:hover {
+  background-color: #1e40af;
+}
+
+.task-form .btn-container {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+.task-form .btn-cancel {
+  background-color: #6b7280;
+}
+
+.task-form .btn-cancel:hover {
+  background-color: #4b5563;
 }

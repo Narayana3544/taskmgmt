@@ -38,7 +38,7 @@ const Profile = () => {
         </div>
         <div className="profile-field">
           <label>Role</label>
-          <p>{user.role}</p>
+          <p>{user.role.description}</p>
         </div>
       </div>
     </div>

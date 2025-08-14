@@ -28,6 +28,7 @@ const LoginForm = ({ onLogin }) => {
       );
 
       if (res.status === 200) {
+        
         toast.success('✅ Login Successful!');
         onLogin(); // ✅ Update parent login state
         setTimeout(() => navigate('/home'), 1000);

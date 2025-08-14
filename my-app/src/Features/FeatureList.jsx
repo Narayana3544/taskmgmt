@@ -74,7 +74,7 @@ const handleSearch = () => {
           <thead>
             <tr>
               <th>Feature ID</th>
-              <th>Project ID</th>
+              <th>Project Name</th>
               <th>Feature Name</th>
               <th>Description</th>
               <th>Status</th>
@@ -85,9 +85,9 @@ const handleSearch = () => {
             {filteredFeatures.map((feature) => (
               <tr key={feature.id}>
                 <td>{feature.id}</td>
-                <td>{feature.project?.id}</td>
+                <td>{feature.project?.name}</td>
                 <td>{feature.name}</td>
-                <td>{feature.descriptor}</td>
+                <td>{feature.description}</td>
                 <td>
                   <span className={`status-tag ${feature.status?.toLowerCase().replace(/\s+/g, '-')}`}>
                     {feature.status}

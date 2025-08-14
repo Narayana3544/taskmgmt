@@ -1,8 +1,11 @@
 package com.telusko.demo.Model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.Data;
+import org.hibernate.annotations.CreationTimestamp;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
 @Entity
@@ -17,7 +20,7 @@ public class task {
    private String attachment_flag;
    @ManyToOne
    @JoinColumn(name = "Sprint_id")
-   private createsprint Sprint_id;
+   private createsprint sprint;
 
    private Integer storypoints;
    private String userstory;
@@ -25,7 +28,23 @@ public class task {
 
    @ManyToOne
    @JoinColumn(name = "feature_id")
-   private Feature feature_id;
+   private Feature feature;
+
+    public createsprint getSprint() {
+        return sprint;
+    }
+
+    public void setSprint(createsprint sprint) {
+        this.sprint = sprint;
+    }
+
+    public Feature getFeature() {
+        return feature;
+    }
+
+    public void setFeature(Feature feature) {
+        this.feature = feature;
+    }
 
     public User getUser() {
         return user;
@@ -39,8 +58,10 @@ public class task {
    @JoinColumn(name = "user_id")
    private User user;
 
-    @Column(updatable = false)
-   private Date created_date;
+    @CreationTimestamp
+    @Column(name = "created_date", updatable = false)
+    private LocalDateTime createdDate;
+
    private Date start_date;
    private Date end_date;
    @ManyToOne
@@ -56,8 +77,40 @@ public class task {
     }
 
     @ManyToOne
-   @JoinColumn(name = "task_status")
-   private Task_status task_status;
+   @JoinColumn(name = "task_status_id")
+   private Task_status taskStatus;
+
+    private boolean is_active = true;
+
+    @ManyToOne
+    @JoinColumn(name = "reported_to")
+    private User reportedTo;
+
+    public User getReported_to() {
+        return reportedTo;
+    }
+
+    public void setReported_to(User reported_to) {
+        this.reportedTo = reported_to;
+    }
+
+    public boolean isIs_active() {
+        return is_active;
+    }
+
+    public void setIs_active(boolean is_active) {
+        this.is_active = is_active;
+    }
+
+
+
+    public Task_status getTaskStatus() {
+        return taskStatus;
+    }
+
+    public void setTaskStatus(Task_status taskStatus) {
+        this.taskStatus = taskStatus;
+    }
 
     public int getId() {
         return id;
@@ -83,13 +136,6 @@ public class task {
         this.attachment_flag = attachment_flag;
     }
 
-    public createsprint getSprint_id() {
-        return Sprint_id;
-    }
-
-    public void setSprint_id(createsprint sprint_id) {
-        Sprint_id = sprint_id;
-    }
 
     public Integer getStorypoints() {
         return storypoints;
@@ -115,20 +161,13 @@ public class task {
         this.description = description;
     }
 
-    public Feature getFeature_id() {
-        return feature_id;
+
+    public LocalDateTime getCreatedDate() {
+        return createdDate;
     }
 
-    public void setFeature_id(Feature feature_id) {
-        this.feature_id = feature_id;
-    }
-
-    public Date getCreated_date() {
-        return created_date;
-    }
-
-    public void setCreated_date(Date created_date) {
-        this.created_date = created_date;
+    public void setCreatedDate(LocalDateTime createdDate) {
+        this.createdDate = createdDate;
     }
 
     public Date getStart_date() {
@@ -147,11 +186,4 @@ public class task {
         this.end_date = end_date;
     }
 
-    public Task_status getTask_status() {
-        return task_status;
-    }
-
-    public void setTask_status(Task_status task_status) {
-        this.task_status = task_status;
-    }
 }

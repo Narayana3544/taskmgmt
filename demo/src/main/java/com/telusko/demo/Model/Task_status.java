@@ -7,7 +7,7 @@ import lombok.Data;
 
 @Entity
 @Data
-@Table(name = "task_status")
+@Table(name = "status")
 public class Task_status {
     @Id
     private int id;

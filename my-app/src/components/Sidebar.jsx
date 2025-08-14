@@ -49,7 +49,7 @@ const Sidebar = ({ onToggle }) => {
               <FaUserCircle className="profile-icon" />
               <div>
                 <p className="profile-name">{user.first_name} {user.last_name}</p>
-                <p className="profile-role">{user.role} </p>
+                <p className="profile-role">{user.role.description} </p>
               </div>
             </div>
 
@@ -62,7 +62,7 @@ const Sidebar = ({ onToggle }) => {
                 <div className="submenu">
                   <div className="nav-subitem" onClick={() => navigate('/dashboard')}><FaThList /> Board</div>
                   <div className="nav-subitem"onClick={() => navigate('/my-stories')}><FaChartBar /> Activity</div>
-                  <div className="nav-subitem"><FaChartBar /> Statistics</div>
+                  {/* <div className="nav-subitem"><FaChartBar /> Statistics</div> */}
                 </div>
               )}
 
@@ -74,17 +74,17 @@ const Sidebar = ({ onToggle }) => {
                 <div className="nav-item" onClick={() => navigate('/view-features')}>
               <FaFileInvoiceDollar /><span>Features</span>
               </div>
-               <div className="nav-item" onClick={() => navigate('/view-stories')}>
+               {/* <div className="nav-item" onClick={() => navigate('/view-stories')}>
               <FaFileInvoiceDollar /><span>User Stories</span>
-              </div>
+              </div> */}
               <div className="nav-item" onClick={() => navigate('/manage-sprints')}>
                 <FaChartBar /><span>Sprints</span>
               </div>
-              <div className="nav-item" onClick={() => navigate('/create-task')}>
+              <div className="nav-item" onClick={() => navigate('/task')}>
                 <FaChartBar /><span>Task</span>
               </div>
 
-              <div className="nav-item"><FaBell /><span>Notifications</span></div>
+              {/* <div className="nav-item"><FaBell /><span>Notifications</span></div> */}
               <div className="nav-item" onClick={() => navigate('/profile')}><FaUser /><span>Profile</span></div>
             </div>
 

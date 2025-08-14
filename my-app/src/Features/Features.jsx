@@ -9,28 +9,29 @@ const Features = () => {
   const [selectedProjectName, setSelectedProjectName] = useState('');
   const [feature, setFeature] = useState({
     name: '',
-    descriptor: '',
-    status: 'In Progress'
+    description: '',
+    status: 'In Progress',
   });
 
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
 
   useEffect(() => {
-    axios.get('http://localhost:8080/api/projects',{ withCredentials: true })
-      .then(res => setProjects(res.data))
-      .catch(err => console.error('Error fetching projects:', err));
+    axios
+      .get('http://localhost:8080/api/projects', { withCredentials: true })
+      .then((res) => setProjects(res.data))
+      .catch((err) => console.error('Error fetching projects:', err));
   }, []);
 
   const handleProjectSelect = (e) => {
     const id = e.target.value;
     setSelectedProjectId(id);
-    const project = projects.find(p => p.id.toString() === id);
+    const project = projects.find((p) => p.id.toString() === id);
     setSelectedProjectName(project?.name || '');
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFeature(prev => ({ ...prev, [name]: value }));
+    setFeature((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = (e) => {
@@ -38,36 +39,42 @@ const Features = () => {
     if (!selectedProjectId) {
       alert('Please select a project first.');
       return;
-    };
+    }
 
-    axios.post(`http://localhost:8080/api/projects/${selectedProjectId}/addfeature`, feature,{ withCredentials: true })
+    console.log('Submitting feature:', feature); // Debug log
+
+    axios
+      .post(`http://localhost:8080/api/projects/${selectedProjectId}/addfeature`, feature, {
+        withCredentials: true,
+      })
       .then(() => {
         alert('Feature added successfully!');
-        navigate(`/features/${selectedProjectId}`); // ✅ Redirect to feature list for this project
+        navigate(`/features/${selectedProjectId}`);
       })
-      .catch(err => {
+      .catch((err) => {
         console.error('Failed to save feature:', err);
         alert('Error saving feature.');
       });
   };
-    const handleBack = () => {
-    navigate(-1); 
+
+  const handleBack = () => {
+    navigate(-1);
   };
 
   return (
     <div className="features-page">
       <h2 className="features-header">Add Feature</h2>
 
-            <button type="button" className="back-btn" onClick={handleBack}>
-              Back
-            </button>
+      {/* <button type="button" className="back-btn" onClick={handleBack}>
+        Back
+      </button> */}
 
       <form onSubmit={handleSubmit} className="feature-form">
         <div className="form-group">
           <label>Select Project</label>
           <select value={selectedProjectId} onChange={handleProjectSelect}>
             <option value="">-- Select a project --</option>
-            {projects.map(project => (
+            {projects.map((project) => (
               <option key={project.id} value={project.id}>
                 {project.name}
               </option>
@@ -83,12 +90,25 @@ const Features = () => {
 
             <div className="form-group">
               <label>Feature name</label>
-              <input name="name" value={feature.name} onChange={handleChange} required />
+              <input
+                name="name"
+                value={feature.name}
+                onChange={handleChange}
+                required
+                placeholder="Enter feature name"
+              />
             </div>
 
             <div className="form-group">
               <label>Description</label>
-              <textarea name="descriptor" value={feature.descriptor} onChange={handleChange} required />
+              <textarea
+                name="description"
+                value={feature.description}
+                onChange={handleChange}
+                rows={4}
+                required
+                placeholder="Enter feature description"
+              />
             </div>
 
             <div className="form-group">
@@ -99,15 +119,15 @@ const Features = () => {
                 <option value="On Hold">On Hold</option>
               </select>
             </div>
-            <div className="form-actions">
-            <button type="button" className="back-btn" onClick={handleBack}>
-              Back
-            </button>
-            <button type="submit" className="submit-btn">
-              Add Feature
-            </button>
-          </div>
 
+            <div className="form-actions">
+              <button type="button" className="back-btn" onClick={handleBack}>
+                Back
+              </button>
+              <button type="submit" className="submit-btn">
+                Add Feature
+              </button>
+            </div>
           </>
         )}
       </form>

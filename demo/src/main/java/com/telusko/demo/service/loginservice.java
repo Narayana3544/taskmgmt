@@ -58,4 +58,8 @@ public class loginservice {
     public User getUserById(Long id) {
         return repo.findById(id).orElse(null);
     }
+
+    public List<User> getManagers() {
+        return repo.findByRoleDescription("Project Manager");
+    }
 }

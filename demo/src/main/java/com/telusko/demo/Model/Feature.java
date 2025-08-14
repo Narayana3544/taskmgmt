@@ -11,7 +11,7 @@ public class Feature  {
     @Id
     @GeneratedValue
     private int id;
-    private String descriptor;
+    private String description;
     @ManyToOne
     @JoinColumn(name = "project_id", nullable = false)
     private Project project;
@@ -35,12 +35,12 @@ public class Feature  {
         this.id = id;
     }
 
-    public String getDescriptor() {
-        return descriptor;
+    public String getDescription() {
+        return description;
     }
 
-    public void setDescriptor(String descriptor) {
-        this.descriptor = descriptor;
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public Project getProject() {

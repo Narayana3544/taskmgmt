@@ -3,6 +3,7 @@ package com.telusko.demo.controller;
 import com.telusko.demo.Model.Project;
 import com.telusko.demo.service.projectservice;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -35,7 +36,10 @@ public class projectcontroller {
     }
 
     @GetMapping("/projects/{id}")
-    public Optional<Project> getProjectByid(long id){
-        return service.getProjectByid(id);
+    public ResponseEntity<Project> getProjectByid(@PathVariable long id) {
+        Optional<Project> project = service.getProjectByid(id);
+        return project
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 }

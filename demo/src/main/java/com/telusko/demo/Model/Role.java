@@ -9,6 +9,10 @@ import lombok.Data;
 @Table(name = "ROle")
 @Data
 public class Role {
+    @Id
+    private int id;
+    private String description;
+
     public int getId() {
         return id;
     }
@@ -18,14 +22,10 @@ public class Role {
     }
 
     public String getDescription() {
-        return Description;
+        return description;
     }
 
     public void setDescription(String description) {
-        Description = description;
+        this.description = description;
     }
-
-    @Id
-    private int id;
-    private String Description;
 }

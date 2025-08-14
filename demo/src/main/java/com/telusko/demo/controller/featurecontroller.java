@@ -78,7 +78,7 @@ public List<Feature> getFeaturesByProjectId(@PathVariable int projectId) {
                 .orElseThrow(() -> new RuntimeException("Feature not found with id " + id));
 
         feature.setName(updatedFeature.getName());
-        feature.setDescriptor(updatedFeature.getDescriptor());
+        feature.setDescription(updatedFeature.getDescription());
         feature.setStatus(updatedFeature.getStatus());
 
         Feature savedFeature = repo.save(feature);

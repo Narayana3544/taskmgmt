@@ -42,11 +42,15 @@ export default function ManageProjects() {
       .catch(err => console.error('Failed to update status:', err));
   };
 
-  const filteredProjects = Array.isArray(projects)
-  ? projects.filter(project =>
-      (project.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-       project.id?.toString() === searchTerm.trim())
-    )
+const filteredProjects = Array.isArray(projects)
+  ? projects.filter(project => {
+      const search = searchTerm.toLowerCase();
+      return (
+        project.name?.toLowerCase().includes(search) ||
+        project.status?.decription?.toLowerCase().includes(search) || 
+        project.id?.toString() === searchTerm.trim()
+      );
+    })
   : [];
 
 
@@ -94,10 +98,14 @@ export default function ManageProjects() {
                     <td>{project.name}</td>
                     <td>{project.description}</td>
                     <td>
-                  <span className={`status-tag ${project.status?.toLowerCase().replace(/\s+/g, '-')}`}>
-                    {project.status}
-                  </span>
-                </td>
+                      <span
+                        className={`status-tag ${
+                          project.status?.decription?.toLowerCase().replace(/\s+/g, '-') || ''
+                        }`}
+                      >
+                        {project.status?.decription || "No status"}
+                      </span>
+                    </td>
                     {/* <td>
                       <select
                         className="status-select"

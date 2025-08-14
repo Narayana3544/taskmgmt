@@ -24,6 +24,8 @@ import AssignedStories from './dashboard/AssignedStories';
 import EditUserStory from './userstories/EdituserStories';
 import EditFeature from './Features/EditFeature';
 import TaskForm from './Task/CreateTask';
+import TaskList from './Task/TaskList';
+import TaskDetails from './Task/TaskDetails';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -66,6 +68,8 @@ function App() {
                 <Route path="/edit-userstory/:id" element={<EditUserStory />} />
                  <Route path="/edit-feature/:id" element={<EditFeature />} />
                  <Route path="/create-task" element={<TaskForm />} /> 
+                 <Route path="/task" element={<TaskList />} />
+                 <Route path="/task/:id" element={<TaskDetails />} />
           </Routes>
           </div>
         </>

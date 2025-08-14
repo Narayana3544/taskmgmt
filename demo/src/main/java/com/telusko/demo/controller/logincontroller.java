@@ -91,6 +91,11 @@ public class logincontroller {
             return ResponseEntity.notFound().build();
         }
     }
+
+    @GetMapping("/managers")
+    public List<User> getManagers() {
+        return service.getManagers();
+    }
     }
 
 

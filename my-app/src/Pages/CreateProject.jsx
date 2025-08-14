@@ -1,86 +1,121 @@
-import React, { useState } from 'react';
-import axios from 'axios';
-// import Sidebar from '../components/Sidebar';
-import Navbar from '../components/Navbar';
-import './CreateProject.css'; 
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
-export default function CreateProject() {
-  const [project, setProject] = useState({ name: '', description: '' ,status:''});
-  const [successMessage, setSuccessMessage] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
+const CreateProject = () => {
   const navigate = useNavigate();
-   const handleChange = (e) => {
-    setProject({ ...project, [e.target.name]: e.target.value });
+
+  const [project, setProject] = useState({
+    name: "",
+    description: "",
+    status: "", // will store status ID
+  });
+
+  const [statuses, setStatuses] = useState([]);
+
+  // Fetch statuses for dropdown
+  useEffect(() => {
+    axios
+      .get("http://localhost:8080/api/getstatus",{withCredentials:true}) // Change to your backend URL
+      .then((res) => setStatuses(res.data))
+      .catch((err) => console.error("Error fetching statuses:", err));
+  }, []);
+
+  // Handle form field changes
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setProject((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
-  const handleSubmit = async (e) => {
+  // Handle submit
+  const handleSubmit = (e) => {
     e.preventDefault();
-    const { name, description,status } = project;
-    
 
-    if (description.length < 0 || description.length > 300) {
-      setErrorMessage('Description must be between 250 and 300 characters.');
-      return;
-    }
+    // Prepare data for backend
+    const payload = {
+      name: project.name,
+      description: project.description,
+      status: { id: project.status }, // send status ID object
+    };
 
-    try {
-      await axios.post('http://localhost:8080/api/addproject', project, { withCredentials: true });
-      setSuccessMessage('✅ Project created successfully!');
-      setErrorMessage('');
-      setProject({ name: '', description: '',status:'' });
-      navigate('/manage-projects');
-    } catch (err) {
-      console.error('Error creating project:', err);
-      setErrorMessage('❌ Failed to create project.');
-      setSuccessMessage();
-    }
+    axios
+      .post("http://localhost:8080/api/addproject", payload,{withCredentials:true})
+      .then(() => {
+        alert("Project created successfully!");
+        navigate(-1); // go back after success
+      })
+      .catch((err) => {
+        console.error("Error creating project:", err);
+        alert("Error creating project");
+      });
   };
 
   return (
-    <div className="create-project-page">
-      {/* <Sidebar /> */}
-      <div className="create-main">
-        <Navbar />
-        <div className="create-container">
-          <h1 className="create-title">Create New Project</h1>
+    <div className="max-w-lg mx-auto bg-white shadow-lg p-6 rounded-xl mt-10">
+      <h2 className="text-2xl font-bold mb-4 text-center">Create Project</h2>
 
-          {successMessage && <div className="success-msg">{successMessage}</div>}
-          {errorMessage && <div className="error-msg">{errorMessage}</div>}
-
-          <form className="create-form" onSubmit={handleSubmit}>
-            <label>Project Name</label>
-            <input
-              type="text"
-              value={project.name}
-              placeholder='Project Name'
-              onChange={(e) => setProject({ ...project, name: e.target.value })}
-              required
-            />
-             <label>Status
-            <select name="status" value={project.status} onChange={handleChange}>
-              <option>Select an option</option>
-              <option>In Progress</option>
-              <option>Completed</option>
-              <option>Pending</option>
-               onChange={(e) => setProject({ ...project, status: e.target.value })}
-            </select>
-            </label>
-
-            <label>Description (250–300 characters)</label>
-            <textarea
-              value={project.description}
-              placeholder='Description'
-              onChange={(e) => setProject({ ...project, description: e.target.value })}
-              required
-              maxLength={300}
-            />
-            <div className="char-count">{project.description.length} / 300</div>
-
-            <button type="submit" className="submit-btn">Create Project</button>
-          </form>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Project Name */}
+        <div>
+          <label className="block font-semibold mb-1">Project Name</label>
+          <input
+            type="text"
+            name="name"
+            value={project.name}
+            onChange={handleChange}
+            className="w-full p-2 border rounded"
+            placeholder="Enter project name"
+            required
+          />
         </div>
-      </div>
+
+        {/* Description */}
+        <div>
+          <label className="block font-semibold mb-1">Description</label>
+          <textarea
+            name="description"
+            value={project.description}
+            onChange={handleChange}
+            className="w-full p-2 border rounded"
+            placeholder="Enter project description"
+            required
+          />
+        </div>
+
+        {/* Status Dropdown */}
+        <div>
+          <label className="block font-semibold mb-1">Status</label>
+          <select
+            name="status"
+            value={project.status}
+            onChange={handleChange}
+            className="w-full p-2 border rounded"
+            required
+          >
+            <option value="">Select a status</option>
+            {statuses.map((status) => (
+              <option key={status.id} value={status.id}>
+                {status.decription} {/* Show description */}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Buttons */}
+          <div className="btn-container">
+            <button type="submit" className="submit-btn">
+              Create
+            </button>
+             <button type="button" className="back-btn" onClick={() => navigate(-1)}>
+              Back
+            </button>
+          </div>
+      </form>
     </div>
   );
-}
+};
+
+export default CreateProject;

@@ -1,8 +1,6 @@
 package com.telusko.demo.service;
 
 import com.telusko.demo.Model.Feature;
-import com.telusko.demo.Model.Project;
-import com.telusko.demo.repo.ProjectRepository;
 import com.telusko.demo.repo.featurerepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -32,7 +30,7 @@ public class featureservice {
         if (optionalFeature.isPresent()) {
             Feature existingFeature = optionalFeature.get();
             existingFeature.setName(updatedFeature.getName());
-            existingFeature.setDescriptor(updatedFeature.getDescriptor());
+            existingFeature.setDescription(updatedFeature.getDescription());
             existingFeature.setStatus(updatedFeature.getStatus());
             existingFeature.setProject(updatedFeature.getProject());
 

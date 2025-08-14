@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 @Entity
-@Table(name ="register")
+@Table(name ="users")
 @Data
 public class User {
     @Id
@@ -15,10 +15,22 @@ public class User {
     private String preffered_name;
     private String email;
     private String password;
-    private String role;
+    @ManyToOne
+    @JoinColumn(name = "role_id")
+    private Role role;
     @ManyToOne
     @JoinColumn(name = "sprint_id")
     private Sprint sprint;
+
+    private boolean is_active = true;
+
+    public boolean isIs_active() {
+        return is_active;
+    }
+
+    public void setIs_active(boolean is_active) {
+        this.is_active = is_active;
+    }
 
     public Sprint getSprint() {
         return sprint;
@@ -28,11 +40,11 @@ public class User {
         this.sprint = sprint;
     }
 
-    public String getRole() {
+    public Role getRole() {
         return role;
     }
 
-    public void setRole(String role) {
+    public void setRole(Role role) {
         this.role = role;
     }
 

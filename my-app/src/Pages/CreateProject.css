@@ -60,22 +60,6 @@
   text-align: right;
 }
 
-.submit-btn {
-  background-color: #2563eb;
-  color: #fff;
-  padding: 0.9rem;
-  border: none;
-  border-radius: 10px;
-  font-weight: 600;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background 0.3s ease;
-}
-
-.submit-btn:hover {
-  background-color: #1e40af;
-}
-
 .success-msg {
   background-color: #dcfce7;
   color: #166534;
@@ -91,22 +75,38 @@
   border-radius: 8px;
   margin-bottom: 1rem;
 }
+.btn-container {
+  display: flex;
+  gap: 10px;
+}
 
-/* Back Button Styling */
-.back-btn {
-  position: absolute;
-  top: 1rem;
-  left: 1rem;
-  background-color: #e5e7eb;
-  color: #1e293b;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  font-weight: 500;
+/* Shared button base styles */
+.back-btn,
+.submit-btn {
+  padding: 8px 16px;
+  font-weight: 600;
+  font-size: 1rem;
+  border-radius: 6px;
   border: none;
   cursor: pointer;
-  transition: background 0.3s ease;
+  transition: background-color 0.3s ease;
+  width: 120px;       /* fixed width */
+  text-align: center;
+  color: white;
+  user-select: none;
+}
+.back-btn {
+  background-color: #6b7280;
 }
 
 .back-btn:hover {
-  background-color: #cbd5e1;
+  background-color: #4b5563;
+}
+
+.submit-btn {
+  background-color: #2563eb;
+}
+
+.submit-btn:hover {
+  background-color: #1e40af;
 }

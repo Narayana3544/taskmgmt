@@ -9,7 +9,7 @@ const EditFeature = () => {
 
   const [featureData, setFeatureData] = useState({
     name: "",
-    descriptor: "",
+    descripton: "",
     status: "",
     project: { id: "" }
   });
@@ -21,7 +21,7 @@ const EditFeature = () => {
         // Ensure project exists in state
         setFeatureData({
           name: res.data.name || "",
-          descriptor: res.data.descriptor || "",
+          descripton: res.data.descripton || "",
           status: res.data.status || "",
           project: res.data.project ? { id: res.data.project.id } : { id: "" }
         });
@@ -41,7 +41,7 @@ const EditFeature = () => {
 
     const payload = {
       name: featureData.name,
-      descriptor: featureData.descriptor,
+      descripton: featureData.descripton,
       status: featureData.status,
       project: featureData.project.id ? { id: featureData.project.id } : null
     };
@@ -90,7 +90,7 @@ const EditFeature = () => {
         <label>Description</label>
         <textarea
           name="descriptor"
-          value={featureData.descriptor}
+          value={featureData.descripton}
           onChange={handleChange}
           required
         />

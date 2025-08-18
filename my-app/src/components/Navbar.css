@@ -101,3 +101,7 @@
   left: 60px;
   width: calc(100% - 60px);
 }
+.profile {
+  font-size: 1.5rem;
+  color: #4caf50;
+}

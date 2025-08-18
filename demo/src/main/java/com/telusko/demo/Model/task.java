@@ -30,6 +30,46 @@ public class task {
    @JoinColumn(name = "feature_id")
    private Feature feature;
 
+    @Lob
+    @Column(name = "attachment")
+    private byte[] attachmentData;
+
+    private String attachmentName; // To store original filename
+
+    public String getAttachmentType() {
+        return attachmentType;
+    }
+
+    public void setAttachmentType(String attachmentType) {
+        this.attachmentType = attachmentType;
+    }
+
+    public String getAttachmentName() {
+        return attachmentName;
+    }
+
+    public void setAttachmentName(String attachmentName) {
+        this.attachmentName = attachmentName;
+    }
+
+    private String attachmentType; // To store file MIME type
+
+    public byte[] getAttachment() {
+        return attachmentData;
+    }
+
+    public void setAttachment(byte[] attachment) {
+        this.attachmentData = attachment;
+    }
+
+    public User getReportedTo() {
+        return reportedTo;
+    }
+
+    public void setReportedTo(User reportedTo) {
+        this.reportedTo = reportedTo;
+    }
+
     public createsprint getSprint() {
         return sprint;
     }

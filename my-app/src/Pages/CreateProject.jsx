@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./CreateProject.css";
+// import {AssignUsers} from "./AssignUsersToProject";
 import axios from "axios";
 
 const CreateProject = () => {
@@ -101,6 +102,8 @@ const CreateProject = () => {
               ))}
             </select>
           </div>
+
+          {/* <AssignUsers /> */}
 
           {/* Buttons */}
           <div className="btn-container">

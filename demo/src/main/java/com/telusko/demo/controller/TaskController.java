@@ -5,8 +5,12 @@ import com.telusko.demo.Model.task;
 import com.telusko.demo.repo.TaskRepository;
 import com.telusko.demo.service.Taskservice;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
@@ -38,12 +42,96 @@ public class TaskController {
         return repo.findAll();
     }
 
-    @PutMapping("/task/{id}")
-    public task updatetask(@PathVariable int id,@RequestBody task Task){
-        return service.updateTask(id,Task);
-    }
+//    @PutMapping("/task/{id}")
+//    public task updatetask(@PathVariable int id,@RequestBody task Task){
+//        return service.updateTask(id,Task);
+//    }
     @GetMapping("/view-task/{id}")
     public Optional<task> viewTaskByID(@PathVariable int id){
         return service.viewTaskById(id);
+    }
+
+
+    @PostMapping("/create-task-attach")
+    public ResponseEntity<?> createTask(
+            @RequestPart("task") task Task,
+            @RequestPart(value = "attachment", required = false) MultipartFile attachment) {
+        try {
+            task savedTask = service.saveTask(Task, attachment);
+            return ResponseEntity.ok(savedTask);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+    @GetMapping("/{id}/attachment")
+    public ResponseEntity<byte[]> getAttachment(@PathVariable int id) {
+        task Task = service.getTaskById(id);
+        if (Task != null && Task.getAttachment() != null) {
+            return ResponseEntity.ok()
+                    .header("Content-Disposition", "attachment; filename=\"" + Task.getAttachmentName() + "\"")
+                    .header("Content-Type", Task.getAttachmentType())
+                    .body(Task.getAttachment());
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+    @PostMapping("/create")
+    public ResponseEntity<?> createTask(
+            @RequestParam("userstory") String userstory,
+            @RequestParam("description") String description,
+            @RequestParam("acceptance_criteria") String acceptanceCriteria,
+            @RequestParam("storypoints") Integer storypoints,
+            @RequestParam("attachment_flag") String attachmentFlag,
+            @RequestParam(value = "attachment", required = false) MultipartFile attachment,
+            @RequestParam("feature_id") Long featureId,
+            @RequestParam("sprint_id") Long sprintId
+    ) {
+        try {
+            task savedTask = service.createTask(
+                    userstory,
+                    description,
+                    acceptanceCriteria,
+                    storypoints,
+                    attachmentFlag,
+                    attachment,
+                    featureId,
+                    sprintId
+            );
+            return ResponseEntity.ok(savedTask);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/tasks/{id}/download")
+    public ResponseEntity<byte[]> downloadAttachment(@PathVariable int id) {
+        Optional<task> taskOptional = repo.findById(id);
+
+        if (taskOptional.isEmpty() || taskOptional.get().getAttachment() == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        task Task = taskOptional.get();
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + Task.getAttachmentName() + "\"")
+                .contentType(MediaType.parseMediaType(Task.getAttachmentType()))
+                .body(Task.getAttachment());
+    }
+    @PutMapping("/task/{id}")
+    public ResponseEntity<task> updateTask(
+            @PathVariable int id,
+            @RequestPart("task") task Task,   // JSON part
+            @RequestPart(value = "attachment", required = false) MultipartFile attachment // File part
+    ) {
+        try {
+            task updatedTask = service.updateTask(id, Task, attachment);
+            return ResponseEntity.ok(updatedTask);
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 }

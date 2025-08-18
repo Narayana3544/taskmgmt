@@ -26,6 +26,8 @@ import EditFeature from './Features/EditFeature';
 import TaskForm from './Task/CreateTask';
 import TaskList from './Task/TaskList';
 import TaskDetails from './Task/TaskDetails';
+import EditTask from './Task/EditTask';
+import ViewProject from './Pages/ViewProject';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -70,6 +72,8 @@ function App() {
                  <Route path="/create-task" element={<TaskForm />} /> 
                  <Route path="/task" element={<TaskList />} />
                  <Route path="/task/:id" element={<TaskDetails />} />
+                  <Route path="/edit-task/:id" element={<EditTask />} />
+                   <Route path="/view-project/:id" element={<ViewProject />} />
           </Routes>
           </div>
         </>

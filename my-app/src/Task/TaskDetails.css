@@ -18,6 +18,7 @@
   border-radius: 8px;
   box-shadow: 0 1px 4px rgba(0,0,0,0.08);
   padding: 20px;
+  color: #1e293b !important;
 }
 
 .task-header {
@@ -47,7 +48,7 @@
 }
 
 .status-badge.in-progress { background: #3b82f6; }
-.status-badge.completed { background: #22c55e; }
+.status-badge.Done { background: #22c55e; }
 .status-badge.To-Do { background: #facc15; }
 
 .story-points {

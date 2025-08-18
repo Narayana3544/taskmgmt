@@ -124,6 +124,12 @@ const filteredProjects = Array.isArray(projects)
                       > 
                       <FaEdit />
                       </button>
+                      <button 
+                    className="view-btn" 
+                    onClick={() => navigate(`/view-project/${project.id}`)}
+                  >
+                    View
+                  </button>
                     </td>
                   </tr>
                 ))

@@ -5,6 +5,7 @@
   max-width: 600px;
   margin: 2rem auto;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  color: #000;
 }
 
 .edit-form input,
@@ -19,7 +20,7 @@
 
 .edit-form .update-btn {
   background-color: #3b82f6;
-  color: white;
+  color: black;
   padding: 10px 16px;
   border: none;
   border-radius: 6px;
@@ -30,4 +31,40 @@
   font-size: 0.8rem;
   color: #555;
   text-align: right;
+}
+.edit-input, .edit-textarea, .edit-select, .edit-multi-select {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 1rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  color:black;
+}
+
+.edit-multi-select {
+  height: 120px; /* Make it taller for multiple users */
+}
+
+.hint {
+  font-size: 0.85rem;
+  color: #666;
+  margin-bottom: 1rem;
+  display: block;
+}
+.assign-users-select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background-color: #fff; /* dropdown background */
+  color: #000; /* text color */
+  font-size: 14px;
+  margin-bottom: 15px;
+}
+
+/* Options inside dropdown */
+.assign-users-select option {
+  background-color: #fff; /* background of options */
+  color: #000; /* text color */
+  padding: 5px;
 }

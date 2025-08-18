@@ -1,0 +1,208 @@
+/* Container */
+.view-project-page {
+  max-width: 900px;
+  margin: auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  background-color: white;
+  color: black;
+}
+
+/* Headings */
+.view-project-page h2 {
+  font-size: 1.75rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+
+.view-project-page h3, 
+.view-project-page h4 {
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+
+/* Project info */
+.project-info p {
+  margin: 8px 0;
+}
+
+/* Assigned Users Table */
+.assigned-users-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+.assigned-users-table th,
+.assigned-users-table td {
+  border: 1px solid #ccc;
+  padding: 8px;
+  text-align: left;
+}
+
+.assigned-users-table th {
+  background-color: #f4f4f4;
+}
+
+.assigned-users-table tr:nth-child(even) {
+  background-color: #f9fafb;
+}
+
+/* Buttons container */
+.btn-container {
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+}
+
+/* Buttons */
+.assign-btn,
+.back-btn,
+.btn-submit {
+  padding: 8px 15px;
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+  font-size: 0.95rem;
+}
+
+/* Specific button styles */
+.assign-btn {
+  background-color: #4caf50;
+  color: white;
+}
+
+.assign-btn:hover {
+  background-color: #059669;
+}
+
+.back-btn {
+  background-color:  #4caf50;
+  color: white;
+}
+
+.back-btn:hover {
+  background-color:#059669;
+}
+
+.btn-submit {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.btn-submit:hover {
+  background-color: #2563eb;
+}
+
+/* Assign Users Form */
+.assign-form {
+  border: 1px solid #d1d5db; /* gray-300 */
+  padding: 1rem;
+  border-radius: 0.25rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-top: 20px;
+}
+
+/* Users checkbox grid */
+.user-checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+  max-height: 16rem;
+  overflow-y: auto;
+  margin-top: 0.5rem;
+}
+
+/* Individual checkbox */
+.user-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.user-checkbox:hover {
+  background-color: #f3f4f6;
+}
+
+.user-checkbox.selected {
+  background-color: #dbeafe; /* blue-100 */
+  border-color: #60a5fa; /* blue-400 */
+}
+
+/* User tags (alternative display) */
+.assigned-users {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 5px;
+}
+
+.user-tag {
+  background-color: #3b82f6;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+.assign-users-form {
+  border: 1px solid #d1d5db; /* gray border */
+  padding: 1rem;
+  border-radius: 0.25rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-top: 1rem;
+}
+
+.assign-users-form h4 {
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.users-checkboxes {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* 2 columns, change if needed */
+  gap: 0.5rem;
+  max-height: 16rem;
+  overflow-y: auto;
+  margin-bottom: 1rem;
+}
+
+.users-checkboxes label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.users-checkboxes label:hover {
+  background-color: #f3f4f6; /* light gray hover */
+}
+
+.users-checkboxes input[type="checkbox"] {
+  cursor: pointer;
+}
+
+.users-checkboxes label.selected {
+  background-color: #dbeafe; /* blue-100 */
+  border-color: #60a5fa; /* blue-400 */
+}
+
+.submit-btn {
+  padding: 8px 15px;
+  background-color: #3b82f6; /* blue */
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.submit-btn:hover {
+  background-color: #2563eb; /* darker blue */
+}

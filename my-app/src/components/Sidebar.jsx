@@ -86,22 +86,9 @@ const Sidebar = ({ onToggle }) => {
 
               {/* <div className="nav-item"><FaBell /><span>Notifications</span></div> */}
               <div className="nav-item" onClick={() => navigate('/profile')}><FaUser /><span>Profile</span></div>
+             
             </div>
 
-            <div className="messages-section">
-              <p className="section-title">MESSAGES</p>
-              <div className="message-item"><FaEnvelope /><span>Erik Gunsel</span></div>
-              <div className="message-item"><FaEnvelope /><span>Emily Smith</span></div>
-              <div className="message-item"><FaEnvelope /><span>Arthur Adelk</span></div>
-            </div>
-
-            <div className="task-button">
-              <button><FaPlusCircle /> Add New Task</button>
-            </div>
-            <div className="bottom-section">
-              <div className="nav-item"><FaCog /><span>Settings</span></div>
-              <div className="nav-item" onClick={() => navigate('/')}><FaSignOutAlt /><span>Logout</span></div>
-            </div>
           </>
         )}
       </div>

@@ -75,7 +75,6 @@ export default function TaskList() {
                {/* <td>
                 {task.reportedTo?.firstName || task.reportedTo?.preffered_name || task.reportedTo?.username || "-"}
               </td> */}
-
               <td>{task.taskType?.description || "-"}</td>
               <td>{task.taskStatus?.decription || task.taskStatus?.description || "-"}</td>
               <td>{task.start_date ? new Date(task.start_date).toLocaleDateString() : "-"}</td>

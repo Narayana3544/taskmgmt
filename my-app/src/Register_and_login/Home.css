@@ -1,5 +1,5 @@
 .home-container {
-  margin-left: 20%;
+  margin-left: 15%;
   margin-top: 60px;
   padding: 2rem;
   transition: margin-left 0.3s ease;
@@ -11,22 +11,18 @@
 .home-container.full {
   margin-left: 60px; /* 🔧 Align with collapsed sidebar */
 }
-
-
 .board-title {
   font-size: 1.8rem;
   font-weight: bold;
   color: #4caf50;
   margin-bottom: 1rem;
 }
-
 .columns {
   display: flex;
   gap: 1.5rem;
   justify-content: space-between;
   flex-wrap: wrap;
 }
-
 .column {
   background-color: #2c2c3e;
   border-radius: 8px;

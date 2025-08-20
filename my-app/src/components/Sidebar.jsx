@@ -54,18 +54,17 @@ const Sidebar = ({ onToggle }) => {
             </div>
 
             <div className="nav-section">
-              <div className="nav-item" onClick={() => setOpenDashboard(!openDashboard)}>
+              {/* <div className="nav-item" onClick={() => setOpenDashboard(!openDashboard)}>
                 <FaTachometerAlt />
                 <span>Dashboard</span>
               </div>
               {openDashboard && (
                 <div className="submenu">
-                  <div className="nav-subitem" onClick={() => navigate('/dashboard')}><FaThList /> Board</div>
-                  <div className="nav-subitem"onClick={() => navigate('/my-stories')}><FaChartBar /> Activity</div>
-                  {/* <div className="nav-subitem"><FaChartBar /> Statistics</div> */}
+                  <div className="nav-item" onClick={() => navigate('/dashboard')}><FaThList /> Board</div>
                 </div>
-              )}
-
+              )} */}
+              <div className="nav-item" onClick={() => navigate('/dashboard')}><FaThList /> Dashboard</div>
+                <div className="nav-item"onClick={() => navigate('/task')}><FaChartBar /> Current Sprint</div>
               {/* ✅ Updated navigation to pages */}
 
             <div className="nav-item" onClick={() => navigate('/manage-projects')}>
@@ -83,17 +82,13 @@ const Sidebar = ({ onToggle }) => {
               <div className="nav-item" onClick={() => navigate('/task')}>
                 <FaChartBar /><span>Task</span>
               </div>
-
               {/* <div className="nav-item"><FaBell /><span>Notifications</span></div> */}
-              <div className="nav-item" onClick={() => navigate('/profile')}><FaUser /><span>Profile</span></div>
-             
+              {/* <div className="nav-item" onClick={() => navigate('/profile')}><FaUser /><span>Profile</span></div> */}    
             </div>
-
           </>
         )}
       </div>
     </div>
   );
 };
-
 export default Sidebar;

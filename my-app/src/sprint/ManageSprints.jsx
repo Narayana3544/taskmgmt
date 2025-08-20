@@ -58,8 +58,8 @@ const ManageSprints = () => {
               <td>{sprint.endDate}</td>
               <td>{sprint.feature.name}</td>
               <td>
-                <button onClick={() => navigate(`/sprint/${sprint.id}/assign-users`)}>Add Users</button>
-                <button onClick={() => navigate(`/sprints/${sprint.id}/assign-stories`)}>Assign Stories</button>
+                {/* <button onClick={() => navigate(`/sprint/${sprint.id}/assign-users`)}>Add Users</button>
+                <button onClick={() => navigate(`/sprints/${sprint.id}/assign-stories`)}>Assign Stories</button> */}
                 <button onClick={() => navigate(`/sprints/${sprint.id}/overview`)}>view</button>
                 {/* <button onClick={() => navigate(`/my-stories`)}>view</button> */}
               </td>

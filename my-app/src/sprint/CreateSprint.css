@@ -58,6 +58,19 @@
   background-color: #0056b3;
 }
 
+.back-btn {
+  margin-bottom: 15px;
+  padding: 8px 16px;
+  background-color: #ccc;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.back-btn:hover {
+  background-color: #bbb;
+}
 .success-message {
   margin-top: 1rem;
   padding: 0.75rem;

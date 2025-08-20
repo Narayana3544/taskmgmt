@@ -47,6 +47,9 @@ const handleChange = (e) => {
     <div className="create-sprint-container">
       <h2>Create Sprint</h2>
       <form onSubmit={handleSubmit} className="sprint-form">
+        <button type="button" className="back-btn" onClick={() => navigate(-1)}>
+         ← Back
+         </button>
         <div className="form-group">
           <label>Sprint Name:</label>
           <input type="text" name="name" value={sprint.name} onChange={handleChange} required />
@@ -61,7 +64,6 @@ const handleChange = (e) => {
           <label>End Date:</label>
           <input type="date" name="endDate" value={sprint.endDate} onChange={handleChange} required />
         </div>
-
         <div className="form-group">
           <label>Feature ID:</label>
        <select name="featureId" onChange={handleChange} required>

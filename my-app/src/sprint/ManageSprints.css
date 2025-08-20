@@ -38,13 +38,13 @@
 }
 
 .sprint-table th, .sprint-table td {
-  border: 1px solid #ccc;
+  border: 1px solid #317ee2;
   padding: 10px;
   text-align: center;
 }
 
 .sprint-table th {
-  background-color: #b9c5d1;
+  background-color: #1c7ee0;
 }
 
 .sprint-table button {

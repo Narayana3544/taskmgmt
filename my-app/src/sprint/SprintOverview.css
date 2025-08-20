@@ -8,24 +8,7 @@
   margin: 4px 0;
 }
 
-.users-section table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 1rem;
-}
-
-.users-section th, .users-section td {
-  border: 1px solid #ddd;
-  padding: 8px;
-}
-
-.status-section h4 {
-  margin-top: 1.5rem;
-  color: #444;
-}
-.status-section {
-  margin-top: 2rem;
-}
+.users-section table  
 
 .story-table-group {
   margin-bottom: 3rem;

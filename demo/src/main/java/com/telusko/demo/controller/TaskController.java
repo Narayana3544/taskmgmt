@@ -134,4 +134,9 @@ public class TaskController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+    @GetMapping("/sprint/viewtaskbySprintId/{sprintId}")
+    public List<task> ViewTaskBySprintId(@PathVariable int sprintId)
+    {
+        return service.viewTaskBySprintId(sprintId);
+    }
 }

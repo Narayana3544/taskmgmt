@@ -1,18 +1,20 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { useNavigate } from 'react-router-dom';
-import "./TaskList.css";
+import { useNavigate, useParams } from 'react-router-dom';
+// import "./TaskList.css";
 import { FaEdit } from "react-icons/fa";
 
-export default function TaskList() {
+export default function Viewtaskbysprint() {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const {sprintId} = useParams();
 
   useEffect(() => {
     axios
-      .get("http://localhost:8080/api/view-tasks", { withCredentials: true })
+      .get(`http://localhost:8080/api/sprint/viewtaskbySprintId/${sprintId}`,
+        { withCredentials: true })
       .then((res) => {
         setTasks(res.data);
         setLoading(false);
@@ -22,7 +24,7 @@ export default function TaskList() {
         setError("Failed to load tasks.");
         setLoading(false);
       });
-  }, []);
+  }, [sprintId]);
 
   if (loading) return <p>Loading tasks...</p>;
   if (error) return <p>{error}</p>;
@@ -32,12 +34,8 @@ export default function TaskList() {
       <div className="task-table-container">
         
         <div className="header-row">
-          <h2>Task List</h2>
-          <button className="create-task-btn" onClick={() => navigate('/create-task')}>
-            + Create Task
-          </button>
+          <h2>Tasks for selected sprint</h2>
         </div>
-
         <div className="table-wrapper">
           <table className="task-table" style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>

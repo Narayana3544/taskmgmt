@@ -107,11 +107,11 @@ const CreateProject = () => {
 
           {/* Buttons */}
           <div className="btn-container">
-            <button type="submit" className="submit-btn">
-              Create
-            </button>
             <button type="button" className="back-btn" onClick={() => navigate(-1)}>
               Back
+            </button>
+              <button type="submit" className="submit-btn">
+              Create
             </button>
           </div>
         </form>

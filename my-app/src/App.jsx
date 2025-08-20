@@ -28,6 +28,7 @@ import TaskList from './Task/TaskList';
 import TaskDetails from './Task/TaskDetails';
 import EditTask from './Task/EditTask';
 import ViewProject from './Pages/ViewProject';
+import Viewtaskbysprint from './sprint/Viewtaskbysprint';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -74,6 +75,7 @@ function App() {
                  <Route path="/task/:id" element={<TaskDetails />} />
                   <Route path="/edit-task/:id" element={<EditTask />} />
                    <Route path="/view-project/:id" element={<ViewProject />} />
+                   <Route path="/Viewtaskbysprint/:sprintId" element={< Viewtaskbysprint/>} />
           </Routes>
           </div>
         </>

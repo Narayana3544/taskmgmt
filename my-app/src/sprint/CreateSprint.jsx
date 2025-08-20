@@ -47,9 +47,7 @@ const handleChange = (e) => {
     <div className="create-sprint-container">
       <h2>Create Sprint</h2>
       <form onSubmit={handleSubmit} className="sprint-form">
-        <button type="button" className="back-btn" onClick={() => navigate(-1)}>
-         ← Back
-         </button>
+        
         <div className="form-group">
           <label>Sprint Name:</label>
           <input type="text" name="name" value={sprint.name} onChange={handleChange} required />
@@ -75,8 +73,12 @@ const handleChange = (e) => {
   ))}
 </select>
         </div>
-
-        <button type="submit" className="submit-btn">Create Sprint</button>
+ <button type="button" className="back-btn" onClick={() => navigate(-1)}>
+              Back
+            </button>
+              <button type="submit" className="submit-btn">
+              Create
+            </button>
       </form>
     </div>
   );

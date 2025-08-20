@@ -23,9 +23,28 @@ const ManageSprints = () => {
     axios.get('http://localhost:8080/api/user/profile', { withCredentials: true })
       .then(res => {
         const user = res.data;
-        setUserName(user.preffered_name);
+        setUserName(user.preffered_name || user.username || "User");
       })
       .catch(err => console.error('Error fetching user profile:', err));
+  };
+
+  const deleteSprint = (id) => {
+    const confirmDelete = window.confirm("Are you sure you want to delete this sprint?");
+    if (!confirmDelete) return;
+
+    axios.delete(`http://localhost:8080/api/sprints/${id}`, { withCredentials: true })
+      .then(() => {
+        alert("Sprint deleted successfully.");
+        fetchSprints(); // Refresh list
+      })
+      .catch(err => {
+        console.error("Error deleting sprint:", err);
+        alert("Failed to delete sprint.");
+      });
+  };
+
+  const formatDate = (dateStr) => {
+    return dateStr ? new Date(dateStr).toLocaleDateString() : "-";
   };
 
   return (
@@ -33,7 +52,7 @@ const ManageSprints = () => {
       <div className="sprint-header">
         <h2>📅 Manage Sprints</h2>
         <div className="top-actions">
-          <span className="user-label">👤 {userName}</span>
+          <span className="user-label">{userName}</span>
           <button className="create-sprint-btn" onClick={() => navigate('/create-sprint')}>+ Create Sprint</button>
         </div>
       </div>
@@ -54,14 +73,12 @@ const ManageSprints = () => {
             <tr key={sprint.id}>
               <td>{sprint.id}</td>
               <td>{sprint.name}</td>
-              <td>{sprint.startDate}</td>
-              <td>{sprint.endDate}</td>
-              <td>{sprint.feature.name}</td>
+              <td>{formatDate(sprint.startDate)}</td>
+              <td>{formatDate(sprint.endDate)}</td>
+              <td>{sprint.feature?.name || '-'}</td>
               <td>
-                {/* <button onClick={() => navigate(`/sprint/${sprint.id}/assign-users`)}>Add Users</button>
-                <button onClick={() => navigate(`/sprints/${sprint.id}/assign-stories`)}>Assign Stories</button> */}
-                <button onClick={() => navigate(`/sprints/${sprint.id}/overview`)}>view</button>
-                {/* <button onClick={() => navigate(`/my-stories`)}>view</button> */}
+                <button className="view-btn" onClick={() => navigate(`/Viewtaskbysprint/${sprint.id}`)}>View</button>
+                <button className="delete-btn" onClick={() => deleteSprint(sprint.id)}>Delete</button>
               </td>
             </tr>
           ))}

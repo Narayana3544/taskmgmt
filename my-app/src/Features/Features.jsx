@@ -124,7 +124,7 @@ const Features = () => {
               <button type="button" className="back-btn" onClick={handleBack}>
                 Back
               </button>
-              <button type="submit" className="submit-btn">
+              <button type="submit" className="back-btn">
                 Add Feature
               </button>
             </div>

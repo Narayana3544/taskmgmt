@@ -65,8 +65,8 @@
 
 /* Submit Button */
 .submit-btn {
-  background-color: #1976d2;
-  color: white;
+  background-color: #3090e9 !important;
+  color: white !important;
   border: none;
   padding: 10px 14px;
   border-radius: 6px;
@@ -76,7 +76,7 @@
 }
 
 .submit-btn:hover {
-  background-color: #125aa0;
+  background-color: #2788d8;
 }
 
 /* Back Button */

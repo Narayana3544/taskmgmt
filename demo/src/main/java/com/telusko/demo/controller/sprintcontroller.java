@@ -9,6 +9,7 @@ import com.telusko.demo.repo.userrepo;
 import com.telusko.demo.repo.userstoryrepo;
 import com.telusko.demo.service.sprintservice;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.relational.core.sql.Delete;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -165,7 +166,6 @@ public class sprintcontroller {
         List<story> assignedStories = userStoryRepo.findByAssignedUserInActiveSprints(user.getId());
         return ResponseEntity.ok(assignedStories);
     }
-
 
 }
 

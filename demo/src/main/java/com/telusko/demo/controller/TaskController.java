@@ -2,6 +2,7 @@ package com.telusko.demo.controller;
 
 
 import com.telusko.demo.Model.task;
+import com.telusko.demo.config.CustomUserDetails;
 import com.telusko.demo.repo.TaskRepository;
 import com.telusko.demo.service.Taskservice;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +10,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -134,4 +136,36 @@ public class TaskController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+
+    @GetMapping("/user/tasks")
+    public List<task> viewMyTasks(Authentication authentication) {
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        int userId = userDetails.getUser().getId();
+        return service.viewTasksByUserId(userId);
+    }
+
+    @PutMapping("/tasks/{taskId}/status/{statusId}")
+    public ResponseEntity<String> updateTaskStatus(@PathVariable int taskId, @PathVariable int statusId) {
+      service.updateTaskStatus(taskId, statusId);
+        return ResponseEntity.ok("Task status updated successfully");
+    }
+
+    @GetMapping("/sprint/viewtaskBySprintId/{sprintId}")
+    public List<task> viewTasksBySprintId(@PathVariable int sprintId){
+        return service.viewTasksBySprintId(sprintId);
+    }
+
+    @GetMapping("/tasks/unassigned-toSprint/{featureId}")
+    public List<task> findUnassignedTasks(@PathVariable int featureId){
+        return service.findUnassignedTasks(featureId);
+    }
+    @PutMapping("/sprints/{sprintId}/assign-tasks")
+    public ResponseEntity<String> assignTasksToSprint(
+            @PathVariable int sprintId,
+            @RequestBody List<Integer> taskIds) {
+
+        service.assignTasksToSprint(sprintId, taskIds);
+        return ResponseEntity.ok("Tasks assigned successfully");
+    }
+
 }

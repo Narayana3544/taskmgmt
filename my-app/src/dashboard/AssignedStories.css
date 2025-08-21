@@ -1,61 +1,148 @@
-.assigned-container {
-  max-width: 1000px;
-  margin: 40px auto;
+.task-list-page {
+  max-width: 1100px;
+  margin: auto;
   padding: 20px;
-  background-color: #ffffff;
+  background: hsl(130, 13%, 91%);
   color: black;
-  box-shadow: 0 0 8px rgba(0,0,0,0.1);
   border-radius: 10px;
 }
-
-.assigned-container h2 {
-  margin-bottom: 20px;
-  font-size: 24px;
-  color: #333;
-  text-align: center;
-}
-
-.assigned-table {
+.task-table-container {
   width: 100%;
-  border-collapse: collapse;
-  font-size: 14px;
+  overflow-x: auto;
+}
+.task-list-container h2 {
+  text-align: center;
+  margin-bottom: 1rem;
+  font-weight: 700;
+  color: #1e293b;
+  font-family: 'Segoe UI', sans-serif;
 }
 
-.assigned-table th,
-.assigned-table td {
-  border: 1px solid #ccc;
+.header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.create-task-btn {
+  background-color: #1976d2;
+  color: white;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  display:flex;
+}
+
+.create-task-btn:hover {
+  background-color: #125aa0;
+}
+
+.task-table {
+  min-width: 900px; /* Adjust based on how many columns you have */
+  border-collapse: collapse;
+}
+
+.task-table th,
+.task-table td {
   padding: 10px;
+  border: 1px solid #ddd;
   text-align: left;
 }
 
-.assigned-table th {
-  background-color: #f4f4f4;
-}
-
-.assigned-table textarea {
-  width: 100%;
-  resize: none;
-  padding: 5px;
-  border-radius: 4px;
-  border: 1px solid #aaa;
-}
-
-.assigned-table select {
-  width: 100%;
-  padding: 5px;
-  border-radius: 4px;
-  border: 1px solid #aaa;
-}
-
-.assigned-table button {
-  padding: 5px 8px;
-  border: none;
-  background-color: #007bff;
+.task-table th {
+  background-color: #2875e7;
   color: white;
+}
+
+.task-table tbody tr:nth-child(even) {
+  background-color: #f9fafb;
+}
+
+.status-tag {
+  padding: 4px 10px;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.status-tag.in-progress {
+  background-color: #ffe082;
+  color: #8d6e63;
+}
+
+.status-tag.completed {
+  background-color: #a5d6a7;
+  color: #2e7d32;
+}
+
+.status-tag.on-hold {
+  background-color: #ffab91;
+  color: #bf360c;
+}
+
+.button-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.button-group button {
+  padding: 6px 10px;
+  border: none;
   border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.edit-btn {
+  background-color: #ffca28;
+  color: #333;
+}
+
+.delete-btn {
+  background-color: #e53935;
+  color: white;
+}
+
+.view-btn {
+  background-color: #42a5f5;
+  color: white;
+}
+
+.add-btn {
+  background-color: #66bb6a;
+  color: white;
+}
+
+.search-bar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.search-bar input {
+  flex: 1;
+  padding: 8px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.search-bar button {
+  padding: 8px 12px;
+  background-color: #1976d2;
+  color: white;
+  border: none;
+  border-radius: 5px;
   cursor: pointer;
 }
 
-.assigned-table button:hover {
-  background-color: #0056b3;
+.search-bar button:hover {
+  background-color: #125aa0;
 }

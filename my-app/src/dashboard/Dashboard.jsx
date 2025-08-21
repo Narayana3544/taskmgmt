@@ -19,7 +19,7 @@ const Dashboard = () => {
       const [projRes, featRes, storyRes] = await Promise.all([
         axios.get('http://localhost:8080/api/projects', { withCredentials: true }),
         axios.get('http://localhost:8080/api/features', { withCredentials: true }),
-        axios.get('http://localhost:8080/api/features/userstories', { withCredentials: true })
+        axios.get('http://localhost:8080/api/view-tasks', { withCredentials: true })
       ]);
 
       setCounts({

@@ -1,16 +1,18 @@
 package com.telusko.demo.service;
 
 import com.telusko.demo.Model.Feature;
+import com.telusko.demo.Model.Task_status;
 import com.telusko.demo.Model.createsprint;
 import com.telusko.demo.Model.task;
 import com.telusko.demo.repo.TaskRepository;
+import com.telusko.demo.repo.Task_statusrepo;
 import com.telusko.demo.repo.createsprintrepo;
 import com.telusko.demo.repo.featurerepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -18,6 +20,15 @@ public class Taskservice {
 
     @Autowired
     public TaskRepository repo;
+
+    @Autowired
+    private featurerepo featureRepo;
+
+    @Autowired
+    private createsprintrepo sprintRepo;
+
+    @Autowired
+    private Task_statusrepo taskStatusRepository;
 
     public task createtask(task Task){
         return repo.save(Task);
@@ -77,12 +88,6 @@ public class Taskservice {
     }
 
 
-    @Autowired
-    private featurerepo featureRepo;
-
-    @Autowired
-    private createsprintrepo sprintRepo;
-
     public task createTask(
             String userstory,
             String description,
@@ -119,4 +124,37 @@ public class Taskservice {
         return repo.save(newTask);
     }
 
+    public List<task> viewTasksByUserId(int userId) {
+        return repo.findByUser_Id(userId);
+    }
+
+    public void updateTaskStatus(int taskId, int statusId) {
+        task Task = repo.findById(taskId)
+                .orElseThrow(() -> new RuntimeException("Task not found"));
+        Task_status status = taskStatusRepository.findById(statusId)
+                .orElseThrow(() -> new RuntimeException("Status not found"));
+        Task.setTaskStatus(status);
+       repo.save(Task);   // only updates task_status_id column
+    }
+
+    public List<task> viewTasksBySprintId(int sprintId) {
+        return repo.findBySprint_id(sprintId);
+    }
+
+    public List<task> findUnassignedTasks(int featureId) {
+        return repo.findBySprint_idIsNullAndFeature_id(featureId);
+    }
+
+    public void assignTasksToSprint(int sprintId, List<Integer> taskIds) {
+        createsprint sprint = sprintRepo.findById(sprintId)
+                .orElseThrow(() -> new RuntimeException("Sprint not found"));
+
+        List<task> Tasks = repo.findAllById(taskIds);
+        for (task Task : Tasks) {
+            Task.setSprint(sprint); // update sprint_id
+        }
+
+        repo.saveAll(Tasks); // batch update
+    }
 }
+

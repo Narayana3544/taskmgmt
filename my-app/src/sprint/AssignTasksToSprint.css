@@ -1,0 +1,62 @@
+.assign-task-container {
+ max-width: 1100px;
+  margin: auto;
+  padding: 20px;
+  background: hsl(130, 13%, 91%);
+  color: black;
+  border-radius: 10px;
+}
+
+.assign-task-container h2 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #1e293b;
+}
+
+.task-table {
+    width: 100%;
+  overflow-x: auto;
+}
+
+.task-table th,
+.task-table td {
+   padding: 10px;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+.task-table th {
+  background-color: #2875e7;
+  color: white;
+}
+
+
+.assign-btn {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s ease;
+}
+
+.assign-btn:hover {
+  background: #1e40af;
+}
+
+.no-data {
+  text-align: center;
+  color: #64748b;
+  font-style: italic;
+  padding: 20px;
+}
+.back-btn {
+ 
+  border: none;
+  color: #9fa552;
+  font-size: 14px;
+  cursor: pointer;
+  margin-bottom: 15px;
+}

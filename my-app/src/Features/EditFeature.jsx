@@ -9,20 +9,27 @@ const EditFeature = () => {
 
   const [featureData, setFeatureData] = useState({
     name: "",
-    descripton: "",
+    description: "",
     status: "",
     project: { id: "" }
   });
 
-  useEffect(() => {
+   const [statuses, setStatuses] = useState([]);
+
+    useEffect(() => {
+    // Get statuses for dropdown
+    axios.get('http://localhost:8080/api/getstatus', { withCredentials: true })
+      .then(res => setStatuses(res.data))
+      .catch(err => console.error('Failed to load statuses:', err));
+
     axios
       .get(`http://localhost:8080/api/features/${id}`, { withCredentials: true })
       .then((res) => {
         // Ensure project exists in state
         setFeatureData({
           name: res.data.name || "",
-          descripton: res.data.descripton || "",
-          status: res.data.status || "",
+          description: res.data.description || "",
+          status: res.data.status?.id || '',
           project: res.data.project ? { id: res.data.project.id } : { id: "" }
         });
       })
@@ -41,8 +48,8 @@ const EditFeature = () => {
 
     const payload = {
       name: featureData.name,
-      descripton: featureData.descripton,
-      status: featureData.status,
+      description: featureData.description,
+      status:{ id:featureData.status},
       project: featureData.project.id ? { id: featureData.project.id } : null
     };
 
@@ -90,7 +97,7 @@ const EditFeature = () => {
         <label>Description</label>
         <textarea
           name="descriptor"
-          value={featureData.descripton}
+          value={featureData.description}
           onChange={handleChange}
           required
         />
@@ -102,11 +109,14 @@ const EditFeature = () => {
           onChange={handleChange}
           required
         >
-          <option value="">Select status</option>
-          <option value="In Progress">In Progress</option>
-          <option value="Completed">Completed</option>
-          <option value="On Hold">On Hold</option>
+          <option value="">Select a status</option>
+              {statuses.map(status => (
+                <option key={status.id} value={status.id}>
+                  {status.decription}
+                </option>
+                ))}
         </select>
+          
 
         <div className="button-group">
           <button type="submit" className="save-btn">Save</button>

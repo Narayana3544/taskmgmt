@@ -16,4 +16,6 @@ public interface createsprintrepo extends JpaRepository<createsprint,Integer> {
             "SELECT su.id FROM createsprint s JOIN s.users su " +
             "WHERE s.status = 'Active' AND s.startDate <= :endDate AND s.endDate >= :startDate)")
     List<User> findAvailableUsersForWeek(@Param("startDate") Date startDate, @Param("endDate") Date endDate);
+
+    List<createsprint> findByFeatureId(int featureId);
 }

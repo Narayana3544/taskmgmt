@@ -34,7 +34,35 @@ public class task {
     @Column(name = "attachment")
     private byte[] attachmentData;
 
-    private String attachmentName; // To store original filename
+    private String attachmentName;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
+
+    @CreationTimestamp
+    @Column(name = "created_date", updatable = false)
+    private LocalDateTime createdDate;
+
+    private Date start_date;
+
+    private Date end_date;
+
+    @ManyToOne
+    @JoinColumn(name = "task_type_id")
+    private Task_type taskType;
+
+
+    @ManyToOne
+    @JoinColumn(name = "task_status_id")
+    private Task_status taskStatus;
+
+    private boolean is_active = true;
+
+    @ManyToOne
+    @JoinColumn(name = "reported_to")
+    private User reportedTo;
+
 
     public String getAttachmentType() {
         return attachmentType;
@@ -94,19 +122,7 @@ public class task {
         this.user = user;
     }
 
-    @ManyToOne
-   @JoinColumn(name = "user_id")
-   private User user;
 
-    @CreationTimestamp
-    @Column(name = "created_date", updatable = false)
-    private LocalDateTime createdDate;
-
-   private Date start_date;
-   private Date end_date;
-   @ManyToOne
-   @JoinColumn(name = "task_type_id")
-   private Task_type taskType;
 
     public Task_type getTaskType() {
         return taskType;
@@ -115,16 +131,6 @@ public class task {
     public void setTaskType(Task_type taskType) {
         this.taskType = taskType;
     }
-
-    @ManyToOne
-   @JoinColumn(name = "task_status_id")
-   private Task_status taskStatus;
-
-    private boolean is_active = true;
-
-    @ManyToOne
-    @JoinColumn(name = "reported_to")
-    private User reportedTo;
 
     public User getReported_to() {
         return reportedTo;

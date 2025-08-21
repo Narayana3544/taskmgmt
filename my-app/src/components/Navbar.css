@@ -1,107 +1,56 @@
 .main-navbar {
-  position: fixed;
-  top: 0;
-  left: 240px;
-  width: calc(100% - 240px);
-  background-color: #1e1e2f;
-  padding: 1rem 2rem;
-  color: white;
-  z-index: 1000;
-  display: flex;
-  align-items: center;
+display: flex;
   justify-content: space-between;
-  transition: left 0.3s ease, width 0.3s ease;
-}
-
-.main-navbar.collapsed {
-  left: 60px;
-  width: calc(100% - 60px);
-}
-
-.navbar-left {
-  display: flex;
+  margin-left: 35px;
   align-items: center;
-  gap: 1rem;
-}
-
-.hamburger-left {
-  font-size: 1.5rem;
-  cursor: pointer;
+  background:  #1e1e2f;
+  padding: 10px 20px;
+  color: rgb(72, 202, 60);
+  position: relative;
+  z-index: 1000;
 }
 
 .logo {
   font-size: 1.5rem;
   font-weight: bold;
-  cursor: pointer;
-  color: #4caf50;
 }
 
-
-
-.hamburger {
-  display: none;
-  font-size: 1.5rem;
+.profile {
   cursor: pointer;
+  font-size: 1.8rem;
+ color: rgb(72, 202, 60);
+  height: 30px;
+  align-items: end;
 }
 
-.nav-links {
-  list-style: none;
+.dropdown-menu {
+  position: absolute;
+  top: 60px;
+  right: 20px;
+  background: #004080;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+}
+
+.dropdown-item {
   display: flex;
-  gap: 2rem;
-}
-
-.nav-links li a {
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
   color: white;
   text-decoration: none;
-  font-weight: 500;
-  transition: color 0.3s;
+  transition: background 0.2s;
 }
 
-.nav-links li a:hover {
-  color: #4caf50;
+.dropdown-item:hover {
+  background: #0059b3;
 }
-
-/* Responsive styles */
-@media (max-width: 768px) {
-  .hamburger {
-    display: block;
-  }
-
-  .nav-links {
-    position: absolute;
-    top: 60px;
-    left: 0;
-    right: 60px;
-    background-color: #2a2a3a;
-    flex-direction: column;
-    align-items: center;
-    gap: 1rem;
-    padding: 1rem 0;
-    display: none;
-  }
-
-  .nav-links.open {
-    display: flex;
-  }
+.subnav{
+  height: 3px;
 }
-.main-navbar {
-  position: fixed;
-  top: 0;
-  left: 240px;
-  width: calc(100% - 240px);
-  transition: all 0.3s ease;
-  background-color: #1e1e2f;
-  padding: 1rem 2rem;
-  display: flex;
-  justify-content: space-between;
-  z-index: 1000;
-}
-
-.main-navbar.collapsed {
-  left: 60px;
-  width: calc(100% - 60px);
-}
-.profile {
-  font-size: 1.5rem;
-  color: #4caf50;
+.dropdown{
+font-size: 13px;
+padding-top: 4pxpx;
 }

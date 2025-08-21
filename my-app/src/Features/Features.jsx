@@ -10,8 +10,16 @@ const Features = () => {
   const [feature, setFeature] = useState({
     name: '',
     description: '',
-    status: 'In Progress',
+   status: "",
   });
+    const [statuses, setStatuses] = useState([]);
+
+    useEffect(() => {
+    axios
+      .get("http://localhost:8080/api/getstatus", { withCredentials: true })
+      .then((res) => setStatuses(res.data))
+      .catch((err) => console.error("Error fetching statuses:", err));
+  }, []);
 
   const navigate = useNavigate();
 
@@ -31,9 +39,12 @@ const Features = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+     if (name === "status") {
+    setFeature((prev) => ({ ...prev, status: { id: value } }));
+  } else {
     setFeature((prev) => ({ ...prev, [name]: value }));
-  };
-
+  }
+};
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!selectedProjectId) {
@@ -113,11 +124,19 @@ const Features = () => {
 
             <div className="form-group">
               <label>Status</label>
-              <select name="status" value={feature.status} onChange={handleChange}>
-                <option value="In Progress">In Progress</option>
-                <option value="Completed">Completed</option>
-                <option value="On Hold">On Hold</option>
-              </select>
+             <select
+              name="status"
+              value={feature.status?.id || ""}
+              onChange={handleChange}
+              required
+            >
+              <option value="">Select a status</option>
+              {statuses.map((status) => (
+                <option key={status.id} value={status.id}>
+                  {status.decription}
+                </option>
+              ))}
+            </select>
             </div>
 
             <div className="form-actions">

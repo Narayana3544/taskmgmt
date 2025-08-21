@@ -1,5 +1,6 @@
 package com.telusko.demo.repo;
 
+import com.telusko.demo.Model.Project;
 import com.telusko.demo.Model.Team;
 import com.telusko.demo.Model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -16,4 +17,8 @@ public interface Teamrepo extends JpaRepository<Team,Integer> {
     List<User> findUsersByProject_Id(Integer projectId);
 
     Optional<Team> findByProjectIdAndUserId(Integer projectId, Integer userId);
+
+    List<Project> findByUser_id(int userId);
+
+    List<Team> findProjectsByUser_id(int userId);
 }

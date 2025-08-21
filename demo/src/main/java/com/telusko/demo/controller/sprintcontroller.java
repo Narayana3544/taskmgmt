@@ -166,6 +166,16 @@ public class sprintcontroller {
         return ResponseEntity.ok(assignedStories);
     }
 
+    @GetMapping("/features/{featureId}/sprints")
+    public List<createsprint> getSprintsByFeature(@PathVariable int featureId) {
+        return sprintRepo.findByFeatureId(featureId);
+    }
+
+    @GetMapping("/sprint/users/{sprintId}")
+    public List<User> getUsersByProjectId(@PathVariable int sprintId){
+        return service.getUsersByProjectId(sprintId);
+    }
+
 
 }
 

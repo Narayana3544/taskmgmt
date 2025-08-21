@@ -1,11 +1,14 @@
 package com.telusko.demo.controller;
 
+import com.telusko.demo.Model.Project;
 import com.telusko.demo.Model.Team;
 import com.telusko.demo.Model.User;
+import com.telusko.demo.config.CustomUserDetails;
 import com.telusko.demo.dto.AssignUsersRequest;
 import com.telusko.demo.service.TeamService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -42,5 +45,13 @@ public class teamController {
             @RequestParam Integer userId) {
         service.unassignUserFromProject(projectId, userId);
         return ResponseEntity.ok("User unassigned successfully");
+    }
+
+    @GetMapping("/project/assignedtouser")
+    public List<Project> findUsersByProjectId(Authentication authentication) {
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        int userId = userDetails.getUser().getId();
+        List<Project> projects = service.findProjectByUserId(userId);
+        return projects;
     }
 }

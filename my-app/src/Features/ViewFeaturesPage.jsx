@@ -16,7 +16,8 @@ const ViewFeaturesPage = () => {
     }
 
     // ✅ Navigate to dynamic route
-    navigate(`/features/${projectId}`);
+    // navigate(`/features/${projectId}`);
+    
   };
 
   return (

@@ -279,12 +279,20 @@ export default function CreateTask() {
 
   useEffect(() => {
     axios.get("http://localhost:8080/api/users", { withCredentials: true }).then(res => setUsers(res.data));
-    axios.get("http://localhost:8080/api/sprints", { withCredentials: true }).then(res => setSprints(res.data));
     axios.get("http://localhost:8080/api/features", { withCredentials: true }).then(res => setFeatures(res.data));
     axios.get("http://localhost:8080/api/gettype", { withCredentials: true }).then(res => setTaskTypes(res.data));
     axios.get("http://localhost:8080/api/getstatus", { withCredentials: true }).then(res => setTaskStatuses(res.data));
     axios.get("http://localhost:8080/api/managers", { withCredentials: true }).then(res => setManagers(res.data));
   }, []);
+   useEffect(() => {
+    if (selectedFeature) {
+      axios.get(`http://localhost:8080/api/features/${selectedFeature}/sprints`,{withCredentials:true})
+        .then((res) => setSprints(res.data))
+        .catch((err) => console.error("Error fetching sprints:", err));
+    } else {
+      setSprints([]);
+    }
+  }, [selectedFeature]);
 
   const handleSelectChange = setter => e => {
     const val = e.target.value;
@@ -302,7 +310,7 @@ export default function CreateTask() {
         description: description,
         start_date: startDate || null,
         end_date: endDate || null,
-        sprint: selectedSprint ? { id: Number(selectedSprint) } : null,
+        sprint: selectedSprint ? { id: Number(selectedSprint) } : null ,
         feature: selectedFeature ? { id: Number(selectedFeature) } : null,
         user: selectedUser ? { id: Number(selectedUser) } : null,
         taskType: selectedTaskType ? { id: Number(selectedTaskType) } : null,
@@ -337,7 +345,36 @@ export default function CreateTask() {
 
   return (
     <form onSubmit={handleSubmit} className="task-form" style={{ maxWidth: 600, margin: "auto" }}>
+      <button  onClick={() => navigate(-1)} className="back-btn">Back</button>
       <h2>Create Task</h2>
+
+ <label>Feature</label>
+      <select
+        value={selectedFeature}
+        onChange={(e) => setSelectedFeature(e.target.value)}
+      >
+        <option value="">-- Select Feature --</option>
+        {features.map((f) => (
+          <option key={f.id} value={f.id}>
+            {f.name}
+          </option>
+        ))}
+      </select>
+
+      {/* Sprint Dropdown (depends on feature) */}
+      <label>Sprint</label>
+      <select
+        value={selectedSprint}
+        onChange={(e) => setSelectedSprint(e.target.value)}
+        disabled={!selectedFeature}
+      >
+        <option value="">-- Select Sprint --</option>
+        {sprints.map((s) => (
+          <option key={s.id} value={s.id}>
+            {s.name}
+          </option>
+        ))}
+      </select>
 
       <label>Acceptance Criteria:</label>
       <textarea value={acceptanceCriteria} onChange={e => setAcceptanceCriteria(e.target.value)} required rows={3} />
@@ -355,12 +392,11 @@ export default function CreateTask() {
           <input type="file" onChange={e => setAttachmentFile(e.target.files[0])} />
         </>
       )}
-
-      <label>Sprint:</label>
-      <select value={selectedSprint} onChange={handleSelectChange(setSelectedSprint)} required>
-        <option value="">-- Select Sprint --</option>
-        {sprints.map(s => (
-          <option key={s.id} value={s.id}>{s.sprintName || `Sprint ${s.id}`}</option>
+       <label>Task Type:</label>
+      <select value={selectedTaskType} onChange={handleSelectChange(setSelectedTaskType)} required>
+        <option value="">-- Select Task Type --</option>
+        {taskTypes.map(tt => (
+          <option key={tt.id} value={tt.id}>{tt.description}</option>
         ))}
       </select>
 
@@ -373,16 +409,14 @@ export default function CreateTask() {
       <label>Description:</label>
       <textarea value={description} onChange={e => setDescription(e.target.value)} rows={4} />
 
-      <label>Feature:</label>
-      <select value={selectedFeature} onChange={handleSelectChange(setSelectedFeature)} required>
-        <option value="">-- Select Feature --</option>
-        {features.map(f => (
-          <option key={f.id} value={f.id}>{f.name || `Feature ${f.id}`}</option>
-        ))}
-      </select>
+       <label>Start Date:</label>
+      <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} />
+
+      <label>End Date:</label>
+      <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} />
 
       <label>User:</label>
-      <select value={selectedUser} onChange={handleSelectChange(setSelectedUser)} required>
+      <select value={selectedUser} onChange={handleSelectChange(setSelectedUser)}>
         <option value="">-- Select User --</option>
         {users.map(u => (
           <option key={u.id} value={u.id}>{u.firstName || u.preffered_name || `${u.id}`}</option>
@@ -390,26 +424,13 @@ export default function CreateTask() {
       </select>
 
       <label>Reported To:</label>
-      <select value={reportedTo} onChange={e => setReportedTo(e.target.value)} required>
+      <select value={reportedTo} onChange={e => setReportedTo(e.target.value)} >
         <option value="">Select Manager</option>
         {managers.map(manager => (
           <option key={manager.id} value={manager.id}>{manager.preffered_name}</option>
         ))}
       </select>
 
-      <label>Start Date:</label>
-      <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} />
-
-      <label>End Date:</label>
-      <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} />
-
-      <label>Task Type:</label>
-      <select value={selectedTaskType} onChange={handleSelectChange(setSelectedTaskType)} required>
-        <option value="">-- Select Task Type --</option>
-        {taskTypes.map(tt => (
-          <option key={tt.id} value={tt.id}>{tt.description}</option>
-        ))}
-      </select>
 
       <label>Task Status:</label>
       <select value={selectedTaskStatus} onChange={e => setSelectedTaskStatus(e.target.value)} required>
@@ -422,6 +443,7 @@ export default function CreateTask() {
       <button type="submit" style={{ marginTop: 20, padding: "10px 20px" }}>
         Create Task
       </button>
+      
     </form>
   );
 }

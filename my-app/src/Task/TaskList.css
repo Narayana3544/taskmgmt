@@ -42,7 +42,7 @@
 }
 
 .task-table {
-  min-width: 900px; /* Adjust based on how many columns you have */
+  min-width: 700px; /* Adjust based on how many columns you have */
   border-collapse: collapse;
 }
 

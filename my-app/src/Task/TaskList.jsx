@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from 'react-router-dom';
 import "./TaskList.css";
-import { FaEdit } from "react-icons/fa";
+import { FaEdit ,FaPlus} from "react-icons/fa";
 
 export default function TaskList() {
   const [tasks, setTasks] = useState([]);
@@ -29,9 +29,12 @@ export default function TaskList() {
 
   return (
      <div className="features-list-page">
+               <button className="create-btn" onClick={() => navigate('/create-task')}>
+                      <FaPlus /> Create Task
+                    </button>
 
     <div className="task-table-container" >
-        <button className="create-task-btn" onClick={() => navigate('/create-task')}>+ Create Task</button>
+
       <h2>Task List</h2>
       
       <div class="table-wrapper">

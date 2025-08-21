@@ -1,20 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import './ManageSprints.css';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
-const ManageSprints = () => {
+const ViewSprintsByFeatureid = () => {
   const [sprints, setSprints] = useState([]);
   const [userName, setUserName] = useState('');
   const navigate = useNavigate();
+  const {featureId}=useParams();
 
   useEffect(() => {
     fetchSprints();
     fetchUser();
-  }, []);
+  }, [featureId]);
 
   const fetchSprints = () => {
-    axios.get('http://localhost:8080/api/sprints', { withCredentials: true })
+    axios.get(`http://localhost:8080/api/features/${featureId}/sprints`, { withCredentials: true })
       .then(res => setSprints(res.data))
       .catch(err => console.error('Error fetching sprints:', err));
   };
@@ -31,9 +32,9 @@ const ManageSprints = () => {
   return (
     <div className="manage-sprints-page">
       <div className="sprint-header">
-        <h2> Manage Sprints</h2>
+        <h2>📅 Your Sprints</h2>
         <div className="top-actions">
-          <span className="user-label"> {userName}</span>
+          <span className="user-label">👤 {userName}</span>
           <button className="create-sprint-btn" onClick={() => navigate('/create-sprint')}>+ Create Sprint</button>
         </div>
       </div>
@@ -58,10 +59,7 @@ const ManageSprints = () => {
               <td>{sprint.endDate}</td>
               <td>{sprint.feature.name}</td>
               <td>
-                {/* <button onClick={() => navigate(`/sprint/${sprint.id}/assign-users`)}>Add Users</button> */}
-                <button onClick={() => navigate(`/sprints/${sprint.id}/assign-stories/${sprint.feature.id}`)}>Assign Tasks</button>
                 <button onClick={() => navigate(`/sprints/${sprint.id}/overview`)}>view</button>
-                {/* <button onClick={() => navigate(`/my-stories`)}>view</button> */}
               </td>
             </tr>
           ))}
@@ -76,4 +74,4 @@ const ManageSprints = () => {
   );
 };
 
-export default ManageSprints;
+export default ViewSprintsByFeatureid;

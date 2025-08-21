@@ -18,7 +18,7 @@ import Dashboard from './dashboard/Dashboard';
 import CreateSprint from './sprint/CreateSprint';
 import AssignUsersToSprint from './sprint/AssignUsers';
 import ManageSprints from './sprint/ManageSprints';
-import AssignStoriesToSprint from './sprint/AssignStoriesToSprint';
+import AssignTasksToSprint from './sprint/AssignTasksToSprint';
 import SprintOverview from './sprint/SprintOverview';
 import AssignedStories from './dashboard/AssignedStories';
 import EditUserStory from './userstories/EdituserStories';
@@ -28,6 +28,9 @@ import TaskList from './Task/TaskList';
 import TaskDetails from './Task/TaskDetails';
 import EditTask from './Task/EditTask';
 import ViewProject from './Pages/ViewProject';
+import ViewProjectById from './Project/AssignedProjects'
+import ViewFeaturesByProjectId from './Features/ViewFeaturesByProjectId'
+import ViewSprintsByFeatureid from './sprint/ViewSprintsByFeatureId';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -63,7 +66,7 @@ function App() {
                 {/* <Route path="/assign-sprint-users" element={<AssignUsersToSprint />} /> */}
                 <Route path="/manage-sprints" element={<ManageSprints />} />
                 <Route path="/sprint/:sprintId/assign-users" element={<AssignUsersToSprint />} />
-                <Route path="/sprints/:sprintId/assign-stories" element={<AssignStoriesToSprint />} />
+                <Route path="/sprints/:sprintId/assign-stories/:featureId" element={<AssignTasksToSprint />} />
                 <Route path="/sprints/:id/overview" element={<SprintOverview />} />
                 <Route path="/my-stories" element={<AssignedStories />} />
                 <Route path="/edit-project/:id" element={<EditProject />} />
@@ -73,7 +76,10 @@ function App() {
                  <Route path="/task" element={<TaskList />} />
                  <Route path="/task/:id" element={<TaskDetails />} />
                   <Route path="/edit-task/:id" element={<EditTask />} />
-                   <Route path="/view-project/:id" element={<ViewProject />} />
+                  <Route path="/view-project/:id" element={<ViewProject />} />
+                  <Route path="/view-projectsByUserId" element={<ViewProjectById />} />
+                  <Route path="/view-featuresByprojectid/:projectId" element={<ViewFeaturesByProjectId />} />
+                   <Route path="/ViewSprintsByFeatureid/:featureId" element={<ViewSprintsByFeatureid />} />
           </Routes>
           </div>
         </>

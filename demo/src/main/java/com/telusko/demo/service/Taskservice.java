@@ -4,12 +4,19 @@ import com.telusko.demo.Model.Feature;
 import com.telusko.demo.Model.Task_status;
 import com.telusko.demo.Model.createsprint;
 import com.telusko.demo.Model.task;
+import com.telusko.demo.config.CustomUserDetails;
 import com.telusko.demo.repo.TaskRepository;
 import com.telusko.demo.repo.Task_statusrepo;
 import com.telusko.demo.repo.createsprintrepo;
 import com.telusko.demo.repo.featurerepo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.config.Task;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.List;
@@ -155,6 +162,32 @@ public class Taskservice {
         }
 
         repo.saveAll(Tasks); // batch update
+    }
+
+    public void assignTaskByUser(int taskId, Authentication authentication) {
+        task Task = repo.findById(taskId)
+                .orElseThrow(() -> new RuntimeException("Task not found"));
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        int userId = userDetails.getUser().getId();
+        Task.setUser(userDetails.getUser());
+        repo.save(Task);
+    }
+
+    @PutMapping("/tasks/{taskId}/unassignMe")
+    public ResponseEntity<String> unassignTask(@PathVariable int taskId, Authentication authentication) {
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        int userId = userDetails.getUser().getId();
+
+        task Task = repo.findById(taskId)
+                .orElseThrow(() -> new RuntimeException("Task not found"));
+
+        if (Task.getUser() != null && Task.getUser().getId() == userId) {
+            Task.setUser(null);
+            repo.save(Task);
+            return ResponseEntity.ok("Task unassigned successfully");
+        } else {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You can't unassign this task");
+        }
     }
 }
 

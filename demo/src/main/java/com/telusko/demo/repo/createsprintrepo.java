@@ -18,4 +18,6 @@ public interface createsprintrepo extends JpaRepository<createsprint,Integer> {
     List<User> findAvailableUsersForWeek(@Param("startDate") Date startDate, @Param("endDate") Date endDate);
 
     List<createsprint> findByFeatureId(int featureId);
+
+//    List<createsprint> findByFeature_Project_Teams_User_Id(Integer userId);
 }

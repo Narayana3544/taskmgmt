@@ -4,29 +4,30 @@ import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import './Home.css';
 
 const Home = () => {
-  const [userStories, setUserStories] = useState({ todo: [], inprogress: [], done: [] });
+  const [tasks, setTasks] = useState({ todo: [], inprogress: [], done: [] });
 
+  // Fetch tasks for logged-in user
   useEffect(() => {
-    axios.get('http://localhost:8080/api/features/userstories', { withCredentials: true }) 
+    axios
+      .get('http://localhost:8080/api/user/tasks/', { withCredentials: true })
       .then((res) => {
-        const grouped = {
-          todo: [],
-          inprogress: [],
-          done: []
-        };
-        res.data.forEach(story => {
-          const status = story.status?.toLowerCase().replace(/\s/g, '') || 'todo';
-          if (status === 'todo') grouped.todo.push(story);
-          else if (status === 'inprogress') grouped.inprogress.push(story);
-          else grouped.done.push(story);
+        const grouped = { todo: [], inprogress: [], done: [] };
+
+        res.data.forEach((task) => {
+          const status = task.status?.toLowerCase().replace(/\s/g, '') || 'todo';
+          if (status === 'todo') grouped.todo.push(task);
+          else if (status === 'inprogress') grouped.inprogress.push(task);
+          else grouped.done.push(task);
         });
-        setUserStories(grouped);
+
+        setTasks(grouped);
       })
       .catch((err) => {
-        console.error('Error fetching user stories:', err);
+        console.error('Error fetching tasks:', err);
       });
   }, []);
 
+  // Handle drag and drop
   const onDragEnd = (result) => {
     const { source, destination } = result;
     if (!destination) return;
@@ -34,51 +35,65 @@ const Home = () => {
     const sourceCol = source.droppableId;
     const destCol = destination.droppableId;
 
-    const sourceTasks = Array.from(userStories[sourceCol]);
+    const sourceTasks = Array.from(tasks[sourceCol]);
     const [movedTask] = sourceTasks.splice(source.index, 1);
 
-    const destTasks = Array.from(userStories[destCol]);
+    const destTasks = Array.from(tasks[destCol]);
     destTasks.splice(destination.index, 0, movedTask);
 
-    setUserStories({
-      ...userStories,
+    setTasks({
+      ...tasks,
       [sourceCol]: sourceTasks,
       [destCol]: destTasks,
     });
 
-    // OPTIONAL: update story status in the DB
-    axios.patch(`http://localhost:8080/api/userstories/${movedTask.id}/status`, {
-      status: destCol.replace(/^(todo)$/, 'To Do').replace(/inprogress/, 'In Progress').replace(/done/, 'Done')
+    // Update task status in backend
+    axios.patch(`http://localhost:8080/api/tasks/${movedTask.id}/status`, {
+      status: destCol
+        .replace(/^(todo)$/, 'To Do')
+        .replace(/inprogress/, 'In Progress')
+        .replace(/done/, 'Done'),
     });
   };
 
   const statusCount = {
-    todo: userStories.todo.length,
-    inprogress: userStories.inprogress.length,
-    done: userStories.done.length,
+    todo: tasks.todo.length,
+    inprogress: tasks.inprogress.length,
+    done: tasks.done.length,
   };
 
   return (
     <div className="task-board">
-      <h2 className="board-title">🗂️ User Story Board</h2>
+      <h2 className="board-title">🗂️ Task Board</h2>
+
       <div className="status-summary">
         <span>To Do: {statusCount.todo}</span>
         <span>In Progress: {statusCount.inprogress}</span>
         <span>Done: {statusCount.done}</span>
       </div>
+
       <DragDropContext onDragEnd={onDragEnd}>
         <div className="columns">
           {['todo', 'inprogress', 'done'].map((colKey) => (
             <Droppable key={colKey} droppableId={colKey}>
               {(provided) => (
-                <div className="column" ref={provided.innerRef} {...provided.droppableProps}>
+                <div
+                  className="column"
+                  ref={provided.innerRef}
+                  {...provided.droppableProps}
+                >
                   <h3>
                     {colKey === 'todo' && '📝 To Do'}
                     {colKey === 'inprogress' && '⏳ In Progress'}
                     {colKey === 'done' && '✅ Done'}
                   </h3>
-                  {userStories[colKey].map((story, index) => (
-                    <Draggable key={story.id.toString()} draggableId={story.id.toString()} index={index}>
+
+                  {tasks[colKey].map((task, index) => (
+                    <Draggable
+                      key={task.id.toString()}
+                      draggableId={task.id.toString()}
+                      index={index}
+                    >
                       {(provided) => (
                         <div
                           className="task-card"
@@ -86,9 +101,9 @@ const Home = () => {
                           {...provided.draggableProps}
                           {...provided.dragHandleProps}
                         >
-                          <strong>{story.description}</strong>
-                          <p>Story Points: {story.storypoints}</p>
-                          <p>Assigned to: {story.userstory?.preffered_name || 'Unassigned'}</p>
+                          <strong>{task.title}</strong>
+                          <p>{task.description}</p>
+                          <p>Assigned to: {task.user?.preffered_name || 'Unassigned'}</p>
                         </div>
                       )}
                     </Draggable>

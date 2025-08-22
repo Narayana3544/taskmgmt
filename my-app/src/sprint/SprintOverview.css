@@ -1,65 +1,73 @@
-.sprint-overview-container {
-  padding: 2rem;
-  background: #f9f9f9;
+.sprint-overview {
+     max-width: 1100px;
+  margin: auto;
+  padding: 20px;
+  background: hsl(130, 13%, 91%);
   color: black;
+  border-radius: 10px;
 }
 
-.sprint-details p {
-  margin: 4px 0;
+.sprint-header {
+ display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 15px;
+   color: #1e293b;
 }
 
-.users-section table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 1rem;
+.sprint-header h2 {
+  margin: 0 0 5px;
 }
 
-.users-section th, .users-section td {
-  border: 1px solid #ddd;
-  padding: 8px;
+.sprint-header p {
+  margin: 3px 0;
 }
 
-.status-section h4 {
-  margin-top: 1.5rem;
-  color: #444;
-}
-.status-section {
-  margin-top: 2rem;
-}
-
-.story-table-group {
-  margin-bottom: 3rem;
-}
-
-.status-header {
-  font-size: 1.25rem;
-  font-weight: 600;
-  margin: 1rem 0;
-}
-
-.story-status-table {
-  width: 100%;
-  border-collapse: collapse;
-  background-color: #fff;
-  border-radius: 8px;
+.sp-progress {
+  background-color: #ddd;
+  height: 12px;
+  border-radius: 6px;
+  margin-top: 10px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
-.story-status-table th,
-.story-status-table td {
-  padding: 12px 15px;
-  border-bottom: 1px solid #eaeaea;
+.sp-progress-bar {
+  height: 100%;
+  background-color: #4ade80; /* green */
+}
+
+.users-section, .tasks-section {
+  margin-bottom: 20px;
+}
+
+.users-section table,
+.tasks-section table {
+   min-width: 700px; /* Adjust based on how many columns you have */
+  border-collapse: collapse;
+}
+
+.users-section th,
+.users-section td,
+.tasks-section th,
+.tasks-section td {
+  padding: 10px;
+  border: 1px solid #ddd;
   text-align: left;
 }
 
-.story-status-table th {
-  background-color: #f8f8f8;
-  font-weight: 600;
-  color: #333;
+.users-section th,
+.tasks-section th {
+  background-color: #2875e7;
+  color: white;
 }
 
-.story-status-table tr:hover {
-  background-color: #f1f5f9;
+.task-table {
+  margin-bottom: 20px;
 }
 
+.loading {
+  text-align: center;
+  font-size: 18px;
+  padding: 50px;
+}

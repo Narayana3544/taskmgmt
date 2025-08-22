@@ -167,5 +167,11 @@ public class TaskController {
         service.assignTasksToSprint(sprintId, taskIds);
         return ResponseEntity.ok("Tasks assigned successfully");
     }
+    @PutMapping("/tasks/{taskId}/assignMe")
+    public ResponseEntity<String> assignTask(@PathVariable int taskId,Authentication authentication) {
+        service.assignTaskByUser(taskId,authentication);
+        return ResponseEntity.ok("Task Assigned successfully");
+    }
+
 
 }

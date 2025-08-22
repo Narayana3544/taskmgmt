@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
-import "./AssignedStories.css";
+import "./AssignedTasks.css";
 import { FaEdit } from "react-icons/fa";
 
 export default function TaskList() {
@@ -57,7 +57,7 @@ export default function TaskList() {
   return (
     <div className="features-list-page">
       <div className="task-table-container">
-        <h2>Task List</h2>
+        <h2>Your Assigned Tasks</h2>
 
         <div className="table-wrapper">
           <table className="task-table" style={{ width: "100%", borderCollapse: "collapse" }}>

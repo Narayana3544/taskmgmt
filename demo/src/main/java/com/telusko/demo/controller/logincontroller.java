@@ -2,6 +2,7 @@ package com.telusko.demo.controller;
 
 
 import com.telusko.demo.Model.User;
+import com.telusko.demo.config.CustomUserDetails;
 import com.telusko.demo.repo.userrepo;
 import com.telusko.demo.service.CustomUserDetailsService;
 import com.telusko.demo.service.loginservice;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 public class logincontroller {
@@ -96,7 +98,15 @@ public class logincontroller {
     public List<User> getManagers() {
         return service.getManagers();
     }
+
+    @GetMapping("/users/me")
+    public Optional<User> getloggedUser(Authentication authentication){
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        int userId = userDetails.getUser().getId();
+        return repo.findById(userId);
     }
+
+}
 
 
 

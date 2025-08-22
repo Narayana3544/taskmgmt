@@ -1,0 +1,76 @@
+.sprints-page {
+    max-width: 1100px;
+  margin: auto;
+  padding: 20px;
+  background: hsl(130, 13%, 91%);
+  color: black;
+  border-radius: 10px;
+}
+
+.page-title {
+  text-align: center;
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+.sprint-card {
+  background: #f9f9f9;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 25px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.sprint-title {
+  font-size: 20px;
+  margin-bottom: 5px;
+  color: #333;
+}
+
+.sprint-dates {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 15px;
+}
+
+.task-table {
+  min-width: 700px; /* Adjust based on how many columns you have */
+  border-collapse: collapse;
+}
+
+.task-table th, .task-table td {
+ padding: 10px;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+.task-table th {
+  background-color: #2875e7;
+  color: white;
+}
+
+.btn {
+padding: 6px 10px;
+  border: none;
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn.assign {
+  background: #4caf50;
+  color: white;
+}
+
+.btn.unassign {
+  background: #e74c3c;
+  color: white;
+}
+
+.loading, .no-sprints, .no-tasks {
+  text-align: center;
+  margin: 20px 0;
+  color: #555;
+}

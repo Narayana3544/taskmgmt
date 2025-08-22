@@ -3,6 +3,7 @@ import axios from 'axios';
 import './ManageSprints.css';
 import { useNavigate } from 'react-router-dom';
 
+
 const ManageSprints = () => {
   const [sprints, setSprints] = useState([]);
   const [userName, setUserName] = useState('');
@@ -60,7 +61,7 @@ const ManageSprints = () => {
               <td>
                 {/* <button onClick={() => navigate(`/sprint/${sprint.id}/assign-users`)}>Add Users</button> */}
                 <button onClick={() => navigate(`/sprints/${sprint.id}/assign-stories/${sprint.feature.id}`)}>Assign Tasks</button>
-                <button onClick={() => navigate(`/sprints/${sprint.id}/overview`)}>view</button>
+                <button onClick={() => navigate(`/sprints/overview/${sprint.id}`)}>view</button>
                 {/* <button onClick={() => navigate(`/my-stories`)}>view</button> */}
               </td>
             </tr>

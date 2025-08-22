@@ -20,7 +20,7 @@ import AssignUsersToSprint from './sprint/AssignUsers';
 import ManageSprints from './sprint/ManageSprints';
 import AssignTasksToSprint from './sprint/AssignTasksToSprint';
 import SprintOverview from './sprint/SprintOverview';
-import AssignedStories from './dashboard/AssignedStories';
+import AssignedStories from './dashboard/AssignedTasks';
 import EditUserStory from './userstories/EdituserStories';
 import EditFeature from './Features/EditFeature';
 import TaskForm from './Task/CreateTask';
@@ -31,6 +31,7 @@ import ViewProject from './Pages/ViewProject';
 import ViewProjectById from './Project/AssignedProjects'
 import ViewFeaturesByProjectId from './Features/ViewFeaturesByProjectId'
 import ViewSprintsByFeatureid from './sprint/ViewSprintsByFeatureId';
+import ActiveSprints from './Project/ActiveSprints';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -67,7 +68,7 @@ function App() {
                 <Route path="/manage-sprints" element={<ManageSprints />} />
                 <Route path="/sprint/:sprintId/assign-users" element={<AssignUsersToSprint />} />
                 <Route path="/sprints/:sprintId/assign-stories/:featureId" element={<AssignTasksToSprint />} />
-                <Route path="/sprints/:id/overview" element={<SprintOverview />} />
+                <Route path="/sprints/overview/:sprintId" element={<SprintOverview />} />
                 <Route path="/my-stories" element={<AssignedStories />} />
                 <Route path="/edit-project/:id" element={<EditProject />} />
                 <Route path="/edit-userstory/:id" element={<EditUserStory />} />
@@ -80,6 +81,7 @@ function App() {
                   <Route path="/view-projectsByUserId" element={<ViewProjectById />} />
                   <Route path="/view-featuresByprojectid/:projectId" element={<ViewFeaturesByProjectId />} />
                    <Route path="/ViewSprintsByFeatureid/:featureId" element={<ViewSprintsByFeatureid />} />
+                   <Route path="/active-sprints" element={<ActiveSprints />} />
           </Routes>
           </div>
         </>

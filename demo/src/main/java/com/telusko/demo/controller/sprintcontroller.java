@@ -57,6 +57,7 @@ public class sprintcontroller {
     public List<createsprint> viewsprints(){
         return service.view();
     }
+
     @GetMapping("/sprints/{sprintId}")
     public Optional<createsprint> viewsprintsbyid(@PathVariable int sprintId){
         return sprintRepo.findById(sprintId);
@@ -220,7 +221,6 @@ public class sprintcontroller {
 
         return allSprints;
     }
-
 
 
 

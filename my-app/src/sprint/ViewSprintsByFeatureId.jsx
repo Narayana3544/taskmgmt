@@ -59,7 +59,7 @@ const ViewSprintsByFeatureid = () => {
               <td>{sprint.endDate}</td>
               <td>{sprint.feature.name}</td>
               <td>
-                <button onClick={() => navigate(`/sprints/${sprint.id}/overview`)}>view</button>
+                <button onClick={() => navigate(`/sprints/overview/${sprint.id}`)}>view</button>
               </td>
             </tr>
           ))}

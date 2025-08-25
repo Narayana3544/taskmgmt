@@ -85,7 +85,7 @@ export default function TaskList() {
                 <tr key={task.id}>
                   <td>{task.userstory || "-"}</td>
                   <td>{task.storypoints ?? "-"}</td>
-                  <td>{task.sprint?.sprintName || task.sprint?.name || "-"}</td>
+                  <td>{task.sprint?.sprintName || task.sprint?.name || "-"}({task.sprint.status})</td>
                   <td>{task.feature?.name || "-"}</td>
                   <td>{task.taskType?.description || "-"}</td>
                   <td>

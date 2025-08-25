@@ -22,7 +22,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @RestController
 public class logincontroller {
@@ -100,10 +99,11 @@ public class logincontroller {
     }
 
     @GetMapping("/users/me")
-    public Optional<User> getloggedUser(Authentication authentication){
+    public User getloggedUser(Authentication authentication){
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
         int userId = userDetails.getUser().getId();
         return repo.findById(userId);
+
     }
 
 }

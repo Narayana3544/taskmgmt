@@ -1,5 +1,5 @@
 .sprint-overview {
-     max-width: 1100px;
+     max-width: 900px;
   margin: auto;
   padding: 20px;
   background: hsl(130, 13%, 91%);
@@ -41,7 +41,10 @@
   margin-bottom: 20px;
 }
 
-.users-section table,
+.users-section table{
+  min-width: 300px; /* Adjust based on how many columns you have */
+  border-collapse: collapse;
+}
 .tasks-section table {
    min-width: 700px; /* Adjust based on how many columns you have */
   border-collapse: collapse;

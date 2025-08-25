@@ -5,10 +5,7 @@ import com.telusko.demo.Model.Task_status;
 import com.telusko.demo.Model.createsprint;
 import com.telusko.demo.Model.task;
 import com.telusko.demo.config.CustomUserDetails;
-import com.telusko.demo.repo.TaskRepository;
-import com.telusko.demo.repo.Task_statusrepo;
-import com.telusko.demo.repo.createsprintrepo;
-import com.telusko.demo.repo.featurerepo;
+import com.telusko.demo.repo.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +18,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+
+import static java.lang.Integer.sum;
 
 @Service
 public class Taskservice {
@@ -36,6 +35,9 @@ public class Taskservice {
 
     @Autowired
     private Task_statusrepo taskStatusRepository;
+
+    @Autowired
+    private userrepo UserRepo;
 
     public task createtask(task Task){
         return repo.save(Task);
@@ -161,7 +163,8 @@ public class Taskservice {
             Task.setSprint(sprint); // update sprint_id
         }
 
-        repo.saveAll(Tasks); // batch update
+        repo.saveAll(Tasks);
+
     }
 
     public void assignTaskByUser(int taskId, Authentication authentication) {
@@ -173,21 +176,18 @@ public class Taskservice {
         repo.save(Task);
     }
 
-    @PutMapping("/tasks/{taskId}/unassignMe")
-    public ResponseEntity<String> unassignTask(@PathVariable int taskId, Authentication authentication) {
-        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-        int userId = userDetails.getUser().getId();
-
-        task Task = repo.findById(taskId)
+    public void reportTask(int taskId, int managerId) {
+        task Task=repo.findById(taskId)
                 .orElseThrow(() -> new RuntimeException("Task not found"));
+        Task.setReportedTo(UserRepo.findById(managerId));
+        repo.save(Task);
+    }
 
-        if (Task.getUser() != null && Task.getUser().getId() == userId) {
-            Task.setUser(null);
-            repo.save(Task);
-            return ResponseEntity.ok("Task unassigned successfully");
-        } else {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You can't unassign this task");
-        }
+    public void assignTask(int taskId, int userId) {
+        task Task=repo.findById(taskId)
+                .orElseThrow(() -> new RuntimeException("Task not found"));
+        Task.setUser(UserRepo.findById(userId));
+        repo.save(Task);
     }
 }
 

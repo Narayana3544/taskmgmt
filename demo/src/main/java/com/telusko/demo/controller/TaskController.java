@@ -173,5 +173,35 @@ public class TaskController {
         return ResponseEntity.ok("Task Assigned successfully");
     }
 
+    @PutMapping("/tasks/{taskId}/unassignMe")
+    public ResponseEntity<String> unassignTask(@PathVariable int taskId, Authentication authentication) {
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        int userId = userDetails.getUser().getId();
+
+        task Task = repo.findById(taskId)
+                .orElseThrow(() -> new RuntimeException("Task not found"));
+
+        if (Task.getUser() != null && Task.getUser().getId() == userId) {
+            Task.setUser(null);
+            repo.save(Task);
+            return ResponseEntity.ok("Task unassigned successfully");
+        } else {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You can't unassign this task");
+        }
+    }
+
+    @PutMapping("/tasks/{taskId}/assignReportTo/{managerId}")
+    public ResponseEntity<String> reportTask(@PathVariable int taskId,@PathVariable int managerId ) {
+        service.reportTask(taskId, managerId);
+        return ResponseEntity.ok("Task Assigned successfully");
+    }
+
+    @PutMapping("/tasks/{taskId}/assignTo/{userId}")
+    public ResponseEntity<String> assignTask(@PathVariable int taskId,@PathVariable int userId ) {
+        service.assignTask(taskId, userId);
+        return ResponseEntity.ok("Task Assigned successfully");
+    }
+
+
 
 }

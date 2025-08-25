@@ -66,7 +66,9 @@ export default function UserSprints() {
 
   const unassignTask = async (taskId, sprintId) => {
     try {
-      await axios.put(`http://localhost:8080/api/tasks/${taskId}/unassignMe`,{withCredentials:true});
+      await axios.put(`http://localhost:8080/api/tasks/${taskId}/unassignMe`,
+        {},
+        {withCredentials:true});
       fetchTasks(sprintId); // refresh only this sprint's tasks
     } catch (err) {
       console.error("Error unassigning task:", err);
@@ -111,23 +113,6 @@ export default function UserSprints() {
                          task.user?.first_name || "-"
                           }
                       </td>
-                      {/* <td>
-                        {task.user?.first_name  ? (
-                          <button
-                            className="btn unassign"
-                            onClick={() => unassignTask(task.id, sprint.id)}
-                          >
-                            Unassign Me
-                          </button>
-                        ) : (
-                          <button
-                            className="btn assign"
-                            onClick={() => assignTask(task.id, sprint.id)}
-                          >
-                            Assign Me
-                          </button>
-                        )}
-                      </td> */}
                       <td>
                         {task.user ? (
                           task.user.id === currentUser?.id ? (

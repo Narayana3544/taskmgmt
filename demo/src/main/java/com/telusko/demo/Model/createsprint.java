@@ -1,5 +1,6 @@
 package com.telusko.demo.Model;
 
+import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import lombok.Data;
 

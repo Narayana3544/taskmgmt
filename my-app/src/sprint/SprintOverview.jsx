@@ -141,7 +141,7 @@ export default function SprintOverview({ sprintId: propSprintId }) {
                     <tr key={task.id}>
                       <td>{task.userstory}</td>
                       <td>{task.user?.first_name  || "Unassigned"}</td>
-                      <td>{task.reportedTo ?.first_name  || "Unassigned"}</td>
+                      <td>{task.reportedTo?.first_name  || "Unassigned"}</td>
                       <td>{task.storypoints}</td>
                       {(!task.reportedTo || task.reportedTo === null) && (
                       <td>

@@ -18,7 +18,7 @@ const CreateProject = () => {
   // Fetch statuses for dropdown
   useEffect(() => {
     axios
-      .get("http://localhost:8080/api/getstatus", { withCredentials: true })
+      .get("http://localhost:8080/api/getstatusForProject", { withCredentials: true })
       .then((res) => setStatuses(res.data))
       .catch((err) => console.error("Error fetching statuses:", err));
   }, []);

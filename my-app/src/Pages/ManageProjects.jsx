@@ -74,7 +74,6 @@ const filteredProjects = Array.isArray(projects)
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <button className="search-btn" onClick={fetchProjects}>Search</button>
           </div>
 
           <table className="projects-table">
@@ -106,30 +105,22 @@ const filteredProjects = Array.isArray(projects)
                         {project.status?.decription || "No status"}
                       </span>
                     </td>
-                    {/* <td>
-                      <select
-                        className="status-select"
-                        value={project.status || 'In Progress'}
-                        onChange={(e) => handleStatusChange(project.id, e.target.value)}
-                      >
-                        <option>In Progress</option>
-                        <option>Completed</option>
-                        <option>Pending</option>
-                      </select>
-                    </td> */}
                      <td>
-                        <button 
+                        
+                      {/* <button 
+                    className="view-btn" 
+                    onClick={() => navigate(`/view-project/${project.id}`)}
+                  >
+                    View
+                  </button> */}
+                  <button onClick={() => navigate(`/view-project/${project.id}`)}>Assign Users</button>
+                  <button onClick={() => navigate(`/view-featuresByprojectid/${project.id}`)}>view Features</button>
+                  <button 
                         className="edit-btn" 
                         onClick={() => navigate(`/edit-project/${project.id}`)}
                       > 
                       <FaEdit />
                       </button>
-                      <button 
-                    className="view-btn" 
-                    onClick={() => navigate(`/view-project/${project.id}`)}
-                  >
-                    View
-                  </button>
                     </td>
                   </tr>
                 ))

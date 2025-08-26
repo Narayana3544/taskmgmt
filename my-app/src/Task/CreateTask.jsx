@@ -281,7 +281,7 @@ export default function CreateTask() {
     axios.get("http://localhost:8080/api/users", { withCredentials: true }).then(res => setUsers(res.data));
     axios.get("http://localhost:8080/api/features", { withCredentials: true }).then(res => setFeatures(res.data));
     axios.get("http://localhost:8080/api/gettype", { withCredentials: true }).then(res => setTaskTypes(res.data));
-    axios.get("http://localhost:8080/api/getstatus", { withCredentials: true }).then(res => setTaskStatuses(res.data));
+    axios.get("http://localhost:8080/api/getstatusForTask", { withCredentials: true }).then(res => setTaskStatuses(res.data));
     axios.get("http://localhost:8080/api/managers", { withCredentials: true }).then(res => setManagers(res.data));
   }, []);
    useEffect(() => {

@@ -5,34 +5,50 @@ import jakarta.persistence.*;
 @Entity
 @Table
 public class comment {
+
     @Id
-    private String text;
+    @GeneratedValue
+    private int id;
+
     @ManyToOne
-    @JoinColumn(name = "story_id")
-    private  story story;
-    private String Author;
+    @JoinColumn(name = "task_id")
+    private task task;
 
-    public String getText() {
-        return text;
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
+
+    private String description;
+
+    public String getDescription() {
+        return description;
     }
 
-    public void setText(String text) {
-        this.text = text;
+    public void setDescription(String description) {
+        this.description = description;
     }
 
-    public story getStory() {
-        return story;
+    public int getId() {
+        return id;
     }
 
-    public void setStory(story story) {
-        this.story = story;
+    public void setId(int id) {
+        this.id = id;
     }
 
-    public String getAuthor() {
-        return Author;
+    public task getTask() {
+        return task;
     }
 
-    public void setAuthor(String author) {
-        Author = author;
+    public void setTask(task task) {
+        this.task = task;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 }

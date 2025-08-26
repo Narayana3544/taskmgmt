@@ -23,16 +23,32 @@ const [filteredFeatures, setFilteredFeatures] = useState([]);
   });
   }, []);
 
-const handleSearch = () => {
-  if (searchProjectId.trim() === '') {
+  const [searchTerm, setSearchTerm] = useState('');
+
+
+useEffect(() => {
+  if (searchTerm.trim() === '') {
     setFilteredFeatures(features);
   } else {
-    const filtered = features.filter(
-      feature => feature.project?.id?.toString() === searchProjectId.trim()
+    const term = searchTerm.toLowerCase();
+    const filtered = features.filter(feature =>
+      JSON.stringify(feature).toLowerCase().includes(term)
     );
     setFilteredFeatures(filtered);
   }
-};
+}, [searchTerm, features]);
+
+// const handleSearch = () => {
+//   if (searchProjectId.trim() === '') {
+//     setFilteredFeatures(features);
+//   } else {
+//     const searchTerm = searchProjectId.trim().toLowerCase();
+//     const filtered = features.filter(feature =>
+//       JSON.stringify(feature).toLowerCase().includes(searchTerm)
+//     );
+//     setFilteredFeatures(filtered);
+//   }
+// };
 
   const handleEdit = (id) => {
     navigate(`/edit-feature/${id}`);
@@ -59,12 +75,12 @@ const handleSearch = () => {
 
       <div className="search-bar">
         <input
-          type="text"
-          placeholder="Search by Project ID"
-          value={searchProjectId}
-          onChange={(e) => setSearchProjectId(e.target.value)}
-        />
-        <button onClick={handleSearch}>Search</button>
+      type="text"
+      placeholder="Search..."
+      value={searchTerm}
+      onChange={e => setSearchTerm(e.target.value)}
+    />
+        {/* <button onClick={handleSearch}>Search</button> */}
       </div>
 
       {filteredFeatures.length === 0 ? (
@@ -103,6 +119,12 @@ const handleSearch = () => {
                     onClick={() => navigate(`/edit-feature/${feature.id}`)}
                   > 
                   <FaEdit />
+                  </button>
+                  <button 
+                    className="view-btn" 
+                    onClick={() => navigate(`/ViewSprintsByFeatureid/${feature.id}`)}
+                  >
+                    View Sprints
                   </button>
                 </td>
               </tr>

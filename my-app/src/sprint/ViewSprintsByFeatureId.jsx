@@ -31,12 +31,9 @@ const ViewSprintsByFeatureid = () => {
 
   return (
     <div className="manage-sprints-page">
+        <button className="back-btn" onClick={() => navigate(-1)}>⬅ Back</button>
       <div className="sprint-header">
         <h2>📅 Your Sprints</h2>
-        <div className="top-actions">
-          <span className="user-label">👤 {userName}</span>
-          <button className="create-sprint-btn" onClick={() => navigate('/create-sprint')}>+ Create Sprint</button>
-        </div>
       </div>
 
       <table className="sprint-table">

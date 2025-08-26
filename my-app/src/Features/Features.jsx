@@ -16,7 +16,7 @@ const Features = () => {
 
     useEffect(() => {
     axios
-      .get("http://localhost:8080/api/getstatus", { withCredentials: true })
+      .get("http://localhost:8080/api/getstatusForFeature", { withCredentials: true })
       .then((res) => setStatuses(res.data))
       .catch((err) => console.error("Error fetching statuses:", err));
   }, []);

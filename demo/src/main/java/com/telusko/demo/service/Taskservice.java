@@ -1,9 +1,6 @@
 package com.telusko.demo.service;
 
-import com.telusko.demo.Model.Feature;
-import com.telusko.demo.Model.Task_status;
-import com.telusko.demo.Model.createsprint;
-import com.telusko.demo.Model.task;
+import com.telusko.demo.Model.*;
 import com.telusko.demo.config.CustomUserDetails;
 import com.telusko.demo.repo.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +35,9 @@ public class Taskservice {
 
     @Autowired
     private userrepo UserRepo;
+
+    @Autowired
+    private Teamrepo teamRepository;
 
     public task createtask(task Task){
         return repo.save(Task);
@@ -188,6 +188,12 @@ public class Taskservice {
                 .orElseThrow(() -> new RuntimeException("Task not found"));
         Task.setUser(UserRepo.findById(userId));
         repo.save(Task);
+    }
+
+    public List<Team> viewUsersByTaskId(int taskId) {
+        Optional<task> Task=repo.findById(taskId);
+        int projectId=Task.get().getFeature().getProject().getId();
+        return teamRepository.findByProject_Id(projectId);
     }
 }
 

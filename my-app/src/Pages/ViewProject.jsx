@@ -275,6 +275,10 @@ const ViewProject = () => {
 
   return (
     <div className="view-project-page">
+
+
+    <button className="back-btn" onClick={() => navigate(-1)}>⬅ Back</button>
+
       <h2>Project Details</h2>
 
       <div className="project-info">
@@ -322,19 +326,6 @@ const ViewProject = () => {
           onClick={() => setShowAssignForm((prev) => !prev)}
         >
           {showAssignForm ? "Cancel" : "Assign Users"}
-        </button>
-         <button 
-        className="assign-btn" 
-        onClick={() => navigate(`/view-featuresByprojectid/${project.id}`)}
-      >
-        View Features
-      </button>
-       {/* <button 
-        className="view-btn" 
-        onClick={() => navigate(`/ViewSprintsByFeatureid/${feature.id}`)}
-      ></button> */}
-        <button className="assign-btn" onClick={() => navigate(-1)}>
-          Back
         </button>
       </div>
 

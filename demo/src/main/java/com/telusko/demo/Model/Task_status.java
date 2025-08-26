@@ -1,8 +1,6 @@
 package com.telusko.demo.Model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Data;
 
 @Entity
@@ -13,6 +11,10 @@ public class Task_status {
     private int id;
     private String decription;
     private String sequence;
+
+    @ManyToOne
+    @JoinColumn(name = "statusCode")
+    private  Status_code statusCode;
 
     public String getDecription() {
         return decription;

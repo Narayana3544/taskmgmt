@@ -18,4 +18,28 @@ public class task_statuscontroller {
     public List<Task_status> getstatus(){
         return repo.findAll();
     }
+
+//    @GetMapping("/getstatusForProject")
+//    public List<Task_status> getStatusForProject(){
+//        return repo.findByStatusCodeDescription("Project");
+//    }
+
+    @GetMapping("/getstatusForProject")
+    public List<Task_status> getStatusForProject(){
+        return repo.findByStatusCodeId(2);
+    }
+
+    @GetMapping("/getstatusForTask")
+    public List<Task_status> getStatusForTask(){
+        return repo.findByStatusCodeId(1);
+    }
+
+    @GetMapping("/getstatusForFeature")
+    public List<Task_status> getStatusForFeature(){
+        return repo.findByStatusCodeId(3);
+    }
+    @GetMapping("/getstatusForSprint")
+    public List<Task_status> getStatusForSprint(){
+        return repo.findByStatusCodeId(4);
+    }
 }

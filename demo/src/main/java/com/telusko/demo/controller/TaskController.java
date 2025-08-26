@@ -1,6 +1,8 @@
 package com.telusko.demo.controller;
 
 
+import com.telusko.demo.Model.Team;
+import com.telusko.demo.Model.User;
 import com.telusko.demo.Model.task;
 import com.telusko.demo.config.CustomUserDetails;
 import com.telusko.demo.repo.TaskRepository;
@@ -202,6 +204,9 @@ public class TaskController {
         return ResponseEntity.ok("Task Assigned successfully");
     }
 
-
+    @GetMapping("/tasks/viewUsers/{taskId}")
+    public List<Team> viewUsersBytaskId(@PathVariable int taskId){
+        return service.viewUsersByTaskId(taskId);
+    }
 
 }

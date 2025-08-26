@@ -65,13 +65,12 @@ const filteredProjects = Array.isArray(projects)
 
           <div className="search-bar">
             <input
-              type="text"
+               type="text"
               placeholder="Search by name or ID"
               className="search-input"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <button className="search-btn" onClick={fetchProjects}>Search</button>
           </div>
 
           <table className="projects-table">

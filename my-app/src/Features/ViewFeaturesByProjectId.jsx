@@ -45,20 +45,34 @@ const ViewFeaturesByProjectId = () => {
         .catch((err) => console.error('Error deleting feature:', err));
     }
   };
+  const [searchTerm, setSearchTerm] = useState('');
+
+useEffect(() => {
+  if (searchTerm.trim() === '') {
+    setFilteredFeatures(features);
+  } else {
+    const term = searchTerm.toLowerCase();
+    const filtered = features.filter(feature =>
+      JSON.stringify(feature).toLowerCase().includes(term)
+    );
+    setFilteredFeatures(filtered);
+  }
+}, [searchTerm, features]);
 
   return (
     <div className="features-list-page">
+       <button className="back-btn" onClick={() => navigate(-1)}>⬅ Back</button>
       <div className="header-bar">
+        
         <h2>📋 Features for Project {projectId}</h2>
       </div>
       <div className="search-bar">
         <input
           type="text"
-          placeholder="Search by Project ID"
-          value={searchProjectId}
-          onChange={(e) => setSearchProjectId(e.target.value)}
+      placeholder="Search..."
+      value={searchTerm}
+      onChange={e => setSearchTerm(e.target.value)}
         />
-        <button onClick={handleSearch}>Search</button>
       </div>
 
       {filteredFeatures.length === 0 ? (
@@ -72,7 +86,7 @@ const ViewFeaturesByProjectId = () => {
               <th>Feature Name</th>
               <th>Description</th>
               <th>Status</th>
-              <th>Actions</th>
+              {/* <th>Actions</th> */}
             </tr>
           </thead>
           <tbody>
@@ -91,14 +105,14 @@ const ViewFeaturesByProjectId = () => {
                     {feature.status?.decription || 'No status'}
                   </span>
                 </td>
-                <td>
+                {/* <td>
                    <button 
                     className="view-btn" 
                     onClick={() => navigate(`/ViewSprintsByFeatureid/${feature.id}`)}
                   >
                     View Sprints
                   </button>
-                </td>
+                </td> */}
               </tr>
             ))}
           </tbody>

@@ -18,7 +18,7 @@ export default function EditProject() {
   // Fetch project + statuses
   useEffect(() => {
     // Get statuses for dropdown
-    axios.get('http://localhost:8080/api/getstatus', { withCredentials: true })
+    axios.get('http://localhost:8080/api/getstatusForProject', { withCredentials: true })
       .then(res => setStatuses(res.data))
       .catch(err => console.error('Failed to load statuses:', err));
 

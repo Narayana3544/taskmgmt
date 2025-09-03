@@ -1,5 +1,6 @@
 import React, { useEffect, useState} from "react";
 import { useNavigate } from "react-router-dom";
+import TaskList from "../dashboard/AssignedTasks";
 import axios from "axios";
 import "./UserSprints.css";
 
@@ -148,6 +149,9 @@ export default function UserSprints() {
           </div>
         ))
       )}
+          <div className="assigned-stories-section">
+      <TaskList />
+    </div>
     </div>
   );
 }

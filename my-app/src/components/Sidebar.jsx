@@ -54,23 +54,36 @@ const Sidebar = ({ onToggle }) => {
             </div>
 
             <div className="nav-section">
-            <div className="nav-item" onClick={() => navigate('/dashboard')}><FaThList /> Dashboard</div>
+            <div className="nav-item" onClick={() => navigate('/home')}><FaThList /> Dashboard</div>
             <div className="nav-item"onClick={() => navigate('/my-stories')}><FaChartBar /> Current Sprint</div>
+
+            {user.role?.description === "Admin" && (
             <div className="nav-item" onClick={() => navigate('/manage-projects')}>
               <FaFileInvoiceDollar /><span>Projects</span>
               </div>
+              )}
+              {user.role?.description === "Admin" && (
                 <div className="nav-item" onClick={() => navigate('/view-features')}>
               <FaFileInvoiceDollar /><span>Features</span>
               </div>
-               {/* <div className="nav-item" onClick={() => navigate('/view-stories')}>
-              <FaFileInvoiceDollar /><span>User Stories</span>
-              </div> */}
-              <div className="nav-item" onClick={() => navigate('/manage-sprints')}>
+            )}
+
+                 {user.role?.description === "Admin" && (
+                <div className="nav-item" onClick={() => navigate('/manage-sprints')}>
+                  <FaChartBar /><span>Sprints</span>
+                </div>
+              )}
+
+
+
+              {/* <div className="nav-item" onClick={() => navigate('/manage-sprints')}>
                 <FaChartBar /><span>Sprints</span>
-              </div>
+              </div> */}
+              {user.role?.description === "Admin" && (
               <div className="nav-item" onClick={() => navigate('/task')}>
                 <FaChartBar /><span>Task</span>
               </div>
+              )}
               {/* <div className="nav-item" onClick={() => navigate('/profile')}><FaUser /><span>Profile</span></div> */}
                <div className="nav-item" onClick={() => navigate('/view-projectsByUserId')}><FaUser /><span>My Projects</span></div>
               <div className="nav-item" onClick={() => navigate('/active-sprints')}>

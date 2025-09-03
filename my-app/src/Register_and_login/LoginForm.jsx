@@ -28,11 +28,14 @@ const LoginForm = ({ onLogin }) => {
       );
 
       if (res.status === 200) {
-        
+        // Save JWT or session info (from backend) in localStorage
+        localStorage.setItem("user", JSON.stringify(res.data));
+
         toast.success('✅ Login Successful!');
-        onLogin(); // ✅ Update parent login state
+        onLogin();
         setTimeout(() => navigate('/home'), 1000);
       }
+
     } catch (err) {
       toast.error('❌ Invalid credentials');
       console.error(err);

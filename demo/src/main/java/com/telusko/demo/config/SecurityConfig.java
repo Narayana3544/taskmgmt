@@ -23,6 +23,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST,"/login","/register/{id}").permitAll()
                         .requestMatchers( "/login","/register").permitAll()
+                        .requestMatchers("/current-user").authenticated()
                         .requestMatchers("/create-task").hasRole("Admin")
                         .requestMatchers("/user/profile","/**","/sprints/**","/features/**",
                                 "/sprints","/projects/**").authenticated()

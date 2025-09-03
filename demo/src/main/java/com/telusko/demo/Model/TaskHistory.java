@@ -47,6 +47,4 @@ public class TaskHistory {
         this.id = id;
     }
 
-
-
 }

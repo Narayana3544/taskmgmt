@@ -9,7 +9,7 @@ const Home = () => {
   // Fetch tasks for logged-in user
   useEffect(() => {
     axios
-      .get('http://localhost:8080/api/user/tasks/', { withCredentials: true })
+      .get('http://localhost:8080/api/user/tasks', { withCredentials: true })
       .then((res) => {
         const grouped = { todo: [], inprogress: [], done: [] };
 
@@ -120,3 +120,4 @@ const Home = () => {
 };
 
 export default Home;
+

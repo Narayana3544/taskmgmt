@@ -8,6 +8,8 @@ import com.telusko.demo.config.CustomUserDetails;
 import com.telusko.demo.repo.TaskRepository;
 import com.telusko.demo.service.Taskservice;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -41,9 +43,17 @@ public class TaskController {
         }
     }
 
+//    @GetMapping("/view-tasks")
+//    public List<task> viewtask(){
+//        return repo.findAll();
+//    }
+
     @GetMapping("/view-tasks")
-    public List<task> viewtask(){
-        return repo.findAll();
+    public Page<task> getTasks(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size
+    ) {
+        return service.getAllTasks(PageRequest.of(page, size));
     }
 
 //    @PutMapping("/task/{id}")

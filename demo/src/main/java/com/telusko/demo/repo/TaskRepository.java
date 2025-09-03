@@ -2,9 +2,12 @@ package com.telusko.demo.repo;
 
 import com.telusko.demo.Model.Create_Task;
 import com.telusko.demo.Model.task;
+import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.scheduling.config.Task;
 import org.springframework.stereotype.Repository;
 
+import java.awt.print.Pageable;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,5 +26,7 @@ public interface TaskRepository  extends JpaRepository<task,Integer> {
 
     List<task> findAllBySprint_id(int sprintId);
 
-//    task findByTaskId(int taskId);
+
+
+
 }

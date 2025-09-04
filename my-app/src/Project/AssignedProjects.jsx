@@ -1,8 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-// import Navbar from '../components/Navbar';
-// import '../Pages/ManageProject.css';
-import { FaEdit, FaPlus } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 
 export default function ViewProjectById() {
@@ -115,12 +112,12 @@ const filteredProjects = Array.isArray(projects)
                   >
                     View
                   </button>
-                      {/* <button 
+                      <button 
                     className="view-btn" 
                     onClick={() => navigate(`/view-featuresByprojectid/${project.id}`)}
                   >
-                    View
-                  </button> */}
+                    View Features
+                  </button>
                     </td>
                   </tr>
                 ))

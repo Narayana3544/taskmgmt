@@ -128,7 +128,6 @@ export default function TaskDetails() {
           axios.get(`http://localhost:8080/api/viewComments/${id}`, { withCredentials: true }),
           axios.get(`http://localhost:8080/api/tasks/viewUsers/${id}`, { withCredentials: true }) // Assuming API for listing users
         ]);
-        console.log(usersRes.data);
         setTask(taskRes.data);
         setComments(commentRes.data);
         setUsers(usersRes.data);
@@ -162,7 +161,7 @@ export default function TaskDetails() {
   const handleAssignTask = async () => {
     if (!selectedUser) return alert("Please select a user to assign.");
     try {
-      await axios.post(
+      await axios.put(
         `http://localhost:8080/api/tasks/${id}/assignTo/${selectedUser}`,
         
         {},
@@ -251,13 +250,14 @@ export default function TaskDetails() {
         <div className="task-section">
           <h3>Assign Task</h3>
           <select value={selectedUser} onChange={e => setSelectedUser(e.target.value)}>
-            <option value="">-- Select User --</option>
-            {users.map(u => (
-              <option key={u.id} value={u.id}>
-                {u.user?.first_name}
-              </option>
-            ))}
-          </select>
+          <option value="">-- Select User --</option>
+          {users.map(u => (
+            <option key={u.user?.id} value={u.user?.id}>
+              {u.user?.first_name}
+            </option>
+          ))}
+        </select>
+
           <button className="assign-btn" onClick={handleAssignTask}>Assign</button>
         </div>
 

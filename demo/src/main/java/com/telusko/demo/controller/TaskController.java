@@ -6,6 +6,7 @@ import com.telusko.demo.Model.User;
 import com.telusko.demo.Model.task;
 import com.telusko.demo.config.CustomUserDetails;
 import com.telusko.demo.repo.TaskRepository;
+import com.telusko.demo.service.TaskTrackService;
 import com.telusko.demo.service.Taskservice;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -31,6 +32,9 @@ public class TaskController {
 
     @Autowired
     public Taskservice service;
+
+    @Autowired
+    public TaskTrackService taskTrackService;
 
     @PostMapping("/create-task")
     public ResponseEntity<?> createTask(@RequestBody task Task) {
@@ -207,12 +211,18 @@ public class TaskController {
         service.reportTask(taskId, managerId);
         return ResponseEntity.ok("Task Assigned successfully");
     }
-
     @PutMapping("/tasks/{taskId}/assignTo/{userId}")
-    public ResponseEntity<String> assignTask(@PathVariable int taskId,@PathVariable int userId ) {
-        service.assignTask(taskId, userId);
-        return ResponseEntity.ok("Task Assigned successfully");
+    public ResponseEntity<String> assignTask(@PathVariable int taskId, @PathVariable int userId) {
+        try {
+            taskTrackService.assignTask(taskId, userId);
+            return ResponseEntity.ok("Task Assigned successfully");
+        } catch (Exception e) {
+            e.printStackTrace(); // log in console
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error assigning task: " + e.getMessage());
+        }
     }
+
 
     @GetMapping("/tasks/viewUsers/{taskId}")
     public List<Team> viewUsersBytaskId(@PathVariable int taskId){

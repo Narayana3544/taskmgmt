@@ -3,6 +3,7 @@ package com.telusko.demo.controller;
 
 import com.telusko.demo.Model.Team;
 import com.telusko.demo.Model.User;
+import com.telusko.demo.Model.createsprint;
 import com.telusko.demo.Model.task;
 import com.telusko.demo.config.CustomUserDetails;
 import com.telusko.demo.repo.TaskRepository;
@@ -229,4 +230,13 @@ public class TaskController {
         return service.viewUsersByTaskId(taskId);
     }
 
+    @GetMapping("/viewTaskSprints/{taskId}")
+    public List<createsprint> ViewSprintsOnTasks(@PathVariable int taskId){
+        return service.viewSprintsByTaskId(taskId);
+    }
+
+    @GetMapping("/viewTaskByProjectId/{ProjectId}")
+    public List<task> ViewTasksByProjectId(@PathVariable int ProjectId){
+        return service.viewTasksBYProjectId(ProjectId);
+    }
 }

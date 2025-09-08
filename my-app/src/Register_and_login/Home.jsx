@@ -122,7 +122,7 @@ const handleStatusChange = (taskId, statusId) => {
 
 
   return (
-    <div className="home-container">
+    <div className="home">
       <h2 className="board-title">🗂️ Task Board</h2>
 
       <div className="columns">

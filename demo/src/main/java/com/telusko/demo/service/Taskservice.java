@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -35,6 +36,12 @@ public class Taskservice {
 
     @Autowired
     private Teamrepo teamRepository;
+
+    @Autowired
+    private ProjectRepository projectRepo;
+
+    @Autowired
+    private featurerepo FeatureRepo;
 
     public task createtask(task Task){
         return repo.save(Task);
@@ -198,5 +205,19 @@ public class Taskservice {
     }
 
 
+    public List<createsprint> viewSprintsByTaskId(int taskId) {
+        int featureId=repo.findById(taskId).get().getFeature().getId();
+        return sprintRepo.findByFeatureId(featureId);
+    }
+
+    public List<task> viewTasksBYProjectId(int projectId) {
+        List<Feature> features=featureRepo.findByProjectId(projectId);
+        List<task>Tasks=new ArrayList<>();
+        for(Feature F:features){
+            int featureId=F.getId();
+            Tasks.addAll(repo.findByFeature_id(featureId));
+        }
+        return Tasks;
+    }
 }
 

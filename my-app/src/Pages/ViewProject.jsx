@@ -189,8 +189,13 @@ const ViewProject = () => {
   const [allUsers, setAllUsers] = useState([]);
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [showAssignForm, setShowAssignForm] = useState(false);
+  const [showConfirmPopup, setShowConfirmPopup] = useState(false);
+  const [showUnassignPopup, setShowUnassignPopup] = useState(false);
+const [userToUnassign, setUserToUnassign] = useState(null);
 
-  // Fetch project details
+
+
+ 
   const fetchProject = () => {
     axios
       .get(`http://localhost:8080/api/projects/${id}`, { withCredentials: true })
@@ -198,7 +203,7 @@ const ViewProject = () => {
       .catch((err) => console.error("Error fetching project:", err));
   };
 
-  // Fetch assigned users
+
   const fetchAssignedUsers = () => {
     axios
       .get(`http://localhost:8080/api/project/users/${id}`, { withCredentials: true })
@@ -242,7 +247,6 @@ const ViewProject = () => {
         { withCredentials: true }
       )
       .then(() => {
-        alert("Users assigned successfully!");
         setSelectedUsers([]);
         setShowAssignForm(false);
         fetchAssignedUsers();
@@ -261,8 +265,6 @@ const ViewProject = () => {
       withCredentials: true,
     })
     .then(() => {
-      alert("User unassigned successfully!");
-      // Remove user locally from assignedUsers state
       setAssignedUsers((prev) => prev.filter((u) => u.id !== userId));
     })
     .catch((err) => {
@@ -307,9 +309,12 @@ const ViewProject = () => {
                 <td>
                   <button
                     className="remove-btn"
-                    onClick={() => handleUnassignUser(user.id)}
+                    onClick={() => {
+                      setUserToUnassign(user.id);
+                      setShowUnassignPopup(true);
+                    }}
                   >
-                   unassign
+                    Unassign
                   </button>
                 </td>
               </tr>
@@ -344,15 +349,65 @@ const ViewProject = () => {
                   checked={selectedUsers.includes(user.id)}
                   onChange={handleUserSelect}
                 />
-                {user.preffered_name} 
+                {user.preffered_name}
               </label>
             ))}
           </div>
-          <button className="submit-btn" onClick={handleAssignUsers}>
+          <button
+            className="submit-btn"
+            onClick={() => setShowConfirmPopup(true)} // 👈 trigger popup instead of direct assign
+          >
             Assign Selected Users
           </button>
         </div>
       )}
+
+      {/* ✅ Confirmation Popup */}
+      {showConfirmPopup && (
+        <div className="popup-overlay">
+          <div className="popup">
+            <p>Are you sure you want to assign selected users?</p>
+            <div className="popup-actions">
+              <button className="confirm-btn" onClick={() => {
+            handleAssignUsers();
+            window.location.reload(); 
+          }}>
+                Yes
+              </button>
+              <button className="cancel-btn" onClick={() => setShowConfirmPopup(false)}>
+                No
+              </button>
+            </div>
+          </div>
+        </div>
+        
+      )}
+      {showUnassignPopup && (
+  <div className="popup-overlay">
+    <div className="popup">
+      <p>Are you sure you want to unassign this user?</p>
+      <div className="popup-actions">
+        <button
+          className="confirm-btn"
+          onClick={() => {
+            handleUnassignUser(userToUnassign);
+            window.location.reload(); // 👈 reload after success
+          }}
+        >
+          Yes
+        </button>
+        <button
+          className="cancel-btn"
+          onClick={() => setShowUnassignPopup(false)}
+        >
+          No
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+
     </div>
   );
 };

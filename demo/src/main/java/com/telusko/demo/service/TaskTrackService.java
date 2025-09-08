@@ -28,25 +28,19 @@ public class TaskTrackService {
         task existingTask = Taskrepo.findById(taskId)
                 .orElseThrow(() -> new RuntimeException("Task not found"));
 
-        // 2. Current assigned user
         User fromUser = existingTask.getUser();
 
-
-        // 3. Find new user
         User toUser = Userrepo.findById(newUserId);
         if (toUser == null) {
             throw new RuntimeException("User not found");
         }
 
-
-        // 4. Save transfer record in Task_track
         Task_track track = new Task_track();
         track.setTask(existingTask);
         track.setFromuser(fromUser);
         track.setTouser(toUser);
         repo.save(track);
 
-        // 5. Update the task with the new user
         existingTask.setUser(toUser);
         Taskrepo.save(existingTask);
     }

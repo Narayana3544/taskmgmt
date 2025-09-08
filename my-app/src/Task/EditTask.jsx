@@ -59,7 +59,7 @@ export default function EditTask() {
 
     // Fetch dropdown data
     axios.get("http://localhost:8080/api/users", { withCredentials: true }).then(res => setUsers(res.data));
-    axios.get("http://localhost:8080/api/sprints", { withCredentials: true }).then(res => setSprints(res.data));
+    axios.get(`http://localhost:8080/api/viewTaskSprints/${id}`, { withCredentials: true }).then(res => setSprints(res.data));
     axios.get("http://localhost:8080/api/features", { withCredentials: true }).then(res => setFeatures(res.data));
     axios.get("http://localhost:8080/api/gettype", { withCredentials: true }).then(res => setTaskTypes(res.data));
     axios.get("http://localhost:8080/api/getstatusForTask", { withCredentials: true }).then(res => setTaskStatuses(res.data));
@@ -101,7 +101,7 @@ export default function EditTask() {
         withCredentials: true,
         headers: { "Content-Type": "multipart/form-data" }
       });
-      alert("Task updated successfully!");
+      // alert("Task updated successfully!");
       navigate(-1);
     } catch (err) {
       console.error("Error updating task:", err);
@@ -122,9 +122,10 @@ export default function EditTask() {
   };
 
   return (
+    <div className="home">
     <form onSubmit={handleSubmit} className="task-form" style={{ maxWidth: 600, margin: "auto" }}>
+      <button  onClick={() => navigate(-1)} className="back-btn">Back</button>
       <h2>Edit Task</h2>
-
       <label>Acceptance Criteria:</label>
       <textarea value={acceptanceCriteria} onChange={e => setAcceptanceCriteria(e.target.value)} required rows={3} />
 
@@ -144,10 +145,10 @@ export default function EditTask() {
       )}
 
       <label>Sprint:</label>
-      <select value={selectedSprint} onChange={handleSelectChange(setSelectedSprint)} required>
+      <select value={selectedSprint} onChange={handleSelectChange(setSelectedSprint)}>
         <option value="">-- Select Sprint --</option>
         {sprints.map(s => (
-          <option key={s.id} value={s.id}>{s.sprintName || `Sprint ${s.id}`}</option>
+          <option key={s.id} value={s.id}>{s.name || `Sprint ${s.id}`}</option>
         ))}
       </select>
 
@@ -169,7 +170,7 @@ export default function EditTask() {
       </select>
 
       <label>User:</label>
-      <select value={selectedUser} onChange={handleSelectChange(setSelectedUser)} required>
+      <select value={selectedUser} onChange={handleSelectChange(setSelectedUser)}>
         <option value="">-- Select User --</option>
         {users.map(u => (
           <option key={u.id} value={u.id}>{u.firstName || u.preffered_name || `${u.id}`}</option>
@@ -212,5 +213,6 @@ export default function EditTask() {
         <button type="button" onClick={handleDelete} className="task-form-button delete-button">Delete</button>
       </div>
     </form>
+    </div>
   );
 }

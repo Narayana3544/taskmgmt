@@ -32,6 +32,7 @@ import ViewProjectById from './Project/AssignedProjects'
 import ViewFeaturesByProjectId from './Features/ViewFeaturesByProjectId'
 import ViewSprintsByFeatureid from './sprint/ViewSprintsByFeatureId';
 import ActiveSprints from './Project/ActiveSprints';
+import TimesheetForm from './TimeSheets/TimeSheetForm';
 
 // 🔹 Small component for logout route
 const Logout = ({ onLogout }) => {
@@ -97,6 +98,7 @@ function App() {
               <Route path="/view-featuresByprojectid/:projectId" element={<ViewFeaturesByProjectId />} />
               <Route path="/ViewSprintsByFeatureid/:featureId" element={<ViewSprintsByFeatureid />} />
               <Route path="/active-sprints" element={<ActiveSprints />} />
+              <Route path="/time-sheets" element={<TimesheetForm />} />
 
               {/* 🔹 Logout Route */}
               <Route path="/logout" element={<Logout onLogout={handleLogout} />} />

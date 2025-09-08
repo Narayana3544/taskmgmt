@@ -45,6 +45,7 @@ const handleChange = (e) => {
 
   return (
     <div className="create-sprint-container">
+      <button className="back-btn" onClick={() => navigate(-1)}>⬅ Back</button>
       <h2>Create Sprint</h2>
       <form onSubmit={handleSubmit} className="sprint-form">
         <div className="form-group">

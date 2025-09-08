@@ -52,7 +52,7 @@ export default function AssignTaskToSprint() {
 
    axios.put(`http://localhost:8080/api/sprints/${sprintId}/assign-tasks`, selectedTasks,{withCredentials:true})
   .then(() => {
-    toast.success("Tasks assigned successfully!");
+    window.alert("Tasks assigned successfully!");
     fetchUnassignedTasks(); // refresh
   })
   .catch(err => {

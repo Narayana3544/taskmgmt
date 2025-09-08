@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams,useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import "./SprintOverview.css";
 
@@ -12,7 +12,7 @@ export default function SprintOverview({ sprintId: propSprintId }) {
   const [tasks, setTasks] = useState({ todo: [], inProgress: [], done: [] });
   const [loading, setLoading] = useState(true);
   const [managers, setManagers] = useState([]);
-  const navigate=useNavigate();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!sprintId) return;
@@ -21,28 +21,43 @@ export default function SprintOverview({ sprintId: propSprintId }) {
 
   const fetchData = async () => {
     try {
-      const sprintRes = await axios.get(`http://localhost:8080/api/sprints/${sprintId}`, { withCredentials: true });
+      const sprintRes = await axios.get(
+        `http://localhost:8080/api/sprints/${sprintId}`,
+        { withCredentials: true }
+      );
       setSprint(sprintRes.data);
 
-      const usersRes = await axios.get(`http://localhost:8080/api/sprint/users/${sprintId}`, { withCredentials: true });
+      const usersRes = await axios.get(
+        `http://localhost:8080/api/sprint/users/${sprintId}`,
+        { withCredentials: true }
+      );
       setUsers(usersRes.data);
 
-      const ManagerRes=await axios.get(`http://localhost:8080/api/managers`,{withCredentials:true})
-       setManagers(ManagerRes.data)
-      // .catch(err => console.error("Error fetching managers", err));
-      console.log(ManagerRes.data);
+      const ManagerRes = await axios.get(
+        `http://localhost:8080/api/managers`,
+        { withCredentials: true }
+      );
+      setManagers(ManagerRes.data);
 
-      const tasksRes = await axios.get(`http://localhost:8080/api/sprint/viewtaskBySprintId/${sprintId}`, { withCredentials: true });
-      const todo = tasksRes.data.filter((t) => t.taskStatus?.decription === "To Do");
-      const inProgress = tasksRes.data.filter((t) => t.taskStatus?.decription === "In Progress");
-      const done = tasksRes.data.filter((t) => t.taskStatus?.decription === "Done");
+      const tasksRes = await axios.get(
+        `http://localhost:8080/api/sprint/viewtaskBySprintId/${sprintId}`,
+        { withCredentials: true }
+      );
+      const todo = tasksRes.data.filter(
+        (t) => t.taskStatus?.decription === "To Do"
+      );
+      const inProgress = tasksRes.data.filter(
+        (t) => t.taskStatus?.decription === "In Progress"
+      );
+      const done = tasksRes.data.filter(
+        (t) => t.taskStatus?.decription === "Done"
+      );
       setTasks({ todo, inProgress, done });
     } catch (err) {
       console.error("Error fetching sprint data:", err);
     } finally {
       setLoading(false);
     }
-    
   };
 
   // Assign Task API call
@@ -60,29 +75,33 @@ export default function SprintOverview({ sprintId: propSprintId }) {
   };
 
   const handleAssignReport = async (taskId, managerId) => {
-  try {
-    await axios.put(`http://localhost:8080/api/tasks/${taskId}/assignReportTo/${managerId}`,
-      {},
+    try {
+      await axios.put(
+        `http://localhost:8080/api/tasks/${taskId}/assignReportTo/${managerId}`,
+        {},
         { withCredentials: true }
-    );
-    // refresh tasks list after assignment
-    fetchData();
-  } catch (err) {
-    console.error("Error assigning report-to:", err);
-  }
-};
+      );
+      fetchData();
+    } catch (err) {
+      console.error("Error assigning report-to:", err);
+    }
+  };
 
   if (loading) return <div className="loading">Loading Sprint Overview...</div>;
 
   return (
     <div className="sprint-overview">
-       <button className="back-btn" onClick={() => navigate(-1)}>⬅ Back</button>
+      <button className="back-btn" onClick={() => navigate(-1)}>
+        ⬅ Back
+      </button>
+
       {/* Sprint Header */}
       <div className="sprint-header">
-        <h2>{sprint.name} (ID: {sprint.id})</h2>
+        <h2>
+          {sprint.name} (ID: {sprint.id})
+        </h2>
         <p>
-          Start: {sprint.startDate} | End: {sprint.endDate} | 
-        Duration:{" "}
+          Start: {sprint.startDate} | End: {sprint.endDate} | Duration:{" "}
           {Math.ceil(
             (new Date(sprint.endDate) - new Date(sprint.startDate)) /
               (1000 * 60 * 60 * 24)
@@ -90,7 +109,8 @@ export default function SprintOverview({ sprintId: propSprintId }) {
           days
         </p>
         <p>
-          Status: {sprint.status} | Targeted SP: {sprint.targetedSP} | Achieved SP: {sprint.achievedSP}
+          Status: {sprint.status} | Targeted SP: {sprint.targetedSP} | Achieved
+          SP: {sprint.achievedSP}
         </p>
       </div>
 
@@ -121,7 +141,11 @@ export default function SprintOverview({ sprintId: propSprintId }) {
       <div className="tasks-section">
         {["todo", "inProgress", "done"].map((statusKey) => {
           const statusTitle =
-            statusKey === "todo" ? "To Do" : statusKey === "inProgress" ? "In Progress" : "Done";
+            statusKey === "todo"
+              ? "To Do"
+              : statusKey === "inProgress"
+              ? "In Progress"
+              : "Done";
           return (
             <div key={statusKey} className="task-table">
               <h3>{statusTitle}</h3>
@@ -130,24 +154,48 @@ export default function SprintOverview({ sprintId: propSprintId }) {
                   <tr>
                     <th>Task</th>
                     <th>Assignee</th>
-                     <th>Reporter</th>
+                    <th>Reporter</th>
                     <th>Story Points</th>
                     <th>Report To</th>
-                    {statusKey === "todo" && <th>Assign</th>}
                   </tr>
                 </thead>
                 <tbody>
                   {tasks[statusKey].map((task) => (
                     <tr key={task.id}>
                       <td>{task.userstory}</td>
-                      <td>{task.user?.first_name  || "Unassigned"}</td>
-                      <td>{task.reportedTo?.first_name  || "Unassigned"}</td>
-                      <td>{task.storypoints}</td>
-                      {(!task.reportedTo || task.reportedTo === null) && (
+
+                      {/* Assignee dropdown (always available) */}
                       <td>
                         <select
-                          onChange={(e) => handleAssignReport(task.id, e.target.value)}
-                          defaultValue=""
+                          onChange={(e) =>
+                            handleAssign(task.id, e.target.value)
+                          }
+                          value={task.user?.id || ""}
+                        >
+                          <option value="" disabled>
+                            Assign to...
+                          </option>
+                          {users.map((u) => (
+                            <option key={u.id} value={u.id}>
+                              {u.preffered_name || u.name}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+
+                      {/* Reporter column (always dropdown) */}
+                      <td>{task.reportedTo?.preffered_name || "Unassigned"}</td>
+
+                      {/* Story points */}
+                      <td>{task.storypoints}</td>
+
+                      {/* Report To dropdown */}
+                      <td>
+                        <select
+                          onChange={(e) =>
+                            handleAssignReport(task.id, e.target.value)
+                          }
+                          value={task.reportedTo?.id || ""}
                         >
                           <option value="" disabled>
                             Report to...
@@ -159,24 +207,6 @@ export default function SprintOverview({ sprintId: propSprintId }) {
                           ))}
                         </select>
                       </td>
-                    )}
-                      { (!task.user || task.user.id === null) && (
-                        <td>
-                          <select
-                            onChange={(e) => handleAssign(task.id, e.target.value)}
-                            defaultValue=""
-                          >
-                            <option value="" disabled>
-                              Assign to...
-                            </option>
-                            {users.map((u) => (
-                              <option key={u.id} value={u.id}>
-                                {u.preffered_name || u.name}
-                              </option>
-                            ))}
-                          </select>
-                        </td>
-                      )}
                     </tr>
                   ))}
                 </tbody>

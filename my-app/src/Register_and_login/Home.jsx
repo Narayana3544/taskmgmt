@@ -1,6 +1,8 @@
 
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { FaEye } from "react-icons/fa";
+import { useNavigate } from 'react-router-dom';
 import "./Home.css";
 
 const Home = () => {
@@ -10,6 +12,7 @@ const Home = () => {
   const [users, setUsers] = useState([]);
   const [selectedUserId, setSelectedUserId] = useState("");
   const [selectedStatusId, setSelectedStatusId] = useState("");
+   const navigate = useNavigate();
 
   useEffect(() => {
     // Fetch tasks
@@ -61,6 +64,7 @@ const Home = () => {
         { withCredentials: true }
       )
       .then(() => {
+        
         setTasks((prev) => {
           const updated = { ...prev };
           Object.keys(updated).forEach((col) => {
@@ -72,6 +76,7 @@ const Home = () => {
           });
           return updated;
         });
+        
         closePopup();
       })
       .catch((err) => console.error("Error assigning user:", err));
@@ -136,13 +141,44 @@ const handleStatusChange = (taskId, statusId) => {
 
             {tasks[colKey].map((task) => (
               <div className="task-card" key={task.id}>
-                <div className="task-header">
-                  <strong>{task.userstory || task.title}</strong>
-                  <button className="arrow-btn" onClick={() => openPopup(task)}>
+              {/* Top-left ID */}
+              <div className="task-id">ID: {task.id}</div>
+
+              {/* Main content (title + actions) */}
+              <div className="task-content">
+                <strong>{task.userstory || task.title}</strong>
+                <div className="task-actions">
+                  <button
+                    className="arrow-btn"
+                    onClick={() => navigate(`/task/${task.id}`)}
+                    title="View Task"
+                  >
+                    <FaEye size={18} />
+                  </button>
+                  <button
+                    className="arrow-btn"
+                    onClick={() => openPopup(task)}
+                    title="Move Task"
+                  >
                     ➔
                   </button>
                 </div>
               </div>
+
+              {/* Bottom-right Story Points */}
+              <div
+                className={`storypoints-badge ${
+                  task.storypoints <= 3
+                    ? "low"
+                    : task.storypoints <= 6
+                    ? "medium"
+                    : "high"
+                }`}
+              >
+                {task.storypoints} SP
+              </div>
+            </div>
+
             ))}
           </div>
         ))}

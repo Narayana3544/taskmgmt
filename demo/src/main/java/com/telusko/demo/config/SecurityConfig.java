@@ -12,29 +12,48 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.config.http.SessionCreationPolicy;
 
+//@Configuration
+//public class SecurityConfig {
+//
+//    @Bean
+//    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+//        http
+//                .csrf(csrf -> csrf.disable())
+//                .cors(Customizer.withDefaults())
+//                .authorizeHttpRequests(auth -> auth
+//                        .requestMatchers("/login","/register/{id}").permitAll()
+//                        .requestMatchers( "/login","/register").permitAll()
+//                        .requestMatchers("/current-user").authenticated()
+//                        .requestMatchers("/create-task").hasRole("Admin")
+//                        .requestMatchers("/user/profile","/**","/sprints/**","/features/**",
+//                                "/sprints","/projects/**").authenticated()
+//                        .requestMatchers(HttpMethod.POST, "/sprints/**/assign-users").authenticated()
+//                        .anyRequest().authenticated()
+//                )
+//                .formLogin(form -> form.disable()) // disable default login form
+//                .httpBasic(basic -> basic.disable()) // disable basic auth
+//                .sessionManagement(session -> session
+//                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+//                );
+//
+//        return http.build();
+//    }
+
 @Configuration
 public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable())
-                .cors(Customizer.withDefaults())
+                .csrf(csrf -> csrf.disable()) // disable CSRF for APIs
+                .cors(cors -> cors.disable()) // disable CORS filter to test
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.POST,"/login","/register/{id}").permitAll()
-                        .requestMatchers( "/login","/register").permitAll()
-                        .requestMatchers("/current-user").authenticated()
-                        .requestMatchers("/create-task").hasRole("Admin")
-                        .requestMatchers("/user/profile","/**","/sprints/**","/features/**",
-                                "/sprints","/projects/**").authenticated()
-                        .requestMatchers(HttpMethod.POST, "/sprints/**/assign-users").authenticated()
-                        .anyRequest().authenticated()
+                        .anyRequest().permitAll() // allow all requests
                 )
-                .formLogin(form -> form.disable()) // disable default login form
-                .httpBasic(basic -> basic.disable()) // disable basic auth
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
-                );
+                .formLogin(form -> form.disable())
+                .httpBasic(basic -> basic.disable())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .anonymous(Customizer.withDefaults()); // explicitly allow anonymous
 
         return http.build();
     }

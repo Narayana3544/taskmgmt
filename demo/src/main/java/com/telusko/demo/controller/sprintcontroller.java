@@ -44,10 +44,6 @@ public class sprintcontroller {
 
 
 
-
-//    @Autowired
-//    public sprintoverviewdto overviewrepo;
-
     @PostMapping("/sprints/create-sprints")
     public createsprint create(@RequestBody createsprint sprint){
         return service.create(sprint);
@@ -81,35 +77,7 @@ public class sprintcontroller {
 
         return ResponseEntity.ok("Users assigned successfully");
     }
-    @GetMapping("/sprints/{sprintId}/overview")
-    public ResponseEntity<?> getSprintOverview(@PathVariable int sprintId) {
-        createsprint sprint = sprintRepo.findById(sprintId).orElse(null);
-        if (sprint == null) {
-            return ResponseEntity.notFound().build();
-        }
 
-        // Fetch user stories linked to this sprint
-        List<story> userStories = userStoryRepo.findBySprintId((long) sprintId);
-
-//        int totalPoints = userStories.stream().mapToInt(overviewrepo::gettotalStorypoints).sum();
-//        int completedPoints = userStories.stream()
-//                .filter(story -> "Done".equalsIgnoreCase(story.getStatus()))
-//                .mapToInt(overviewrepo::getStorypoints)
-//                .sum();
-
-        SprintOverviewDTO dto = new SprintOverviewDTO();
-        dto.setSprintId(sprint.getId());
-        dto.setSprintName(sprint.getName());
-        dto.setStartDate(sprint.getStartDate().toString());
-        dto.setEndDate(sprint.getEndDate().toString());
-        dto.setFeatureName(sprint.getFeature().getName());
-        dto.setAssignedUsers(sprint.getUsers());
-        dto.setUserStories(userStories);
-//        dto.setTotalStoryPoints(totalPoints);
-//        dto.setCompletedStoryPoints(completedPoints);
-
-        return ResponseEntity.ok(dto);
-    }
 
 
     @PostMapping("/sprints/{sprintId}/assign-stories")
@@ -221,7 +189,6 @@ public class sprintcontroller {
 
         return allSprints;
     }
-
 
 
 

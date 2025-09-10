@@ -7,6 +7,7 @@ import com.telusko.demo.Model.createsprint;
 import com.telusko.demo.Model.task;
 import com.telusko.demo.config.CustomUserDetails;
 import com.telusko.demo.repo.TaskRepository;
+import com.telusko.demo.service.TaskSprintTrackService;
 import com.telusko.demo.service.TaskTrackService;
 import com.telusko.demo.service.Taskservice;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +37,9 @@ public class TaskController {
 
     @Autowired
     public TaskTrackService taskTrackService;
+
+    @Autowired
+    public TaskSprintTrackService taskSprintTrackService;
 
     @PostMapping("/create-task")
     public ResponseEntity<?> createTask(@RequestBody task Task) {
@@ -238,5 +242,18 @@ public class TaskController {
     @GetMapping("/viewTaskByProjectId/{ProjectId}")
     public List<task> ViewTasksByProjectId(@PathVariable int ProjectId){
         return service.viewTasksBYProjectId(ProjectId);
+    }
+
+    @PutMapping("/tasks/{taskId}/move/{SprintId}")
+    public ResponseEntity<String> moveTaskToNextSprint(@PathVariable int taskId, @PathVariable int SprintId) {
+        try {
+//          service.moveTaskToNextSprint(taskId,SprintId);
+            taskSprintTrackService.MoveTaskToAnySprint(taskId,SprintId);
+            return ResponseEntity.ok("Task Assigned successfully");
+        } catch (Exception e) {
+            e.printStackTrace(); // log in console
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error moving task to next sprint: " + e.getMessage());
+        }
     }
 }

@@ -146,3 +146,45 @@
 .search-bar button:hover {
   background-color: #125aa0;
 }
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 15px;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.pagination button {
+  padding: 5px 10px;
+  border: 1px solid #ddd;
+  background: #f9f9f9;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: 0.2s;
+}
+
+.pagination button.active {
+  background: #007bff;
+  color: #fff;
+  font-weight: bold;
+}
+
+.pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination .dots {
+  padding: 0 6px;
+  font-size: 14px;
+  color: #555;
+}
+
+.page-info {
+  margin-left: 10px;
+  font-size: 14px;
+  color: #333;
+}
+
+

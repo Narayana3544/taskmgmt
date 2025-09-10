@@ -225,7 +225,16 @@ export default function TaskDetails() {
         {/* Acceptance Criteria */}
         <div className="task-section">
           <h3>Acceptance Criteria</h3>
-          <p>{task.acceptance_criteria || "-"}</p>
+          {/* <p>{task.acceptance_criteria || "-"}</p> */}
+          <ul>
+           {task.acceptance_criteria
+                    ? task.acceptance_criteria
+                        .split(/\d+\)/) // split by 1), 2), 3)...
+                        .filter(line => line.trim() !== "")
+                        .map((line, idx) => <li key={idx}>{line.trim()}</li>)
+                    : <li>-</li>}
+          </ul>
+          
         </div>
 
         {/* Comments */}

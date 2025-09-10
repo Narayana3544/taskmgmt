@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -61,8 +62,8 @@ public class Taskservice {
         existingTask.setDescription(newTaskData.getDescription());
         existingTask.setAcceptance_criteria(newTaskData.getAcceptance_criteria());
         existingTask.setStorypoints(newTaskData.getStorypoints());
-        existingTask.setStart_date(newTaskData.getStart_date());
-        existingTask.setEnd_date(newTaskData.getEnd_date());
+//        existingTask.setStart_date(newTaskData.getStart_date());
+//        existingTask.setEnd_date(newTaskData.getEnd_date());
         existingTask.setSprint(newTaskData.getSprint());
         existingTask.setFeature(newTaskData.getFeature());
         existingTask.setUser(newTaskData.getUser());
@@ -142,10 +143,17 @@ public class Taskservice {
     }
 
     public void updateTaskStatus(int taskId, int statusId) {
+        LocalDate today = LocalDate.now();
         task Task = repo.findById(taskId)
                 .orElseThrow(() -> new RuntimeException("Task not found"));
         Task_status status = taskStatusRepository.findById(statusId)
                 .orElseThrow(() -> new RuntimeException("Status not found"));
+        if(status.getDecription().equals("In Progress")){
+            Task.setStart_date(today.atStartOfDay());
+        }
+       else if(status.getDecription().equals("Done")){
+            Task.setEnd_date(today.atStartOfDay());
+        }
         Task.setTaskStatus(status);
        repo.save(Task);   // only updates task_status_id column
     }
@@ -218,6 +226,14 @@ public class Taskservice {
             Tasks.addAll(repo.findByFeature_id(featureId));
         }
         return Tasks;
+    }
+
+    public void moveTaskToNextSprint(int taskId, int sprintId) {
+        task Task=repo.findById(taskId)
+                .orElseThrow(() -> new RuntimeException("Task not found"));
+        createsprint Sprint=sprintRepo.findById(sprintId).orElseThrow(()->new RuntimeException(("sprint not found")));
+        Task.setSprint(Sprint);
+        repo.save(Task);
     }
 }
 

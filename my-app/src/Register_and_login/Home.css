@@ -45,42 +45,83 @@
 
 /* Task Card */
 .task-card {
-  background: #444;
-  border-radius: 8px;
-  padding: 10px;
-  margin-bottom: 8px;
-  color: #fff;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  position: relative;
+  background: #fff;
+  border-radius: 10px;
+  padding: 12px;
+  margin: 10px 0;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  min-height: 90px;
+  display: flex;
+  flex-direction: column;
 }
 
-.task-header {
+/* Task ID at top-left */
+.task-id {
+  font-size: 12px;
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 4px;  /* reduced space between ID and content */
+}
+
+/* Content row: story + actions */
+.task-content {
   display: flex;
-  justify-content: space-between; /* Title on left, arrow on right */
+  justify-content: space-between;
   align-items: center;
 }
 
-.task-header strong {
+/* Story title -> single line only */
+.task-content strong {
   flex: 1;
-  font-size: 1rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;      /* force single line */
+  overflow: hidden;         /* cut overflowing text */
+  text-overflow: ellipsis;  /* add "..." */
+  margin-right: 8px;
+}
+
+/* Action buttons */
+.task-actions {
+  display: flex;
+  gap: 6px;
 }
 
 .arrow-btn {
-  background: transparent;
+  background: none;
   border: none;
-  color: #4caf50;
-  font-size: 1.2rem;
   cursor: pointer;
-  transition: transform 0.2s ease;
+  color: #2e7d32;
+  transition: transform 0.2s;
 }
 
 .arrow-btn:hover {
-  transform: translateX(3px);
-  color: #81c784;
+  transform: scale(1.2);
 }
 
+/* Story points badge (smaller, bottom-right) */
+.storypoints-badge {
+  position: absolute;
+  bottom: 6px;
+  right: 8px;
+  font-size: 11px;     /* smaller size */
+  font-weight: bold;
+  padding: 2px 5px;
+  border-radius: 5px;
+  color: #fff;
+}
+
+/* Color coding */
+.storypoints-badge.low {
+  background-color: #2e7d32; /* green */
+}
+.storypoints-badge.medium {
+  background-color: #f9a825; /* yellow */
+}
+.storypoints-badge.high {
+  background-color: #d32f2f; /* red */
+}
 
 .task-card:hover {
   background-color: #4caf50;

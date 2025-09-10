@@ -9,10 +9,30 @@ export default function SprintOverview({ sprintId: propSprintId }) {
 
   const [sprint, setSprint] = useState(null);
   const [users, setUsers] = useState([]);
+  const [statuses, setStatuses] = useState([]);
   const [tasks, setTasks] = useState({ todo: [], inProgress: [], done: [] });
   const [loading, setLoading] = useState(true);
   const [managers, setManagers] = useState([]);
+   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  // Add this state at the top
+const [allSprints, setAllSprints] = useState([]);
+
+// Fetch all sprints in fetchData or a separate useEffect
+useEffect(() => {
+  const fetchAllSprints = async () => {
+    try {
+      const res = await axios.get(
+        `http://localhost:8080/api/sprints`,
+        { withCredentials: true }
+      );
+      setAllSprints(res.data);
+    } catch (err) {
+      console.error("Error fetching all sprints:", err);
+    }
+  };
+  fetchAllSprints();
+}, []);
 
   useEffect(() => {
     if (!sprintId) return;
@@ -61,31 +81,75 @@ export default function SprintOverview({ sprintId: propSprintId }) {
   };
 
   // Assign Task API call
-  const handleAssign = async (taskId, userId) => {
-    try {
-      await axios.put(
-        `http://localhost:8080/api/tasks/${taskId}/assignTo/${userId}`,
-        {},
-        { withCredentials: true }
-      );
-      fetchData(); // refresh data
-    } catch (err) {
-      console.error("Error assigning task:", err);
-    }
-  };
+  // Inside your SprintOverview.jsx
 
-  const handleAssignReport = async (taskId, managerId) => {
-    try {
-      await axios.put(
-        `http://localhost:8080/api/tasks/${taskId}/assignReportTo/${managerId}`,
-        {},
-        { withCredentials: true }
-      );
-      fetchData();
-    } catch (err) {
-      console.error("Error assigning report-to:", err);
-    }
-  };
+// Move Task API
+const handleMoveTask = async (taskId, nextSprintId) => {
+  if (!window.confirm("Are you sure you want to move this task to another sprint?")) return;
+
+  try {
+    await axios.put(
+      `http://localhost:8080/api/tasks/${taskId}/move/${nextSprintId}`,
+      {},
+      { withCredentials: true }
+    );
+    fetchData(); // refresh data
+  } catch (err) {
+    console.error("Error moving task:", err);
+  }
+};
+
+// Update handleAssign & handleAssignReport with confirmation
+const handleAssign = async (taskId, userId) => {
+  if (!window.confirm("Are you sure you want to assign this task?")) return;
+
+  try {
+    await axios.put(
+      `http://localhost:8080/api/tasks/${taskId}/assignTo/${userId}`,
+      {},
+      { withCredentials: true }
+    );
+    fetchData();
+  } catch (err) {
+    console.error("Error assigning task:", err);
+  }
+};
+
+const handleAssignReport = async (taskId, managerId) => {
+  if (!window.confirm("Are you sure you want to assign this report-to?")) return;
+
+  try {
+    await axios.put(
+      `http://localhost:8080/api/tasks/${taskId}/assignReportTo/${managerId}`,
+      {},
+      { withCredentials: true }
+    );
+    fetchData();
+  } catch (err) {
+    console.error("Error assigning report-to:", err);
+  }
+};
+useEffect(() => {
+    // Fetch all available statuses
+    axios
+      .get(`http://localhost:8080/api/getstatusForTask`, { withCredentials: true })
+      .then((res) => setStatuses(res.data))
+      .catch((err) => console.error("Error fetching statuses:", err));
+  }, []);
+
+  const handleStatusChange = (taskId, statusId) => {
+  axios
+    .put(
+      `http://localhost:8080/api/tasks/${taskId}/status/${statusId}`,
+      {},
+      { withCredentials: true }
+    )
+    .then(() => {
+      fetchData(); // refresh tasks
+    })
+    .catch((err) => console.error("Error updating status:", err));
+};
+
 
   if (loading) return <div className="loading">Loading Sprint Overview...</div>;
 
@@ -114,7 +178,7 @@ export default function SprintOverview({ sprintId: propSprintId }) {
         </p>
       </div>
 
-      {/* Users Section */}
+      {/* Users Section 
       <div className="users-section">
         <h3>Users</h3>
         <table>
@@ -136,6 +200,7 @@ export default function SprintOverview({ sprintId: propSprintId }) {
           </tbody>
         </table>
       </div>
+      */}
 
       {/* Tasks Section */}
       <div className="tasks-section">
@@ -154,9 +219,10 @@ export default function SprintOverview({ sprintId: propSprintId }) {
                   <tr>
                     <th>Task</th>
                     <th>Assignee</th>
-                    <th>Reporter</th>
+                     <th>Status</th>
                     <th>Story Points</th>
                     <th>Report To</th>
+                    <th>Move Sprint</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -183,8 +249,20 @@ export default function SprintOverview({ sprintId: propSprintId }) {
                         </select>
                       </td>
 
-                      {/* Reporter column (always dropdown) */}
-                      <td>{task.reportedTo?.preffered_name || "Unassigned"}</td>
+                     
+                      <td>
+                    <select
+                      value={task.taskStatus?.id || ""}
+                      onChange={(e) => handleStatusChange(task.id, e.target.value)}
+                    >
+                      <option value="">-- Select Status --</option>
+                      {statuses.map((status) => (
+                        <option key={status.id} value={status.id}>
+                          {status.decription}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
 
                       {/* Story points */}
                       <td>{task.storypoints}</td>
@@ -207,6 +285,22 @@ export default function SprintOverview({ sprintId: propSprintId }) {
                           ))}
                         </select>
                       </td>
+                    <td>
+                      <select
+                        onChange={(e) => handleMoveTask(task.id, e.target.value)}
+                        defaultValue=""
+                      >
+                        <option value="" disabled>Move to sprint...</option>
+                        {allSprints
+                          .filter(s => s.id !== sprint.id)
+                          .map(s => (
+                            <option key={s.id} value={s.id}>
+                              {s.name}
+                            </option>
+                          ))}
+                      </select>
+                    </td>
+
                     </tr>
                   ))}
                 </tbody>

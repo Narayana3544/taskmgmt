@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { useParams, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import "./AssignedTasks.css";
-import { FaEdit } from "react-icons/fa";
 
 export default function TaskList() {
   const [tasks, setTasks] = useState([]);
-  const [statuses, setStatuses] = useState([]); // <-- store all statuses
+  const [statuses, setStatuses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [tasksPerPage] = useState(5); // 👈 change this to increase/decrease rows per page
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -25,7 +26,7 @@ export default function TaskList() {
         setLoading(false);
       });
 
-    // Fetch all available statuses
+    // Fetch statuses
     axios
       .get(`http://localhost:8080/api/getstatusForTask`, { withCredentials: true })
       .then((res) => setStatuses(res.data))
@@ -51,6 +52,14 @@ export default function TaskList() {
       .catch((err) => console.error("Error updating status:", err));
   };
 
+  // Pagination logic
+  const indexOfLastTask = currentPage * tasksPerPage;
+  const indexOfFirstTask = indexOfLastTask - tasksPerPage;
+  const currentTasks = tasks.slice(indexOfFirstTask, indexOfLastTask);
+  const totalPages = Math.ceil(tasks.length / tasksPerPage);
+
+  const handlePageChange = (pageNumber) => setCurrentPage(pageNumber);
+
   if (loading) return <p>Loading tasks...</p>;
   if (error) return <p>{error}</p>;
 
@@ -74,18 +83,20 @@ export default function TaskList() {
               </tr>
             </thead>
             <tbody>
-              {tasks.length === 0 && (
+              {currentTasks.length === 0 && (
                 <tr>
                   <td colSpan="11" style={{ textAlign: "center" }}>
                     No tasks found.
                   </td>
                 </tr>
               )}
-              {tasks.map((task) => (
+              {currentTasks.map((task) => (
                 <tr key={task.id}>
                   <td>{task.userstory || "-"}</td>
                   <td>{task.storypoints ?? "-"}</td>
-                  <td>{task.sprint?.sprintName || task.sprint?.name || "-"}({task.sprint.status})</td>
+                  <td>
+                    {task.sprint?.sprintName || task.sprint?.name || "-"} ({task.sprint?.status})
+                  </td>
                   <td>{task.feature?.name || "-"}</td>
                   <td>{task.taskType?.description || "-"}</td>
                   <td>
@@ -101,7 +112,9 @@ export default function TaskList() {
                       ))}
                     </select>
                   </td>
-                  <td>{task.start_date ? new Date(task.start_date).toLocaleDateString() : "-"}</td>
+                  <td>
+                    {task.start_date ? new Date(task.start_date).toLocaleDateString() : "-"}
+                  </td>
                   <td>
                     <button className="view-btn" onClick={() => navigate(`/task/${task.id}`)}>
                       View
@@ -115,6 +128,58 @@ export default function TaskList() {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination Controls */}
+        {tasks.length > tasksPerPage && (
+          <div className="pagination">
+  <button
+    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+    disabled={currentPage === 1}
+  >
+    Previous
+  </button>
+
+  {/* Show limited page numbers */}
+  {Array.from({ length: totalPages }, (_, idx) => idx + 1)
+    .filter(
+      (num) =>
+        num === 1 || // always show first
+        num === totalPages || // always show last
+        (num >= currentPage - 2 && num <= currentPage + 2) // show around current
+    )
+    .map((num, idx, arr) => {
+      // Add "..." where numbers are skipped
+      if (idx > 0 && arr[idx] - arr[idx - 1] > 1) {
+        return (
+          <span key={`dots-${num}`} className="dots">
+            ...
+          </span>
+        );
+      }
+      return (
+        <button
+          key={num}
+          onClick={() => setCurrentPage(num)}
+          className={currentPage === num ? "active" : ""}
+        >
+          {num}
+        </button>
+      );
+    })}
+
+  <button
+    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+    disabled={currentPage === totalPages}
+  >
+    Next
+  </button>
+
+  {/* Page info */}
+  <span className="page-info">
+    Page {currentPage} of {totalPages}
+  </span>
+</div>
+        )}
       </div>
     </div>
   );

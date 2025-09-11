@@ -168,9 +168,9 @@ const handleStatusChange = (taskId, statusId) => {
               {/* Bottom-right Story Points */}
               <div
                 className={`storypoints-badge ${
-                  task.storypoints <= 3
+                  task.storypoints <= 1
                     ? "low"
-                    : task.storypoints <= 6
+                    : task.storypoints <= 3
                     ? "medium"
                     : "high"
                 }`}

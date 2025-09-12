@@ -2,7 +2,7 @@ INSERT INTO task_type VALUES (1,'user story','user story');
 INSERT INTO task_type VALUES (2,'Bug','bug');
 INSERT INTO task_type VALUES (3,'Test case','Test case');
 
-SELECT * FROM task_type;
+
 
 
 
@@ -11,7 +11,7 @@ INSERT INTO status VALUES (1,'In Progress','1');
 INSERT INTO status VALUES (2,'Done','2');
 INSERT INTO status VALUES (3,'To Do','3');
 
-SELECT * FROM status;
+
 
 
 INSERT INTO role VALUES (1,'Developer');
@@ -20,5 +20,5 @@ INSERT INTO role VALUES (3,'Project Manager');
 INSERT INTO role VALUES (4,'Scrum Master');
 INSERT INTO role VALUES (5,'Product Owner');
 
-SELECT * FROM role;
+
 

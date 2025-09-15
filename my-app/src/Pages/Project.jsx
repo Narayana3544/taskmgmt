@@ -1,7 +1,5 @@
-// src/Pages/Project.jsx
-
 import React, { useState, useEffect } from 'react';
-import axios from 'axios'; // ✅ import axios
+import api from '../api';
 import Navbar from '../components/Navbar';
 import './Project.css';
 
@@ -12,7 +10,7 @@ export default function Project() {
 
   // ✅ Fetch all projects from backend
   useEffect(() => {
-  axios.get('http://localhost:8080/api/projects')
+  api.get('/projects')
     .then(res => {
       console.log("Projects:", res.data);  // Add this line to debug
       setProjects(res.data);
@@ -34,8 +32,8 @@ export default function Project() {
 
     try {
       // ✅ Update this URL to match your Spring Boot endpoint
-      const response = await axios.post(
-  'http://localhost:8080/api/addproject',
+      const response = await api.post(
+  '/addproject',
   project,
   { headers: { 'Content-Type': 'application/json' } }
 );

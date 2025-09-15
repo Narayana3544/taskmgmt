@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../api';
 import './Profile.css';
 
 const Profile = () => {
@@ -7,7 +7,7 @@ const Profile = () => {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    axios.get('http://localhost:8080/api/user/profile', { withCredentials: true })
+   api.get('/user/profile', { withCredentials: true })
       .then(response => {
         setUser(response.data);
       })

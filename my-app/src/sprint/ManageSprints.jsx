@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../api';
 import Select from 'react-select';
 import './ManageSprints.css';
 import { useNavigate } from 'react-router-dom';
@@ -35,19 +35,19 @@ const ManageSprints = () => {
   }, []);
 
   const fetchProjects = () => {
-    axios.get('http://localhost:8080/api/projects', { withCredentials: true })
+   api.get('/projects', { withCredentials: true })
       .then(res => setProjects(res.data))
       .catch(err => console.error('Error fetching projects:', err));
   };
 
   const fetchFeatures = (projectId) => {
-    axios.get(`http://localhost:8080/api/features/project/${projectId}`, { withCredentials: true })
+   api.get(`/features/project/${projectId}`, { withCredentials: true })
       .then(res => setFeatures(res.data))
       .catch(err => console.error('Error fetching features:', err));
   };
 
   const fetchSprints = () => {
-    axios.get(`http://localhost:8080/api/sprints`, { withCredentials: true })
+   api.get(`/sprints`, { withCredentials: true })
       .then(res => {
         setSprints(res.data);
         setFilteredSprints(res.data);
@@ -56,7 +56,7 @@ const ManageSprints = () => {
   };
 
   const fetchUser = () => {
-    axios.get('http://localhost:8080/api/user/profile', { withCredentials: true })
+   api.get('/user/profile', { withCredentials: true })
       .then(res => setUserName(res.data.preffered_name))
       .catch(err => console.error('Error fetching user profile:', err));
   };

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../api';
 import { useNavigate, useParams } from 'react-router-dom';
 import { FaEdit } from "react-icons/fa";
 
@@ -12,8 +12,8 @@ const ViewFeaturesByProjectId = () => {
 
   useEffect(() => {
     if (projectId) {
-      axios
-        .get(`http://localhost:8080/api/features/project/${projectId}`, { withCredentials: true })
+      api
+        .get(`/features/project/${projectId}`, { withCredentials: true })
         .then((res) => {
           setFeatures(res.data);
           setFilteredFeatures(res.data); // ✅ initialize filteredFeatures as well
@@ -35,8 +35,8 @@ const ViewFeaturesByProjectId = () => {
 
   const handleDelete = (id) => {
     if (window.confirm('Are you sure you want to delete this feature?')) {
-      axios
-        .delete(`http://localhost:8080/api/features/${id}`, { withCredentials: true })
+      api
+        .delete(`/features/${id}`, { withCredentials: true })
         .then(() => {
           const updated = features.filter((f) => f.id !== id);
           setFeatures(updated);

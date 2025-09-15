@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from '../api';
 import { useNavigate } from "react-router-dom";
 import Select from "react-select";
 import "./TaskList.css";
@@ -27,7 +27,7 @@ export default function TaskList() {
 
   const fetchProjects = async () => {
     try {
-      const res = await axios.get("http://localhost:8080/api/projects", {
+      const res = await api.get("/projects", {
         withCredentials: true,
       });
       setProjects(res.data);
@@ -38,8 +38,8 @@ export default function TaskList() {
 
   const fetchFeatures = async (projectId) => {
     try {
-      const res = await axios.get(
-        `http://localhost:8080/api/features/project/${projectId}`,
+      const res = await api.get(
+        `/features/project/${projectId}`,
         { withCredentials: true }
       );
       setFeatures(res.data);
@@ -51,8 +51,8 @@ export default function TaskList() {
   const fetchTasks = async (projectId) => {
     setLoading(true);
     try {
-      const res = await axios.get(
-        `http://localhost:8080/api/viewTaskByProjectId/${projectId}`,
+      const res = await api.get(
+        `/viewTaskByProjectId/${projectId}`,
         { withCredentials: true }
       );
       setTasks(res.data);

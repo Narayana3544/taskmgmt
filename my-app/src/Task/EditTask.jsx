@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from '../api';
 import "./TaskForm.css";
 
 export default function EditTask() {
@@ -33,7 +33,7 @@ export default function EditTask() {
 
   useEffect(() => {
     // Fetch task details
-    axios.get(`http://localhost:8080/api/view-task/${id}`, { withCredentials: true })
+    api.get(`/view-task/${id}`, { withCredentials: true })
       .then(res => {
         const task = res.data;
         setAcceptanceCriteria(task.acceptance_criteria || "");
@@ -58,12 +58,12 @@ export default function EditTask() {
       .catch(err => console.error("Failed to load task:", err));
 
     // Fetch dropdown data
-    axios.get("http://localhost:8080/api/users", { withCredentials: true }).then(res => setUsers(res.data));
-    axios.get(`http://localhost:8080/api/viewTaskSprints/${id}`, { withCredentials: true }).then(res => setSprints(res.data));
-    axios.get("http://localhost:8080/api/features", { withCredentials: true }).then(res => setFeatures(res.data));
-    axios.get("http://localhost:8080/api/gettype", { withCredentials: true }).then(res => setTaskTypes(res.data));
-    axios.get("http://localhost:8080/api/getstatusForTask", { withCredentials: true }).then(res => setTaskStatuses(res.data));
-    axios.get("http://localhost:8080/api/managers", { withCredentials: true }).then(res => setManagers(res.data));
+    api.get("/users", { withCredentials: true }).then(res => setUsers(res.data));
+    api.get(`/viewTaskSprints/${id}`, { withCredentials: true }).then(res => setSprints(res.data));
+    api.get("/features", { withCredentials: true }).then(res => setFeatures(res.data));
+    api.get("/gettype", { withCredentials: true }).then(res => setTaskTypes(res.data));
+    api.get("/getstatusForTask", { withCredentials: true }).then(res => setTaskStatuses(res.data));
+    api.get("/managers", { withCredentials: true }).then(res => setManagers(res.data));
   }, [id]);
 
   const handleSelectChange = setter => e => {
@@ -97,7 +97,7 @@ export default function EditTask() {
     }
 
     try {
-      await axios.put(`http://localhost:8080/api/task/${id}`, formData, {
+      await api.put(`/task/${id}`, formData, {
         withCredentials: true,
         headers: { "Content-Type": "multipart/form-data" }
       });
@@ -112,7 +112,7 @@ export default function EditTask() {
   const handleDelete = async () => {
     if (!window.confirm("Are you sure you want to delete this task?")) return;
     try {
-      await axios.delete(`http://localhost:8080/api/tasks/${id}`, { withCredentials: true });
+      await api.delete(`/tasks/${id}`, { withCredentials: true });
       alert("Task deleted successfully!");
       navigate(-1);
     } catch (err) {

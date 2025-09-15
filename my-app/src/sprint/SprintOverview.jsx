@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from '../api';
 import "./SprintOverview.css";
 
 export default function SprintOverview({ sprintId: propSprintId }) {
@@ -22,8 +22,8 @@ const [allSprints, setAllSprints] = useState([]);
 useEffect(() => {
   const fetchAllSprints = async () => {
     try {
-      const res = await axios.get(
-        `http://localhost:8080/api/sprints`,
+      const res = await api.get(
+        `/sprints`,
         { withCredentials: true }
       );
       setAllSprints(res.data);
@@ -41,26 +41,26 @@ useEffect(() => {
 
   const fetchData = async () => {
     try {
-      const sprintRes = await axios.get(
-        `http://localhost:8080/api/sprints/${sprintId}`,
+      const sprintRes = await api.get(
+        `/sprints/${sprintId}`,
         { withCredentials: true }
       );
       setSprint(sprintRes.data);
 
-      const usersRes = await axios.get(
-        `http://localhost:8080/api/sprint/users/${sprintId}`,
+      const usersRes = await api.get(
+        `/sprint/users/${sprintId}`,
         { withCredentials: true }
       );
       setUsers(usersRes.data);
 
-      const ManagerRes = await axios.get(
-        `http://localhost:8080/api/managers`,
+      const ManagerRes = await api.get(
+        `/managers`,
         { withCredentials: true }
       );
       setManagers(ManagerRes.data);
 
-      const tasksRes = await axios.get(
-        `http://localhost:8080/api/sprint/viewtaskBySprintId/${sprintId}`,
+      const tasksRes = await api.get(
+        `/sprint/viewtaskBySprintId/${sprintId}`,
         { withCredentials: true }
       );
       const todo = tasksRes.data.filter(
@@ -88,8 +88,8 @@ const handleMoveTask = async (taskId, nextSprintId) => {
   if (!window.confirm("Are you sure you want to move this task to another sprint?")) return;
 
   try {
-    await axios.put(
-      `http://localhost:8080/api/tasks/${taskId}/move/${nextSprintId}`,
+    await api.put(
+      `/tasks/${taskId}/move/${nextSprintId}`,
       {},
       { withCredentials: true }
     );
@@ -104,8 +104,8 @@ const handleAssign = async (taskId, userId) => {
   if (!window.confirm("Are you sure you want to assign this task?")) return;
 
   try {
-    await axios.put(
-      `http://localhost:8080/api/tasks/${taskId}/assignTo/${userId}`,
+    await api.put(
+      `/tasks/${taskId}/assignTo/${userId}`,
       {},
       { withCredentials: true }
     );
@@ -119,8 +119,8 @@ const handleAssignReport = async (taskId, managerId) => {
   if (!window.confirm("Are you sure you want to assign this report-to?")) return;
 
   try {
-    await axios.put(
-      `http://localhost:8080/api/tasks/${taskId}/assignReportTo/${managerId}`,
+    await api.put(
+      `/tasks/${taskId}/assignReportTo/${managerId}`,
       {},
       { withCredentials: true }
     );
@@ -131,16 +131,16 @@ const handleAssignReport = async (taskId, managerId) => {
 };
 useEffect(() => {
     // Fetch all available statuses
-    axios
-      .get(`http://localhost:8080/api/getstatusForTask`, { withCredentials: true })
+    api
+      .get(`/getstatusForTask`, { withCredentials: true })
       .then((res) => setStatuses(res.data))
       .catch((err) => console.error("Error fetching statuses:", err));
   }, []);
 
   const handleStatusChange = (taskId, statusId) => {
-  axios
+  api
     .put(
-      `http://localhost:8080/api/tasks/${taskId}/status/${statusId}`,
+      `/tasks/${taskId}/status/${statusId}`,
       {},
       { withCredentials: true }
     )

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from '../api';
 import "./AssignUsersToProject.css";
 
 export default function AssignUsersForm() {
@@ -10,7 +10,7 @@ export default function AssignUsersForm() {
   useEffect(() => {
   const fetchUsers = async () => {
     try {
-      const response = await axios.get("http://localhost:8080/api/users",{withCredentials:true});
+      const response = await api.get("/users",{withCredentials:true});
       setUsers(response.data);
       console.log("Fetched Users:", response.data); // ✅ check in console
     } catch (error) {
@@ -22,7 +22,7 @@ export default function AssignUsersForm() {
 
   // Fetch all users for dropdown
   useEffect(() => {
-    axios.get("http://localhost:8080/api/users",{withCredentials:true})
+    api.get("/users",{withCredentials:true})
       .then((res) => setUsers(res.data))
       .catch((err) => console.error("Error fetching users:", err));
       
@@ -37,8 +37,8 @@ const handleSubmit = async (e) => {
   e.preventDefault();
   console.log("Submitting:", { userIds: selectedUsers, projectId }); // 👈 check
   try {
-    await axios.post(
-      `http://localhost:8080/api/project/${projectId}/assign-users`,
+    await api.post(
+      `/project/${projectId}/assign-users`,
       { userIds: selectedUsers },{withCredentials:true}
     );
     alert("Users assigned successfully!");

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api';
 import './ViewUserStories.css';
 import { useNavigate } from 'react-router-dom';
 import { FaEdit } from "react-icons/fa";
@@ -17,7 +17,7 @@ const ViewStories = () => {
   }, []);
 
  const fetchAllStories = () => {
-  axios.get('http://localhost:8080/api/features/userstories', { withCredentials: true })
+  api.get('/features/userstories', { withCredentials: true })
     .then(res => {
       const stories = Array.isArray(res.data) ? res.data : [];
       setAllStories(stories);
@@ -41,7 +41,7 @@ const ViewStories = () => {
   };
 
   const handleStatusChange = (storyId, newStatus) => {
-    axios.patch(`http://localhost:8080/api/userstories/${storyId}/status`, { status: newStatus }, { withCredentials: true })
+    api.patch(`/userstories/${storyId}/status`, { status: newStatus }, { withCredentials: true })
       .then(() => {
         const updated = filteredStories.map(story =>
           story.id === storyId ? { ...story, status: newStatus } : story
@@ -57,7 +57,7 @@ const ViewStories = () => {
 
   const handleDelete = (id) => {
     if (window.confirm('Are you sure you want to delete this story?')) {
-      axios.delete(`http://localhost:8080/api/userstories/${id}`, { withCredentials: true })
+      api.delete(`/userstories/${id}`, { withCredentials: true })
         .then(() => fetchAllStories())
         .catch(err => console.error('Error deleting story:', err));
     }

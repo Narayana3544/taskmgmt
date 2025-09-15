@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from '../api';
 import { useNavigate } from "react-router-dom";
 import "./AssignedTasks.css";
 
@@ -14,8 +14,8 @@ export default function TaskList() {
 
   useEffect(() => {
     // Fetch tasks
-    axios
-      .get(`http://localhost:8080/api/user/tasks`, { withCredentials: true })
+    api
+      .get(`/user/tasks`, { withCredentials: true })
       .then((res) => {
         setTasks(res.data);
         setLoading(false);
@@ -27,16 +27,16 @@ export default function TaskList() {
       });
 
     // Fetch statuses
-    axios
-      .get(`http://localhost:8080/api/getstatusForTask`, { withCredentials: true })
+    api
+      .get(`/getstatusForTask`, { withCredentials: true })
       .then((res) => setStatuses(res.data))
       .catch((err) => console.error("Error fetching statuses:", err));
   }, []);
 
   const handleStatusChange = (taskId, statusId) => {
-    axios
+    api
       .put(
-        `http://localhost:8080/api/tasks/${taskId}/status/${statusId}`,
+        `/tasks/${taskId}/status/${statusId}`,
         {},
         { withCredentials: true }
       )

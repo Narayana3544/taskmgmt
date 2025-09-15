@@ -1,9 +1,9 @@
 
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import { FaEye } from "react-icons/fa";
 import { useNavigate } from 'react-router-dom';
 import "./Home.css";
+import api from "../api";
 
 const Home = () => {
   const [tasks, setTasks] = useState({ todo: [], inprogress: [], done: [] });
@@ -16,8 +16,8 @@ const Home = () => {
 
   useEffect(() => {
     // Fetch tasks
-    axios
-      .get("http://localhost:8080/api/user/tasks", { withCredentials: true })
+    api
+      .get("/user/tasks", { withCredentials: true })
       .then((res) => {
        // after GET /api/user/tasks
         const grouped = { todo: [], inprogress: [], done: [] };
@@ -31,14 +31,14 @@ const Home = () => {
       .catch((err) => console.error("Error fetching tasks:", err));
 
     // Fetch statuses
-    axios
-      .get("http://localhost:8080/api/getstatusForTask", { withCredentials: true })
+    api
+      .get("/getstatusForTask", { withCredentials: true })
       .then((res) => setStatuses(res.data))
       .catch((err) => console.error("Error fetching statuses:", err));
 
     // Fetch users
-    axios
-      .get("http://localhost:8080/api/users", { withCredentials: true })
+    api
+      .get("/users", { withCredentials: true })
       .then((res) => setUsers(res.data))
       .catch((err) => console.error("Error fetching users:", err));
   }, []);
@@ -57,9 +57,9 @@ const Home = () => {
   const handleAssignUser = () => {
     if (!selectedUserId || !selectedTask) return;
 
-    axios
+    api
       .put(
-        `http://localhost:8080/api/tasks/${selectedTask.id}/assignTo/${selectedUserId}`,
+        `/tasks/${selectedTask.id}/assignTo/${selectedUserId}`,
         {},
         { withCredentials: true }
       )
@@ -89,9 +89,9 @@ const toColKey = (label) => {
 };
 
 const handleStatusChange = (taskId, statusId) => {
-  axios
+  api
     .put(
-      `http://localhost:8080/api/tasks/${taskId}/status/${statusId}`,
+      `/tasks/${taskId}/status/${statusId}`,
       {},
       { withCredentials: true }
     )

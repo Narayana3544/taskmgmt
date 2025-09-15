@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../api';
 
 const AssignedStories = () => {
   const [stories, setStories] = useState([]);
 
   useEffect(() => {
-    axios.get('http://localhost:8080/api/stories/assigned', { withCredentials: true })
+    api.get('/stories/assigned', { withCredentials: true })
       .then(res => setStories(res.data))
       .catch(err => console.error('Error fetching assigned stories:', err));
   }, []);
@@ -28,7 +28,7 @@ const AssignedStories = () => {
 
   const handleUpdate = (id) => {
     const story = stories.find(s => s.id === id);
-    axios.put(`http://localhost:8080/api/stories/${id}/update`, {
+    api.put(`/stories/${id}/update`, {
       status: story.status,
       comment: story.comment
     }, { withCredentials: true })

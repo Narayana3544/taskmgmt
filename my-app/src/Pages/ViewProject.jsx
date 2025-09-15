@@ -1,6 +1,6 @@
 // import React, { useEffect, useState } from "react";
 // import { useParams, useNavigate } from "react-router-dom";
-// import axios from "axios";
+// import api from "api";
 // import "./ViewProject.css";
 
 // const ViewProject = () => {
@@ -14,8 +14,8 @@
 //   const [showAssignForm, setShowAssignForm] = useState(false);
 
 //   useEffect(() => {
-//     axios
-//       .get(`http://localhost:8080/api/projects/${id}`, { withCredentials: true })
+//     api
+//       .get(`/projects/${id}`, { withCredentials: true })
 //       .then((res) => {
 //         setProject(res.data);
 //         setLoading(false);
@@ -25,8 +25,8 @@
 //         setLoading(false);
 //       });
 
-//     axios
-//       .get("http://localhost:8080/api/users", { withCredentials: true })
+//     api
+//       .get("/users", { withCredentials: true })
 //       .then((res) => setUsers(res.data))
 //       .catch((err) => console.error("Error fetching users:", err));
 //   }, [id]);
@@ -45,15 +45,15 @@
 //       return;
 //     }
 
-//     axios
-//       .post(`http://localhost:8080/api/projects/${id}/assign-users`, selectedUsers, {
+//     api
+//       .post(`/projects/${id}/assign-users`, selectedUsers, {
 //         withCredentials: true,
 //       })
 //       .then(() => {
 //         alert("Users assigned successfully!");
 //         setShowAssignForm(false);
 //         setSelectedUsers([]);
-//         return axios.get(`http://localhost:8080/api/projects/${id}`, { withCredentials: true });
+//         return api.get(`/projects/${id}`, { withCredentials: true });
 //       })
 //       .then((res) => setProject(res.data))
 //       .catch((err) => {
@@ -65,8 +65,8 @@
 //    const [assignedUsers, setAssignedUsers] = useState([]);
 
 //    useEffect(() => {
-//     axios
-//       .get(`http://localhost:8080/api/project/users/${id}`, { withCredentials: true })
+//     api
+//       .get(`/project/users/${id}`, { withCredentials: true })
 //       .then((res) => setAssignedUsers(res.data))
 //       .catch((err) => console.error("Error fetching assigned users:", err));
 //   }, [id]);
@@ -177,7 +177,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from '../api';
 import "./ViewProject.css";
 
 const ViewProject = () => {
@@ -197,24 +197,24 @@ const [userToUnassign, setUserToUnassign] = useState(null);
 
  
   const fetchProject = () => {
-    axios
-      .get(`http://localhost:8080/api/projects/${id}`, { withCredentials: true })
+    api
+      .get(`/projects/${id}`, { withCredentials: true })
       .then((res) => setProject(res.data))
       .catch((err) => console.error("Error fetching project:", err));
   };
 
 
   const fetchAssignedUsers = () => {
-    axios
-      .get(`http://localhost:8080/api/project/users/${id}`, { withCredentials: true })
+    api
+      .get(`/project/users/${id}`, { withCredentials: true })
       .then((res) => setAssignedUsers(res.data))
       .catch((err) => console.error("Error fetching assigned users:", err));
   };
 
   // Fetch all users
   const fetchAllUsers = () => {
-    axios
-      .get("http://localhost:8080/api/users", { withCredentials: true })
+    api
+      .get("/users", { withCredentials: true })
       .then((res) => setAllUsers(res.data))
       .catch((err) => console.error("Error fetching all users:", err));
   };
@@ -240,9 +240,9 @@ const [userToUnassign, setUserToUnassign] = useState(null);
       return;
     }
 
-    axios
+    api
       .post(
-        `http://localhost:8080/api/projects/${id}/assign-users`,
+        `/projects/${id}/assign-users`,
         selectedUsers,
         { withCredentials: true }
       )
@@ -259,8 +259,8 @@ const [userToUnassign, setUserToUnassign] = useState(null);
 
   // Unassign single user
   const handleUnassignUser = (userId) => {
-  axios
-    .delete(`http://localhost:8080/api/project/unassign`, {
+  api
+    .delete(`/project/unassign`, {
       params: { projectId: project.id, userId: userId },
       withCredentials: true,
     })

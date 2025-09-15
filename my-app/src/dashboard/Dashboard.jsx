@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../api';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   PieChart, Pie, Cell
@@ -17,9 +17,9 @@ const Dashboard = () => {
   const fetchStats = async () => {
     try {
       const [projRes, featRes, storyRes] = await Promise.all([
-        axios.get('http://localhost:8080/api/projects', { withCredentials: true }),
-        axios.get('http://localhost:8080/api/features', { withCredentials: true }),
-        axios.get('http://localhost:8080/api/view-tasks', { withCredentials: true })
+        api.get('/projects', { withCredentials: true }),
+        api.get('/features', { withCredentials: true }),
+        api.get('/view-tasks', { withCredentials: true })
       ]);
 
       setCounts({

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from '../api';
 import "./EditFeature.css";
 
 const EditFeature = () => {
@@ -18,12 +18,12 @@ const EditFeature = () => {
 
     useEffect(() => {
     // Get statuses for dropdown
-    axios.get('http://localhost:8080/api/getstatusForFeature', { withCredentials: true })
+   api.get('/getstatusForFeature', { withCredentials: true })
       .then(res => setStatuses(res.data))
       .catch(err => console.error('Failed to load statuses:', err));
 
-    axios
-      .get(`http://localhost:8080/api/features/${id}`, { withCredentials: true })
+   api
+      .get(`/features/${id}`, { withCredentials: true })
       .then((res) => {
         // Ensure project exists in state
         setFeatureData({
@@ -53,8 +53,8 @@ const EditFeature = () => {
       project: featureData.project.id ? { id: featureData.project.id } : null
     };
 
-    axios
-      .put(`http://localhost:8080/api/features/${id}`, payload, {
+   api
+      .put(`/features/${id}`, payload, {
         withCredentials: true
       })
       .then(() => {
@@ -66,8 +66,8 @@ const EditFeature = () => {
 
   const handleDelete = () => {
     if (window.confirm("Are you sure you want to delete this feature?")) {
-      axios
-        .delete(`http://localhost:8080/api/features/${id}`, {
+     api
+        .delete(`/features/${id}`, {
           withCredentials: true
         })
         .then(() => {

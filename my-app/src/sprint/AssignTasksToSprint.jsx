@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams,useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import axios from "axios";
+import api from '../api';
 import "./AssignTasksToSprint.css";
 
 export default function AssignTaskToSprint() {
@@ -19,8 +19,8 @@ export default function AssignTaskToSprint() {
     setError(null);
 
     try {
-      const res = await axios.get(
-        `http://localhost:8080/api/tasks/unassigned-toSprint/${featureId}`,
+      const res = await api.get(
+        `/tasks/unassigned-toSprint/${featureId}`,
         { withCredentials: true }
       );
       setTasks(res.data);
@@ -50,7 +50,7 @@ export default function AssignTaskToSprint() {
       return;
     }
 
-   axios.put(`http://localhost:8080/api/sprints/${sprintId}/assign-tasks`, selectedTasks,{withCredentials:true})
+   api.put(`/sprints/${sprintId}/assign-tasks`, selectedTasks,{withCredentials:true})
   .then(() => {
     window.alert("Tasks assigned successfully!");
     fetchUnassignedTasks(); // refresh

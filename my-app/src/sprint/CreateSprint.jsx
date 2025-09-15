@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../api';
 import './CreateSprint.css';
 import { useNavigate } from 'react-router-dom';
 
@@ -14,7 +14,7 @@ const CreateSprint = () => {
   });
 
   useEffect(() => {
-    axios.get('http://localhost:8080/api/features', { withCredentials: true })
+    api.get('/features', { withCredentials: true })
       .then(res => setFeatures(res.data))
       .catch(err => console.error('Error fetching features:', err));
   }, []);
@@ -32,7 +32,7 @@ const handleChange = (e) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log('Submitting sprint:', sprint);
-    axios.post('http://localhost:8080/api/sprints/create-sprints', sprint, { withCredentials: true })
+    api.post('/sprints/create-sprints', sprint, { withCredentials: true })
       .then(() => {
         alert('sprint created sucessfully',navigate('/manage-sprints'));
         setSprint({ name: '', startDate: '', endDate: '', featureId: '',status:'' });

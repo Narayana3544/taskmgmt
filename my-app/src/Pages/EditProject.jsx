@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../api';
 import './EditProject.css';
 
 export default function EditProject() {
@@ -18,12 +18,12 @@ export default function EditProject() {
   // Fetch project + statuses
   useEffect(() => {
     // Get statuses for dropdown
-    axios.get('http://localhost:8080/api/getstatusForProject', { withCredentials: true })
+    api.get('/getstatusForProject', { withCredentials: true })
       .then(res => setStatuses(res.data))
       .catch(err => console.error('Failed to load statuses:', err));
 
     // Get project details
-    axios.get(`http://localhost:8080/api/projects/${id}`, { withCredentials: true })
+    api.get(`/projects/${id}`, { withCredentials: true })
       .then(res => {
         const proj = res.data;
         setProject({
@@ -51,7 +51,7 @@ export default function EditProject() {
       status: { id: project.status } // send status ID object
     };
 
-    axios.put(`http://localhost:8080/api/projects/${id}`, payload, { withCredentials: true })
+    api.put(`/projects/${id}`, payload, { withCredentials: true })
       .then(() => {
         alert('Project updated successfully!');
         navigate('/manage-projects');
@@ -61,8 +61,8 @@ export default function EditProject() {
 
   const handleDelete = () => {
     if (window.confirm("Are you sure you want to delete this project?")) {
-      axios
-        .delete(`http://localhost:8080/api/projects/${id}`, { withCredentials: true })
+      api
+        .delete(`/projects/${id}`, { withCredentials: true })
         .then(() => {
           alert("Project deleted successfully!");
           navigate("/manage-projects");

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../api';
 import { useNavigate } from 'react-router-dom';
 import './FeatureList.css';
 import { FaEdit } from "react-icons/fa";
@@ -12,7 +12,7 @@ const [filteredFeatures, setFilteredFeatures] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
-    axios.get('http://localhost:8080/api/features', { withCredentials: true })
+    api.get('/features', { withCredentials: true })
   .then(res => {
     console.log("Features from API:", res.data);
     setFeatures(res.data);
@@ -56,7 +56,7 @@ useEffect(() => {
 
   const handleDelete = (id) => {
     if (window.confirm('Are you sure you want to delete this feature?')) {
-      axios.delete(`http://localhost:8080/api/features/${id}`)
+      api.delete(`/features/${id}`)
         .then(() => {
           const updated = features.filter(f => f.id !== id);
           setFeatures(updated);

@@ -64,6 +64,8 @@ public class task {
     private User reportedTo;
 
 
+
+
     public String getAttachmentType() {
         return attachmentType;
     }

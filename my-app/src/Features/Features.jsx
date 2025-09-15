@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../api';
 import './Features.css';
 import { useNavigate } from 'react-router-dom';
 
@@ -15,8 +15,8 @@ const Features = () => {
     const [statuses, setStatuses] = useState([]);
 
     useEffect(() => {
-    axios
-      .get("http://localhost:8080/api/getstatusForFeature", { withCredentials: true })
+    api
+      .get("/getstatusForFeature", { withCredentials: true })
       .then((res) => setStatuses(res.data))
       .catch((err) => console.error("Error fetching statuses:", err));
   }, []);
@@ -24,8 +24,8 @@ const Features = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    axios
-      .get('http://localhost:8080/api/projects', { withCredentials: true })
+    api
+      .get('/projects', { withCredentials: true })
       .then((res) => setProjects(res.data))
       .catch((err) => console.error('Error fetching projects:', err));
   }, []);
@@ -54,8 +54,8 @@ const Features = () => {
 
     console.log('Submitting feature:', feature); // Debug log
 
-    axios
-      .post(`http://localhost:8080/api/projects/${selectedProjectId}/addfeature`, feature, {
+    api
+      .post(`/projects/${selectedProjectId}/addfeature`, feature, {
         withCredentials: true,
       })
       .then(() => {

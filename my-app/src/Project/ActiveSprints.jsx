@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from '../api';
 import "./UserSprints.css";
 
 export default function UserSprints() {
@@ -23,7 +23,7 @@ export default function UserSprints() {
 
   const fetchSprints = async () => {
     try {
-      const res = await axios.get("http://localhost:8080/api/users/currentsprints", {
+      const res = await api.get("/users/currentsprints", {
         withCredentials: true,
       });
       setSprints(res.data);
@@ -46,7 +46,7 @@ export default function UserSprints() {
 
   const fetchCurrentUser = async () => {
     try {
-      const res = await axios.get("http://localhost:8080/api/users/me", {
+      const res = await api.get("/users/me", {
         withCredentials: true,
       });
       setCurrentUser(res.data);
@@ -57,7 +57,7 @@ export default function UserSprints() {
 
   const fetchStatuses = async () => {
     try {
-      const res = await axios.get("http://localhost:8080/api/getstatusForTask", {
+      const res = await api.get("/getstatusForTask", {
         withCredentials: true,
       });
       setStatuses(res.data);
@@ -68,8 +68,8 @@ export default function UserSprints() {
 
   const fetchTasks = async (sprintId) => {
     try {
-      const res = await axios.get(
-        `http://localhost:8080/api/sprint/viewtaskBySprintId/${sprintId}`,
+      const res = await api.get(
+        `/sprint/viewtaskBySprintId/${sprintId}`,
         { withCredentials: true }
       );
       setTasksBySprint((prev) => ({
@@ -83,7 +83,7 @@ export default function UserSprints() {
 
   const assignTask = async (taskId, sprintId) => {
     try {
-      await axios.put(`http://localhost:8080/api/tasks/${taskId}/assignMe`, {}, { withCredentials: true });
+      await api.put(`/tasks/${taskId}/assignMe`, {}, { withCredentials: true });
       fetchTasks(sprintId);
     } catch (err) {
       console.error("Error assigning task:", err);
@@ -92,7 +92,7 @@ export default function UserSprints() {
 
   const unassignTask = async (taskId, sprintId) => {
     try {
-      await axios.put(`http://localhost:8080/api/tasks/${taskId}/unassignMe`, {}, { withCredentials: true });
+      await api.put(`/tasks/${taskId}/unassignMe`, {}, { withCredentials: true });
       fetchTasks(sprintId);
     } catch (err) {
       console.error("Error unassigning task:", err);
@@ -101,8 +101,8 @@ export default function UserSprints() {
 
   const handleStatusChange = async (taskId, statusId, sprintId) => {
     try {
-      await axios.put(
-        `http://localhost:8080/api/tasks/${taskId}/status/${statusId}`,
+      await api.put(
+        `/tasks/${taskId}/status/${statusId}`,
         {},
         { withCredentials: true }
       );

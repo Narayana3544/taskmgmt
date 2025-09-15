@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../api';
 import { useNavigate } from 'react-router-dom';
 
 export default function ViewProjectById() {
@@ -12,14 +12,14 @@ export default function ViewProjectById() {
   }, []);
 
   const fetchProjects = () => {
-    axios.get(`http://localhost:8080/api/project/assignedtouser`, { withCredentials: true })
+    api.get(`/project/assignedtouser`, { withCredentials: true })
       .then(res => setProjects(res.data))
       .catch(err => console.error('Error fetching projects:', err));
   };
 
   const deleteProject = (id) => {
     if (window.confirm('Are you sure you want to delete this project?')) {
-      axios.delete(`http://localhost:8080/api/projects/${id}`)
+      api.delete(`/projects/${id}`)
         .then(() => fetchProjects())
         .catch(err => console.error('Error deleting project:', err));
     }
@@ -34,7 +34,7 @@ export default function ViewProjectById() {
   };
 
   const handleStatusChange = (id, newStatus) => {
-    axios.patch(`http://localhost:8080/api/projects/${id}`, { status: newStatus }, { withCredentials: true })
+    api.patch(`/projects/${id}`, { status: newStatus }, { withCredentials: true })
       .then(() => fetchProjects())
       .catch(err => console.error('Failed to update status:', err));
   };

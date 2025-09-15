@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../api';
 // import Navbar from '../components/Navbar';
 import './ManageProject.css';
 import { FaEdit, FaPlus } from 'react-icons/fa';
@@ -15,14 +15,14 @@ export default function ManageProjects() {
   }, []);
 
   const fetchProjects = () => {
-    axios.get('http://localhost:8080/api/projects', { withCredentials: true })
+   api.get('/projects', { withCredentials: true })
       .then(res => setProjects(res.data))
       .catch(err => console.error('Error fetching projects:', err));
   };
 
   const deleteProject = (id) => {
     if (window.confirm('Are you sure you want to delete this project?')) {
-      axios.delete(`http://localhost:8080/api/projects/${id}`)
+     api.delete(`/projects/${id}`)
         .then(() => fetchProjects())
         .catch(err => console.error('Error deleting project:', err));
     }
@@ -37,7 +37,7 @@ export default function ManageProjects() {
   };
 
   const handleStatusChange = (id, newStatus) => {
-    axios.patch(`http://localhost:8080/api/projects/${id}`, { status: newStatus }, { withCredentials: true })
+   api.patch(`/projects/${id}`, { status: newStatus }, { withCredentials: true })
       .then(() => fetchProjects())
       .catch(err => console.error('Failed to update status:', err));
   };

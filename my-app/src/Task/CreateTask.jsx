@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from '../api';
 import "./TaskForm.css";
 
 export default function CreateTask() {
@@ -31,15 +31,15 @@ export default function CreateTask() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    axios.get("http://localhost:8080/api/users", { withCredentials: true }).then(res => setUsers(res.data));
-    axios.get("http://localhost:8080/api/features", { withCredentials: true }).then(res => setFeatures(res.data));
-    axios.get("http://localhost:8080/api/gettype", { withCredentials: true }).then(res => setTaskTypes(res.data));
-    axios.get("http://localhost:8080/api/getstatusForTask", { withCredentials: true }).then(res => setTaskStatuses(res.data));
-    axios.get("http://localhost:8080/api/managers", { withCredentials: true }).then(res => setManagers(res.data));
+    api.get("/users", { withCredentials: true }).then(res => setUsers(res.data));
+    api.get("/features", { withCredentials: true }).then(res => setFeatures(res.data));
+    api.get("/gettype", { withCredentials: true }).then(res => setTaskTypes(res.data));
+    api.get("/getstatusForTask", { withCredentials: true }).then(res => setTaskStatuses(res.data));
+    api.get("/managers", { withCredentials: true }).then(res => setManagers(res.data));
   }, []);
    useEffect(() => {
     if (selectedFeature) {
-      axios.get(`http://localhost:8080/api/features/${selectedFeature}/sprints`,{withCredentials:true})
+      api.get(`/features/${selectedFeature}/sprints`,{withCredentials:true})
         .then((res) => setSprints(res.data))
         .catch((err) => console.error("Error fetching sprints:", err));
     } else {
@@ -84,7 +84,7 @@ export default function CreateTask() {
     }
 
     try {
-      await axios.post("http://localhost:8080/api/create-task-attach", formData, {
+      await api.post("/create-task-attach", formData, {
         withCredentials: true,
         headers: { "Content-Type": "multipart/form-data" }
       });

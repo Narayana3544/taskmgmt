@@ -15,10 +15,10 @@ INSERT INTO status VALUES (3,'To Do','3');
 
 
 INSERT INTO role VALUES (1,'Developer');
-INSERT INTO role VALUES (2,'Admin');
 INSERT INTO role VALUES (3,'Project Manager');
 INSERT INTO role VALUES (4,'Scrum Master');
 INSERT INTO role VALUES (5,'Product Owner');
 
 
 
+insert into

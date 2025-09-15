@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../api';
 import './ManageSprints.css';
 import { useNavigate, useParams } from 'react-router-dom';
 
@@ -15,13 +15,13 @@ const ViewSprintsByFeatureid = () => {
   }, [featureId]);
 
   const fetchSprints = () => {
-    axios.get(`http://localhost:8080/api/features/${featureId}/sprints`, { withCredentials: true })
+    api.get(`/features/${featureId}/sprints`, { withCredentials: true })
       .then(res => setSprints(res.data))
       .catch(err => console.error('Error fetching sprints:', err));
   };
 
   const fetchUser = () => {
-    axios.get('http://localhost:8080/api/user/profile', { withCredentials: true })
+    api.get('/user/profile', { withCredentials: true })
       .then(res => {
         const user = res.data;
         setUserName(user.preffered_name);

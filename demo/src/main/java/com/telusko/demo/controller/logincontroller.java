@@ -2,10 +2,12 @@ package com.telusko.demo.controller;
 
 
 import com.telusko.demo.Model.User;
+import com.telusko.demo.config.CustomUserDetails;
 import com.telusko.demo.repo.userrepo;
 import com.telusko.demo.service.CustomUserDetailsService;
 import com.telusko.demo.service.loginservice;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import org.apache.catalina.Authenticator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -96,7 +98,27 @@ public class logincontroller {
     public List<User> getManagers() {
         return service.getManagers();
     }
+
+    @GetMapping("/users/me")
+    public User getloggedUser(Authentication authentication){
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        int userId = userDetails.getUser().getId();
+        return repo.findById(userId);
+
     }
+
+
+//
+//        @GetMapping("/current-user")
+//        public ResponseEntity<?> getCurrentUser(Authentication authentication) {
+//            if (authentication == null) {
+//                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+//            }
+//            return ResponseEntity.ok(authentication.getPrincipal());
+//        }
+
+
+}
 
 
 

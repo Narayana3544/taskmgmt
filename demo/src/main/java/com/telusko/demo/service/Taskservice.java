@@ -1,16 +1,20 @@
 package com.telusko.demo.service;
 
-import com.telusko.demo.Model.Feature;
-import com.telusko.demo.Model.createsprint;
-import com.telusko.demo.Model.task;
-import com.telusko.demo.repo.TaskRepository;
-import com.telusko.demo.repo.createsprintrepo;
-import com.telusko.demo.repo.featurerepo;
+import com.telusko.demo.Model.*;
+import com.telusko.demo.config.CustomUserDetails;
+import com.telusko.demo.repo.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.scheduling.config.Task;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -18,6 +22,27 @@ public class Taskservice {
 
     @Autowired
     public TaskRepository repo;
+
+    @Autowired
+    private featurerepo featureRepo;
+
+    @Autowired
+    private createsprintrepo sprintRepo;
+
+    @Autowired
+    private Task_statusrepo taskStatusRepository;
+
+    @Autowired
+    private userrepo UserRepo;
+
+    @Autowired
+    private Teamrepo teamRepository;
+
+    @Autowired
+    private ProjectRepository projectRepo;
+
+    @Autowired
+    private featurerepo FeatureRepo;
 
     public task createtask(task Task){
         return repo.save(Task);
@@ -37,8 +62,8 @@ public class Taskservice {
         existingTask.setDescription(newTaskData.getDescription());
         existingTask.setAcceptance_criteria(newTaskData.getAcceptance_criteria());
         existingTask.setStorypoints(newTaskData.getStorypoints());
-        existingTask.setStart_date(newTaskData.getStart_date());
-        existingTask.setEnd_date(newTaskData.getEnd_date());
+//        existingTask.setStart_date(newTaskData.getStart_date());
+//        existingTask.setEnd_date(newTaskData.getEnd_date());
         existingTask.setSprint(newTaskData.getSprint());
         existingTask.setFeature(newTaskData.getFeature());
         existingTask.setUser(newTaskData.getUser());
@@ -77,12 +102,6 @@ public class Taskservice {
     }
 
 
-    @Autowired
-    private featurerepo featureRepo;
-
-    @Autowired
-    private createsprintrepo sprintRepo;
-
     public task createTask(
             String userstory,
             String description,
@@ -119,4 +138,102 @@ public class Taskservice {
         return repo.save(newTask);
     }
 
+    public List<task> viewTasksByUserId(int userId) {
+        return repo.findByUser_Id(userId);
+    }
+
+    public void updateTaskStatus(int taskId, int statusId) {
+        LocalDate today = LocalDate.now();
+        task Task = repo.findById(taskId)
+                .orElseThrow(() -> new RuntimeException("Task not found"));
+        Task_status status = taskStatusRepository.findById(statusId)
+                .orElseThrow(() -> new RuntimeException("Status not found"));
+        if(status.getDecription().equals("In Progress")){
+            Task.setStart_date(today.atStartOfDay());
+        }
+       else if(status.getDecription().equals("Done")){
+            Task.setEnd_date(today.atStartOfDay());
+        }
+        Task.setTaskStatus(status);
+       repo.save(Task);   // only updates task_status_id column
+    }
+
+    public List<task> viewTasksBySprintId(int sprintId) {
+        return repo.findBySprint_id(sprintId);
+    }
+
+    public List<task> findUnassignedTasks(int featureId) {
+        return repo.findBySprint_idIsNullAndFeature_id(featureId);
+    }
+
+    public void assignTasksToSprint(int sprintId, List<Integer> taskIds) {
+        createsprint sprint = sprintRepo.findById(sprintId)
+                .orElseThrow(() -> new RuntimeException("Sprint not found"));
+
+        List<task> Tasks = repo.findAllById(taskIds);
+        for (task Task : Tasks) {
+            Task.setSprint(sprint); // update sprint_id
+        }
+
+        repo.saveAll(Tasks);
+
+    }
+
+    public void assignTaskByUser(int taskId, Authentication authentication) {
+        task Task = repo.findById(taskId)
+                .orElseThrow(() -> new RuntimeException("Task not found"));
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        int userId = userDetails.getUser().getId();
+        Task.setUser(userDetails.getUser());
+        repo.save(Task);
+    }
+
+    public void reportTask(int taskId, int managerId) {
+        task Task=repo.findById(taskId)
+                .orElseThrow(() -> new RuntimeException("Task not found"));
+        Task.setReportedTo(UserRepo.findById(managerId));
+        repo.save(Task);
+    }
+
+    public void assignTask(int taskId, int userId) {
+        task Task=repo.findById(taskId)
+                .orElseThrow(() -> new RuntimeException("Task not found"));
+        Task.setUser(UserRepo.findById(userId));
+        repo.save(Task);
+    }
+
+    public List<Team> viewUsersByTaskId(int taskId) {
+        Optional<task> Task=repo.findById(taskId);
+        int projectId=Task.get().getFeature().getProject().getId();
+        return teamRepository.findByProject_Id(projectId);
+    }
+
+    public Page<task> getAllTasks(PageRequest pageable) {
+        return repo.findAll(pageable);
+    }
+
+
+    public List<createsprint> viewSprintsByTaskId(int taskId) {
+        int featureId=repo.findById(taskId).get().getFeature().getId();
+        return sprintRepo.findByFeatureId(featureId);
+    }
+
+    public List<task> viewTasksBYProjectId(int projectId) {
+        List<Feature> features=featureRepo.findByProjectId(projectId);
+        List<task>Tasks=new ArrayList<>();
+        for(Feature F:features){
+            int featureId=F.getId();
+            Tasks.addAll(repo.findByFeature_id(featureId));
+        }
+        return Tasks;
+    }
+
+    public void moveTaskToNextSprint(int taskId, int sprintId) {
+        task Task=repo.findById(taskId)
+                .orElseThrow(() -> new RuntimeException("Task not found"));
+        createsprint Sprint=sprintRepo.findById(sprintId).orElseThrow(()->new RuntimeException(("sprint not found")));
+        Task.setSprint(Sprint);
+        repo.save(Task);
+    }
 }
+

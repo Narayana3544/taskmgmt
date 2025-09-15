@@ -1,0 +1,43 @@
+version: '3.9'
+services:
+  postgres:
+    image: postgres:15
+    container_name: taskmgmt-db
+    environment:
+      POSTGRES_DB: task_mgmt
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 0000
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: ./demo  # backend folder
+      dockerfile: Dockerfile
+    container_name: taskmgmt-backend
+    depends_on:
+      - postgres
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/task_mgmt
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: 0000
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: "true"
+      SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.PostgreSQLDialect
+
+  frontend:
+    build:
+      context: ./my-app  # frontend folder
+      dockerfile: Dockerfile
+    container_name: taskmgmt-frontend
+    depends_on:
+      - backend
+    ports:
+      - "3000:80"   # maps host 3000 -> container port 80
+
+volumes:
+  postgres_data:

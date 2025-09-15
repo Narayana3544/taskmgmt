@@ -16,14 +16,16 @@ public class Feature  {
     @JoinColumn(name = "project_id", nullable = false)
     private Project project;
     private String name;
-    private String status;
 
+    @ManyToOne
+    @JoinColumn(name = "status_id")
+    private Task_status status;
 
-    public String getStatus() {
+    public Task_status getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(Task_status status) {
         this.status = status;
     }
 

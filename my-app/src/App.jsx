@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import Navbar from './components/Navbar';
 import Home from './Register_and_login/Home';
@@ -18,9 +18,9 @@ import Dashboard from './dashboard/Dashboard';
 import CreateSprint from './sprint/CreateSprint';
 import AssignUsersToSprint from './sprint/AssignUsers';
 import ManageSprints from './sprint/ManageSprints';
-import AssignStoriesToSprint from './sprint/AssignStoriesToSprint';
+import AssignTasksToSprint from './sprint/AssignTasksToSprint';
 import SprintOverview from './sprint/SprintOverview';
-import AssignedStories from './dashboard/AssignedStories';
+import AssignedStories from './dashboard/AssignedTasks';
 import EditUserStory from './userstories/EdituserStories';
 import EditFeature from './Features/EditFeature';
 import TaskForm from './Task/CreateTask';
@@ -28,53 +28,81 @@ import TaskList from './Task/TaskList';
 import TaskDetails from './Task/TaskDetails';
 import EditTask from './Task/EditTask';
 import ViewProject from './Pages/ViewProject';
+import ViewProjectById from './Project/AssignedProjects'
+import ViewFeaturesByProjectId from './Features/ViewFeaturesByProjectId'
+import ViewSprintsByFeatureid from './sprint/ViewSprintsByFeatureId';
+import ActiveSprints from './Project/ActiveSprints';
+import TimesheetForm from './TimeSheets/TimeSheetForm';
+
+// 🔹 Small component for logout route
+const Logout = ({ onLogout }) => {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    onLogout();
+    navigate("/"); // redirect to login after logout
+  }, [onLogout, navigate]);
+
+  return null; // nothing to render
+};
 
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(() => {
+    return localStorage.getItem("user") ? true : false;
+  });
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    setIsLoggedIn(false);
+  };
 
   return (
     <Router>
-    {isLoggedIn ? (
-      <>
-        <Sidebar collapsed={sidebarCollapsed} onToggle={setSidebarCollapsed} />
-        <Navbar
-          collapsed={sidebarCollapsed}
-          onToggleSidebar={() => setSidebarCollapsed(prev => !prev)}
-        />
-        <div className={`home-container ${sidebarCollapsed ? 'full' : ''}`}>
-          <Routes>
-                <Route path="/home" element={<Home />} />
-                {/* <Route path="/tasks" element={<Tasks />} /> */}
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/project" element={<Project />} />
-                {/* <Route path="/features" element={<FeaturesPage />} /> ✅ new route */}
-                {/* <Route path="*" element={<Navigate to="/home" />} /> */}
-                <Route path="/create-project" element={<CreateProject />} />    
-                <Route path="/manage-projects" element={<ManageProjects />} />
-                <Route path="/features" element={<Features />} />
-                <Route path="/projects/:projectId/features" element={<Features />} />
-                <Route path="/features/:projectId" element={<FeatureList />} />
-                <Route path="/view-features" element={<FeatureList />} />
-                <Route path="/userstories" element={<UserStories />} />
-                <Route path="/view-stories" element={<ViewUserStories />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/create-sprint" element={<CreateSprint />} />
-                {/* <Route path="/assign-sprint-users" element={<AssignUsersToSprint />} /> */}
-                <Route path="/manage-sprints" element={<ManageSprints />} />
-                <Route path="/sprint/:sprintId/assign-users" element={<AssignUsersToSprint />} />
-                <Route path="/sprints/:sprintId/assign-stories" element={<AssignStoriesToSprint />} />
-                <Route path="/sprints/:id/overview" element={<SprintOverview />} />
-                <Route path="/my-stories" element={<AssignedStories />} />
-                <Route path="/edit-project/:id" element={<EditProject />} />
-                <Route path="/edit-userstory/:id" element={<EditUserStory />} />
-                 <Route path="/edit-feature/:id" element={<EditFeature />} />
-                 <Route path="/create-task" element={<TaskForm />} /> 
-                 <Route path="/task" element={<TaskList />} />
-                 <Route path="/task/:id" element={<TaskDetails />} />
-                  <Route path="/edit-task/:id" element={<EditTask />} />
-                   <Route path="/view-project/:id" element={<ViewProject />} />
-          </Routes>
+      {isLoggedIn ? (
+        <>
+          <Sidebar collapsed={sidebarCollapsed} onToggle={setSidebarCollapsed} />
+          <Navbar
+            collapsed={sidebarCollapsed}
+            onToggleSidebar={() => setSidebarCollapsed(prev => !prev)}
+          />
+          <div className={`home-container ${sidebarCollapsed ? 'full' : ''}`}>
+            <Routes>
+              <Route path="/home" element={<Home />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/project" element={<Project />} />
+              <Route path="/create-project" element={<CreateProject />} />    
+              <Route path="/manage-projects" element={<ManageProjects />} />
+              <Route path="/features" element={<Features />} />
+              <Route path="/projects/:projectId/features" element={<Features />} />
+              <Route path="/features/:projectId" element={<FeatureList />} />
+              <Route path="/view-features" element={<FeatureList />} />
+              <Route path="/userstories" element={<UserStories />} />
+              <Route path="/view-stories" element={<ViewUserStories />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/create-sprint" element={<CreateSprint />} />
+              <Route path="/manage-sprints" element={<ManageSprints />} />
+              <Route path="/sprint/:sprintId/assign-users" element={<AssignUsersToSprint />} />
+              <Route path="/sprints/:sprintId/assign-stories/:featureId" element={<AssignTasksToSprint />} />
+              <Route path="/sprints/overview/:sprintId" element={<SprintOverview />} />
+              <Route path="/my-stories" element={<AssignedStories />} />
+              <Route path="/edit-project/:id" element={<EditProject />} />
+              <Route path="/edit-userstory/:id" element={<EditUserStory />} />
+              <Route path="/edit-feature/:id" element={<EditFeature />} />
+              <Route path="/create-task" element={<TaskForm />} /> 
+              <Route path="/task" element={<TaskList />} />
+              <Route path="/task/:id" element={<TaskDetails />} />
+              <Route path="/edit-task/:id" element={<EditTask />} />
+              <Route path="/view-project/:id" element={<ViewProject />} />
+              <Route path="/view-projectsByUserId" element={<ViewProjectById />} />
+              <Route path="/view-featuresByprojectid/:projectId" element={<ViewFeaturesByProjectId />} />
+              <Route path="/ViewSprintsByFeatureid/:featureId" element={<ViewSprintsByFeatureid />} />
+              <Route path="/active-sprints" element={<ActiveSprints />} />
+              <Route path="/time-sheets" element={<TimesheetForm />} />
+
+              {/* 🔹 Logout Route */}
+              <Route path="/logout" element={<Logout onLogout={handleLogout} />} />
+            </Routes>
           </div>
         </>
       ) : (

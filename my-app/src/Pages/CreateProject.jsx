@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./CreateProject.css";
 // import {AssignUsers} from "./AssignUsersToProject";
-import axios from "axios";
+import api from '../api';
 
 const CreateProject = () => {
   const navigate = useNavigate();
@@ -17,8 +17,8 @@ const CreateProject = () => {
 
   // Fetch statuses for dropdown
   useEffect(() => {
-    axios
-      .get("http://localhost:8080/api/getstatus", { withCredentials: true })
+    api
+      .get("/getstatusForProject", { withCredentials: true })
       .then((res) => setStatuses(res.data))
       .catch((err) => console.error("Error fetching statuses:", err));
   }, []);
@@ -42,8 +42,8 @@ const CreateProject = () => {
       status: { id: project.status },
     };
 
-    axios
-      .post("http://localhost:8080/api/addproject", payload, { withCredentials: true })
+    api
+      .post("/addproject", payload, { withCredentials: true })
       .then(() => {
         alert("Project created successfully!");
         navigate(-1);

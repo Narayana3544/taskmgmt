@@ -13,6 +13,7 @@ public class TaskHistory {
     private int id;
     private int task_id;
     private int sprint_id;
+    private String notes;
 
     public String getNotes() {
         return notes;
@@ -45,7 +46,5 @@ public class TaskHistory {
     public void setId(int id) {
         this.id = id;
     }
-
-    private String notes;
 
 }

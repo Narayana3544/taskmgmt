@@ -1,139 +1,314 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import './SprintOverview.css';
-import { useParams } from 'react-router-dom';
+import React, { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import api from '../api';
+import "./SprintOverview.css";
 
-const SprintOverview = () => {
-  const { id } = useParams();
+export default function SprintOverview({ sprintId: propSprintId }) {
+  const { sprintId: paramSprintId } = useParams();
+  const sprintId = propSprintId || paramSprintId;
 
-  const [error, setError] = useState('');
-const [data, setData] = useState({ userStories: [] }); 
+  const [sprint, setSprint] = useState(null);
+  const [users, setUsers] = useState([]);
+  const [statuses, setStatuses] = useState([]);
+  const [tasks, setTasks] = useState({ todo: [], inProgress: [], done: [] });
+  const [loading, setLoading] = useState(true);
+  const [managers, setManagers] = useState([]);
+   const [error, setError] = useState(null);
+  const navigate = useNavigate();
+  // Add this state at the top
+const [allSprints, setAllSprints] = useState([]);
+
+// Fetch all sprints in fetchData or a separate useEffect
+useEffect(() => {
+  const fetchAllSprints = async () => {
+    try {
+      const res = await api.get(
+        `/sprints`,
+        { withCredentials: true }
+      );
+      setAllSprints(res.data);
+    } catch (err) {
+      console.error("Error fetching all sprints:", err);
+    }
+  };
+  fetchAllSprints();
+}, []);
 
   useEffect(() => {
-    axios.get(`http://localhost:8080/api/sprints/${id}/overview`, { withCredentials: true })
-      .then(res => setData(res.data))
-      .catch(err => {
-        console.error(err);
-        setError('Failed to load sprint overview.');
-      });
-  }, [id]);
+    if (!sprintId) return;
+    fetchData();
+  }, [sprintId]);
 
-  if (error) return <div>{error}</div>;
-  if (!data) return <div>Loading...</div>;
+  const fetchData = async () => {
+    try {
+      const sprintRes = await api.get(
+        `/sprints/${sprintId}`,
+        { withCredentials: true }
+      );
+      setSprint(sprintRes.data);
 
-//   const { sprint, users, userStories } = data;
- const {
-  sprint = {},
-  users = [],
-  userStories = []
-} = data;
+      const usersRes = await api.get(
+        `/sprint/users/${sprintId}`,
+        { withCredentials: true }
+      );
+      setUsers(usersRes.data);
 
-const userPerformance = (users || []).map(user => {
-  const userStoriesForUser = (userStories || []).filter(s => s.userstory?.id === user.id);
-  const done = userStoriesForUser.filter(s => s.status === 'Done');
-  const totalPoints = userStoriesForUser.reduce((sum, s) => sum + s.storypoints, 0);
-  const donePoints = done.reduce((sum, s) => sum + s.storypoints, 0);
-  return {
-    ...user,
-    totalStories: userStoriesForUser.length,
-    doneStories: done.length,
-    totalPoints,
-    donePoints
+      const ManagerRes = await api.get(
+        `/managers`,
+        { withCredentials: true }
+      );
+      setManagers(ManagerRes.data);
+
+      const tasksRes = await api.get(
+        `/sprint/viewtaskBySprintId/${sprintId}`,
+        { withCredentials: true }
+      );
+      const todo = tasksRes.data.filter(
+        (t) => t.taskStatus?.decription === "To Do"
+      );
+      const inProgress = tasksRes.data.filter(
+        (t) => t.taskStatus?.decription === "In Progress"
+      );
+      const done = tasksRes.data.filter(
+        (t) => t.taskStatus?.decription === "Done"
+      );
+      setTasks({ todo, inProgress, done });
+    } catch (err) {
+      console.error("Error fetching sprint data:", err);
+    } finally {
+      setLoading(false);
+    }
   };
-});
-const statusGroups = {
-    'To Do': [],
-    'In Progress': [],
-    'Done': []
-  };
 
-  userStories.forEach(story => {
-    statusGroups[story.status]?.push(story);
-  });
+  // Assign Task API call
+  // Inside your SprintOverview.jsx
 
-  const achievedPoints = userStories
-    .filter(story => story.status === 'Done')
-    .reduce((sum, s) => sum + s.storypoints, 0);
+// Move Task API
+const handleMoveTask = async (taskId, nextSprintId) => {
+  if (!window.confirm("Are you sure you want to move this task to another sprint?")) return;
 
-  return (
-    <div className="sprint-overview-container">
-      <h2>📊 Sprint Overview: {sprint.name}</h2>
-
-      <section className="sprint-details">
-  <p><strong>Start:</strong> {data.sprint?.startDate || 'N/A'}</p>
-  <p><strong>End:</strong> {data.sprint?.endDate || 'N/A'}</p>
-  <p><strong>Feature:</strong> {data.sprint?.feature?.name || 'N/A'}</p>
-  <p><strong>Total Story Points:</strong> {data.userStories.reduce((sum, s) => sum + (s.storypoints || 0), 0)}</p>
-  <p><strong>Achieved Story Points:</strong> {
-    data.userStories
-      .filter(story => story.status === 'Done')
-      .reduce((sum, s) => sum + (s.storypoints || 0), 0)
-  }</p>
-</section>
-
-      <section className="users-section">
-        <h3>👥 Assigned Users</h3>
-       {data.users?.length > 0 ? (
-  <table className="user-table">
-    <thead>
-      <tr>
-        <th>Name</th><th>Role</th><th>Total</th><th>Done</th><th>Story Points</th><th>Achieved</th>
-      </tr>
-    </thead>
-    <tbody>
-      {userPerformance.map(user => (
-        <tr key={user.id}>
-          <td>{user.preferred_name}</td>
-          <td>{user.role}</td>
-          <td>{user.totalStories}</td>
-          <td>{user.doneStories}</td>
-          <td>{user.totalPoints}</td>
-          <td>{user.donePoints}</td>
-        </tr>
-      ))}
-    </tbody>
-  </table>
-) : (
-  <p>No assigned users found.</p>
-)}
-
-      </section>
-
-      <section className="status-section">
-  <h3>📌 User Stories by Status</h3>
-  {Object.entries(statusGroups).map(([status, stories]) => (
-    <div key={status} className="story-table-group">
-      <h4 className="status-header">{status} ({stories.length})</h4>
-      <table className="story-status-table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Description</th>
-            <th>Acceptance Criteria</th>
-            <th>Story Points</th>
-            <th>Assigned To</th>
-            <th>Reported To</th>
-          </tr>
-        </thead>
-        <tbody>
-          {stories.map(story => (
-            <tr key={story.id}>
-              <td>{story.id}</td>
-              <td>{story.description}</td>
-              <td>{story.acceptancecriteria || 'N/A'}</td>
-              <td>{story.storypoints}</td>
-              <td>{story.userstory?.preffered_name || 'N/A'}</td>
-              <td>{story.reportedTo?.prefferred_name || 'N/A'}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  ))}
-</section>
-
-    </div>
-  );
+  try {
+    await api.put(
+      `/tasks/${taskId}/move/${nextSprintId}`,
+      {},
+      { withCredentials: true }
+    );
+    fetchData(); // refresh data
+  } catch (err) {
+    console.error("Error moving task:", err);
+  }
 };
 
-export default SprintOverview;
+// Update handleAssign & handleAssignReport with confirmation
+const handleAssign = async (taskId, userId) => {
+  if (!window.confirm("Are you sure you want to assign this task?")) return;
+
+  try {
+    await api.put(
+      `/tasks/${taskId}/assignTo/${userId}`,
+      {},
+      { withCredentials: true }
+    );
+    fetchData();
+  } catch (err) {
+    console.error("Error assigning task:", err);
+  }
+};
+
+const handleAssignReport = async (taskId, managerId) => {
+  if (!window.confirm("Are you sure you want to assign this report-to?")) return;
+
+  try {
+    await api.put(
+      `/tasks/${taskId}/assignReportTo/${managerId}`,
+      {},
+      { withCredentials: true }
+    );
+    fetchData();
+  } catch (err) {
+    console.error("Error assigning report-to:", err);
+  }
+};
+useEffect(() => {
+    // Fetch all available statuses
+    api
+      .get(`/getstatusForTask`, { withCredentials: true })
+      .then((res) => setStatuses(res.data))
+      .catch((err) => console.error("Error fetching statuses:", err));
+  }, []);
+
+  const handleStatusChange = (taskId, statusId) => {
+  api
+    .put(
+      `/tasks/${taskId}/status/${statusId}`,
+      {},
+      { withCredentials: true }
+    )
+    .then(() => {
+      fetchData(); // refresh tasks
+    })
+    .catch((err) => console.error("Error updating status:", err));
+};
+
+
+  if (loading) return <div className="loading">Loading Sprint Overview...</div>;
+
+  return (
+    <div className="sprint-overview">
+      <button className="back-btn" onClick={() => navigate(-1)}>
+        ⬅ Back
+      </button>
+
+      {/* Sprint Header */}
+      <div className="sprint-header">
+        <h2>
+          {sprint.name} (ID: {sprint.id})
+        </h2>
+        <p>
+          Start: {sprint.startDate} | End: {sprint.endDate} | Duration:{" "}
+          {Math.ceil(
+            (new Date(sprint.endDate) - new Date(sprint.startDate)) /
+              (1000 * 60 * 60 * 24)
+          )}{" "}
+          days
+        </p>
+        <p>
+          Status: {sprint.status} | Targeted SP: {sprint.targetedSP} | Achieved
+          SP: {sprint.achievedSP}
+        </p>
+      </div>
+
+      {/* Users Section 
+      <div className="users-section">
+        <h3>Users</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Achieved SP</th>
+              <th>Remaining SP</th>
+            </tr>
+          </thead>
+          <tbody>
+            {users.map((u) => (
+              <tr key={u.id}>
+                <td>{u.preffered_name || u.name}</td>
+                <td>{u.achievedSP}</td>
+                <td>{u.remainingSP}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      */}
+
+      {/* Tasks Section */}
+      <div className="tasks-section">
+        {["todo", "inProgress", "done"].map((statusKey) => {
+          const statusTitle =
+            statusKey === "todo"
+              ? "To Do"
+              : statusKey === "inProgress"
+              ? "In Progress"
+              : "Done";
+          return (
+            <div key={statusKey} className="task-table">
+              <h3>{statusTitle}</h3>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Task</th>
+                    <th>Assignee</th>
+                     <th>Status</th>
+                    <th>Story Points</th>
+                    <th>Report To</th>
+                    <th>Move Sprint</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tasks[statusKey].map((task) => (
+                    <tr key={task.id}>
+                      <td>{task.userstory}</td>
+
+                      {/* Assignee dropdown (always available) */}
+                      <td>
+                        <select
+                          onChange={(e) =>
+                            handleAssign(task.id, e.target.value)
+                          }
+                          value={task.user?.id || ""}
+                        >
+                          <option value="" disabled>
+                            Assign to...
+                          </option>
+                          {users.map((u) => (
+                            <option key={u.id} value={u.id}>
+                              {u.preffered_name || u.name}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+
+                     
+                      <td>
+                    <select
+                      value={task.taskStatus?.id || ""}
+                      onChange={(e) => handleStatusChange(task.id, e.target.value)}
+                    >
+                      <option value="">-- Select Status --</option>
+                      {statuses.map((status) => (
+                        <option key={status.id} value={status.id}>
+                          {status.decription}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+
+                      {/* Story points */}
+                      <td>{task.storypoints}</td>
+
+                      {/* Report To dropdown */}
+                      <td>
+                        <select
+                          onChange={(e) =>
+                            handleAssignReport(task.id, e.target.value)
+                          }
+                          value={task.reportedTo?.id || ""}
+                        >
+                          <option value="" disabled>
+                            Report to...
+                          </option>
+                          {managers.map((m) => (
+                            <option key={m.id} value={m.id}>
+                              {m.preffered_name || m.name}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                    <td>
+                      <select
+                        onChange={(e) => handleMoveTask(task.id, e.target.value)}
+                        defaultValue=""
+                      >
+                        <option value="" disabled>Move to sprint...</option>
+                        {allSprints
+                          .filter(s => s.id !== sprint.id)
+                          .map(s => (
+                            <option key={s.id} value={s.id}>
+                              {s.name}
+                            </option>
+                          ))}
+                      </select>
+                    </td>
+
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}

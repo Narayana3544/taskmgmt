@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from '../api';
 import "./EditFeature.css";
 
 const EditFeature = () => {
@@ -9,20 +9,27 @@ const EditFeature = () => {
 
   const [featureData, setFeatureData] = useState({
     name: "",
-    descripton: "",
+    description: "",
     status: "",
     project: { id: "" }
   });
 
-  useEffect(() => {
-    axios
-      .get(`http://localhost:8080/api/features/${id}`, { withCredentials: true })
+   const [statuses, setStatuses] = useState([]);
+
+    useEffect(() => {
+    // Get statuses for dropdown
+   api.get('/getstatusForFeature', { withCredentials: true })
+      .then(res => setStatuses(res.data))
+      .catch(err => console.error('Failed to load statuses:', err));
+
+   api
+      .get(`/features/${id}`, { withCredentials: true })
       .then((res) => {
         // Ensure project exists in state
         setFeatureData({
           name: res.data.name || "",
-          descripton: res.data.descripton || "",
-          status: res.data.status || "",
+          description: res.data.description || "",
+          status: res.data.status?.id || '',
           project: res.data.project ? { id: res.data.project.id } : { id: "" }
         });
       })
@@ -41,13 +48,13 @@ const EditFeature = () => {
 
     const payload = {
       name: featureData.name,
-      descripton: featureData.descripton,
-      status: featureData.status,
+      description: featureData.description,
+      status:{ id:featureData.status},
       project: featureData.project.id ? { id: featureData.project.id } : null
     };
 
-    axios
-      .put(`http://localhost:8080/api/features/${id}`, payload, {
+   api
+      .put(`/features/${id}`, payload, {
         withCredentials: true
       })
       .then(() => {
@@ -59,8 +66,8 @@ const EditFeature = () => {
 
   const handleDelete = () => {
     if (window.confirm("Are you sure you want to delete this feature?")) {
-      axios
-        .delete(`http://localhost:8080/api/features/${id}`, {
+     api
+        .delete(`/features/${id}`, {
           withCredentials: true
         })
         .then(() => {
@@ -90,7 +97,7 @@ const EditFeature = () => {
         <label>Description</label>
         <textarea
           name="descriptor"
-          value={featureData.descripton}
+          value={featureData.description}
           onChange={handleChange}
           required
         />
@@ -102,11 +109,14 @@ const EditFeature = () => {
           onChange={handleChange}
           required
         >
-          <option value="">Select status</option>
-          <option value="In Progress">In Progress</option>
-          <option value="Completed">Completed</option>
-          <option value="On Hold">On Hold</option>
+          <option value="">Select a status</option>
+              {statuses.map(status => (
+                <option key={status.id} value={status.id}>
+                  {status.decription}
+                </option>
+                ))}
         </select>
+          
 
         <div className="button-group">
           <button type="submit" className="save-btn">Save</button>

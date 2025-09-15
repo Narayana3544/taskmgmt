@@ -1,107 +1,248 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import './Home.css';
+
+import React, { useEffect, useState } from "react";
+import { FaEye } from "react-icons/fa";
+import { useNavigate } from 'react-router-dom';
+import "./Home.css";
+import api from "../api";
 
 const Home = () => {
-  const [userStories, setUserStories] = useState({ todo: [], inprogress: [], done: [] });
+  const [tasks, setTasks] = useState({ todo: [], inprogress: [], done: [] });
+  const [selectedTask, setSelectedTask] = useState(null);
+  const [statuses, setStatuses] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [selectedUserId, setSelectedUserId] = useState("");
+  const [selectedStatusId, setSelectedStatusId] = useState("");
+   const navigate = useNavigate();
 
   useEffect(() => {
-    axios.get('http://localhost:8080/api/features/userstories', { withCredentials: true }) 
+    // Fetch tasks
+    api
+      .get("/user/tasks", { withCredentials: true })
       .then((res) => {
-        const grouped = {
-          todo: [],
-          inprogress: [],
-          done: []
-        };
-        res.data.forEach(story => {
-          const status = story.status?.toLowerCase().replace(/\s/g, '') || 'todo';
-          if (status === 'todo') grouped.todo.push(story);
-          else if (status === 'inprogress') grouped.inprogress.push(story);
-          else grouped.done.push(story);
+       // after GET /api/user/tasks
+        const grouped = { todo: [], inprogress: [], done: [] };
+        res.data.forEach((task) => {
+          const label = task.taskStatus?.decription || task.status; // decription is intentional
+          grouped[toColKey(label)].push(task);
         });
-        setUserStories(grouped);
+        setTasks(grouped);
+
       })
-      .catch((err) => {
-        console.error('Error fetching user stories:', err);
-      });
+      .catch((err) => console.error("Error fetching tasks:", err));
+
+    // Fetch statuses
+    api
+      .get("/getstatusForTask", { withCredentials: true })
+      .then((res) => setStatuses(res.data))
+      .catch((err) => console.error("Error fetching statuses:", err));
+
+    // Fetch users
+    api
+      .get("/users", { withCredentials: true })
+      .then((res) => setUsers(res.data))
+      .catch((err) => console.error("Error fetching users:", err));
   }, []);
 
-  const onDragEnd = (result) => {
-    const { source, destination } = result;
-    if (!destination) return;
-
-    const sourceCol = source.droppableId;
-    const destCol = destination.droppableId;
-
-    const sourceTasks = Array.from(userStories[sourceCol]);
-    const [movedTask] = sourceTasks.splice(source.index, 1);
-
-    const destTasks = Array.from(userStories[destCol]);
-    destTasks.splice(destination.index, 0, movedTask);
-
-    setUserStories({
-      ...userStories,
-      [sourceCol]: sourceTasks,
-      [destCol]: destTasks,
-    });
-
-    // OPTIONAL: update story status in the DB
-    axios.patch(`http://localhost:8080/api/userstories/${movedTask.id}/status`, {
-      status: destCol.replace(/^(todo)$/, 'To Do').replace(/inprogress/, 'In Progress').replace(/done/, 'Done')
-    });
+  const openPopup = (task) => {
+    setSelectedTask(task);
+    setSelectedUserId("");
+    setSelectedStatusId("");
   };
 
-  const statusCount = {
-    todo: userStories.todo.length,
-    inprogress: userStories.inprogress.length,
-    done: userStories.done.length,
+  const closePopup = () => {
+    setSelectedTask(null);
   };
+
+  // ✅ Assign user
+  const handleAssignUser = () => {
+    if (!selectedUserId || !selectedTask) return;
+
+    api
+      .put(
+        `/tasks/${selectedTask.id}/assignTo/${selectedUserId}`,
+        {},
+        { withCredentials: true }
+      )
+      .then(() => {
+        
+        setTasks((prev) => {
+          const updated = { ...prev };
+          Object.keys(updated).forEach((col) => {
+            updated[col] = updated[col].map((task) =>
+              task.id === selectedTask.id
+                ? { ...task, user: users.find((u) => u.id === parseInt(selectedUserId)) }
+                : task
+            );
+          });
+          return updated;
+        });
+        
+        closePopup();
+      })
+      .catch((err) => console.error("Error assigning user:", err));
+  };
+
+  // ✅ Change status
+const toColKey = (label) => {
+  const key = (label || "").toLowerCase().replace(/\s/g, "");
+  return ["todo", "inprogress", "done"].includes(key) ? key : "todo";
+};
+
+const handleStatusChange = (taskId, statusId) => {
+  api
+    .put(
+      `/tasks/${taskId}/status/${statusId}`,
+      {},
+      { withCredentials: true }
+    )
+    .then(() => {
+      const newStatus = statuses.find((s) => s.id === Number(statusId)); // uses decription
+      setTasks((prev) => {
+        const updated = { todo: [], inprogress: [], done: [] };
+
+        // flatten then rebuild into columns
+        const all = [...prev.todo, ...prev.inprogress, ...prev.done];
+        all.forEach((task) => {
+          if (task.id === taskId) {
+            const updatedTask = {
+              ...task,
+              taskStatus: newStatus,
+              status: newStatus?.decription, // keep flat field if you use it elsewhere
+            };
+            updated[toColKey(newStatus?.decription)].push(updatedTask);
+          } else {
+            const currentLabel = task.taskStatus?.decription || task.status; // <-- key fix
+            updated[toColKey(currentLabel)].push(task);
+          }
+        });
+
+        return updated;
+      });
+
+      // close popup
+      setSelectedTask(null); // or call your closePopup() if you have it
+    })
+    .catch((err) => console.error("Error updating status:", err));
+};
+
 
   return (
-    <div className="task-board">
-      <h2 className="board-title">🗂️ User Story Board</h2>
-      <div className="status-summary">
-        <span>To Do: {statusCount.todo}</span>
-        <span>In Progress: {statusCount.inprogress}</span>
-        <span>Done: {statusCount.done}</span>
-      </div>
-      <DragDropContext onDragEnd={onDragEnd}>
-        <div className="columns">
-          {['todo', 'inprogress', 'done'].map((colKey) => (
-            <Droppable key={colKey} droppableId={colKey}>
-              {(provided) => (
-                <div className="column" ref={provided.innerRef} {...provided.droppableProps}>
-                  <h3>
-                    {colKey === 'todo' && '📝 To Do'}
-                    {colKey === 'inprogress' && '⏳ In Progress'}
-                    {colKey === 'done' && '✅ Done'}
-                  </h3>
-                  {userStories[colKey].map((story, index) => (
-                    <Draggable key={story.id.toString()} draggableId={story.id.toString()} index={index}>
-                      {(provided) => (
-                        <div
-                          className="task-card"
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          {...provided.dragHandleProps}
-                        >
-                          <strong>{story.description}</strong>
-                          <p>Story Points: {story.storypoints}</p>
-                          <p>Assigned to: {story.userstory?.preffered_name || 'Unassigned'}</p>
-                        </div>
-                      )}
-                    </Draggable>
-                  ))}
-                  {provided.placeholder}
+    <div className="home">
+      <h2 className="board-title">🗂️ Task Board</h2>
+
+      <div className="columns">
+        {["todo", "inprogress", "done"].map((colKey) => (
+          <div className="column" key={colKey}>
+            <h3>
+              {colKey === "todo" && "📝 To Do"}
+              {colKey === "inprogress" && "⏳ In Progress"}
+              {colKey === "done" && "✅ Done"}
+            </h3>
+
+            {tasks[colKey].map((task) => (
+              <div className="task-card" key={task.id}>
+              {/* Top-left ID */}
+              <div className="task-id">ID: {task.id}</div>
+
+              {/* Main content (title + actions) */}
+              <div className="task-content">
+                <strong>{task.userstory || task.title}</strong>
+                <div className="task-actions">
+                  <button
+                    className="arrow-btn"
+                    onClick={() => navigate(`/task/${task.id}`)}
+                    title="View Task"
+                  >
+                    <FaEye size={18} />
+                  </button>
+                  <button
+                    className="arrow-btn"
+                    onClick={() => openPopup(task)}
+                    title="Move Task"
+                  >
+                    ➔
+                  </button>
                 </div>
-              )}
-            </Droppable>
-          ))}
+              </div>
+
+              {/* Bottom-right Story Points */}
+              <div
+                className={`storypoints-badge ${
+                  task.storypoints <= 1
+                    ? "low"
+                    : task.storypoints <= 3
+                    ? "medium"
+                    : "high"
+                }`}
+              >
+                {task.storypoints} SP
+              </div>
+            </div>
+
+            ))}
+          </div>
+        ))}
+      </div>
+
+      {/* Popup */}
+      {selectedTask && (
+        <div className="popup-overlay">
+          <div className="popup-card">
+            <button className="close-btn" onClick={closePopup}>
+              ✖
+            </button>
+            <h3>{selectedTask.userstory || selectedTask.title}</h3>
+            <p>{selectedTask.description}</p>
+            
+
+            {/* Assign User */}
+            <div className="popup-section">
+              <label>Select User:</label>
+              <select
+                value={selectedUserId}
+                onChange={(e) => setSelectedUserId(e.target.value)}
+              >
+                <option value="">-- Select User --</option>
+                {users.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.preffered_name || u.username}
+                  </option>
+                ))}
+              </select>
+              <button className="assign-btn" onClick={handleAssignUser}>
+                Assign User
+              </button>
+            </div>
+
+            {/* Change Status */}
+            <div className="popup-section">
+              <label>Change Status:</label>
+              <select
+                value={selectedStatusId}
+                onChange={(e) => setSelectedStatusId(e.target.value)}
+              >
+                <option value="">-- Select Status --</option>
+                {statuses.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.decription}
+                  </option>
+                ))}
+              </select>
+              <button
+                className="status-btn"
+                onClick={() =>
+                  selectedStatusId && handleStatusChange(selectedTask.id, selectedStatusId)
+                }
+              >
+                Change Status
+              </button>
+            </div>
+          </div>
         </div>
-      </DragDropContext>
+      )}
     </div>
   );
 };
 
 export default Home;
+

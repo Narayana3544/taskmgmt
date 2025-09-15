@@ -1,6 +1,7 @@
 package com.telusko.demo.service;
 
 import com.telusko.demo.Model.User;
+import com.telusko.demo.repo.Rolerepo;
 import com.telusko.demo.repo.userrepo;
 import org.springframework.beans.factory.annotation.Autowired;
 //import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -24,6 +25,9 @@ public class loginservice {
 
     @Autowired
     private userrepo repo;
+
+    @Autowired
+    private Rolerepo rolerepo;
 
     public List<User> getusers() {
         return repo.findAll();
@@ -52,6 +56,7 @@ public class loginservice {
 
     public User register(User user) {
         user.setPassword(encoder.encode(user.getPassword()));
+        user.setRole(rolerepo.findById(1).orElseThrow(()->new RuntimeException("role not found")));
         return repo.save(user);
     }
 

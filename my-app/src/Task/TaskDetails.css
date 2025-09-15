@@ -1,6 +1,10 @@
 .task-details-container {
   max-width: 800px;
   margin: 30px auto;
+  padding: 20px;
+  background: hsl(130, 13%, 91%);
+  color: black;
+  border-radius: 10px;
   font-family: 'Segoe UI', sans-serif;
 }
 
@@ -14,8 +18,9 @@
 }
 
 .task-card {
-  background: rgb(93, 190, 228) !important;
+  background: #f9fafb !important;
   border-radius: 8px;
+   border: 1px solid #ddd;
   box-shadow: 0 1px 4px rgba(0,0,0,0.08);
   padding: 20px;
   color: #1e293b !important;
@@ -71,6 +76,7 @@
   border-radius: 6px;
   padding: 12px;
   margin-top: 10px;
+ border: 1px solid #b1afaf;
 }
 
 .task-section h3 {

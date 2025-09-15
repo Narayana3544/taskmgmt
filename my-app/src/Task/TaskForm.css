@@ -130,3 +130,17 @@
 .task-form .btn-cancel:hover {
   background-color: #4b5563;
 }
+.task-form .back-btn {
+  background-color: #4caf50; 
+  color: white;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  position: relative; 
+  margin-top: 5px;
+  left: 0;
+  display: inline-block; 
+  align-self: flex-start;
+}

@@ -42,7 +42,7 @@
 }
 
 .task-table {
-  min-width: 900px; /* Adjust based on how many columns you have */
+  min-width: 700px; /* Adjust based on how many columns you have */
   border-collapse: collapse;
 }
 
@@ -146,3 +146,108 @@
 .search-bar button:hover {
   background-color: #125aa0;
 }
+.pagination {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  justify-content: center;
+}
+
+.pagination button {
+  padding: 6px 12px;
+  border: 1px solid #ccc;
+  background: white;
+  cursor: pointer;
+}
+
+.pagination button.active {
+  background: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+.pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.filter-section {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 20px;
+}
+
+.filter-section select {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  background: #fff;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.filter-section select:disabled {
+  background: #f5f5f5;
+  cursor: not-allowed;
+}
+
+.reset-btn {
+  background: #f0ad4e;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: white;
+  font-weight: bold;
+  transition: 0.3s;
+}
+
+.reset-btn:hover {
+  background: #ec971f;
+}
+
+.create-btn {
+  background: #5cb85c;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: white;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: 0.3s;
+}
+
+.create-btn:hover {
+  background: #4cae4c;
+}
+
+.pagination {
+  margin-top: 15px;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.pagination button {
+  padding: 6px 12px;
+  border: 1px solid #ccc;
+  background: #fff;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.pagination button.active {
+  background: #0275d8;
+  color: white;
+  border-color: #0275d8;
+}
+
+.pagination button:disabled {
+  background: #eee;
+  cursor: not-allowed;
+}
+

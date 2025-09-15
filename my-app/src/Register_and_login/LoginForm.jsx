@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import axios from 'axios';
+import  { useState } from 'react';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import { FaEnvelope, FaLock, FaUserCircle } from 'react-icons/fa';
+import api from '../api';
+// import axios from "axios";
 import './LoginForm.css';
 
 const LoginForm = ({ onLogin }) => {
@@ -21,18 +22,21 @@ const LoginForm = ({ onLogin }) => {
     const { email, password } = loginData; // ✅ extract values
 
     try {
-      const res = await axios.post(
-        "http://localhost:8080/api/login",
+      const res = await api.post(
+        "/login",
         { email, password },
         { withCredentials: true }
       );
 
       if (res.status === 200) {
-        
+        // Save JWT or session info (from backend) in localStorage
+        localStorage.setItem("user", JSON.stringify(res.data));
+
         toast.success('✅ Login Successful!');
-        onLogin(); // ✅ Update parent login state
+        onLogin();
         setTimeout(() => navigate('/home'), 1000);
       }
+
     } catch (err) {
       toast.error('❌ Invalid credentials');
       console.error(err);

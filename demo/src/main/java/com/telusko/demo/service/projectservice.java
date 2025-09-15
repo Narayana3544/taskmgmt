@@ -25,10 +25,7 @@ public class projectservice {
     public void deleteproject(int id) {
         repo.deleteById((long) id);
     }
-//
-//    public Project updateproject(Project project) {
-//        return repo.save(project);
-//    }
+
 
     public Project updateProject(Long id, Project updatedProject) {
         return repo.findById(id)

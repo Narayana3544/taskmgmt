@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../api';
 import { useParams, useNavigate } from 'react-router-dom';
 import './AssignUsersToSprint.css';
 
@@ -10,7 +10,7 @@ const AssignUsersToSprint = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    axios.get(`http://localhost:8080/api/sprints/${sprintId}/available-users`, { withCredentials: true })
+    api.get(`/sprints/${sprintId}/available-users`, { withCredentials: true })
       .then((res) => setUsers(res.data))
       .catch((err) => console.error('Error fetching users:', err));
   }, []);
@@ -27,8 +27,8 @@ const AssignUsersToSprint = () => {
     return;
   }
 
-  axios.post(
-  `http://localhost:8080/api/sprints/${sprintId}/assign-users`,
+  api.post(
+  `/sprints/${sprintId}/assign-users`,
   selectedUserIds,
   { withCredentials: true } // ✅ send cookies (JSESSIONID)
 )

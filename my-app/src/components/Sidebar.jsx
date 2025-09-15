@@ -1,5 +1,5 @@
 import React, { useState ,useEffect} from 'react';
-import axios from 'axios';
+import api from '../api';
 import './Sidebar.css';
 import {
   FaTachometerAlt, FaBell, FaEnvelope,
@@ -23,7 +23,7 @@ const Sidebar = ({ onToggle }) => {
     const [error, setError] = useState('');
   
     useEffect(() => {
-      axios.get('http://localhost:8080/api/user/profile', { withCredentials: true })
+      api.get('/user/profile', { withCredentials: true })
         .then(response => {
           setUser(response.data);
         })
@@ -54,39 +54,44 @@ const Sidebar = ({ onToggle }) => {
             </div>
 
             <div className="nav-section">
-              <div className="nav-item" onClick={() => setOpenDashboard(!openDashboard)}>
-                <FaTachometerAlt />
-                <span>Dashboard</span>
-              </div>
-              {openDashboard && (
-                <div className="submenu">
-                  <div className="nav-subitem" onClick={() => navigate('/dashboard')}><FaThList /> Board</div>
-                  <div className="nav-subitem"onClick={() => navigate('/my-stories')}><FaChartBar /> Activity</div>
-                  {/* <div className="nav-subitem"><FaChartBar /> Statistics</div> */}
-                </div>
-              )}
+            <div className="nav-item" onClick={() => navigate('/home')}><FaThList /> Dashboard</div>
+            <div className="nav-item"onClick={() => navigate('/my-stories')}><FaChartBar /> Current Sprint</div>
 
-              {/* ✅ Updated navigation to pages */}
-
+            {user.role?.description === "Admin" && (
             <div className="nav-item" onClick={() => navigate('/manage-projects')}>
               <FaFileInvoiceDollar /><span>Projects</span>
               </div>
+              )}
+              {user.role?.description === "Admin" && (
                 <div className="nav-item" onClick={() => navigate('/view-features')}>
               <FaFileInvoiceDollar /><span>Features</span>
               </div>
-               {/* <div className="nav-item" onClick={() => navigate('/view-stories')}>
-              <FaFileInvoiceDollar /><span>User Stories</span>
-              </div> */}
-              <div className="nav-item" onClick={() => navigate('/manage-sprints')}>
+            )}
+
+                 {user.role?.description === "Admin" && (
+                <div className="nav-item" onClick={() => navigate('/manage-sprints')}>
+                  <FaChartBar /><span>Sprints</span>
+                </div>
+              )}
+
+
+
+              {/* <div className="nav-item" onClick={() => navigate('/manage-sprints')}>
                 <FaChartBar /><span>Sprints</span>
-              </div>
+              </div> */}
+              {user.role?.description === "Admin" && (
               <div className="nav-item" onClick={() => navigate('/task')}>
                 <FaChartBar /><span>Task</span>
               </div>
-
-              {/* <div className="nav-item"><FaBell /><span>Notifications</span></div> */}
-              <div className="nav-item" onClick={() => navigate('/profile')}><FaUser /><span>Profile</span></div>
-             
+              )}
+              {/* <div className="nav-item" onClick={() => navigate('/profile')}><FaUser /><span>Profile</span></div> */}
+               <div className="nav-item" onClick={() => navigate('/view-projectsByUserId')}><FaUser /><span>My Projects</span></div>
+              <div className="nav-item" onClick={() => navigate('/active-sprints')}>
+                <FaChartBar /><span>Your Active Sprints</span>
+              </div>
+               {/* <div className="nav-item" onClick={() => navigate('/time-sheets')}>
+                <FaChartBar /><span>TIme Sheets</span>
+              </div> */}
             </div>
 
           </>

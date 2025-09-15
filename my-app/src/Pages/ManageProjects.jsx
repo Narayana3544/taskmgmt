@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../api';
 // import Navbar from '../components/Navbar';
 import './ManageProject.css';
 import { FaEdit, FaPlus } from 'react-icons/fa';
@@ -15,14 +15,14 @@ export default function ManageProjects() {
   }, []);
 
   const fetchProjects = () => {
-    axios.get('http://localhost:8080/api/projects', { withCredentials: true })
+   api.get('/projects', { withCredentials: true })
       .then(res => setProjects(res.data))
       .catch(err => console.error('Error fetching projects:', err));
   };
 
   const deleteProject = (id) => {
     if (window.confirm('Are you sure you want to delete this project?')) {
-      axios.delete(`http://localhost:8080/api/projects/${id}`)
+     api.delete(`/projects/${id}`)
         .then(() => fetchProjects())
         .catch(err => console.error('Error deleting project:', err));
     }
@@ -37,7 +37,7 @@ export default function ManageProjects() {
   };
 
   const handleStatusChange = (id, newStatus) => {
-    axios.patch(`http://localhost:8080/api/projects/${id}`, { status: newStatus }, { withCredentials: true })
+   api.patch(`/projects/${id}`, { status: newStatus }, { withCredentials: true })
       .then(() => fetchProjects())
       .catch(err => console.error('Failed to update status:', err));
   };
@@ -74,7 +74,6 @@ const filteredProjects = Array.isArray(projects)
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <button className="search-btn" onClick={fetchProjects}>Search</button>
           </div>
 
           <table className="projects-table">
@@ -106,30 +105,22 @@ const filteredProjects = Array.isArray(projects)
                         {project.status?.decription || "No status"}
                       </span>
                     </td>
-                    {/* <td>
-                      <select
-                        className="status-select"
-                        value={project.status || 'In Progress'}
-                        onChange={(e) => handleStatusChange(project.id, e.target.value)}
-                      >
-                        <option>In Progress</option>
-                        <option>Completed</option>
-                        <option>Pending</option>
-                      </select>
-                    </td> */}
                      <td>
-                        <button 
+                        
+                      {/* <button 
+                    className="view-btn" 
+                    onClick={() => navigate(`/view-project/${project.id}`)}
+                  >
+                    View
+                  </button> */}
+                  <button onClick={() => navigate(`/view-project/${project.id}`)}>Assign Users</button>
+                  <button onClick={() => navigate(`/view-featuresByprojectid/${project.id}`)}>view Features</button>
+                  <button 
                         className="edit-btn" 
                         onClick={() => navigate(`/edit-project/${project.id}`)}
                       > 
                       <FaEdit />
                       </button>
-                      <button 
-                    className="view-btn" 
-                    onClick={() => navigate(`/view-project/${project.id}`)}
-                  >
-                    View
-                  </button>
                     </td>
                   </tr>
                 ))

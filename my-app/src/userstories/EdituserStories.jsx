@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from '../api';
 import "./CreateUserStory.css"; // reuse create form styles
 
 const EditUserStory = () => {
@@ -15,7 +15,7 @@ const EditUserStory = () => {
   });
 
   useEffect(() => {
-    axios.get(`http://localhost:8080/api/userstories/${id}`, { withCredentials: true })
+    api.get(`/userstories/${id}`, { withCredentials: true })
       .then(res => setStory(res.data))
       .catch(err => console.error("Error loading story:", err));
   }, [id]);
@@ -36,7 +36,7 @@ const EditUserStory = () => {
   };
 
   const handleSave = () => {
-    axios.put(`http://localhost:8080/api/userstories/${id}`, story, { withCredentials: true })
+    api.put(`/userstories/${id}`, story, { withCredentials: true })
       .then(() => {
         alert("Story updated successfully!");
         navigate("/view-stories");
@@ -49,7 +49,7 @@ const EditUserStory = () => {
 
   const handleDelete = () => {
     if (window.confirm("Are you sure you want to delete this story?")) {
-      axios.delete(`http://localhost:8080/api/userstories/${id}`, { withCredentials: true })
+      api.delete(`/userstories/${id}`, { withCredentials: true })
         .then(() => {
           alert("Story deleted successfully!");
           navigate("/view-userstories");

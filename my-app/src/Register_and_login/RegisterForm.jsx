@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+// import axios from 'axios';
+import api from '../api';
 import { toast } from 'react-toastify';
 import { FaUser, FaEnvelope, FaLock, FaUserCircle, FaRegUser } from 'react-icons/fa';
 import './RegisterForm.css';
@@ -27,7 +28,7 @@ const RegisterForm = ({ onToggle }) => {
   
 
     try {
-      const res = await axios.post('http://localhost:8080/api/register', formData);
+      const res = await api.post('0/register', formData);
 
       if (res.status === 200) {
         toast.success(' Registered Successfully!', {
@@ -42,6 +43,7 @@ const RegisterForm = ({ onToggle }) => {
           preffered_name: '',
           email: '',
           password: '',
+          role_id:'1'
         });
       }
     } catch (err) {

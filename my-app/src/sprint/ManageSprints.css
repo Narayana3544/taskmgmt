@@ -1,14 +1,17 @@
 .manage-sprints-page {
+  max-width: 1100px;
+  margin: auto;
   padding: 20px;
-  font-family: Arial, sans-serif;
-  background-color: white;
+  background: hsl(130, 13%, 91%);
   color: black;
+  border-radius: 10px;
 }
 
 .sprint-header {
-  display: flex;
+   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 20px;
 }
 
 .top-actions {
@@ -23,28 +26,29 @@
 }
 
 .create-sprint-btn {
-  background-color: #28a745;
+  background-color: #1976d2;
   color: white;
-  padding: 8px 16px;
   border: none;
+  padding: 10px 14px;
   border-radius: 6px;
+  font-size: 14px;
   cursor: pointer;
+  transition: background 0.2s ease;
 }
 
 .sprint-table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 20px;
 }
 
 .sprint-table th, .sprint-table td {
-  border: 1px solid #ccc;
   padding: 10px;
-  text-align: center;
+  border: 1px solid #ddd;
+  text-align: left;
 }
 
 .sprint-table th {
-  background-color: #b9c5d1;
+   background-color: #2875e7;
 }
 
 .sprint-table button {

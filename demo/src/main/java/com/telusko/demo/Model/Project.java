@@ -2,7 +2,9 @@ package com.telusko.demo.Model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import org.hibernate.annotations.CreationTimestamp;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -33,6 +35,13 @@ public class Project {
     @ManyToOne
     @JoinColumn(name = "status_id")
     private Task_status status;
+
+    @CreationTimestamp
+    @Column(name = "created_date", updatable = false)
+    private LocalDateTime createdDate;
+
+    private boolean is_active = true;
+
 
 
     public Task_status getStatus() {

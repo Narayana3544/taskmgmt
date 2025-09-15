@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api';
 import './UserStories.css';
 
 const UserStories = () => {
@@ -19,7 +19,7 @@ const UserStories = () => {
 
   useEffect(() => {
     // Fetch users
-    axios.get('http://localhost:8080/api/users', { withCredentials: true })
+    api.get('/users', { withCredentials: true })
       .then((res) => setUsers(res.data))
       .catch((err) => console.error('Error fetching users:', err));
   }, []);
@@ -43,7 +43,7 @@ const UserStories = () => {
 
   const handleStorySubmit = (e) => {
     e.preventDefault();
-    axios.post(`http://localhost:8080/api/features/${featureId}/adduserstory`, {
+    api.post(`/features/${featureId}/adduserstory`, {
   description: story.description,
   acceptancecriteria: story.acceptancecriteria,
   storypoints: story.storypoints,

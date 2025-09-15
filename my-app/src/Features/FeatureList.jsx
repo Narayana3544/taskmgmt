@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../api';
 import { useNavigate } from 'react-router-dom';
 import './FeatureList.css';
 import { FaEdit } from "react-icons/fa";
@@ -12,7 +12,7 @@ const [filteredFeatures, setFilteredFeatures] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
-    axios.get('http://localhost:8080/api/features', { withCredentials: true })
+    api.get('/features', { withCredentials: true })
   .then(res => {
     console.log("Features from API:", res.data);
     setFeatures(res.data);
@@ -23,16 +23,32 @@ const [filteredFeatures, setFilteredFeatures] = useState([]);
   });
   }, []);
 
-const handleSearch = () => {
-  if (searchProjectId.trim() === '') {
+  const [searchTerm, setSearchTerm] = useState('');
+
+
+useEffect(() => {
+  if (searchTerm.trim() === '') {
     setFilteredFeatures(features);
   } else {
-    const filtered = features.filter(
-      feature => feature.project?.id?.toString() === searchProjectId.trim()
+    const term = searchTerm.toLowerCase();
+    const filtered = features.filter(feature =>
+      JSON.stringify(feature).toLowerCase().includes(term)
     );
     setFilteredFeatures(filtered);
   }
-};
+}, [searchTerm, features]);
+
+// const handleSearch = () => {
+//   if (searchProjectId.trim() === '') {
+//     setFilteredFeatures(features);
+//   } else {
+//     const searchTerm = searchProjectId.trim().toLowerCase();
+//     const filtered = features.filter(feature =>
+//       JSON.stringify(feature).toLowerCase().includes(searchTerm)
+//     );
+//     setFilteredFeatures(filtered);
+//   }
+// };
 
   const handleEdit = (id) => {
     navigate(`/edit-feature/${id}`);
@@ -40,7 +56,7 @@ const handleSearch = () => {
 
   const handleDelete = (id) => {
     if (window.confirm('Are you sure you want to delete this feature?')) {
-      axios.delete(`http://localhost:8080/api/features/${id}`)
+      api.delete(`/features/${id}`)
         .then(() => {
           const updated = features.filter(f => f.id !== id);
           setFeatures(updated);
@@ -59,12 +75,12 @@ const handleSearch = () => {
 
       <div className="search-bar">
         <input
-          type="text"
-          placeholder="Search by Project ID"
-          value={searchProjectId}
-          onChange={(e) => setSearchProjectId(e.target.value)}
-        />
-        <button onClick={handleSearch}>Search</button>
+      type="text"
+      placeholder="Search..."
+      value={searchTerm}
+      onChange={e => setSearchTerm(e.target.value)}
+    />
+        {/* <button onClick={handleSearch}>Search</button> */}
       </div>
 
       {filteredFeatures.length === 0 ? (
@@ -89,9 +105,13 @@ const handleSearch = () => {
                 <td>{feature.name}</td>
                 <td>{feature.description}</td>
                 <td>
-                  <span className={`status-tag ${feature.status?.toLowerCase().replace(/\s+/g, '-')}`}>
-                    {feature.status}
-                  </span>
+                  <span
+                        className={`status-tag ${
+                          feature.status?.decription?.toLowerCase().replace(/\s+/g, '-') || ''
+                        }`}
+                      >
+                        {feature.status?.decription || "No status"}
+                      </span>
                 </td>
                 <td>
                    <button 
@@ -99,6 +119,12 @@ const handleSearch = () => {
                     onClick={() => navigate(`/edit-feature/${feature.id}`)}
                   > 
                   <FaEdit />
+                  </button>
+                  <button 
+                    className="view-btn" 
+                    onClick={() => navigate(`/ViewSprintsByFeatureid/${feature.id}`)}
+                  >
+                    View Sprints
                   </button>
                 </td>
               </tr>

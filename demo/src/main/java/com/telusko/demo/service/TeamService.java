@@ -55,7 +55,6 @@ public class TeamService {
 
 
     public void unassignUserFromProject(Integer projectId, Integer userId) {
-        // Assuming you have a repository for the join table, e.g., ProjectUserRepository
         Optional<Team> assignment = repo.findByProjectIdAndUserId(projectId, userId);
 
         if (assignment.isPresent()) {
@@ -65,5 +64,11 @@ public class TeamService {
         }
     }
 
+    public List<Project> findProjectByUserId(int userId){
+        List<Team> projectList  =repo.findProjectsByUser_id(userId);
+         return projectList.stream()
+                .map(Team::getProject)
+                .collect(Collectors.toList());
+    }
 
 }

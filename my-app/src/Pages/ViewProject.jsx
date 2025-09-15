@@ -1,6 +1,6 @@
 // import React, { useEffect, useState } from "react";
 // import { useParams, useNavigate } from "react-router-dom";
-// import axios from "axios";
+// import api from "api";
 // import "./ViewProject.css";
 
 // const ViewProject = () => {
@@ -14,8 +14,8 @@
 //   const [showAssignForm, setShowAssignForm] = useState(false);
 
 //   useEffect(() => {
-//     axios
-//       .get(`http://localhost:8080/api/projects/${id}`, { withCredentials: true })
+//     api
+//       .get(`/projects/${id}`, { withCredentials: true })
 //       .then((res) => {
 //         setProject(res.data);
 //         setLoading(false);
@@ -25,8 +25,8 @@
 //         setLoading(false);
 //       });
 
-//     axios
-//       .get("http://localhost:8080/api/users", { withCredentials: true })
+//     api
+//       .get("/users", { withCredentials: true })
 //       .then((res) => setUsers(res.data))
 //       .catch((err) => console.error("Error fetching users:", err));
 //   }, [id]);
@@ -45,15 +45,15 @@
 //       return;
 //     }
 
-//     axios
-//       .post(`http://localhost:8080/api/projects/${id}/assign-users`, selectedUsers, {
+//     api
+//       .post(`/projects/${id}/assign-users`, selectedUsers, {
 //         withCredentials: true,
 //       })
 //       .then(() => {
 //         alert("Users assigned successfully!");
 //         setShowAssignForm(false);
 //         setSelectedUsers([]);
-//         return axios.get(`http://localhost:8080/api/projects/${id}`, { withCredentials: true });
+//         return api.get(`/projects/${id}`, { withCredentials: true });
 //       })
 //       .then((res) => setProject(res.data))
 //       .catch((err) => {
@@ -65,8 +65,8 @@
 //    const [assignedUsers, setAssignedUsers] = useState([]);
 
 //    useEffect(() => {
-//     axios
-//       .get(`http://localhost:8080/api/project/users/${id}`, { withCredentials: true })
+//     api
+//       .get(`/project/users/${id}`, { withCredentials: true })
 //       .then((res) => setAssignedUsers(res.data))
 //       .catch((err) => console.error("Error fetching assigned users:", err));
 //   }, [id]);
@@ -177,7 +177,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from '../api';
 import "./ViewProject.css";
 
 const ViewProject = () => {
@@ -189,27 +189,32 @@ const ViewProject = () => {
   const [allUsers, setAllUsers] = useState([]);
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [showAssignForm, setShowAssignForm] = useState(false);
+  const [showConfirmPopup, setShowConfirmPopup] = useState(false);
+  const [showUnassignPopup, setShowUnassignPopup] = useState(false);
+const [userToUnassign, setUserToUnassign] = useState(null);
 
-  // Fetch project details
+
+
+ 
   const fetchProject = () => {
-    axios
-      .get(`http://localhost:8080/api/projects/${id}`, { withCredentials: true })
+    api
+      .get(`/projects/${id}`, { withCredentials: true })
       .then((res) => setProject(res.data))
       .catch((err) => console.error("Error fetching project:", err));
   };
 
-  // Fetch assigned users
+
   const fetchAssignedUsers = () => {
-    axios
-      .get(`http://localhost:8080/api/project/users/${id}`, { withCredentials: true })
+    api
+      .get(`/project/users/${id}`, { withCredentials: true })
       .then((res) => setAssignedUsers(res.data))
       .catch((err) => console.error("Error fetching assigned users:", err));
   };
 
   // Fetch all users
   const fetchAllUsers = () => {
-    axios
-      .get("http://localhost:8080/api/users", { withCredentials: true })
+    api
+      .get("/users", { withCredentials: true })
       .then((res) => setAllUsers(res.data))
       .catch((err) => console.error("Error fetching all users:", err));
   };
@@ -235,14 +240,13 @@ const ViewProject = () => {
       return;
     }
 
-    axios
+    api
       .post(
-        `http://localhost:8080/api/projects/${id}/assign-users`,
+        `/projects/${id}/assign-users`,
         selectedUsers,
         { withCredentials: true }
       )
       .then(() => {
-        alert("Users assigned successfully!");
         setSelectedUsers([]);
         setShowAssignForm(false);
         fetchAssignedUsers();
@@ -255,14 +259,12 @@ const ViewProject = () => {
 
   // Unassign single user
   const handleUnassignUser = (userId) => {
-  axios
-    .delete(`http://localhost:8080/api/project/unassign`, {
+  api
+    .delete(`/project/unassign`, {
       params: { projectId: project.id, userId: userId },
       withCredentials: true,
     })
     .then(() => {
-      alert("User unassigned successfully!");
-      // Remove user locally from assignedUsers state
       setAssignedUsers((prev) => prev.filter((u) => u.id !== userId));
     })
     .catch((err) => {
@@ -275,6 +277,10 @@ const ViewProject = () => {
 
   return (
     <div className="view-project-page">
+
+
+    <button className="back-btn" onClick={() => navigate(-1)}>⬅ Back</button>
+
       <h2>Project Details</h2>
 
       <div className="project-info">
@@ -303,9 +309,12 @@ const ViewProject = () => {
                 <td>
                   <button
                     className="remove-btn"
-                    onClick={() => handleUnassignUser(user.id)}
+                    onClick={() => {
+                      setUserToUnassign(user.id);
+                      setShowUnassignPopup(true);
+                    }}
                   >
-                   unassign
+                    Unassign
                   </button>
                 </td>
               </tr>
@@ -322,9 +331,6 @@ const ViewProject = () => {
           onClick={() => setShowAssignForm((prev) => !prev)}
         >
           {showAssignForm ? "Cancel" : "Assign Users"}
-        </button>
-        <button className="back-btn" onClick={() => navigate(-1)}>
-          Back
         </button>
       </div>
 
@@ -343,15 +349,65 @@ const ViewProject = () => {
                   checked={selectedUsers.includes(user.id)}
                   onChange={handleUserSelect}
                 />
-                {user.preffered_name} 
+                {user.preffered_name}
               </label>
             ))}
           </div>
-          <button className="submit-btn" onClick={handleAssignUsers}>
+          <button
+            className="submit-btn"
+            onClick={() => setShowConfirmPopup(true)} // 👈 trigger popup instead of direct assign
+          >
             Assign Selected Users
           </button>
         </div>
       )}
+
+      {/* ✅ Confirmation Popup */}
+      {showConfirmPopup && (
+        <div className="popup-overlay">
+          <div className="popup">
+            <p>Are you sure you want to assign selected users?</p>
+            <div className="popup-actions">
+              <button className="confirm-btn" onClick={() => {
+            handleAssignUsers();
+            window.location.reload(); 
+          }}>
+                Yes
+              </button>
+              <button className="cancel-btn" onClick={() => setShowConfirmPopup(false)}>
+                No
+              </button>
+            </div>
+          </div>
+        </div>
+        
+      )}
+      {showUnassignPopup && (
+  <div className="popup-overlay">
+    <div className="popup">
+      <p>Are you sure you want to unassign this user?</p>
+      <div className="popup-actions">
+        <button
+          className="confirm-btn"
+          onClick={() => {
+            handleUnassignUser(userToUnassign);
+            window.location.reload(); // 👈 reload after success
+          }}
+        >
+          Yes
+        </button>
+        <button
+          className="cancel-btn"
+          onClick={() => setShowUnassignPopup(false)}
+        >
+          No
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+
     </div>
   );
 };

@@ -6,9 +6,7 @@ import com.telusko.demo.config.CustomUserDetails;
 import com.telusko.demo.repo.userrepo;
 import com.telusko.demo.service.CustomUserDetailsService;
 import com.telusko.demo.service.loginservice;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
-import org.apache.catalina.Authenticator;
+import javax.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -72,7 +70,8 @@ public class logincontroller {
         Authentication auth = authManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
         );
-
+        System.out.println("Authorities: " + auth.getAuthorities()); // should print ROLE_ADMIN, etc.
+        System.out.println("Principal: " + auth.getPrincipal());
         SecurityContextHolder.getContext().setAuthentication(auth);
 
         req.getSession().setAttribute(
@@ -84,15 +83,15 @@ public class logincontroller {
     }
 
 
-    @GetMapping("/register/{id}")
-    public ResponseEntity<User> getRegisterById(@PathVariable Long id) {
-        User user = service.getUserById(id); // ✅ Ensure this returns a proper User object
-        if (user != null) {
-            return ResponseEntity.ok(user);
-        } else {
-            return ResponseEntity.notFound().build();
-        }
-    }
+//    @GetMapping("/register/{id}")
+//    public ResponseEntity<User> getRegisterById(@PathVariable Long id) {
+//        User user = service.getUserById(id); // ✅ Ensure this returns a proper User object
+//        if (user != null) {
+//            return ResponseEntity.ok(user);
+//        } else {
+//            return ResponseEntity.notFound().build();
+//        }
+//    }
 
     @GetMapping("/managers")
     public List<User> getManagers() {

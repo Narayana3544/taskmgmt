@@ -23,11 +23,11 @@ public class projectservice {
     }
 
     public void deleteproject(int id) {
-        repo.deleteById((long) id);
+        repo.deleteById(id);
     }
 
 
-    public Project updateProject(Long id, Project updatedProject) {
+    public Project updateProject(int id, Project updatedProject) {
         return repo.findById(id)
                 .map(project -> {
                     project.setName(updatedProject.getName());
@@ -38,7 +38,7 @@ public class projectservice {
                 .orElseThrow(() -> new RuntimeException("Project not found with id: " + id));
     }
 
-    public Optional<Project> getProjectByid(long id) {
+    public Optional<Project> getProjectByid(int id) {
         return repo.findById(id);
     }
 }

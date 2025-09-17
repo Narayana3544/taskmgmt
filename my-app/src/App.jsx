@@ -33,6 +33,7 @@ import ViewFeaturesByProjectId from './Features/ViewFeaturesByProjectId'
 import ViewSprintsByFeatureid from './sprint/ViewSprintsByFeatureId';
 import ActiveSprints from './Project/ActiveSprints';
 import TimesheetForm from './TimeSheets/TimeSheetForm';
+import { BrowserRouter } from "react-router-dom";
 
 // 🔹 Small component for logout route
 const Logout = ({ onLogout }) => {
@@ -58,7 +59,7 @@ function App() {
   };
 
   return (
-    <Router>
+       <BrowserRouter basename="/frontend">
       {isLoggedIn ? (
         <>
           <Sidebar collapsed={sidebarCollapsed} onToggle={setSidebarCollapsed} />
@@ -112,7 +113,7 @@ function App() {
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       )}
-    </Router>
+   </BrowserRouter>
   );
 }
 

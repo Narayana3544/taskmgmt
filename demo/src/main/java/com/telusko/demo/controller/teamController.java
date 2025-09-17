@@ -33,8 +33,8 @@ public class teamController {
 
     @PostMapping("/projects/{projectId}/assign-users")
     public ResponseEntity<?> assignUsersToProject(
-            @PathVariable Long projectId,
-            @RequestBody List<Long> userIds) {
+            @PathVariable int projectId,
+            @RequestBody List<Integer> userIds) {
         service.assignUsersToProject(projectId, userIds);
         return ResponseEntity.ok("Users assigned successfully!");
     }

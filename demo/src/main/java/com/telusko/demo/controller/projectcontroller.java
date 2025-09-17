@@ -31,12 +31,12 @@ public class projectcontroller {
     }
 
     @PutMapping("/projects/{id}")
-    public Project updateproject(@PathVariable Long id,@RequestBody Project project){
+    public Project updateproject(@PathVariable int id,@RequestBody Project project){
        return service.updateProject(id,project);
     }
 
     @GetMapping("/projects/{id}")
-    public ResponseEntity<Project> getProjectByid(@PathVariable long id) {
+    public ResponseEntity<Project> getProjectByid(@PathVariable int id) {
         Optional<Project> project = service.getProjectByid(id);
         return project
                 .map(ResponseEntity::ok)

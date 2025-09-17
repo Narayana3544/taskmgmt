@@ -1,13 +1,20 @@
 package com.telusko.demo.Model;
 
-import jakarta.persistence.*;
+import javax.persistence.*;
+
 import lombok.Data;
-import lombok.Generated;
+
+import java.util.Optional;
+
 
 @Data
 @Entity
 @Table(name = "team")
 public class Team {
+    public void setUser(User user) {
+        this.user = user;
+    }
+
     @Id
     @GeneratedValue
     private int id;
@@ -36,9 +43,7 @@ public class Team {
         return user;
     }
 
-    public void setUser(User user) {
-        this.user = user;
-    }
+
 
     public void setId(int id) {
         this.id = id;

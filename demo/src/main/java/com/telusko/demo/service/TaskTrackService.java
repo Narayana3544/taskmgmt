@@ -6,7 +6,6 @@ import com.telusko.demo.Model.task;
 import com.telusko.demo.repo.TaskRepository;
 import com.telusko.demo.repo.TaskTrackRepo;
 import com.telusko.demo.repo.userrepo;
-import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -22,7 +21,7 @@ public class TaskTrackService {
     @Autowired
     userrepo Userrepo;
 
-    @Transactional
+
     public void assignTask(int taskId, int newUserId) {
         // 1. Find task
         task existingTask = Taskrepo.findById(taskId)

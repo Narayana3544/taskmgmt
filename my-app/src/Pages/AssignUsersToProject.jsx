@@ -35,7 +35,6 @@ export default function AssignUsersForm() {
 
 const handleSubmit = async (e) => {
   e.preventDefault();
-  console.log("Submitting:", { userIds: selectedUsers, projectId }); // 👈 check
   try {
     await api.post(
       `/project/${projectId}/assign-users`,

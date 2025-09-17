@@ -28,8 +28,10 @@ public class TimeSheetService {
 
     public Timesheets createTimesheet(int userId, int managerId, LocalDate weekStart, LocalDate weekEnd, Authentication authentication) {
 
-        User user = userRepo.findById((long)userId)
-                .orElseThrow(() -> new RuntimeException("Status DRAFT not found"));
+        User user = userRepo.findById(userId);
+        if (user == null) {
+            throw new RuntimeException("Status DRAFT not found");
+        };
 
         User manager = userRepo.findById(managerId);
         if (manager == null) {

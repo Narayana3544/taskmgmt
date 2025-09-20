@@ -14,6 +14,7 @@ export default function TaskDetails() {
   const [selectedUser, setSelectedUser] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
 
   // Fetch task + comments + users
   useEffect(() => {
@@ -86,6 +87,16 @@ export default function TaskDetails() {
       <button className="back-btn" onClick={() => navigate(-1)}>⬅ Back</button>
 
       <div className="task-card">
+              {/* Top-right bugs dropdown */}
+              <div className="bugs-dropdown">
+                <div className="dropdown">
+                  <button className="dropdown-btn">🐞 Bugs ▾</button>
+                  <div className="dropdown-content">
+                    <button onClick={() => navigate(`/task/${id}/bug`)}>➕ Create Bug</button>
+                    <button onClick={() => navigate(`/task/${id}/buglist`)}>📋 View Bugs</button>
+                  </div>
+                </div>
+              </div>
         {/* Title + status */}
         <div className="task-header">
           <div className="task-icon">📌</div>
@@ -178,5 +189,3 @@ export default function TaskDetails() {
     </div>
   );
 }
-
-

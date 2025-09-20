@@ -1,92 +1,71 @@
 import React, { useState } from 'react';
+// import axios from 'axios';
 import api from '../api';
+import { toast } from 'react-toastify';
 import { FaUser, FaEnvelope, FaLock, FaUserCircle, FaRegUser } from 'react-icons/fa';
 import './RegisterForm.css';
 import { useNavigate } from 'react-router-dom';
 
-const RegisterForm = () => {
+
+
+
+const RegisterForm = ({ onToggle }) => {
   const navigate = useNavigate();
-  
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
     preffered_name: '',
     email: '',
     password: '',
-    role_id: '1', // default role
-  });
-
-  const [popup, setPopup] = useState({
-    show: false,
-    message: '',
-    type: '', // 'success' or 'error'
   });
 
   const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  const validateForm = () => {
-  const { first_name, last_name, email, password } = formData;
-
-  if (!first_name || !last_name || !email || !password) {
-    setPopup({ show: true, message: "All fields are required!", type: "error" });
-    return false;
-  }
-
-  // Simple email regex
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
-    setPopup({ show: true, message: "Invalid email format!", type: "error" });
-    return false;
-  }
-
-  if (password.length < 6) {
-    setPopup({ show: true, message: "Password must be at least 6 characters!", type: "error" });
-    return false;
-  }
-
-  return true;
-};
-
-
   const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  if (!validateForm()) return; // stop if validation fails
+  
 
-  try {
-    const res = await api.post('/register', formData);
+    try {
+      const res = await api.post('/register', formData);
 
-    if (res.status === 201) {
-      setPopup({ show: true, message: res.data, type: "success" });
-      setFormData({ first_name: '', last_name: '', preffered_name: '', email: '', password: '', role_id: '1' });
+      if (res.status === 200) {
+        toast.success(' Registered Successfully!', {
+          position: 'top-right',
+          autoClose: 3000,
+        });
 
-      setTimeout(() => {
-        setPopup({ show: false, message: '', type: '' });
-        navigate('/login');
-      }, 2000);
+        // Reset form
+        setFormData({
+          first_name: '',
+          last_name: '',
+          preffered_name: '',
+          email: '',
+          password: '',
+          role_id:'1'
+        });
+      }
+    } catch (err) {
+      if (err.response?.status === 409) {
+        toast.error('⚠️ Email already exists!');
+      } else {
+        toast.error('❌ Registration failed!');
+        console.error(err);
+      }
     }
-  } catch (err) {
-    if (err.response?.status === 409) {
-      setPopup({ show: true, message: err.response.data || "Email already exists!", type: "error" });
-    } else {
-      setPopup({ show: true, message: err.response?.data || "Registration failed!", type: "error" });
-    }
-  }
-};
-
+  };
 
   return (
+    
     <div className="auth-container">
+     <div className="top-toggle">
+  <button onClick={() => navigate('/')} className="top-toggle-button">
+    Login
+  </button>
+</div>
 
-      {/* Top toggle to go back to login */}
-      <div className="top-toggle">
-        <button onClick={() => navigate('/')} className="top-toggle-button">
-          Login
-        </button>
-      </div>
 
-      {/* Registration Form */}
       <form className="auth-form" onSubmit={handleSubmit}>
         <div className="login-icon"><FaUserCircle size={48} /></div>
         <h4>Create an Account</h4>
@@ -150,18 +129,6 @@ const RegisterForm = () => {
 
         <button type="submit">Register</button>
       </form>
-
-      {/* Popup for status messages */}
-      {popup.show && (
-        <div className={`popup ${popup.type}`}>
-          <p>{popup.message}</p>
-          {popup.type === 'error' && (
-            <button onClick={() => setPopup({ show: false, message: '', type: '' })}>
-              Close
-            </button>
-          )}
-        </div>
-      )}
     </div>
   );
 };

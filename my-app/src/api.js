@@ -1,6 +1,7 @@
 import axios from "axios";
 
-const baseURL = "http://192.168.14.191:8080/task-mgmt";
+// const baseURL = "http://192.168.14.191:8080/task-mgmt";
+const baseURL="http://localhost:8081";
 
 const api = axios.create({
   baseURL: baseURL,  // include the context path

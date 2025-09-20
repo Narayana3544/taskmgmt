@@ -79,7 +79,7 @@ const Sidebar = ({ onToggle }) => {
               {/* <div className="nav-item" onClick={() => navigate('/manage-sprints')}>
                 <FaChartBar /><span>Sprints</span>
               </div> */}
-              {user.role?.description === "Admin" && (
+              {user.role?.description === "Admin"||user.role?.description === "Developer" && (
               <div className="nav-item" onClick={() => navigate('/task')}>
                 <FaChartBar /><span>Task</span>
               </div>

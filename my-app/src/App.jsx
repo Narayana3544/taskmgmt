@@ -33,6 +33,9 @@ import ViewFeaturesByProjectId from './Features/ViewFeaturesByProjectId'
 import ViewSprintsByFeatureid from './sprint/ViewSprintsByFeatureId';
 import ActiveSprints from './Project/ActiveSprints';
 import TimesheetForm from './TimeSheets/TimeSheetForm';
+import BugForm from './Bugs/Bugform';
+import BugList from './Bugs/BugList';
+import BugDetails from './Bugs/BugDetails';
 import { BrowserRouter } from "react-router-dom";
 
 // 🔹 Small component for logout route
@@ -100,6 +103,9 @@ function App() {
               <Route path="/ViewSprintsByFeatureid/:featureId" element={<ViewSprintsByFeatureid />} />
               <Route path="/active-sprints" element={<ActiveSprints />} />
               <Route path="/time-sheets" element={<TimesheetForm />} />
+              <Route path="/task/:id/buglist" element={<BugList/>} />
+              <Route path="/task/:id/bug" element={<BugForm />} />
+              <Route path="/bug/:id" element={<BugDetails/>} />
 
               {/* 🔹 Logout Route */}
               <Route path="/logout" element={<Logout onLogout={handleLogout} />} />

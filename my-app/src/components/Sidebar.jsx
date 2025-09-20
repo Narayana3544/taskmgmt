@@ -89,6 +89,7 @@ const Sidebar = ({ onToggle }) => {
               <div className="nav-item" onClick={() => navigate('/active-sprints')}>
                 <FaChartBar /><span>Your Active Sprints</span>
               </div>
+              <div className="nav-item" onClick={() => navigate('/createbug/:task_id')}><FaUser /><span>create bugs</span></div>
                {/* <div className="nav-item" onClick={() => navigate('/time-sheets')}>
                 <FaChartBar /><span>TIme Sheets</span>
               </div> */}

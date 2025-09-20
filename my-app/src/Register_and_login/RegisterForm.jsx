@@ -28,7 +28,7 @@ const RegisterForm = ({ onToggle }) => {
   
 
     try {
-      const res = await api.post('0/register', formData);
+      const res = await api.post('/register', formData);
 
       if (res.status === 200) {
         toast.success(' Registered Successfully!', {

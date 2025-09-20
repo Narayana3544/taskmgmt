@@ -391,6 +391,7 @@ const [userToUnassign, setUserToUnassign] = useState(null);
           className="confirm-btn"
           onClick={() => {
             handleUnassignUser(userToUnassign);
+            setShowUnassignPopup(false)
             window.location.reload(); // 👈 reload after success
           }}
         >

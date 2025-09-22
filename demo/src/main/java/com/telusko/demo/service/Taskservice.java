@@ -278,5 +278,18 @@ public class Taskservice {
         Task.setSprint(Sprint);
         repo.save(Task);
     }
+
+    public List<task> viewActiveTasksByUserId(int userId) {
+        List<task> tasks=repo.findByUser_Id(userId);
+
+        List<task> ActiveTasks=new ArrayList<>();
+        for(task t: tasks){
+            if(t.getTaskStatus().getDecription().equals("In Progress")){
+                ActiveTasks.add(t);
+            }
+        }
+        return ActiveTasks;
+
+    }
 }
 

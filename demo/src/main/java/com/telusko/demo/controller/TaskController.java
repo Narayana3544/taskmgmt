@@ -272,4 +272,12 @@ public class TaskController {
                     .body("Error moving task to next sprint: " + e.getMessage());
         }
     }
+
+    @GetMapping("/user/active/tasks")
+    public List<task> viewMyActiveTasks(Authentication authentication) {
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        int userId = userDetails.getUser().getId();
+        return service.viewActiveTasksByUserId(userId);
+    }
+
 }

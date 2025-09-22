@@ -27,7 +27,7 @@ public class SecurityConfig {
                 .authorizeRequests()
                 .antMatchers("/login", "/register", "/register/*").permitAll()
                 .antMatchers("/", "/index.html", "/static/**").permitAll()
-                .antMatchers("/create-task").hasRole("Admin")
+                .antMatchers("/create-task").authenticated()
                 .antMatchers("/current-user").authenticated()
                 .antMatchers("/user/profile", "/sprints/**", "/features/**", "/projects/**").authenticated()
                 .antMatchers(HttpMethod.POST, "/sprints/**/assign-users").authenticated()

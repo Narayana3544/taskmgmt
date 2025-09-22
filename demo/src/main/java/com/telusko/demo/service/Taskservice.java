@@ -13,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -43,6 +44,9 @@ public class Taskservice {
 
     @Autowired
     private featurerepo FeatureRepo;
+
+    @Autowired
+    private Task_typerepo taskTypeRepo;
 
     public task createtask(task Task){
         return repo.save(Task);
@@ -110,7 +114,13 @@ public class Taskservice {
             String attachmentFlag,
             MultipartFile attachment,
             Long featureId,
-            Long sprintId
+            Long sprintId,
+            Long userId,
+            Long reportedToId,
+            Long taskTypeId,
+            Long taskStatusId,
+            LocalDateTime startDate,
+            LocalDateTime endDate
     ) throws IOException {
 
         task newTask = new task();
@@ -119,18 +129,51 @@ public class Taskservice {
         newTask.setAcceptance_criteria(acceptanceCriteria);
         newTask.setStorypoints(storypoints);
         newTask.setAttachment_flag(attachmentFlag);
+        newTask.setStart_date(startDate);
+        newTask.setEnd_date(endDate);
 
-        // Set feature & sprint
+        // Feature (required)
         Feature feature = featureRepo.findById(Math.toIntExact(featureId))
                 .orElseThrow(() -> new RuntimeException("Feature not found"));
         newTask.setFeature(feature);
 
-        createsprint sprint = sprintRepo.findById(Math.toIntExact(sprintId))
-                .orElseThrow(() -> new RuntimeException("Sprint not found"));
-        newTask.setSprint(sprint);
+        // Sprint (optional)
+        if (sprintId != null) {
+            createsprint sprint = sprintRepo.findById(Math.toIntExact(sprintId))
+                    .orElseThrow(() -> new RuntimeException("Sprint not found"));
+            newTask.setSprint(sprint);
+        }
 
-        // Save attachment as byte[]
-        if ("yes".equalsIgnoreCase(attachmentFlag) && attachment != null && !attachment.isEmpty()) {
+        // Assignee (optional)
+        if (userId != null) {
+            User user = UserRepo.findById(Math.toIntExact(userId));
+//                    .orElseThrow(() -> new RuntimeException("User not found"));
+            newTask.setUser(user);
+        }
+
+        // ReportedTo (optional)
+        if (reportedToId != null) {
+            User manager = UserRepo.findById(Math.toIntExact(reportedToId));
+//                    .orElseThrow(() -> new RuntimeException("ReportedTo user not found"));
+            newTask.setReportedTo(manager);
+        }
+
+        // TaskType (optional)
+        if (taskTypeId != null) {
+            Task_type type = taskTypeRepo.findById(Math.toIntExact(taskTypeId))
+                    .orElseThrow(() -> new RuntimeException("TaskType not found"));
+            newTask.setTaskType(type);
+        }
+
+        // TaskStatus (optional)
+        if (taskStatusId != null) {
+            Task_status status = taskStatusRepository.findById(Math.toIntExact(taskStatusId))
+                    .orElseThrow(() -> new RuntimeException("TaskStatus not found"));
+            newTask.setTaskStatus(status);
+        }
+
+        // Attachment (optional)
+        if ("Yes".equalsIgnoreCase(attachmentFlag) && attachment != null && !attachment.isEmpty()) {
             newTask.setAttachment(attachment.getBytes());
             newTask.setAttachmentName(attachment.getOriginalFilename());
         }

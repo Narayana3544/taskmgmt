@@ -18,6 +18,7 @@ export default function EditTask() {
   const [acceptanceCriteria, setAcceptanceCriteria] = useState("");
   const [attachmentFlag, setAttachmentFlag] = useState("");
   const [attachmentFile, setAttachmentFile] = useState(null);
+  const [existingAttachmentName, setExistingAttachmentName] = useState("");
   const [selectedSprint, setSelectedSprint] = useState("");
   const [storypoints, setStorypoints] = useState("");
   const [userstory, setUserstory] = useState("");
@@ -29,7 +30,6 @@ export default function EditTask() {
   const [endDate, setEndDate] = useState("");
   const [selectedTaskType, setSelectedTaskType] = useState("");
   const [selectedTaskStatus, setSelectedTaskStatus] = useState("");
-  const [existingAttachmentName, setExistingAttachmentName] = useState(""); // To show current file
 
   useEffect(() => {
     // Fetch task details
@@ -40,17 +40,17 @@ export default function EditTask() {
         setStorypoints(task.storypoints || "");
         setUserstory(task.userstory || "");
         setDescription(task.description || "");
-        setStartDate(task.start_date || "");
-        setEndDate(task.end_date || "");
+        setStartDate(task.start_date ? task.start_date.slice(0,16) : ""); // for datetime-local input
+        setEndDate(task.end_date ? task.end_date.slice(0,16) : "");
         setSelectedSprint(task.sprint?.id || "");
         setSelectedFeature(task.feature?.id || "");
         setSelectedUser(task.user?.id || "");
         setReportedTo(task.reportedTo?.id || "");
         setSelectedTaskType(task.taskType?.id || "");
         setSelectedTaskStatus(task.taskStatus?.id || "");
-        if (task.attachment) {
+        if (task.attachment_flag === "Yes" && task.attachmentName) {
           setAttachmentFlag("Yes");
-          setExistingAttachmentName(task.attachment.fileName || "Current File");
+          setExistingAttachmentName(task.attachmentName);
         } else {
           setAttachmentFlag("No");
         }
@@ -59,12 +59,16 @@ export default function EditTask() {
 
     // Fetch dropdown data
     api.get("/users", { withCredentials: true }).then(res => setUsers(res.data));
-    api.get(`/viewTaskSprints/${id}`, { withCredentials: true }).then(res => setSprints(res.data));
     api.get("/features", { withCredentials: true }).then(res => setFeatures(res.data));
     api.get("/gettype", { withCredentials: true }).then(res => setTaskTypes(res.data));
     api.get("/getstatusForTask", { withCredentials: true }).then(res => setTaskStatuses(res.data));
     api.get("/managers", { withCredentials: true }).then(res => setManagers(res.data));
-  }, [id]);
+    if (selectedFeature) {
+      api.get(`/features/${selectedFeature}/sprints`, { withCredentials:true })
+        .then(res => setSprints(res.data))
+        .catch(err => console.error(err));
+    }
+  }, [id, selectedFeature]);
 
   const handleSelectChange = setter => e => {
     const val = e.target.value;
@@ -101,7 +105,7 @@ export default function EditTask() {
         withCredentials: true,
         headers: { "Content-Type": "multipart/form-data" }
       });
-      // alert("Task updated successfully!");
+      alert("Task updated successfully!");
       navigate(-1);
     } catch (err) {
       console.error("Error updating task:", err);
@@ -123,96 +127,95 @@ export default function EditTask() {
 
   return (
     <div className="home">
-    <form onSubmit={handleSubmit} className="task-form" style={{ maxWidth: 600, margin: "auto" }}>
-      <button  onClick={() => navigate(-1)} className="back-btn">Back</button>
-      <h2>Edit Task</h2>
-      <label>Acceptance Criteria:</label>
-      <textarea value={acceptanceCriteria} onChange={e => setAcceptanceCriteria(e.target.value)} required rows={3} />
+      <form onSubmit={handleSubmit} className="task-form" style={{ maxWidth: 600, margin: "auto" }}>
+        <button onClick={() => navigate(-1)} className="back-btn">Back</button>
+        <h2>Edit Task</h2>
 
-      <label>Attachment Flag:</label>
-      <select value={attachmentFlag} onChange={e => setAttachmentFlag(e.target.value)}>
-        <option value="">-- Select --</option>
-        <option value="Yes">Yes</option>
-        <option value="No">No</option>
-      </select>
+        <label>Acceptance Criteria:</label>
+        <textarea value={acceptanceCriteria} onChange={e => setAcceptanceCriteria(e.target.value)} required rows={3} />
 
-      {attachmentFlag === "Yes" && (
-        <>
-          <label>Attachment:</label>
-          {existingAttachmentName && <p>Current File: {existingAttachmentName}</p>}
-          <input type="file" onChange={e => setAttachmentFile(e.target.files[0])} />
-        </>
-      )}
+        <label>Attachment Flag:</label>
+        <select value={attachmentFlag} onChange={e => setAttachmentFlag(e.target.value)}>
+          <option value="">-- Select --</option>
+          <option value="Yes">Yes</option>
+          <option value="No">No</option>
+        </select>
 
-      <label>Sprint:</label>
-      <select value={selectedSprint} onChange={handleSelectChange(setSelectedSprint)}>
-        <option value="">-- Select Sprint --</option>
-        {sprints.map(s => (
-          <option key={s.id} value={s.id}>{s.name || `Sprint ${s.id}`}</option>
-        ))}
-      </select>
+        {attachmentFlag === "Yes" && (
+          <div className="attachment-container">
+            {existingAttachmentName && !attachmentFile && (
+              <div className="attachment-file">
+                <span>{existingAttachmentName}</span>
+                <button type="button" className="remove-btn" onClick={() => setExistingAttachmentName("")}>✖</button>
+              </div>
+            )}
+            <input type="file" onChange={e => setAttachmentFile(e.target.files[0])} />
+            {attachmentFile && (
+              <div className="attachment-file">
+                <span>{attachmentFile.name}</span>
+                <button type="button" className="remove-btn" onClick={() => setAttachmentFile(null)}>✖</button>
+              </div>
+            )}
+          </div>
+        )}
 
-      <label>Story Points:</label>
-      <input type="number" min="0" value={storypoints} onChange={e => setStorypoints(e.target.value)} />
+        <label>Sprint:</label>
+        <select value={selectedSprint} onChange={handleSelectChange(setSelectedSprint)}>
+          <option value="">-- Select Sprint --</option>
+          {sprints.map(s => <option key={s.id} value={s.id}>{s.name || `Sprint ${s.id}`}</option>)}
+        </select>
 
-      <label>User Story:</label>
-      <input type="text" value={userstory} onChange={e => setUserstory(e.target.value)} required />
+        <label>Story Points:</label>
+        <input type="number" min="0" value={storypoints} onChange={e => setStorypoints(e.target.value)} />
 
-      <label>Description:</label>
-      <textarea value={description} onChange={e => setDescription(e.target.value)} rows={4} />
+        <label>User Story:</label>
+        <input type="text" value={userstory} onChange={e => setUserstory(e.target.value)} required />
 
-      <label>Feature:</label>
-      <select value={selectedFeature} onChange={handleSelectChange(setSelectedFeature)} required>
-        <option value="">-- Select Feature --</option>
-        {features.map(f => (
-          <option key={f.id} value={f.id}>{f.name || `Feature ${f.id}`}</option>
-        ))}
-      </select>
+        <label>Description:</label>
+        <textarea value={description} onChange={e => setDescription(e.target.value)} rows={4} />
 
-      <label>User:</label>
-      <select value={selectedUser} onChange={handleSelectChange(setSelectedUser)}>
-        <option value="">-- Select User --</option>
-        {users.map(u => (
-          <option key={u.id} value={u.id}>{u.firstName || u.preffered_name || `${u.id}`}</option>
-        ))}
-      </select>
+        <label>Feature:</label>
+        <select value={selectedFeature} onChange={handleSelectChange(setSelectedFeature)} required>
+          <option value="">-- Select Feature --</option>
+          {features.map(f => <option key={f.id} value={f.id}>{f.name || `Feature ${f.id}`}</option>)}
+        </select>
 
-      <label>Reported To:</label>
-      <select value={reportedTo} onChange={e => setReportedTo(e.target.value)} required>
-        <option value="">Select Manager</option>
-        {managers.map(manager => (
-          <option key={manager.id} value={manager.id}>{manager.preffered_name}</option>
-        ))}
-      </select>
+        <label>User:</label>
+        <select value={selectedUser} onChange={handleSelectChange(setSelectedUser)}>
+          <option value="">-- Select User --</option>
+          {users.map(u => <option key={u.id} value={u.id}>{u.firstName || u.preffered_name || `${u.id}`}</option>)}
+        </select>
 
-      <label>Start Date:</label>
-      <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} />
+        <label>Reported To:</label>
+        <select value={reportedTo} onChange={e => setReportedTo(e.target.value)} >
+          <option value="">Select Manager</option>
+          {managers.map(m => <option key={m.id} value={m.id}>{m.preffered_name}</option>)}
+        </select>
 
-      <label>End Date:</label>
-      <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} />
+        <label>Start Date:</label>
+        <input type="datetime-local" value={startDate} onChange={e => setStartDate(e.target.value)} />
 
-      <label>Task Type:</label>
-      <select value={selectedTaskType} onChange={handleSelectChange(setSelectedTaskType)} required>
-        <option value="">-- Select Task Type --</option>
-        {taskTypes.map(tt => (
-          <option key={tt.id} value={tt.id}>{tt.description}</option>
-        ))}
-      </select>
+        <label>End Date:</label>
+        <input type="datetime-local" value={endDate} onChange={e => setEndDate(e.target.value)} />
 
-      <label>Task Status:</label>
-      <select value={selectedTaskStatus} onChange={e => setSelectedTaskStatus(e.target.value)} required>
-        <option value="">-- Select Task Status --</option>
-        {taskStatuses.map(ts => (
-          <option key={ts.id} value={ts.id}>{ts.decription}</option>
-        ))}
-      </select>
+        <label>Task Type:</label>
+        <select value={selectedTaskType} onChange={handleSelectChange(setSelectedTaskType)} required>
+          <option value="">-- Select Task Type --</option>
+          {taskTypes.map(tt => <option key={tt.id} value={tt.id}>{tt.description}</option>)}
+        </select>
 
-      <div style={{ marginTop: 20, display: "flex", gap: "10px" }}>
-        <button type="submit" className="task-form-button">Update Task</button>
-        <button type="button" onClick={() => navigate(-1)} className="task-form-button">Back</button>
-        <button type="button" onClick={handleDelete} className="task-form-button delete-button">Delete</button>
-      </div>
-    </form>
+        <label>Task Status:</label>
+        <select value={selectedTaskStatus} onChange={handleSelectChange(setSelectedTaskStatus)} required>
+          <option value="">-- Select Task Status --</option>
+          {taskStatuses.map(ts => <option key={ts.id} value={ts.id}>{ts.decription}</option>)}
+        </select>
+
+        <div style={{ marginTop: 20, display: "flex", gap: "10px" }}>
+          <button type="submit" className="task-form-button">Update Task</button>
+          <button type="button" onClick={() => navigate(-1)} className="task-form-button">Back</button>
+          <button type="button" onClick={handleDelete} className="task-form-button delete-button">Delete</button>
+        </div>
+      </form>
     </div>
   );
 }

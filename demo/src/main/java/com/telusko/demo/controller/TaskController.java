@@ -13,6 +13,7 @@ import com.telusko.demo.service.Taskservice;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -21,6 +22,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -104,11 +106,17 @@ public class TaskController {
             @RequestParam("userstory") String userstory,
             @RequestParam("description") String description,
             @RequestParam("acceptance_criteria") String acceptanceCriteria,
-            @RequestParam("storypoints") Integer storypoints,
+            @RequestParam(value = "storypoints", required = false) Integer storypoints,
             @RequestParam("attachment_flag") String attachmentFlag,
             @RequestParam(value = "attachment", required = false) MultipartFile attachment,
             @RequestParam("feature_id") Long featureId,
-            @RequestParam("sprint_id") Long sprintId
+            @RequestParam(value = "sprint_id", required = false) Long sprintId,
+            @RequestParam(value = "user_id", required = false) Long userId,
+            @RequestParam(value = "reportedTo", required = false) Long reportedToId,
+            @RequestParam(value = "taskType_id", required = false) Long taskTypeId,
+            @RequestParam(value = "taskStatus_id", required = false) Long taskStatusId,
+            @RequestParam(value = "start_date", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
+            @RequestParam(value = "end_date", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate
     ) {
         try {
             task savedTask = service.createTask(
@@ -119,7 +127,13 @@ public class TaskController {
                     attachmentFlag,
                     attachment,
                     featureId,
-                    sprintId
+                    sprintId,
+                    userId,
+                    reportedToId,
+                    taskTypeId,
+                    taskStatusId,
+                    startDate,
+                    endDate
             );
             return ResponseEntity.ok(savedTask);
         } catch (Exception e) {
@@ -127,6 +141,8 @@ public class TaskController {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
+
+
 
     @GetMapping("/tasks/{id}/download")
     public ResponseEntity<byte[]> downloadAttachment(@PathVariable int id) {

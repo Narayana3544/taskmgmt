@@ -144,3 +144,44 @@
   display: inline-block; 
   align-self: flex-start;
 }
+.attachment-container {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.attachment-file {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #f3f4f6;
+  padding: 5px 10px;
+  border-radius: 5px;
+  border: 1px solid #d1d5db;
+  max-width: 400px;
+}
+
+.attachment-file span {
+  color: black;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.remove-btn {
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+}
+.remove-btn:hover {
+  background: #dc2626;
+}

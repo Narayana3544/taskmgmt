@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import api from "../api"; // your axios instance
 import "./DailyTimeSheet.css";
 
-export default function DailyTimesheet({ userId }) {
+export default function DailyTimesheet() {
+  const { date } = useParams(); // date from URL
   const [entries, setEntries] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [workTypes, setWorkTypes] = useState([]);
@@ -13,33 +15,42 @@ export default function DailyTimesheet({ userId }) {
     workTypeId: "",
     description: ""
   });
+  const [editingId, setEditingId] = useState(null);
 
   const today = new Date().toISOString().split("T")[0];
+  const canEdit = date === today; // only today is editable
 
-  // Fetch today's timesheet
+  const checkOverlap = (newEntry, entries, ignoreId = null) => {
+    return entries.some(entry => {
+      if (ignoreId && entry.id === ignoreId) return false;
+      return !(
+        newEntry.end_time <= entry.start_time || 
+        newEntry.start_time >= entry.end_time
+      );
+    });
+  };
+
   const fetchEntries = async () => {
     try {
-      const res = await api.get(`/timesheets/day/${today}`,{withCredentials:true});
+      const res = await api.get(`/timesheets/day/${date}`, { withCredentials: true });
       setEntries(res.data);
     } catch (err) {
       console.error("Error fetching entries:", err);
     }
   };
 
-  // Fetch tasks assigned to user
   const fetchTasks = async () => {
     try {
-      const res = await api.get(`/user/active/tasks`,{withCredentials:true});
+      const res = await api.get(`/user/active/tasks`, { withCredentials: true });
       setTasks(res.data);
     } catch (err) {
       console.error("Error fetching tasks:", err);
     }
   };
 
-  // Fetch work types
   const fetchWorkTypes = async () => {
     try {
-      const res = await api.get("/worktypes",{withCredentials:true});
+      const res = await api.get("/worktypes", { withCredentials: true });
       setWorkTypes(res.data);
     } catch (err) {
       console.error("Error fetching work types:", err);
@@ -50,10 +61,21 @@ export default function DailyTimesheet({ userId }) {
     fetchEntries();
     fetchTasks();
     fetchWorkTypes();
-  }, []);
+  }, [date]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const resetForm = () => {
+    setForm({
+      startTime: "",
+      endTime: "",
+      taskId: "",
+      workTypeId: "",
+      description: ""
+    });
+    setEditingId(null);
   };
 
   const handleAdd = async () => {
@@ -63,7 +85,7 @@ export default function DailyTimesheet({ userId }) {
     }
 
     const payload = {
-      date: today,
+      date,
       start_time: form.startTime,
       end_time: form.endTime,
       task: form.taskId ? { id: Number(form.taskId) } : null,
@@ -72,15 +94,14 @@ export default function DailyTimesheet({ userId }) {
       is_permission_granted: true
     };
 
+    if (checkOverlap(payload, entries)) {
+      alert("This time entry overlaps with an existing one.");
+      return;
+    }
+
     try {
-      await api.post("/timesheets", payload,{withCredentials:true});
-      setForm({
-        startTime: "",
-        endTime: "",
-        taskId: "",
-        workTypeId: "",
-        description: ""
-      });
+      await api.post("/timesheets", payload, { withCredentials: true });
+      resetForm();
       fetchEntries();
     } catch (err) {
       console.error("Error adding entry:", err);
@@ -88,48 +109,118 @@ export default function DailyTimesheet({ userId }) {
     }
   };
 
+  const handleEdit = (entry) => {
+    setEditingId(entry.id);
+    setForm({
+      startTime: entry.start_time,
+      endTime: entry.end_time,
+      taskId: entry.task?.id || "",
+      workTypeId: entry.workType?.id || "",
+      description: entry.description || ""
+    });
+  };
+
+  const handleUpdate = async () => {
+    if (!form.startTime || !form.endTime) {
+      alert("Start and End times are required");
+      return;
+    }
+
+    const payload = {
+      date,
+      start_time: form.startTime,
+      end_time: form.endTime,
+      task: form.taskId ? { id: Number(form.taskId) } : null,
+      workType: form.workTypeId ? { id: Number(form.workTypeId) } : null,
+      description: form.description,
+      is_permission_granted: form.isPermissionGranted !== undefined
+        ? form.isPermissionGranted
+        : true
+    };
+
+    if (checkOverlap(payload, entries, editingId)) {
+      alert("This time entry overlaps with an existing one.");
+      return;
+    }
+
+    try {
+      await api.put(`/timesheet/${editingId}`, payload, { withCredentials: true });
+      resetForm();
+      fetchEntries();
+    } catch (err) {
+      console.error("Error updating entry:", err);
+      alert("Failed to update entry");
+    }
+  };
+
   return (
     <div className="timesheet-container">
-      <h2>Daily Timesheet ({today})</h2>
+      <h2>Daily Timesheet ({date})</h2>
 
-      {/* Form */}
-      <div className="timesheet-form">
-        <input
-          type="time"
-          name="startTime"
-          value={form.startTime}
-          onChange={handleChange}
-        />
-        <input
-          type="time"
-          name="endTime"
-          value={form.endTime}
-          onChange={handleChange}
-        />
-        <select name="taskId" value={form.taskId} onChange={handleChange}>
-          <option value="">Select Task</option>
-          {tasks.map((task) => (
-            <option key={task.id} value={task.id}>
-              {task.userstory}
-            </option>
-          ))}
-        </select>
-        <select name="workTypeId" value={form.workTypeId} onChange={handleChange}>
-          <option value="">Select Work Type</option>
-          {workTypes.map((type) => (
-            <option key={type.id} value={type.id}>
-              {type.description}
-            </option>
-          ))}
-        </select>
-        <textarea
-          name="description"
-          placeholder="Description"
-          value={form.description}
-          onChange={handleChange}
-        />
-        <button onClick={handleAdd}>+ Add</button>
-      </div>
+      {canEdit && (
+        <div className="timesheet-form">
+          <input
+            type="time"
+            name="startTime"
+            value={form.startTime}
+            onChange={handleChange}
+          />
+          <input
+            type="time"
+            name="endTime"
+            value={form.endTime}
+            onChange={handleChange}
+          />
+          <select name="taskId" value={form.taskId} onChange={handleChange}>
+            <option value="">Select Task</option>
+            {tasks.map(task => (
+              <option key={task.id} value={task.id}>
+                {task.userstory}
+              </option>
+            ))}
+          </select>
+          <select name="workTypeId" value={form.workTypeId} onChange={handleChange}>
+            <option value="">Select Work Type</option>
+            {workTypes.map(type => (
+              <option key={type.id} value={type.id}>
+                {type.description}
+              </option>
+            ))}
+          </select>
+
+          {/* Show permission only for Official / Time Off */}
+          {["Official", "Time Off"].includes(
+            workTypes.find(wt => wt.id === Number(form.workTypeId))?.description
+          ) && (
+            <select
+              name="isPermissionGranted"
+              value={form.isPermissionGranted || false}
+              onChange={e =>
+                setForm({ ...form, isPermissionGranted: e.target.value === "true" })
+              }
+            >
+              <option value="true">Granted</option>
+              <option value="false">Pending</option>
+            </select>
+          )}
+
+          <textarea
+            name="description"
+            placeholder="Description"
+            value={form.description}
+            onChange={handleChange}
+          />
+
+          {editingId ? (
+            <>
+              <button onClick={handleUpdate}>Update</button>
+              <button onClick={resetForm}>Cancel</button>
+            </>
+          ) : (
+            <button onClick={handleAdd}>+ Add</button>
+          )}
+        </div>
+      )}
 
       {/* Table */}
       <table className="timesheet-table">
@@ -141,20 +232,29 @@ export default function DailyTimesheet({ userId }) {
             <th>Work Type</th>
             <th>Description</th>
             <th>Permission</th>
+            {canEdit && <th>Actions</th>}
           </tr>
         </thead>
         <tbody>
           {entries.map((entry, idx) => (
-            <tr
-              key={idx}
-              className={entry.isAutoMarkedLeave ? "auto-leave" : ""}
-            >
+            <tr key={idx} className={entry.isAutoMarkedLeave ? "auto-leave" : ""}>
               <td>{entry.start_time || "-"}</td>
               <td>{entry.end_time || "-"}</td>
               <td>{entry.task?.userstory || "-"}</td>
               <td>{entry.workType?.description || "-"}</td>
               <td>{entry.description}</td>
-              <td>{entry.is_permission_granted ? "Yes" : "No"}</td>
+              <td>
+                {["Official", "Time Off"].includes(entry.workType?.description)
+                  ? entry.permission_granted
+                    ? "Yes"
+                    : "No"
+                  : "-"}
+              </td>
+              {canEdit && (
+                <td>
+                  <button onClick={() => handleEdit(entry)}>Edit</button>
+                </td>
+              )}
             </tr>
           ))}
         </tbody>

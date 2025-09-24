@@ -37,6 +37,8 @@ import BugForm from './Bugs/Bugform';
 import BugList from './Bugs/BugList';
 import BugDetails from './Bugs/BugDetails';
 import DailyTimesheet from './DailyTimesheets/DailyTimeSheet';
+import MonthlyTimesheet from './DailyTimesheets/UserRangeTimeSheet';
+import AdminRangeTimeSheet from './DailyTimesheets/AdminRangeTimeSheet';
 
 // 🔹 Small component for logout route
 const Logout = ({ onLogout }) => {
@@ -106,8 +108,10 @@ function App() {
               <Route path="/task/:id/buglist" element={<BugList/>} />
               <Route path="/task/:id/bug" element={<BugForm />} />
               <Route path="/bug/:id" element={<BugDetails/>} />
-               <Route path="/Daily-time-sheets" element={<DailyTimesheet/>} />
-
+              <Route path="/Daily-time-sheets" element={<DailyTimesheet/>} />
+              <Route path="/Monthly-time-sheets" element={<MonthlyTimesheet/>} />
+               <Route path="/daily-timesheet/:date" element={<DailyTimesheet/>} />
+              <Route path="/admin-timesheet" element={<AdminRangeTimeSheet />} />
               {/* 🔹 Logout Route */}
               <Route path="/logout" element={<Logout onLogout={handleLogout} />} />
             </Routes>

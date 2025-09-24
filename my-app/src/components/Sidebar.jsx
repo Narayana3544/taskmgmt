@@ -93,6 +93,13 @@ const Sidebar = ({ onToggle }) => {
                {/* <div className="nav-item" onClick={() => navigate('/time-sheets')}>
                 <FaChartBar /><span>TIme Sheets</span>
               </div> */}
+               <div className="nav-item" onClick={() => navigate('/Monthly-time-sheets')}><FaUser /><span> Monthly Time Sheets</span></div>
+                
+                {user.role?.description === "Admin" && (
+              <div className="nav-item" onClick={() => navigate('/admin-timesheet')}>
+                <FaChartBar /><span>Timesheets</span>
+              </div>
+              )}
             </div>
 
           </>

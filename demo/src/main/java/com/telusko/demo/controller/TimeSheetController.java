@@ -5,6 +5,7 @@ import com.telusko.demo.Model.Timesheet;
 import com.telusko.demo.Model.User;
 import com.telusko.demo.Model.WorkType;
 import com.telusko.demo.config.CustomUserDetails;
+import com.telusko.demo.dto.DailySummaryDTO;
 import com.telusko.demo.repo.WorkTypeRepo;
 import com.telusko.demo.service.TimeSheetService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,16 +45,16 @@ public class TimeSheetController {
         return ResponseEntity.ok(entries);
     }
 
-    @GetMapping("/{userId}/week")
-    public ResponseEntity<List<Timesheet>> getEntriesForWeek(
-            @PathVariable int userId,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end) {
-        List<Timesheet> entries = service.getEntriesForWeek(userId, start, end);
-        return ResponseEntity.ok(entries);
-    }
+//    @GetMapping("/{userId}/week")
+//    public ResponseEntity<List<Timesheet>> getEntriesForWeek(
+//            @PathVariable int userId,
+//            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
+//            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end) {
+//        List<Timesheet> entries = service.getEntriesForWeek(userId, start, end);
+//        return ResponseEntity.ok(entries);
+//    }
 
-    @PutMapping("/{id}")
+    @PutMapping("/timesheet/{id}")
     public ResponseEntity<Timesheet> updateEntry(
             @PathVariable int id,
             @RequestBody Timesheet updatedEntry) {
@@ -71,5 +72,21 @@ public class TimeSheetController {
     public List<WorkType> getAllWorkTypes() {
         return workTypeRepository.findAll();
     }
+    @GetMapping("/timesheets/month")
+    public List<Timesheet> getTimesheetsByMonth(
+            @RequestParam String startDate,
+            @RequestParam String endDate) {
+        return service.getTimesheetsBetween(startDate, endDate);
+    }
+
+    @GetMapping("/timesheets/range-summary")
+    public List<DailySummaryDTO> getRangeSummary(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end,
+            @RequestParam(required = false) Integer userId // optional
+    ) {
+        return service.getRangeSummary(start, end, userId);
+    }
+
 
 }

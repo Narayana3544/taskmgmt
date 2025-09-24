@@ -12,4 +12,10 @@ public interface TimeSheetsRepo extends JpaRepository<Timesheet,Integer> {
     List<Timesheet> findByUserIdAndDate(int userId, LocalDate date);
 
     List<Timesheet> findByUserIdAndDateBetween(int userId, LocalDate startDate, LocalDate endDate);
+
+    List<Timesheet> findByDateBetween(LocalDate start, LocalDate end);
+
+    List<Timesheet> findByDate(LocalDate date);
+
+    List<Timesheet> findByDateAndUserId(LocalDate date, Integer userId);
 }

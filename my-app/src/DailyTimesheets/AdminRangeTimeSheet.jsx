@@ -30,44 +30,53 @@ export default function AdminRangeTimeSheet() {
 
   // Fetch range summary for selected user
   const fetchRange = async () => {
-    if (!selectedUser || !startDate || !endDate) {
-      alert("Please select user and both start and end dates.");
-      return;
-    }
-    setLoading(true);
-    try {
-      const res = await api.get("/timesheets/range-summary", {
-        params: { start: startDate, end: endDate, userId: selectedUser },
-        withCredentials: true,
-      });
-      setEntries(res.data);
-      setDailyDetails([]);
-      setSelectedDate(null);
-    } catch (err) {
-      console.error("Error fetching range summary:", err);
-      alert("Failed to fetch data.");
-    }
-    setLoading(false);
-  };
+  if (!selectedUser || !startDate || !endDate) {
+    alert("Please select user and both start and end dates.");
+    return;
+  }
 
+  setLoading(true);
+  try {
+    const res = await api.get(`/timesheets/range-summary/${selectedUser}`, {
+      params: { start: startDate, end: endDate },
+      withCredentials: true,
+    });
+
+    setEntries(res.data);
+    setDailyDetails([]);
+    setSelectedDate(null);
+  } catch (err) {
+    console.error("Error fetching range summary:", err);
+    alert("Failed to fetch data.");
+  }
+  setLoading(false);
+};
   // Fetch daily entries
   const handleViewDay = async (date) => {
-    setLoadingDaily(true);
-    try {
-      const res = await api.get(`/timesheets/day/${date}`, {
-        params: { userId: selectedUser },
-        withCredentials: true,
-      });
-      setDailyDetails(res.data);
-      setSelectedDate(date);
-    } catch (err) {
-      console.error("Error fetching daily entries:", err);
-      alert("Failed to fetch daily details.");
-      setDailyDetails([]);
-      setSelectedDate(null);
-    }
-    setLoadingDaily(false);
-  };
+  setLoadingDaily(true);
+  try {
+    const res = await api.get(`/timesheets/day/${selectedUser}/${date}`, {
+      withCredentials: true,
+    });
+
+    // Sort entries by start_time
+    const sortedDaily = res.data.sort((a, b) => {
+      if (!a.start_time) return 1;
+      if (!b.start_time) return -1;
+      return a.start_time.localeCompare(b.start_time);
+    });
+
+    setDailyDetails(sortedDaily);
+    setSelectedDate(date);
+  } catch (err) {
+    console.error("Error fetching daily entries:", err);
+    alert("Failed to fetch daily details.");
+    setDailyDetails([]);
+    setSelectedDate(null);
+  }
+  setLoadingDaily(false);
+};
+
 
   // Utility functions
   const isWeekend = (dateStr) => {
@@ -77,7 +86,7 @@ export default function AdminRangeTimeSheet() {
 
   const isHoliday = (dateStr) => {
     // Add your logic to check holidays
-    const holidays = ["2025-09-21", "2025-10-02"]; // Example
+    const holidays = ["2025-09-21", "2025-10-02","2025-10-03"]; // Example
     return holidays.includes(dateStr);
   };
 
@@ -225,3 +234,4 @@ export default function AdminRangeTimeSheet() {
     </div>
   );
 }
+

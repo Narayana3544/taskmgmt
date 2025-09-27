@@ -1,19 +1,18 @@
 package com.telusko.demo.service;
 
 import com.telusko.demo.Model.Timesheet;
+import com.telusko.demo.config.CustomUserDetails;
 import com.telusko.demo.dto.DailySummaryDTO;
 import com.telusko.demo.repo.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
 
 @Service
 public class TimeSheetService {
@@ -40,7 +39,6 @@ public class TimeSheetService {
             throw new IllegalStateException("Timesheet entries can only be created/edited for today.");
         }
         List<Timesheet> existingEntries=repo.findAll();
-//        validateTimesheet(entry,existingEntries);
         return repo.save(entry);
     }
 
@@ -127,14 +125,17 @@ public class TimeSheetService {
         return repo.findByDateBetween(start, end);
     }
 
-    public List<DailySummaryDTO> getRangeSummary(LocalDate start, LocalDate end, Integer userId) {
+    public List<DailySummaryDTO> getRangeSummary(LocalDate start, LocalDate end, Authentication authentication) {
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        int userId = userDetails.getUser().getId();
         List<DailySummaryDTO> summaries = new ArrayList<>();
 
         for (LocalDate date = start; !date.isAfter(end); date = date.plusDays(1)) {
             List<Timesheet> entries;
-            if (userId != null) {
+            if (userId != 0) {
                 entries = repo.findByDateAndUserId(date, userId);
-            } else {
+            }
+            else {
                 entries = repo.findByDate(date); // all users
             }
 
@@ -161,5 +162,43 @@ public class TimeSheetService {
         return summaries;
     }
 
+
+    public List<DailySummaryDTO> getRangeSummaryforUser(LocalDate start, LocalDate end, Integer userId) {
+        List<DailySummaryDTO> summaries = new ArrayList<>();
+
+        if (userId != null && !userRepo.existsById(Long.valueOf(userId))) {
+            throw new RuntimeException("Record not found for userId: " + userId);
+        }
+
+        for (LocalDate date = start; !date.isAfter(end); date = date.plusDays(1)) {
+            List<Timesheet> entries;
+
+            if (userId != null) {
+                entries = repo.findByDateAndUserId(date, userId);
+            } else {
+                entries = repo.findByDate(date); 
+            }
+
+            if (entries.isEmpty()) {
+                summaries.add(new DailySummaryDTO(date, 0, "Leave"));
+            } else {
+                double totalHours = entries.stream()
+                        .mapToDouble(e -> Duration.between(e.getStart_time(), e.getEnd_time()).toMinutes() / 60.0)
+                        .sum();
+
+                String status;
+                if (entries.stream().anyMatch(e -> e.getWorkType().getDescription().equalsIgnoreCase("Official"))) {
+                    status = "Official";
+                } else if (entries.stream().anyMatch(e -> e.getWorkType().getDescription().equalsIgnoreCase("Time Off"))) {
+                    status = "Time Off";
+                } else {
+                    status = "Worked";
+                }
+                summaries.add(new DailySummaryDTO(date, totalHours, status));
+            }
+        }
+
+        return summaries;
+    }
 
 }

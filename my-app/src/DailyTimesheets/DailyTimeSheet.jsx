@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import api from "../api"; // your axios instance
+import api from "../api"; 
 import "./DailyTimeSheet.css";
 
 export default function DailyTimesheet() {
-  const { date } = useParams(); // date from URL
+  const { date } = useParams(); 
   const [entries, setEntries] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [workTypes, setWorkTypes] = useState([]);
@@ -13,12 +13,13 @@ export default function DailyTimesheet() {
     endTime: "",
     taskId: "",
     workTypeId: "",
-    description: ""
+    description: "",
+    isPermissionGranted: false 
   });
   const [editingId, setEditingId] = useState(null);
 
   const today = new Date().toISOString().split("T")[0];
-  const canEdit = date === today; // only today is editable
+  const canEdit = date === today; 
 
   const checkOverlap = (newEntry, entries, ignoreId = null) => {
     return entries.some(entry => {
@@ -33,7 +34,12 @@ export default function DailyTimesheet() {
   const fetchEntries = async () => {
     try {
       const res = await api.get(`/timesheets/day/${date}`, { withCredentials: true });
-      setEntries(res.data);
+      const sortedEntries = res.data.sort((a, b) => {
+        if (!a.start_time) return 1;
+        if (!b.start_time) return -1;
+        return a.start_time.localeCompare(b.start_time);
+      });
+      setEntries(sortedEntries);
     } catch (err) {
       console.error("Error fetching entries:", err);
     }
@@ -73,7 +79,8 @@ export default function DailyTimesheet() {
       endTime: "",
       taskId: "",
       workTypeId: "",
-      description: ""
+      description: "",
+      isPermissionGranted: false
     });
     setEditingId(null);
   };
@@ -91,7 +98,7 @@ export default function DailyTimesheet() {
       task: form.taskId ? { id: Number(form.taskId) } : null,
       workType: form.workTypeId ? { id: Number(form.workTypeId) } : null,
       description: form.description,
-      is_permission_granted: true
+      is_permission_granted: form.isPermissionGranted // true if checked, false if not
     };
 
     if (checkOverlap(payload, entries)) {
@@ -116,7 +123,8 @@ export default function DailyTimesheet() {
       endTime: entry.end_time,
       taskId: entry.task?.id || "",
       workTypeId: entry.workType?.id || "",
-      description: entry.description || ""
+      description: entry.description || "",
+      isPermissionGranted: entry.is_permission_granted ?? false
     });
   };
 
@@ -133,9 +141,7 @@ export default function DailyTimesheet() {
       task: form.taskId ? { id: Number(form.taskId) } : null,
       workType: form.workTypeId ? { id: Number(form.workTypeId) } : null,
       description: form.description,
-      is_permission_granted: form.isPermissionGranted !== undefined
-        ? form.isPermissionGranted
-        : true
+      is_permission_granted: form.isPermissionGranted
     };
 
     if (checkOverlap(payload, entries, editingId)) {
@@ -188,20 +194,21 @@ export default function DailyTimesheet() {
             ))}
           </select>
 
-          {/* Show permission only for Official / Time Off */}
+          {/* Permission Checkbox only for Official / Time Off */}
           {["Official", "Time Off"].includes(
             workTypes.find(wt => wt.id === Number(form.workTypeId))?.description
           ) && (
-            <select
-              name="isPermissionGranted"
-              value={form.isPermissionGranted || false}
-              onChange={e =>
-                setForm({ ...form, isPermissionGranted: e.target.value === "true" })
-              }
-            >
-              <option value="true">Granted</option>
-              <option value="false">Pending</option>
-            </select>
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={form.isPermissionGranted}
+                onChange={(e) =>
+                  setForm({ ...form, isPermissionGranted: e.target.checked })
+                }
+                id="permissionGranted"
+              />
+              <label htmlFor="permissionGranted">Permission Granted</label>
+            </div>
           )}
 
           <textarea

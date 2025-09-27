@@ -3,6 +3,7 @@ package com.telusko.demo.service;
 import com.telusko.demo.Model.*;
 import com.telusko.demo.config.CustomUserDetails;
 import com.telusko.demo.repo.*;
+import jakarta.persistence.Tuple;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -66,8 +67,6 @@ public class Taskservice {
         existingTask.setDescription(newTaskData.getDescription());
         existingTask.setAcceptance_criteria(newTaskData.getAcceptance_criteria());
         existingTask.setStorypoints(newTaskData.getStorypoints());
-//        existingTask.setStart_date(newTaskData.getStart_date());
-//        existingTask.setEnd_date(newTaskData.getEnd_date());
         existingTask.setSprint(newTaskData.getSprint());
         existingTask.setFeature(newTaskData.getFeature());
         existingTask.setUser(newTaskData.getUser());
@@ -215,7 +214,7 @@ public class Taskservice {
 
         List<task> Tasks = repo.findAllById(taskIds);
         for (task Task : Tasks) {
-            Task.setSprint(sprint); // update sprint_id
+            Task.setSprint(sprint);
         }
 
         repo.saveAll(Tasks);
@@ -291,5 +290,39 @@ public class Taskservice {
         return ActiveTasks;
 
     }
+
+    public List<task> viewActiveSprintTasksByUserId(int userId) {
+       // List<Project> projects=new ArrayList<>();
+        List<Team> new_team=teamRepository.findProjectsByUser_id(userId);
+        List<Feature> features=new ArrayList<>();
+        List<createsprint> sprints=new ArrayList<>();
+
+        List<task> tasks=new ArrayList<>();
+
+        for(Team f:new_team){
+            features.addAll(featureRepo.findByProjectId(f.getProject().getId()));
+        }
+        for(Feature f: features){
+            sprints.addAll(sprintRepo.findByFeatureId(f.getId()));
+        }
+        System.out.println("Teams: " + new_team.size());
+        System.out.println("Features: " + features.size());
+        System.out.println("Sprints: " + sprints.size());
+        for(createsprint s:sprints){
+            System.out.println("Sprint " + s.getId() + " status = " + s.getStatus());
+            if(s.getStatus().equals("Active")) {
+                List<task> usertasks=new ArrayList<>();
+                usertasks.addAll(repo.findBySprint_id(s.getId()));
+                for(task t:usertasks){
+                    if(t.getUser().getId()==userId){
+                        tasks.add(t);
+                    }
+                }
+            }
+        }
+        return tasks;
+    }
 }
+
+
 

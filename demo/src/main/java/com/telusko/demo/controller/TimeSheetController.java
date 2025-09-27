@@ -83,10 +83,25 @@ public class TimeSheetController {
     public List<DailySummaryDTO> getRangeSummary(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end,
-            @RequestParam(required = false) Integer userId // optional
+           Authentication authentication
     ) {
-        return service.getRangeSummary(start, end, userId);
+        return service.getRangeSummary(start, end, authentication);
     }
 
+    @GetMapping("/timesheets/range-summary/{userId}")
+    public List<DailySummaryDTO> getRangeSummarybyUserId(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end,
+            @PathVariable int userId) {
+        return service.getRangeSummaryforUser(start, end, userId);
+    }
+
+    @GetMapping("/timesheets/day/{userId}/{date}")
+    public ResponseEntity<List<Timesheet>> getEntriesForDaybyUserId(
+            @PathVariable int userId,
+            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        List<Timesheet> entries = service.getEntriesByUserAndDate(userId, date);
+        return ResponseEntity.ok(entries);
+    }
 
 }

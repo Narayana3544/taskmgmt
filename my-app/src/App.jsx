@@ -108,10 +108,10 @@ function App() {
               <Route path="/task/:id/buglist" element={<BugList/>} />
               <Route path="/task/:id/bug" element={<BugForm />} />
               <Route path="/bug/:id" element={<BugDetails/>} />
-              <Route path="/Daily-time-sheets" element={<DailyTimesheet/>} />
+              {/* <Route path="/Daily-time-sheets" element={<DailyTimesheet/>} /> */}
               <Route path="/Monthly-time-sheets" element={<MonthlyTimesheet/>} />
-               <Route path="/daily-timesheet/:date" element={<DailyTimesheet/>} />
-              <Route path="/admin-timesheet" element={<AdminRangeTimeSheet />} />
+               <Route path="/timesheet/:date" element={<DailyTimesheet />} />
+               <Route path="/admin/timesheets" element={<AdminRangeTimeSheet />} />
               {/* 🔹 Logout Route */}
               <Route path="/logout" element={<Logout onLogout={handleLogout} />} />
             </Routes>

@@ -20,10 +20,10 @@
   font-weight: bold;
 }
 
-button {
+/* button {
   padding: 5px 10px;
   cursor: pointer;
-}
+} */
 
 .timesheet-table {
   width: 100%;

@@ -263,7 +263,6 @@ public class TaskController {
     @PutMapping("/tasks/{taskId}/move/{SprintId}")
     public ResponseEntity<String> moveTaskToNextSprint(@PathVariable int taskId, @PathVariable int SprintId) {
         try {
-//          service.moveTaskToNextSprint(taskId,SprintId);
             taskSprintTrackService.MoveTaskToAnySprint(taskId,SprintId);
             return ResponseEntity.ok("Task Assigned successfully");
         } catch (Exception e) {
@@ -278,6 +277,15 @@ public class TaskController {
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
         int userId = userDetails.getUser().getId();
         return service.viewActiveTasksByUserId(userId);
+    }
+
+
+    //this is for dashboard for returning the current active sprint tasks only
+    @GetMapping("/user/Sprintactive/tasks")
+    public List<task> viewMyActiveSprintTasks(Authentication authentication) {
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        int userId = userDetails.getUser().getId();
+        return service.viewActiveSprintTasksByUserId(userId);
     }
 
 }

@@ -2,16 +2,18 @@ import React, { useState ,useEffect} from 'react';
 import api from '../api';
 import './Sidebar.css';
 import {
-  FaTachometerAlt, FaBell, FaEnvelope,
+  FaClipboardList, FaChevronDown, FaChevronUp ,
   FaUserCircle, FaPlusCircle, FaChartBar, FaCog,
-  FaSignOutAlt, FaFileInvoiceDollar, FaBars, FaUser, FaThList
+  FaRegCalendarAlt, FaFileInvoiceDollar, FaBars, FaUser, FaThList
 } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 
 const Sidebar = ({ onToggle }) => {
   const [openDashboard, setOpenDashboard] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+    const [timeSheetOpen, setTimeSheetOpen] = useState(true);
   const navigate = useNavigate();
+  const today = new Date().toISOString().split("T")[0];
 
   const handleToggle = () => {
     setCollapsed(!collapsed);
@@ -89,18 +91,48 @@ const Sidebar = ({ onToggle }) => {
               <div className="nav-item" onClick={() => navigate('/active-sprints')}>
                 <FaChartBar /><span>Your Active Sprints</span>
               </div>
-              <div className="nav-item" onClick={() => navigate('/Daily-time-sheets')}><FaUser /><span>Time Sheets</span></div>
-               {/* <div className="nav-item" onClick={() => navigate('/time-sheets')}>
-                <FaChartBar /><span>TIme Sheets</span>
-              </div> */}
-               <div className="nav-item" onClick={() => navigate('/Monthly-time-sheets')}><FaUser /><span> Monthly Time Sheets</span></div>
-                
-                {user.role?.description === "Admin" && (
-              <div className="nav-item" onClick={() => navigate('/admin-timesheet')}>
-                <FaChartBar /><span>Timesheets</span>
-              </div>
-              )}
+<div
+        className="nav-item "
+        onClick={() => setTimeSheetOpen(!timeSheetOpen)}
+        style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <FaRegCalendarAlt />
+          <span>Time Sheets</span>
+        </div>
+        {timeSheetOpen ? <FaChevronUp /> : <FaChevronDown />}
+      </div>
+
+      {/* Sub-navigation */}
+      {timeSheetOpen && (
+        <div className="sub-nav" style={{ paddingLeft: "20px", marginTop: "5px" }}>
+          <div
+            className="nav-item"
+            onClick={() => navigate(`/timesheet/${today}`)}
+          >
+            <FaRegCalendarAlt />
+            <span>Daily Time Sheets</span>
+          </div>
+          <div
+            className="nav-item"
+            onClick={() => navigate("/Monthly-time-sheets")}
+          >
+            <FaUser />
+            <span>Monthly Time Sheets</span>
+          </div>
+          {user.role?.description === "Admin" && (
+            <div
+              className="nav-item"
+              onClick={() => navigate("/admin/timesheets")}
+            >
+              <FaClipboardList />
+              <span>Admin Timesheets</span>
             </div>
+          )}
+        </div>
+      )}
+    </div>
+
 
           </>
         )}

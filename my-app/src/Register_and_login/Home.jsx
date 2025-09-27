@@ -17,7 +17,7 @@ const Home = () => {
     const fetchData = async () => {
       try {
         // 1️⃣ Fetch tasks
-        const tasksRes = await api.get("/user/tasks", { withCredentials: true });
+        const tasksRes = await api.get("/user/Sprintactive/tasks", { withCredentials: true });
         let allTasks = tasksRes.data;
 
         // 2️⃣ Fetch bugs assigned to user

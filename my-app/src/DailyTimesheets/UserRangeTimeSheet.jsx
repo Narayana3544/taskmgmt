@@ -115,15 +115,19 @@ export default function UserRangeTimeSheet() {
             let rowClass = "";
             let statusText = entry.status; // default from backend
 
-            if (holiday) {
+            // Only override if no work done
+            if (holiday && entry.totalHours === 0) {
               rowClass = "holiday-row";
               statusText = "Holiday";
-            } else if (weekend) {
+            } else if (weekend && entry.totalHours === 0) {
               rowClass = "weekend-row";
               statusText = "Weekend";
             } else if (entry.status === "Leave") {
               rowClass = "leave-row";
               statusText = "Leave";
+            } else if (entry.status === "Worked") {
+              rowClass = "worked-row"; // optional highlight for worked days
+              statusText = "Worked";
             }
 
             return (

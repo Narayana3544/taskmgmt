@@ -2,6 +2,7 @@ package com.telusko.demo.controller;
 
 
 import com.telusko.demo.Model.Team;
+import com.telusko.demo.Model.User;
 import com.telusko.demo.Model.createsprint;
 import com.telusko.demo.Model.task;
 import com.telusko.demo.config.CustomUserDetails;
@@ -66,7 +67,7 @@ public class TaskController {
         return service.getAllTasks(PageRequest.of(page, size));
     }
 
-//    @PutMapping("/task/{id}")
+    //    @PutMapping("/task/{id}")
 //    public task updatetask(@PathVariable int id,@RequestBody task Task){
 //        return service.updateTask(id,Task);
 //    }
@@ -140,6 +141,9 @@ public class TaskController {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
+
+
+
     @GetMapping("/tasks/{id}/download")
     public ResponseEntity<byte[]> downloadAttachment(@PathVariable int id) {
         Optional<task> taskOptional = repo.findById(id);
@@ -179,7 +183,7 @@ public class TaskController {
 
     @PutMapping("/tasks/{taskId}/status/{statusId}")
     public ResponseEntity<String> updateTaskStatus(@PathVariable int taskId, @PathVariable int statusId) {
-      service.updateTaskStatus(taskId, statusId);
+        service.updateTaskStatus(taskId, statusId);
         return ResponseEntity.ok("Task status updated successfully");
     }
 
@@ -259,7 +263,6 @@ public class TaskController {
     @PutMapping("/tasks/{taskId}/move/{SprintId}")
     public ResponseEntity<String> moveTaskToNextSprint(@PathVariable int taskId, @PathVariable int SprintId) {
         try {
-//          service.moveTaskToNextSprint(taskId,SprintId);
             taskSprintTrackService.MoveTaskToAnySprint(taskId,SprintId);
             return ResponseEntity.ok("Task Assigned successfully");
         } catch (Exception e) {
@@ -268,4 +271,21 @@ public class TaskController {
                     .body("Error moving task to next sprint: " + e.getMessage());
         }
     }
+
+    @GetMapping("/user/active/tasks")
+    public List<task> viewMyActiveTasks(Authentication authentication) {
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        int userId = userDetails.getUser().getId();
+        return service.viewActiveTasksByUserId(userId);
+    }
+
+
+    //this is for dashboard for returning the current active sprint tasks only
+    @GetMapping("/user/Sprintactive/tasks")
+    public List<task> viewMyActiveSprintTasks(Authentication authentication) {
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        int userId = userDetails.getUser().getId();
+        return service.viewActiveSprintTasksByUserId(userId);
+    }
+
 }

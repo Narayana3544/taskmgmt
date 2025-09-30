@@ -54,7 +54,7 @@ useEffect(() => {
       setUsers(usersRes.data);
 
       const ManagerRes = await api.get(
-        `/managers`,
+         `/users`,
         { withCredentials: true }
       );
       setManagers(ManagerRes.data);

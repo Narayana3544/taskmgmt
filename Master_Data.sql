@@ -28,3 +28,7 @@ INSERT INTO role(
 	        (4,'Scrum Master'),
 	        (5,'Product Owner'),
 	        (6,'Tester');
+
+INSERT INTO work_type VALUES (1,'Work'),
+				(2,'Official'),
+				(3,'Time Off');

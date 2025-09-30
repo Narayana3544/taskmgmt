@@ -189,10 +189,23 @@ public class sprintcontroller {
 
         return allSprints;
     }
-
-
+    //this method is to override the getsprintbyid to mchange the status of sprint whether it is active or not
+//    @Override
+//    public createsprint getSprintById(int id) {
+//        createsprint s = sprintRepo.findById(id)
+//                .orElseThrow(() -> new RuntimeException("Sprint not found"));
+//
+//        LocalDate today = LocalDate.now();
+//        if (today.isBefore(s.getStartDate().toLocalDate())) {
+//            s.setStatus("Planned");
+//        } else if (!today.isAfter(s.getEndDate().toLocalDate())) {
+//            s.setStatus("Active");
+//        } else {
+//            s.setStatus("Completed");
+//        }
+//
+//        // Save back to DB so queries will see the updated status
+//        return sprintRepo.save(s);
+//    }
 
 }
-
-
-

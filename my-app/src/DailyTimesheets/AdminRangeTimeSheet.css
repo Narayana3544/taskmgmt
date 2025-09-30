@@ -1,0 +1,61 @@
+.admin-timesheet-container {
+  max-width: 900px;
+  margin: auto;
+  padding: 20px;
+  background: hsl(130, 13%, 91%);
+  color: black;
+  border-radius: 10px;
+}
+
+.filters {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 15px;
+  align-items: center;
+}
+
+.filters label {
+  display: flex;
+  flex-direction: column;
+  font-weight: bold;
+}
+
+/* button {
+  padding: 5px 10px;
+  cursor: pointer;
+} */
+
+.timesheet-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+.timesheet-table th,
+.timesheet-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: center;
+}
+.timesheet-table th{
+  background-color: #2875e7;
+  color: white;
+}
+.timesheet-tabletbody tr:nth-child(even) {
+  background-color: #f9fafb;
+}
+.leave-row {
+  background-color: #f8d7da; /* red */
+}
+
+.holiday-row {
+  background-color: #fff3cd; /* yellow */
+}
+
+.weekend-row {
+  background-color: #e2e3e5; /* gray */
+}
+
+.daily-details {
+  margin-top: 20px;
+}

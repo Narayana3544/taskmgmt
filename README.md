@@ -20,3 +20,4 @@ Mainly this project consists of creation of any project and its feautures and sp
 HOW SPRINT PLANNING WORKS
 
 Imagine you're a product owner ,you creates the tasks with the skilled people with the story points and give that tasks to the organization.in the organization the sprint planners called scrum masters creates a sprint of the feature which is described by the product owner. Actually sprint has the duration of 10 working days.After the creation of the sprints we need to add the tasks that need to be completed or that has the status of backlog .After the adding of tasks to the sprint in the sprint overview there will be the project assigned users that will be reflected here also ,so no problem with the assigning of users.After the adding of tasks to the sprint the next step is to assignment of tasks to the users (this can be done by the user itself or by the manager)
+

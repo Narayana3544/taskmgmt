@@ -21,4 +21,6 @@ INSERT INTO role VALUES (5,'Product Owner');
 
 
 
-insert into
+INSERT INTO work_type VALUES (1,'Work'),
+				(2,'Official'),
+				(3,'Time Off');

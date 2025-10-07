@@ -59,7 +59,7 @@
 .assign-btn,
 .back-btn,
 .btn-submit,
-.remove-btn {
+.removee-btn {
   padding: 8px 15px;
   border: none;
   cursor: pointer;
@@ -70,7 +70,7 @@
 /* Specific button styles */
 
 .assign-btn,
-.remove-btn {
+.removee-btn {
   background-color: #4caf50;
   color: white;
 }

@@ -47,8 +47,8 @@ const Navbar = ({ collapsed, onToggleSidebar }) => {
             <Link to="/privacy" className="dropdown-item">
               <FaLock /> Privacy
             </Link> */}
-            <Link to="/settings" className="dropdown-item">
-              <FaCog /> Settings
+            <Link to="/view-projectsByUserId" className="dropdown-item">
+              <FaCog /> Projects
             </Link>
             <Link to="/logout" className="dropdown-item">
               <FaSignOutAlt /> Log out

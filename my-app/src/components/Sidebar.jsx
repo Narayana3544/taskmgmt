@@ -57,7 +57,7 @@ const Sidebar = ({ onToggle }) => {
 
             <div className="nav-section">
             <div className="nav-item" onClick={() => navigate('/home')}><FaThList /> Dashboard</div>
-            <div className="nav-item"onClick={() => navigate('/my-stories')}><FaChartBar /> Current Sprint</div>
+            <div className="nav-item"onClick={() => navigate('/my-stories')}><FaChartBar /> Search Task</div>
 
             {user.role?.description === "Admin" && (
             <div className="nav-item" onClick={() => navigate('/manage-projects')}>
@@ -81,17 +81,16 @@ const Sidebar = ({ onToggle }) => {
               {/* <div className="nav-item" onClick={() => navigate('/manage-sprints')}>
                 <FaChartBar /><span>Sprints</span>
               </div> */}
-              {user.role?.description === "Admin" && (
               <div className="nav-item" onClick={() => navigate('/task')}>
                 <FaChartBar /><span>Task</span>
               </div>
-              )}
+              
               {/* <div className="nav-item" onClick={() => navigate('/profile')}><FaUser /><span>Profile</span></div> */}
-               <div className="nav-item" onClick={() => navigate('/view-projectsByUserId')}><FaUser /><span>My Projects</span></div>
+               {/* <div className="nav-item" onClick={() => navigate('/view-projectsByUserId')}><FaUser /><span>My Projects</span></div> */}
               <div className="nav-item" onClick={() => navigate('/active-sprints')}>
-                <FaChartBar /><span>Your Active Sprints</span>
+                <FaChartBar /><span>Sprint Tasks</span>
               </div>
-<div
+        <div
         className="nav-item "
         onClick={() => setTimeSheetOpen(!timeSheetOpen)}
         style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}

@@ -308,7 +308,7 @@ const [userToUnassign, setUserToUnassign] = useState(null);
                 <td>{user.email}</td>
                 <td>
                   <button
-                    className="remove-btn"
+                    className="removee-btn"
                     onClick={() => {
                       setUserToUnassign(user.id);
                       setShowUnassignPopup(true);

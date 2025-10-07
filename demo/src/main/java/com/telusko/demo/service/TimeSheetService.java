@@ -162,6 +162,44 @@ public class TimeSheetService {
         return summaries;
     }
 
+//
+//    public List<DailySummaryDTO> getRangeSummaryforUser(LocalDate start, LocalDate end, int userId) {
+//        List<DailySummaryDTO> summaries = new ArrayList<>();
+//
+////        if (userId == null && !userRepo.existsById(Long.valueOf(userId))) {
+////            throw new RuntimeException("Record not found for userId: " + userId);
+////        }
+//
+//        for (LocalDate date = start; !date.isAfter(end); date = date.plusDays(1)) {
+//            List<Timesheet> entries;
+//
+//            if (userId==0) {
+//                entries = repo.findByDateAndUserId(date, userId);
+//            } else {
+//                entries = repo.findByDate(date);
+//            }
+//
+//            if (entries.isEmpty()) {
+//                summaries.add(new DailySummaryDTO(date, 0, "Leave"));
+//            } else {
+//                double totalHours = entries.stream()
+//                        .mapToDouble(e -> Duration.between(e.getStart_time(), e.getEnd_time()).toMinutes() / 60.0)
+//                        .sum();
+//
+//                String status;
+//                if (entries.stream().anyMatch(e -> e.getWorkType().getDescription().equalsIgnoreCase("Official"))) {
+//                    status = "Official";
+//                } else if (entries.stream().anyMatch(e -> e.getWorkType().getDescription().equalsIgnoreCase("Time Off"))) {
+//                    status = "Time Off";
+//                } else {
+//                    status = "Worked";
+//                }
+//                summaries.add(new DailySummaryDTO(date, totalHours, status));
+//            }
+//        }
+//
+//        return summaries;
+//    }
 
     public List<DailySummaryDTO> getRangeSummaryforUser(LocalDate start, LocalDate end, Integer userId) {
         List<DailySummaryDTO> summaries = new ArrayList<>();
@@ -176,7 +214,7 @@ public class TimeSheetService {
             if (userId != null) {
                 entries = repo.findByDateAndUserId(date, userId);
             } else {
-                entries = repo.findByDate(date); 
+                entries = repo.findByDate(date);
             }
 
             if (entries.isEmpty()) {

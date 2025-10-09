@@ -110,4 +110,17 @@ public class sprintservice {
 //        sprint.setTargettedStoryPoints(TargettedStoryPoints);
 //        sprint.setAchievedStoryPoints(AcheivedStoryPoints);
     }
+
+    public List<createsprint> findByProjectId(int projectId) {
+        List<Feature> featureList=Featurerepo.findByProjectId(projectId);
+        List<Integer> featureids=new ArrayList<>();
+        List<createsprint> sprints=new ArrayList<>();
+        for(Feature f :featureList){
+            featureids.add(f.getId());
+        }
+        for(int i: featureids){
+            sprints.addAll(repo.findByFeatureId(i));
+        }
+        return sprints;
+    }
 }

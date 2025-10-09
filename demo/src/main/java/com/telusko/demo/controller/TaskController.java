@@ -255,9 +255,14 @@ public class TaskController {
         return service.viewSprintsByTaskId(taskId);
     }
 
-    @GetMapping("/viewTaskByProjectId/{ProjectId}")
-    public List<task> ViewTasksByProjectId(@PathVariable int ProjectId){
-        return service.viewTasksBYProjectId(ProjectId);
+    @GetMapping("/viewTaskByProjectId/{projectId}")
+    public List<task> getTasksByProjectId(
+            @PathVariable Integer projectId,
+            @RequestParam(required = false) String searchStory,
+            @RequestParam(required = false) String searchUser,
+            @RequestParam(required = false) String searchStatus
+    ) {
+        return service.filterTasks(projectId, searchStory, searchUser, searchStatus);
     }
 
     @PutMapping("/tasks/{taskId}/move/{SprintId}")
@@ -287,5 +292,7 @@ public class TaskController {
         int userId = userDetails.getUser().getId();
         return service.viewActiveSprintTasksByUserId(userId);
     }
+
+
 
 }

@@ -98,7 +98,7 @@ const Sidebar = ({ onToggle }) => {
       >
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <FaRegCalendarAlt />
-          <span>Time Sheets</span>
+          <span>Timesheet</span>
         </div>
         {timeSheetOpen ? <FaChevronUp /> : <FaChevronDown />}
       </div>
@@ -111,14 +111,14 @@ const Sidebar = ({ onToggle }) => {
             onClick={() => navigate(`/timesheet/${today}`)}
           >
             <FaRegCalendarAlt />
-            <span>Daily Time Sheets</span>
+            <span>Create</span>
           </div>
           <div
             className="nav-item"
             onClick={() => navigate("/Monthly-time-sheets")}
           >
             <FaUser />
-            <span>Monthly Time Sheets</span>
+            <span>Search</span>
           </div>
           {user.role?.description === "Admin" && (
             <div

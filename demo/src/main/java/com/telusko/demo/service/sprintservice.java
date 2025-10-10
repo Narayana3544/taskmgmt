@@ -42,22 +42,25 @@ public class sprintservice {
     }
 
     public List<createsprint> view() {
-       List<createsprint> sprints=repo.findAll();
+        List<createsprint> sprints=repo.findAll();
         List<createsprint> allSprints = new ArrayList<>();
         LocalDate today = LocalDate.now();
         for (createsprint sprint : sprints) {
             // ✅ auto update status based on date
             if (today.isBefore(sprint.getStartDate().toLocalDate())) {
-                sprint.setStatus("UPCOMING");
+                sprint.setStatus("Upcoming");
             } else if (today.isAfter(sprint.getEndDate().toLocalDate())) {
-                sprint.setStatus("COMPLETED");
+                sprint.setStatus("Completed");
             } else {
-                sprint.setStatus("ACTIVE");
+                sprint.setStatus("Active");
             }
+//
+//            if ("Active".equals(sprint.getStatus())) {
+//                allSprints.add(sprint);
+//            }
+//            updateSprintStatus(sprint);
+            allSprints.add(sprint);
 
-            if ("ACTIVE".equals(sprint.getStatus())) {
-                allSprints.add(sprint);
-            }
         }
 
         return sprints.stream()
@@ -80,12 +83,12 @@ public class sprintservice {
         LocalDate today = LocalDate.now();
 
         if (today.isBefore(sprint.getStartDate().toLocalDate())) {
-            sprint.setStatus("PLANNED"); // not started yet
+            sprint.setStatus("Planned"); // not started yet
         } else if ((today.isEqual(sprint.getStartDate().toLocalDate()) || today.isAfter(sprint.getStartDate().toLocalDate()))
                 && (today.isEqual(sprint.getEndDate().toLocalDate()) || today.isBefore(sprint.getEndDate().toLocalDate()))) {
-            sprint.setStatus("ACTIVE");
+            sprint.setStatus("Active");
         } else if (today.isAfter(sprint.getEndDate().toLocalDate())) {
-            sprint.setStatus("COMPLETED");
+            sprint.setStatus("Completed");
         }
 
         return sprint;
@@ -106,5 +109,18 @@ public class sprintservice {
         }
 //        sprint.setTargettedStoryPoints(TargettedStoryPoints);
 //        sprint.setAchievedStoryPoints(AcheivedStoryPoints);
+    }
+
+    public List<createsprint> findByProjectId(int projectId) {
+        List<Feature> featureList=Featurerepo.findByProjectId(projectId);
+        List<Integer> featureids=new ArrayList<>();
+        List<createsprint> sprints=new ArrayList<>();
+        for(Feature f :featureList){
+            featureids.add(f.getId());
+        }
+        for(int i: featureids){
+            sprints.addAll(repo.findByFeatureId(i));
+        }
+        return sprints;
     }
 }

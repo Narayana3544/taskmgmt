@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class Taskservice {
@@ -291,33 +292,76 @@ public class Taskservice {
 
     public List<task> viewActiveSprintTasksByUserId(int userId) {
         // List<Project> projects=new ArrayList<>();
-        List<Team> new_team=teamRepository.findProjectsByUser_id(userId);
-        List<Feature> features=new ArrayList<>();
-        List<createsprint> sprints=new ArrayList<>();
+        List<Team> new_team = teamRepository.findProjectsByUser_id(userId);
+        List<Feature> features = new ArrayList<>();
+        List<createsprint> sprints = new ArrayList<>();
 
-        List<task> tasks=new ArrayList<>();
+        List<task> tasks = new ArrayList<>();
 
-        for(Team f:new_team){
+        for (Team f : new_team) {
             features.addAll(featureRepo.findByProjectId(f.getProject().getId()));
         }
-        for(Feature f: features){
+        for (Feature f : features) {
             sprints.addAll(sprintRepo.findByFeatureId(f.getId()));
         }
         System.out.println("Teams: " + new_team.size());
         System.out.println("Features: " + features.size());
         System.out.println("Sprints: " + sprints.size());
-        for(createsprint s:sprints){
+        for (createsprint s : sprints) {
             System.out.println("Sprint " + s.getId() + " status = " + s.getStatus());
-            if(s.getStatus().equals("Active")) {
-                List<task> usertasks=new ArrayList<>();
+            if (s.getStatus().equals("Active") || s.getStatus().equals("ACTIVE")) {
+                List<task> usertasks = new ArrayList<>();
                 usertasks.addAll(repo.findBySprint_id(s.getId()));
-                for(task t:usertasks){
-                    if(t.getUser().getId()==userId){
+                for (task t : usertasks) {
+                    if (t.getUser().getId() == userId) {
                         tasks.add(t);
                     }
                 }
             }
         }
         return tasks;
+    }
+
+
+    public List<task> filterTasks(Integer projectId, String story, String user, String status) {
+        // Fetch all tasks for the project first
+        List<task> allTasks = repo.findByFeature_Project_Id(projectId);
+
+        // Now apply filters step by step
+        return allTasks.stream()
+                .filter(t -> {
+                    if (story != null && !story.isBlank()) {
+                        return t.getUserstory() != null &&
+                                t.getUserstory().toLowerCase().contains(story.toLowerCase());
+                    }
+                    return true;
+                })
+                .filter(t -> {
+                    if (user != null && !user.isBlank()) {
+                        String name = "";
+                        if (t.getUser() != null) {
+                            name = (t.getUser().getFirst_name() != null ? t.getUser().getFirst_name() : "");
+//                                        (t.getUser().getPreffered_name() != null ? t.getUser().getPreffered_name() : "") +
+//                                        (t.getUser().getUsername() != null ? t.getUser().getUsername() : "");
+
+                        }
+                        return name.toLowerCase().contains(user.toLowerCase());
+                    }
+                    return true;
+                })
+                .filter(t -> {
+                    if (status != null && !status.isBlank()) {
+                        String desc = "";
+                        if (t.getTaskStatus() != null) {
+                            desc = (t.getTaskStatus().getDecription() != null ?
+                                    t.getTaskStatus().getDecription() :
+                                    t.getTaskStatus().getDecription() != null ?
+                                            t.getTaskStatus().getDecription() : "");
+                        }
+                        return desc.toLowerCase().contains(status.toLowerCase());
+                    }
+                    return true;
+                })
+                .collect(Collectors.toList());
     }
 }

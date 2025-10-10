@@ -208,4 +208,8 @@ public class sprintcontroller {
 //        return sprintRepo.save(s);
 //    }
 
+    @GetMapping("/project/sprints/{ProjectId}")
+    public List<createsprint> getSprintsByProject(@PathVariable int ProjectId) {
+        return service.findByProjectId(ProjectId);
+    }
 }

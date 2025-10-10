@@ -212,6 +212,8 @@ public class sprintcontroller {
     public List<createsprint> getSprintsByProject(@PathVariable int ProjectId) {
         return service.findByProjectId(ProjectId);
     }
+
+
 }
 
 

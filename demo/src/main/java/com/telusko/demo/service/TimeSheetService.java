@@ -33,7 +33,7 @@ public class TimeSheetService {
     public WorkTypeRepo workTypeRepo;
 
     public Timesheet saveEntry(Timesheet entry) {
-        entry.setPermission_granted(true);
+//        entry.setPermission_granted(true);
         LocalDate today = LocalDate.now();
         if (!entry.getDate().isEqual(today)) {
             throw new IllegalStateException("Timesheet entries can only be created/edited for today.");

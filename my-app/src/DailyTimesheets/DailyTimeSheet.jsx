@@ -98,9 +98,9 @@ export default function DailyTimesheet() {
       task: form.taskId ? { id: Number(form.taskId) } : null,
       workType: form.workTypeId ? { id: Number(form.workTypeId) } : null,
       description: form.description,
-      is_permission_granted: form.isPermissionGranted // true if checked, false if not
+      permission_granted: form.isPermissionGranted
     };
-
+console.log("Submitting timesheet payload:", payload);
     if (checkOverlap(payload, entries)) {
       alert("This time entry overlaps with an existing one.");
       return;
@@ -124,10 +124,9 @@ export default function DailyTimesheet() {
       taskId: entry.task?.id || "",
       workTypeId: entry.workType?.id || "",
       description: entry.description || "",
-      isPermissionGranted: entry.is_permission_granted ?? false
+     isPermissionGranted: entry.permission_granted
     });
   };
-
   const handleUpdate = async () => {
     if (!form.startTime || !form.endTime) {
       alert("Start and End times are required");
@@ -141,7 +140,7 @@ export default function DailyTimesheet() {
       task: form.taskId ? { id: Number(form.taskId) } : null,
       workType: form.workTypeId ? { id: Number(form.workTypeId) } : null,
       description: form.description,
-      is_permission_granted: form.isPermissionGranted
+      permission_granted: form.isPermissionGranted
     };
 
     if (checkOverlap(payload, entries, editingId)) {

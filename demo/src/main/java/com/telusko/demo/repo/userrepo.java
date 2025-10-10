@@ -8,7 +8,9 @@ import java.util.Optional;
 
 public interface userrepo extends JpaRepository<User, Long> {
 
-    User findById(int id);
+    default User findById(int id) {
+        return findById(Long.valueOf(id)).orElse(null);
+    }
     Optional<User> findByEmail(String email);
     List<User> findByRoleDescription(String description);
 

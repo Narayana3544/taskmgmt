@@ -213,6 +213,11 @@ public class sprintcontroller {
         return service.findByProjectId(ProjectId);
     }
 
+    @GetMapping("/sprintsforUser")
+    public List<createsprint> getsprintsforUser(Authentication authentication){
+        return service.findSprintsforUsers(authentication);
+    }
+
 
 }
 

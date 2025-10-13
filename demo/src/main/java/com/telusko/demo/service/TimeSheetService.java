@@ -45,7 +45,7 @@ public class TimeSheetService {
     public List<Timesheet> getEntriesByUserAndDate(int userId, LocalDate date) {
         return repo.findByUserIdAndDate(userId, date);
     }
-    
+
 
     public Timesheet updateEntry(int id, Timesheet updatedEntry) {
         Timesheet existing = repo.findById(id)
@@ -68,7 +68,7 @@ public class TimeSheetService {
     }
 
     public void deleteEntry(int id) {
-       Timesheet existing = repo.findById(id)
+        Timesheet existing = repo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Entry not found"));
 
         LocalDate today = LocalDate.now();
@@ -166,9 +166,9 @@ public class TimeSheetService {
 //    public List<DailySummaryDTO> getRangeSummaryforUser(LocalDate start, LocalDate end, int userId) {
 //        List<DailySummaryDTO> summaries = new ArrayList<>();
 //
-////        if (userId == null && !userRepo.existsById(Long.valueOf(userId))) {
-////            throw new RuntimeException("Record not found for userId: " + userId);
-////        }
+    ////        if (userId == null && !userRepo.existsById(Long.valueOf(userId))) {
+    ////            throw new RuntimeException("Record not found for userId: " + userId);
+    ////        }
 //
 //        for (LocalDate date = start; !date.isAfter(end); date = date.plusDays(1)) {
 //            List<Timesheet> entries;

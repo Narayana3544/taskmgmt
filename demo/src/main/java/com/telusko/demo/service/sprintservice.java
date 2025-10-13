@@ -7,14 +7,11 @@ import com.telusko.demo.repo.Teamrepo;
 import com.telusko.demo.repo.createsprintrepo;
 import com.telusko.demo.repo.featurerepo;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.GetMapping;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -33,6 +30,7 @@ public class sprintservice {
 
     @Autowired
     public TaskRepository taskrepo;
+
 
     public sprintservice service;
 
@@ -123,4 +121,38 @@ public class sprintservice {
         }
         return sprints;
     }
+
+    public List<createsprint> findSprintsforUsers(Authentication authentication) {
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        int userId = userDetails.getUser().getId();
+
+        List<Feature> featureList=new ArrayList<>();
+        List<Team> new_team = teamrepo.findProjectsByUser_id(userId);
+        List<createsprint> usersprints=new ArrayList<>();
+        for (Team f : new_team) {
+            featureList.addAll(Featurerepo.findByProjectId(f.getProject().getId()));
+        }
+        for(Feature f:featureList){
+            usersprints.addAll(repo.findByFeatureId(f.getId()));
+        }
+        return usersprints;
+    }
+
+//    public List<createsprint> findSprintsforUsers(Authentication authentication) {
+//        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+//        int userId = userDetails.getUser().getId();
+//        List<Optional<Feature>> featureList=new ArrayList<>();
+//        List<Project> projectList=new ArrayList<>();
+//        List<createsprint> usersprints=new ArrayList<>();
+//        projectList.addAll(teamrepo.findByUser_id(userId));
+//        System.out.println(projectList.size());
+////        for(Project p:projectList){
+////
+////        }
+////        for(Optional<Feature> f:featureList){
+////            featureList.add(.findById(f.get().getId()));
+////            usersprints.addAll(repo.findByFeatureId(f.get().getId()));
+////        }
+//        return usersprints;
+//    }
 }

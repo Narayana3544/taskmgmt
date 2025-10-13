@@ -84,37 +84,16 @@ public class BugController {
                 .body(fileData);
     }
 
-    @PutMapping(value = "/bugs/{bugId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Bug> updateBug(
-            @PathVariable int bugId,
-            @RequestParam(required = false) String title,
-            @RequestParam(required = false) String description,
-            @RequestParam(required = false) Integer priorityId,
-            @RequestParam(required = false) Integer statusId,
-            @RequestParam(required = false) Integer assignedToId,
-            @RequestPart(required = false) List<MultipartFile> attachments,
-            @AuthenticationPrincipal CustomUserDetails userDetails
-    ) {
-        Bug updatedBug = bugService.updateBug(
-                bugId,
-                title,
-                description,
-                priorityId,
-                statusId,
-                assignedToId,
-                attachments,
-                userDetails.getUser().getId()
-        );
-        return ResponseEntity.ok(updatedBug);
-    }
-
-    @PutMapping("/bugs/{bugId}/status")
-    public ResponseEntity<Bug> updateBugStatus(
-            @PathVariable int bugId,
-            @RequestParam int statusId
-    ) {
-        Bug updatedBug = bugService.updateBugStatus(bugId, statusId);
-        return ResponseEntity.ok(updatedBug);
-    }
+//    @PutMapping("/edit-bug/{id}")
+//    public ResponseEntity<Bug> editBug(@PathVariable Integer id,@RequestBody Bug bug) {
+//        return repo.findById(id)
+//                .map(bug1 -> {
+//                    bug.setTitle();
+//                    bug.setDescription(updatedProject.getDescription());
+//                    bug.setStatus(updatedProject.getStatus());
+//                    return repo.save(bug);
+//                })
+//                .orElseThrow(() -> new RuntimeException("Project not found with id: " + id));
+//    }
 
 }

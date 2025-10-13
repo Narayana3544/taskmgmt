@@ -163,21 +163,17 @@ public class TimeSheetService {
     }
 
 
-    public List<DailySummaryDTO> getRangeSummaryforUser(LocalDate start, LocalDate end, Integer userId) {
+    public List<DailySummaryDTO> getRangeSummaryforUser(LocalDate start, LocalDate end, int userId) {
         List<DailySummaryDTO> summaries = new ArrayList<>();
 
-        if (userId != null && !userRepo.existsById(Long.valueOf(userId))) {
+        // Check if user exists
+        if (!userRepo.existsById(userId)) {
             throw new RuntimeException("Record not found for userId: " + userId);
         }
 
         for (LocalDate date = start; !date.isAfter(end); date = date.plusDays(1)) {
-            List<Timesheet> entries;
-
-            if (userId != null) {
-                entries = repo.findByDateAndUserId(date, userId);
-            } else {
-                entries = repo.findByDate(date);
-            }
+            // Fetch entries only for this user and date
+            List<Timesheet> entries = repo.findByDateAndUserId(date, userId);
 
             if (entries.isEmpty()) {
                 summaries.add(new DailySummaryDTO(date, 0, "Leave"));
@@ -194,11 +190,11 @@ public class TimeSheetService {
                 } else {
                     status = "Worked";
                 }
+
                 summaries.add(new DailySummaryDTO(date, totalHours, status));
             }
         }
 
         return summaries;
     }
-
 }

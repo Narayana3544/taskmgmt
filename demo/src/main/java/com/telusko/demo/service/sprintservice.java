@@ -123,4 +123,19 @@ public class sprintservice {
         }
         return sprints;
     }
+    public List<createsprint> findSprintsforUsers(Authentication authentication) {
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        int userId = userDetails.getUser().getId();
+
+        List<Feature> featureList=new ArrayList<>();
+        List<Team> new_team = teamrepo.findProjectsByUser_id(userId);
+        List<createsprint> usersprints=new ArrayList<>();
+        for (Team f : new_team) {
+            featureList.addAll(Featurerepo.findByProjectId(f.getProject().getId()));
+        }
+        for(Feature f:featureList){
+            usersprints.addAll(repo.findByFeatureId(f.getId()));
+        }
+        return usersprints;
+    }
 }

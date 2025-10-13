@@ -175,10 +175,11 @@ public class TaskController {
     }
 
     @GetMapping("/user/tasks")
-    public List<task> viewMyTasks(Authentication authentication) {
-        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-        int userId = userDetails.getUser().getId();
-        return service.viewTasksByUserId(userId);
+    public List<task> getTasksForUser(
+            Authentication authentication,
+            @RequestParam(required = false) Integer sprintId,
+            @RequestParam(required = false) Integer statusId) {
+        return service.getTasksForUser(authentication, sprintId, statusId);
     }
 
     @PutMapping("/tasks/{taskId}/status/{statusId}")

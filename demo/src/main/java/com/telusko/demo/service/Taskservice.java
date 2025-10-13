@@ -364,4 +364,25 @@ public class Taskservice {
                 })
                 .collect(Collectors.toList());
     }
+    public List<task> getTasksForUser(Authentication authentication, Integer sprintId, Integer statusId) {
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        int userId = userDetails.getUser().getId();
+
+
+        List<task> tasks =repo.findByUser_Id(userId);
+
+        if(sprintId!=null) {
+            tasks = tasks.stream()
+                    .filter(t -> t.getSprint() != null && t.getSprint().getId() == sprintId)
+                    .collect(Collectors.toList());
+        }
+
+        if (statusId != null) {
+            tasks = tasks.stream()
+                    .filter(t -> t.getTaskStatus() != null && t.getTaskStatus().getId() == statusId)
+                    .collect(Collectors.toList());
+        }
+
+        return tasks;
+    }
 }

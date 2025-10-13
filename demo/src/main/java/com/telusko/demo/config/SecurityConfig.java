@@ -1,56 +1,60 @@
-package com.telusko.demo.config;//package com.telusko.demo.config;
+//package com.telusko.demo.config;//package com.telusko.demo.config;
+//
+//import org.springframework.context.annotation.Bean;
+//import org.springframework.context.annotation.Configuration;
+//import org.springframework.http.HttpMethod;
+//import org.springframework.security.authentication.AuthenticationManager;
+//import org.springframework.security.config.Customizer;
+//import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+//import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+//import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+//import org.springframework.security.crypto.password.PasswordEncoder;
+//import org.springframework.security.web.SecurityFilterChain;
+//import org.springframework.security.config.http.SessionCreationPolicy;
+//
+//@Configuration
+//public class SecurityConfig {
+//
+//    @Bean
+//    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+//        http
+//                .csrf(csrf -> csrf.disable())
+//                .cors(Customizer.withDefaults())
+//                .authorizeHttpRequests(auth -> auth
+//                        .requestMatchers("/login","/register/{id}").permitAll()
+//                        .requestMatchers( "/login","/register").permitAll()
+//                        .requestMatchers("/current-user").authenticated()
+//                        .requestMatchers("/create-task").hasRole("Admin")
+//                        .requestMatchers("/user/profile","/**","/sprints/**","/features/**",
+//                                "/sprints","/projects/**").authenticated()
+//                        .requestMatchers(HttpMethod.POST, "/sprints/**/assign-users").authenticated()
+//                        .anyRequest().authenticated()
+//                )
+//                .formLogin(form -> form.disable()) // disable default login form
+//                .httpBasic(basic -> basic.disable()) // disable basic auth
+//                .sessionManagement(session -> session
+//                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+//                );
+//
+//        return http.build();
+//    }
+//
+//
+//    @Bean
+//public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+//    return config.getAuthenticationManager();
+//}
+//        @Bean
+//        public PasswordEncoder passwordEncoder() {
+//            return new BCryptPasswordEncoder();  // uses {bcrypt} internally
+//        }
+//
+//
+//}
 
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.Customizer;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.config.http.SessionCreationPolicy;
-
-@Configuration
-public class SecurityConfig {
-
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-                .csrf(csrf -> csrf.disable())
-                .cors(Customizer.withDefaults())
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login","/register/{id}").permitAll()
-                        .requestMatchers( "/login","/register").permitAll()
-                        .requestMatchers("/current-user").authenticated()
-                        .requestMatchers("/create-task").hasRole("Admin")
-                        .requestMatchers("/user/profile","/**","/sprints/**","/features/**",
-                                "/sprints","/projects/**").authenticated()
-                        .requestMatchers(HttpMethod.POST, "/sprints/**/assign-users").authenticated()
-                        .anyRequest().authenticated()
-                )
-                .formLogin(form -> form.disable()) // disable default login form
-                .httpBasic(basic -> basic.disable()) // disable basic auth
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
-                );
-
-        return http.build();
-    }
 
 
-    @Bean
-public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
-    return config.getAuthenticationManager();
-}
-        @Bean
-        public PasswordEncoder passwordEncoder() {
-            return new BCryptPasswordEncoder();  // uses {bcrypt} internally
-        }
 
-
-}
 //import com.telusko.demo.service.CustomUserDetailsService;
 //import org.springframework.context.annotation.Bean;
 //import org.springframework.context.annotation.Configuration;
@@ -129,3 +133,64 @@ public AuthenticationManager authenticationManager(AuthenticationConfiguration c
 //        return source;
 //    }
 //}
+
+package com.telusko.demo.config;
+
+import com.telusko.demo.service.CustomUserDetailsService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+
+@Configuration
+public class SecurityConfig {
+
+    @Autowired
+    private CustomUserDetailsService customUserDetailsService;
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+                .cors().and()
+                .csrf().disable()
+                .authorizeRequests()
+                .antMatchers("/login", "/register", "/register/*").permitAll()
+                .antMatchers("/", "/index.html", "/static/**").permitAll()
+                .antMatchers("/create-task").authenticated()
+                .antMatchers("/current-user").authenticated()
+                .antMatchers("/user/profile", "/sprints/**", "/features/**", "/projects/**").authenticated()
+                .antMatchers(HttpMethod.POST, "/sprints/**/assign-users").authenticated()
+                .antMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                .anyRequest().authenticated()
+                .and()
+                .formLogin().disable()
+                .httpBasic().disable()
+                .sessionManagement()
+                .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED);
+
+        return http.build();
+    }
+
+    // ✅ Now Spring Security uses your DB users
+    @Bean
+    public AuthenticationManager authenticationManager(HttpSecurity http, PasswordEncoder passwordEncoder)
+            throws Exception {
+        return http.getSharedObject(AuthenticationManagerBuilder.class)
+                .userDetailsService(customUserDetailsService)
+                .passwordEncoder(passwordEncoder)
+                .and()
+                .build();
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+}

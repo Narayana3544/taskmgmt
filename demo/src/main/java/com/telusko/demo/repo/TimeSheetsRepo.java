@@ -17,5 +17,5 @@ public interface TimeSheetsRepo extends JpaRepository<Timesheet,Integer> {
 
     List<Timesheet> findByDate(LocalDate date);
 
-    List<Timesheet> findByDateAndUserId(LocalDate date, Integer userId);
+    List<Timesheet> findByDateAndUserId(LocalDate date, int userId);
 }

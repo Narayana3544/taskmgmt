@@ -1,6 +1,6 @@
 package com.telusko.demo.Model;
 
-import jakarta.persistence.*;
+import javax.persistence.*;
 
 @Entity
 @Table

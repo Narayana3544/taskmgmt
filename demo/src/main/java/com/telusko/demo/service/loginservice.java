@@ -39,8 +39,8 @@ public class loginservice {
 //    }
 
     public boolean deleteUserById(int id) {
-        if (repo.existsById((long) id)) {
-            repo.deleteById((long) id);
+        if (repo.existsById(id)) {
+            repo.deleteById(id);
             return true;
         }
         return false;
@@ -61,7 +61,7 @@ public class loginservice {
     }
 
     public User getUserById(Long id) {
-        return repo.findById(id).orElse(null);
+        return repo.findById(Math.toIntExact(id));
     }
 
     public List<User> getManagers() {

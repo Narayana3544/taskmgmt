@@ -41,8 +41,7 @@ public class TeamService {
                 .orElseThrow(() -> new RuntimeException("Project not found"));
 
         for (Long userId : userIds) {
-            User user = userRepository.findById(userId)
-                    .orElseThrow(() -> new RuntimeException("User not found"));
+            User user = userRepository.findById(Math.toIntExact(userId));
 
             Team team = new Team();
             team.setProject(project);

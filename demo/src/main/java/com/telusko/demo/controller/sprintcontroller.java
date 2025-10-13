@@ -60,13 +60,14 @@ public class sprintcontroller {
     }
 
     @PostMapping("/sprints/{sprintId}/assign-users")
-    public ResponseEntity<?> assignUsersToSprint(@PathVariable int sprintId, @RequestBody List<Long> userIds) {
+    public ResponseEntity<?> assignUsersToSprint(@PathVariable int sprintId, @RequestBody List<Integer> userIds) {
         Optional<createsprint> sprintOpt = sprintRepo.findById(sprintId);
         if (sprintOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Sprint not found");
         }
 
-        List<User> users = userRepo.findAllById(userIds);
+        List<User> users;
+        users = userRepo.findAllById(userIds);
         if (users.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("No valid users found");
         }

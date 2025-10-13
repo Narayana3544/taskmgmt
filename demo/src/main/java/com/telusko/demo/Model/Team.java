@@ -1,8 +1,8 @@
 package com.telusko.demo.Model;
 
-import jakarta.persistence.*;
+import javax.persistence.*;
 import lombok.Data;
-import lombok.Generated;
+
 
 @Data
 @Entity

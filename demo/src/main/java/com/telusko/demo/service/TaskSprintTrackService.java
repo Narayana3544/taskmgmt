@@ -4,7 +4,8 @@ import com.telusko.demo.Model.*;
 import com.telusko.demo.repo.TaskRepository;
 import com.telusko.demo.repo.TaskSprintTrackRepo;
 import com.telusko.demo.repo.sprintrepo;
-import jakarta.transaction.Transactional;
+import javax.transaction.Transactional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

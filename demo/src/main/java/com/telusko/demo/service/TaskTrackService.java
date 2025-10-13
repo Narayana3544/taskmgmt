@@ -6,7 +6,7 @@ import com.telusko.demo.Model.task;
 import com.telusko.demo.repo.TaskRepository;
 import com.telusko.demo.repo.TaskTrackRepo;
 import com.telusko.demo.repo.userrepo;
-import jakarta.transaction.Transactional;
+import javax.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

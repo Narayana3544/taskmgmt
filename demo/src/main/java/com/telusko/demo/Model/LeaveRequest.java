@@ -1,8 +1,10 @@
 package com.telusko.demo.Model;
 
-import jakarta.persistence.*;
+import javax.persistence.*;
 import lombok.Data;
 
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import java.sql.Date;
 import java.time.LocalDate;
 

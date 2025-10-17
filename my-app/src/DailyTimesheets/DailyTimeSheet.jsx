@@ -86,8 +86,8 @@ export default function DailyTimesheet() {
   };
 
   const handleAdd = async () => {
-    if (!form.startTime || !form.endTime) {
-      alert("Start and End times are required");
+    if (!form.startTime || !form.endTime || !form.workTypeId) {
+      alert("Start and End times and work_type are required");
       return;
     }
 

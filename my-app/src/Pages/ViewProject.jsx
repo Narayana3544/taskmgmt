@@ -392,7 +392,7 @@ const [userToUnassign, setUserToUnassign] = useState(null);
           onClick={() => {
             handleUnassignUser(userToUnassign);
             setShowUnassignPopup(false)
-            window.location.reload(); // 👈 reload after success
+            window.location.reload();
           }}
         >
           Yes

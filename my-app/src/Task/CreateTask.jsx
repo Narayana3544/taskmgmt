@@ -34,7 +34,7 @@ export default function CreateTask() {
   useEffect(() => {
     api.get("/features", { withCredentials: true }).then(res => setFeatures(res.data));
     api.get("/users", { withCredentials: true }).then(res => setUsers(res.data));
-    api.get("/users", { withCredentials: true }).then(res => setManagers(res.data));
+    api.get("/managers", { withCredentials: true }).then(res => setManagers(res.data));
     api.get("/gettype", { withCredentials: true }).then(res => setTaskTypes(res.data));
     api.get("/getstatusForTask", { withCredentials: true }).then(res => setTaskStatuses(res.data));
   }, []);
@@ -167,7 +167,7 @@ export default function CreateTask() {
       <label>Reported To</label>
       <select value={reportedTo} onChange={e => setReportedTo(e.target.value)}>
         <option value="">-- Select Manager --</option>
-         {users.map(u => <option key={u.id} value={u.id}>{u.first_name}</option>)}
+        {managers.map(m => <option key={m.id} value={m.id}>{m.preffered_name}</option>)}
       </select>
 
       {/* Sprint (Optional) */}

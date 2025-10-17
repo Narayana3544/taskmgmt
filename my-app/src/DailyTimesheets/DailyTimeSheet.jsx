@@ -63,11 +63,18 @@ export default function DailyTimesheet() {
     }
   };
 
-  useEffect(() => {
-    fetchEntries();
-    fetchTasks();
-    fetchWorkTypes();
-  }, [date]);
+useEffect(() => {
+  fetchEntries();
+  fetchTasks();
+  fetchWorkTypes();
+}, [date]);
+
+// Set default work type once workTypes are loaded
+useEffect(() => {
+  if (workTypes.length > 0 && !form.workTypeId) {
+    setForm(prev => ({ ...prev, workTypeId: workTypes[0].id.toString() }));
+  }
+}, [workTypes]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -86,8 +93,8 @@ export default function DailyTimesheet() {
   };
 
   const handleAdd = async () => {
-    if (!form.startTime || !form.endTime) {
-      alert("Start and End times are required");
+    if (!form.startTime || !form.endTime || !form.workTypeId) {
+      alert("Start and End times and work_type are required");
       return;
     }
 
@@ -98,9 +105,9 @@ export default function DailyTimesheet() {
       task: form.taskId ? { id: Number(form.taskId) } : null,
       workType: form.workTypeId ? { id: Number(form.workTypeId) } : null,
       description: form.description,
-      is_permission_granted: form.isPermissionGranted // true if checked, false if not
+      permission_granted: form.isPermissionGranted
     };
-
+console.log("Submitting timesheet payload:", payload);
     if (checkOverlap(payload, entries)) {
       alert("This time entry overlaps with an existing one.");
       return;
@@ -124,10 +131,9 @@ export default function DailyTimesheet() {
       taskId: entry.task?.id || "",
       workTypeId: entry.workType?.id || "",
       description: entry.description || "",
-      isPermissionGranted: entry.is_permission_granted ?? false
+     isPermissionGranted: entry.permission_granted
     });
   };
-
   const handleUpdate = async () => {
     if (!form.startTime || !form.endTime) {
       alert("Start and End times are required");
@@ -141,7 +147,7 @@ export default function DailyTimesheet() {
       task: form.taskId ? { id: Number(form.taskId) } : null,
       workType: form.workTypeId ? { id: Number(form.workTypeId) } : null,
       description: form.description,
-      is_permission_granted: form.isPermissionGranted
+      permission_granted: form.isPermissionGranted
     };
 
     if (checkOverlap(payload, entries, editingId)) {

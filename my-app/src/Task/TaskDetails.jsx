@@ -10,11 +10,10 @@ export default function TaskDetails() {
   const [task, setTask] = useState(null);
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
-  const [users, setUsers] = useState([]); // to assign task
+  const [users, setUsers] = useState([]); 
   const [selectedUser, setSelectedUser] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
 
   // Fetch task + comments + users
   useEffect(() => {
@@ -23,7 +22,7 @@ export default function TaskDetails() {
         const [taskRes, commentRes, usersRes] = await Promise.all([
           api.get(`/view-task/${id}`, { withCredentials: true }),
           api.get(`/viewComments/${id}`, { withCredentials: true }),
-          api.get(`/tasks/viewUsers/${id}`, { withCredentials: true }) // Assuming API for listing users
+          api.get(`/tasks/viewUsers/${id}`, { withCredentials: true }) 
         ]);
         setTask(taskRes.data);
         setComments(commentRes.data);
@@ -58,25 +57,54 @@ export default function TaskDetails() {
   const handleAssignTask = async () => {
     if (!selectedUser) return alert("Please select a user to assign.");
     try {
-      await api.put(
-        `/tasks/${id}/assignTo/${selectedUser}`,
-        
-        {},
-        { withCredentials: true }
-      );
+      await api.put(`/tasks/${id}/assignTo/${selectedUser}`, {}, { withCredentials: true });
       alert("Task assigned successfully!");
     } catch (err) {
       console.error("Error assigning task:", err);
     }
   };
 
-  const downloadFile = (taskId) => {
-    if (!task || task.attachment_flag !== "Yes") {
-      alert("No attachment exists for this task.");
+  // ✅ Fixed download function using fetch + blob
+  const downloadFile = async (taskId) => {
+  if (!task || task.attachment_flag !== "Yes") {
+    alert("No attachment exists for this task.");
+    return;
+  }
+
+  try {
+    const response = await fetch(`/tasks/${taskId}/download`, {
+      method: "GET",
+      credentials: "include"
+    });
+
+    if (!response.ok) {
+      alert("Failed to download attachment.");
       return;
     }
-    window.open(`/tasks/${taskId}/download`, "_blank");
-  };
+
+    const blob = await response.blob();
+
+    // Try to get filename from headers
+    const disposition = response.headers.get("Content-Disposition");
+    let filename = task.attachment_name; // fallback
+    if (disposition && disposition.includes("filename=")) {
+      filename = disposition.split("filename=")[1].replace(/"/g, "");
+    }
+
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+  } catch (err) {
+    console.error("Download failed:", err);
+    alert("Download failed");
+  }
+};
+
 
   if (loading) return <p>Loading task details...</p>;
   if (error) return <p>{error}</p>;
@@ -87,16 +115,17 @@ export default function TaskDetails() {
       <button className="back-btn" onClick={() => navigate(-1)}>⬅ Back</button>
 
       <div className="task-card">
-              {/* Top-right bugs dropdown */}
-              <div className="bugs-dropdown">
-                <div className="dropdown">
-                  <button className="dropdown-btn">🐞 Bugs ▾</button>
-                  <div className="dropdown-content">
-                    <button onClick={() => navigate(`/task/${id}/bug`)}>➕ Create Bug</button>
-                    <button onClick={() => navigate(`/task/${id}/buglist`)}>📋 View Bugs</button>
-                  </div>
-                </div>
-              </div>
+        {/* Top-right bugs dropdown */}
+        <div className="bugs-dropdown">
+          <div className="dropdown">
+            <button className="dropdown-btn">🐞 Bugs ▾</button>
+            <div className="dropdown-content">
+              <button onClick={() => navigate(`/task/${id}/bug`)}>➕ Create Bug</button>
+              <button onClick={() => navigate(`/task/${id}/buglist`)}>📋 View Bugs</button>
+            </div>
+          </div>
+        </div>
+
         {/* Title + status */}
         <div className="task-header">
           <div className="task-icon">📌</div>
@@ -132,16 +161,14 @@ export default function TaskDetails() {
         {/* Acceptance Criteria */}
         <div className="task-section">
           <h3>Acceptance Criteria</h3>
-          {/* <p>{task.acceptance_criteria || "-"}</p> */}
           <ul>
-           {task.acceptance_criteria
-                    ? task.acceptance_criteria
-                        .split(/\d+\)/) // split by 1), 2), 3)...
-                        .filter(line => line.trim() !== "")
-                        .map((line, idx) => <li key={idx}>{line.trim()}</li>)
-                    : <li>-</li>}
+            {task.acceptance_criteria
+              ? task.acceptance_criteria
+                  .split(/\d+\)/)
+                  .filter(line => line.trim() !== "")
+                  .map((line, idx) => <li key={idx}>{line.trim()}</li>)
+              : <li>-</li>}
           </ul>
-          
         </div>
 
         {/* Comments */}
@@ -166,14 +193,13 @@ export default function TaskDetails() {
         <div className="task-section">
           <h3>Assign Task</h3>
           <select value={selectedUser} onChange={e => setSelectedUser(e.target.value)}>
-          <option value="">-- Select User --</option>
-          {users.map(u => (
-            <option key={u.user?.id} value={u.user?.id}>
-              {u.user?.first_name}
-            </option>
-          ))}
-        </select>
-
+            <option value="">-- Select User --</option>
+            {users.map(u => (
+              <option key={u.user?.id} value={u.user?.id}>
+                {u.user?.first_name}
+              </option>
+            ))}
+          </select>
           <button className="assign-btn" onClick={handleAssignTask}>Assign</button>
         </div>
 

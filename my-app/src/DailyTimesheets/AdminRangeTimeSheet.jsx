@@ -139,7 +139,7 @@ export default function AdminRangeTimeSheet() {
             <tr>
               <th>Date</th>
               <th>Total Hours</th>
-              <th>Status</th>
+              {/* <th>Status</th> */}
               <th>Action</th>
             </tr>
           </thead>
@@ -167,7 +167,7 @@ export default function AdminRangeTimeSheet() {
                   <tr key={idx} className={rowClass}>
                     <td>{entry.date}</td>
                     <td>{entry.totalHours.toFixed(2)} h</td>
-                    <td>{statusText}</td>
+                    {/* <td>{statusText}</td> */}
                     <td>
                       <button onClick={() => handleViewDay(entry.date)}>
                         View

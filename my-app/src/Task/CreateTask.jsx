@@ -160,7 +160,7 @@ export default function CreateTask() {
       <label>User</label>
       <select value={selectedUser} onChange={e => setSelectedUser(e.target.value)}>
         <option value="">-- Select User --</option>
-        {users.map(u => <option key={u.id} value={u.id}>{u.firstName}</option>)}
+        {users.map(u => <option key={u.id} value={u.id}>{u.first_name}</option>)}
       </select>
 
       {/* Reported To */}

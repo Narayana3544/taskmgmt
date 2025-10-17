@@ -12,12 +12,14 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -54,16 +56,13 @@ public class Taskservice {
         return repo.save(Task);
     }
 
-    public task updateTask(int id, task newTaskData, MultipartFile attachment) throws Exception {
-        // Fetch existing task
+    public task updateTask(int id, task newTaskData, MultipartFile attachment, String attachmentFlag) throws Exception {
         Optional<task> existingTaskOpt = repo.findById(id);
-        if (existingTaskOpt.isEmpty()) {
-            throw new RuntimeException("Task not found with id: " + id);
-        }
+        if (existingTaskOpt.isEmpty()) throw new RuntimeException("Task not found");
 
         task existingTask = existingTaskOpt.get();
 
-        // ✅ Update normal fields
+        // Update normal fields
         existingTask.setUserstory(newTaskData.getUserstory());
         existingTask.setDescription(newTaskData.getDescription());
         existingTask.setAcceptance_criteria(newTaskData.getAcceptance_criteria());
@@ -74,33 +73,55 @@ public class Taskservice {
         existingTask.setTaskType(newTaskData.getTaskType());
         existingTask.setTaskStatus(newTaskData.getTaskStatus());
         existingTask.setReportedTo(newTaskData.getReportedTo());
+        existingTask.setStart_date(newTaskData.getStart_date());
+        existingTask.setEnd_date(newTaskData.getEnd_date());
 
-        // ✅ Handle attachment
+        // Handle attachment replacement
         if (attachment != null && !attachment.isEmpty()) {
+            // Delete old file if exists
+            if (existingTask.getAttachmentPath() != null) {
+                File oldFile = new File(existingTask.getAttachmentPath());
+                if (oldFile.exists()) oldFile.delete();
+            }
+
+            // Save new file
+            String uploadDir = System.getProperty("user.dir") + "/uploads/";
+            File dir = new File(uploadDir);
+            if (!dir.exists()) dir.mkdirs();
+
+            String fileName = UUID.randomUUID() + "_" + attachment.getOriginalFilename();
+            String filePath = uploadDir + fileName;
+
+            attachment.transferTo(new File(filePath));
+
+            existingTask.setAttachmentPath(filePath);
             existingTask.setAttachmentName(attachment.getOriginalFilename());
-            existingTask.setAttachment(attachment.getBytes());
+            existingTask.setAttachmentType(attachment.getContentType());
+
+            // Set flag to Yes if not already
+//            existingTask.setAttachmentFlag("Yes");
         }
-        // ⚠️ else → keep existing attachment as it is (do nothing)
 
         return repo.save(existingTask);
     }
+
 
     public Optional<task> viewTaskById(int id) {
         return repo.findById(id);
     }
 
 
-    public task saveTask(task Task, MultipartFile attachment) throws IOException {
-        if (attachment != null && !attachment.isEmpty()) {
-            Task.setAttachment(attachment.getBytes());
-            Task.setAttachmentName(attachment.getOriginalFilename());
-            Task.setAttachmentType(attachment.getContentType());
-            Task.setAttachment_flag("Yes");
-        } else {
-            Task.setAttachment_flag("No");
-        }
-        return repo.save(Task);
-    }
+//    public task saveTask(task Task, MultipartFile attachment) throws IOException {
+//        if (attachment != null && !attachment.isEmpty()) {
+//            Task.setAttachment(attachment.getBytes());
+//            Task.setAttachmentName(attachment.getOriginalFilename());
+//            Task.setAttachmentType(attachment.getContentType());
+//            Task.setAttachment_flag("Yes");
+//        } else {
+//            Task.setAttachment_flag("No");
+//        }
+//        return repo.save(Task);
+//    }
     public task getTaskById(int id) {
         return repo.findById(id).orElse(null);
     }
@@ -174,7 +195,19 @@ public class Taskservice {
 
         // Attachment (optional)
         if ("Yes".equalsIgnoreCase(attachmentFlag) && attachment != null && !attachment.isEmpty()) {
-            newTask.setAttachment(attachment.getBytes());
+            // create uploads directory if not exists
+            String uploadDir = System.getProperty("user.dir") + "/uploads/";
+            File dir = new File(uploadDir);
+            if (!dir.exists()) dir.mkdirs();
+
+            // create unique file name
+            String fileName = UUID.randomUUID() + "_" + attachment.getOriginalFilename();
+            String filePath = uploadDir + fileName;
+
+            // save file to disk
+            attachment.transferTo(new File(filePath));
+
+            newTask.setAttachmentPath(filePath);
             newTask.setAttachmentName(attachment.getOriginalFilename());
         }
 

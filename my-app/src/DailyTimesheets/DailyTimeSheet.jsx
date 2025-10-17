@@ -63,11 +63,18 @@ export default function DailyTimesheet() {
     }
   };
 
-  useEffect(() => {
-    fetchEntries();
-    fetchTasks();
-    fetchWorkTypes();
-  }, [date]);
+useEffect(() => {
+  fetchEntries();
+  fetchTasks();
+  fetchWorkTypes();
+}, [date]);
+
+// Set default work type once workTypes are loaded
+useEffect(() => {
+  if (workTypes.length > 0 && !form.workTypeId) {
+    setForm(prev => ({ ...prev, workTypeId: workTypes[0].id.toString() }));
+  }
+}, [workTypes]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });

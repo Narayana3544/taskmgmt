@@ -16,7 +16,7 @@ export default function EditTask() {
 
   // Form states
   const [acceptanceCriteria, setAcceptanceCriteria] = useState("");
-  const [attachmentFlag, setAttachmentFlag] = useState("");
+  const [attachmentFlag, setAttachmentFlag] = useState("No");
   const [attachmentFile, setAttachmentFile] = useState(null);
   const [existingAttachmentName, setExistingAttachmentName] = useState("");
   const [selectedSprint, setSelectedSprint] = useState("");
@@ -40,7 +40,7 @@ export default function EditTask() {
         setStorypoints(task.storypoints || "");
         setUserstory(task.userstory || "");
         setDescription(task.description || "");
-        setStartDate(task.start_date ? task.start_date.slice(0,16) : ""); // for datetime-local input
+        setStartDate(task.start_date ? task.start_date.slice(0,16) : "");
         setEndDate(task.end_date ? task.end_date.slice(0,16) : "");
         setSelectedSprint(task.sprint?.id || "");
         setSelectedFeature(task.feature?.id || "");
@@ -63,12 +63,19 @@ export default function EditTask() {
     api.get("/gettype", { withCredentials: true }).then(res => setTaskTypes(res.data));
     api.get("/getstatusForTask", { withCredentials: true }).then(res => setTaskStatuses(res.data));
     api.get("/managers", { withCredentials: true }).then(res => setManagers(res.data));
+  }, [id]);
+
+  useEffect(() => {
+    // Fetch sprints when feature changes
     if (selectedFeature) {
       api.get(`/features/${selectedFeature}/sprints`, { withCredentials:true })
         .then(res => setSprints(res.data))
         .catch(err => console.error(err));
+    } else {
+      setSprints([]);
+      setSelectedSprint("");
     }
-  }, [id, selectedFeature]);
+  }, [selectedFeature]);
 
   const handleSelectChange = setter => e => {
     const val = e.target.value;
@@ -96,7 +103,8 @@ export default function EditTask() {
     const formData = new FormData();
     formData.append("task", new Blob([JSON.stringify(taskObj)], { type: "application/json" }));
 
-    if (attachmentFlag === "Yes" && attachmentFile) {
+    // Append new file only if selected
+    if (attachmentFile) {
       formData.append("attachment", attachmentFile);
     }
 
@@ -134,21 +142,22 @@ export default function EditTask() {
         <label>Acceptance Criteria:</label>
         <textarea value={acceptanceCriteria} onChange={e => setAcceptanceCriteria(e.target.value)} required rows={3} />
 
-        <label>Attachment Flag:</label>
+        <label>Attachment:</label>
         <select value={attachmentFlag} onChange={e => setAttachmentFlag(e.target.value)}>
-          <option value="">-- Select --</option>
-          <option value="Yes">Yes</option>
           <option value="No">No</option>
+          <option value="Yes">Yes</option>
         </select>
 
         {attachmentFlag === "Yes" && (
           <div className="attachment-container">
+            {/* Show existing attachment if no new file is selected */}
             {existingAttachmentName && !attachmentFile && (
               <div className="attachment-file">
                 <span>{existingAttachmentName}</span>
                 <button type="button" className="remove-btn" onClick={() => setExistingAttachmentName("")}>✖</button>
               </div>
             )}
+            {/* Input for new file */}
             <input type="file" onChange={e => setAttachmentFile(e.target.files[0])} />
             {attachmentFile && (
               <div className="attachment-file">
@@ -159,6 +168,7 @@ export default function EditTask() {
           </div>
         )}
 
+        {/* Rest of the form */}
         <label>Sprint:</label>
         <select value={selectedSprint} onChange={handleSelectChange(setSelectedSprint)}>
           <option value="">-- Select Sprint --</option>

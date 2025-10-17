@@ -1,6 +1,8 @@
 package com.telusko.demo.Model;
 
 import javax.persistence.*;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -30,9 +32,9 @@ public class task {
    @JoinColumn(name = "feature_id")
    private Feature feature;
 
-    @Lob
+
     @Column(name = "attachment")
-    private byte[] attachmentData;
+    private String attachmentPath;
 
     private String attachmentName;
 
@@ -83,14 +85,6 @@ public class task {
     }
 
     private String attachmentType; // To store file MIME type
-
-    public byte[] getAttachment() {
-        return attachmentData;
-    }
-
-    public void setAttachment(byte[] attachment) {
-        this.attachmentData = attachment;
-    }
 
     public User getReportedTo() {
         return reportedTo;
@@ -218,16 +212,6 @@ public class task {
         this.createdDate = createdDate;
     }
 
-
-    public byte[] getAttachmentData() {
-        return attachmentData;
-    }
-
-    public void setAttachmentData(byte[] attachmentData) {
-        this.attachmentData = attachmentData;
-    }
-
-
     public LocalDateTime getStart_date() {
         return start_date;
     }
@@ -238,6 +222,14 @@ public class task {
 
     public LocalDateTime getEnd_date() {
         return end_date;
+    }
+
+    public String getAttachmentPath() {
+        return attachmentPath;
+    }
+
+    public void setAttachmentPath(String attachmentPath) {
+        this.attachmentPath = attachmentPath;
     }
 
     public void setEnd_date(LocalDateTime end_date) {

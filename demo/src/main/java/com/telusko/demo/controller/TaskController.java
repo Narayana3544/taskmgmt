@@ -11,6 +11,9 @@ import com.telusko.demo.service.TaskSprintTrackService;
 import com.telusko.demo.service.TaskTrackService;
 import com.telusko.demo.service.Taskservice;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -22,6 +25,11 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -77,29 +85,47 @@ public class TaskController {
     }
 
 
-    @PostMapping("/create-task-attach")
-    public ResponseEntity<?> createTask(
-            @RequestPart("task") task Task,
-            @RequestPart(value = "attachment", required = false) MultipartFile attachment) {
-        try {
-            task savedTask = service.saveTask(Task, attachment);
-            return ResponseEntity.ok(savedTask);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        }
-    }
-    @GetMapping("/{id}/attachment")
-    public ResponseEntity<byte[]> getAttachment(@PathVariable int id) {
-        task Task = service.getTaskById(id);
-        if (Task != null && Task.getAttachment() != null) {
-            return ResponseEntity.ok()
-                    .header("Content-Disposition", "attachment; filename=\"" + Task.getAttachmentName() + "\"")
-                    .header("Content-Type", Task.getAttachmentType())
-                    .body(Task.getAttachment());
-        }
+//    @PostMapping("/create-task-attach")
+//    public ResponseEntity<?> createTask(
+//            @RequestPart("task") task Task,
+//            @RequestPart(value = "attachment", required = false) MultipartFile attachment) {
+//        try {
+//            task savedTask = service.saveTask(Task, attachment);
+//            return ResponseEntity.ok(savedTask);
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+//        }
+//    }
+@GetMapping("/{id}/attachment")
+public ResponseEntity<?> getAttachment(@PathVariable int id) {
+    task taskObj = service.getTaskById(id);
+    if (taskObj == null || taskObj.getAttachmentPath() == null) {
         return ResponseEntity.notFound().build();
     }
+
+    File file = new File(taskObj.getAttachmentPath());
+    if (!file.exists()) {
+        return ResponseEntity.notFound().build();
+    }
+
+    try {
+        Path path = file.toPath();
+        byte[] data = Files.readAllBytes(path);
+        String mimeType = Files.probeContentType(path);
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + taskObj.getAttachmentName() + "\"")
+                .contentType(mimeType != null ? MediaType.parseMediaType(mimeType) : MediaType.APPLICATION_OCTET_STREAM)
+                .body(data);
+
+    } catch (IOException e) {
+        e.printStackTrace();
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Failed to read attachment"));
+    }
+}
+
 
     @PostMapping("/create")
     public ResponseEntity<?> createTask(
@@ -145,20 +171,23 @@ public class TaskController {
 
 
     @GetMapping("/tasks/{id}/download")
-    public ResponseEntity<byte[]> downloadAttachment(@PathVariable int id) {
-        Optional<task> taskOptional = repo.findById(id);
-
-        if (taskOptional.isEmpty() || taskOptional.get().getAttachment() == null) {
+    public ResponseEntity<Resource> downloadAttachment(@PathVariable int id) throws IOException {
+        task Task = repo.findById(id).orElseThrow(() -> new RuntimeException("Task not found"));
+        if (Task.getAttachmentPath() == null) {
             return ResponseEntity.notFound().build();
         }
 
-        task Task = taskOptional.get();
+        File file = new File(Task.getAttachmentPath());
+        Path path = file.toPath();
+        ByteArrayResource resource = new ByteArrayResource(Files.readAllBytes(path));
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + Task.getAttachmentName() + "\"")
-                .contentType(MediaType.parseMediaType(Task.getAttachmentType()))
-                .body(Task.getAttachment());
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .body(resource);
     }
+
+
     @PutMapping("/task/{id}")
     public ResponseEntity<task> updateTask(
             @PathVariable int id,
@@ -166,13 +195,17 @@ public class TaskController {
             @RequestPart(value = "attachment", required = false) MultipartFile attachment // File part
     ) {
         try {
-            task updatedTask = service.updateTask(id, Task, attachment);
+            // attachmentFlag is not needed here because we just check if attachment exists
+            task updatedTask = service.updateTask(id, Task, attachment, null);
             return ResponseEntity.ok(updatedTask);
-
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+
+
+
 
     @GetMapping("/user/tasks")
     public List<task> getTasksForUser(

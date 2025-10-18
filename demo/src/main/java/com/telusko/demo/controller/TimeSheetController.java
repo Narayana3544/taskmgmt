@@ -6,6 +6,7 @@ import com.telusko.demo.Model.User;
 import com.telusko.demo.Model.WorkType;
 import com.telusko.demo.config.CustomUserDetails;
 import com.telusko.demo.dto.DailySummaryDTO;
+import com.telusko.demo.dto.DailySummaryWithLogsDTO;
 import com.telusko.demo.repo.WorkTypeRepo;
 import com.telusko.demo.service.TimeSheetService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -102,6 +103,16 @@ public class TimeSheetController {
             @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         List<Timesheet> entries = service.getEntriesByUserAndDate(userId, date);
         return ResponseEntity.ok(entries);
+    }
+
+    @GetMapping("/timesheet/range-summary-with-logs/{userId}")
+    public ResponseEntity<List<DailySummaryWithLogsDTO>> getRangeSummaryWithLogs(
+            @PathVariable int userId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end) {
+
+        List<DailySummaryWithLogsDTO> data = service.getRangeSummaryWithLogsForUser(start, end, userId);
+        return ResponseEntity.ok(data);
     }
 
 }

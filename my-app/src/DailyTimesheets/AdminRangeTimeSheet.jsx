@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../api";
 import "./AdminRangeTimeSheet.css";
 
@@ -12,6 +13,7 @@ export default function AdminRangeTimeSheet() {
   const [selectedDate, setSelectedDate] = useState(null);
   const [loading, setLoading] = useState(false);
   const [loadingDaily, setLoadingDaily] = useState(false);
+  const navigate = useNavigate();
 
   // Fetch all users for admin
   const fetchUsers = async () => {
@@ -130,7 +132,13 @@ export default function AdminRangeTimeSheet() {
 
         <button onClick={fetchRange}>Fetch</button>
       </div>
-
+            <button
+  onClick={() =>
+    navigate("/timesheet-export", { state: { userId: selectedUser, startDate, endDate } })
+  }
+>
+  Export to Excel
+</button>
       {loading ? (
         <p>Loading...</p>
       ) : (

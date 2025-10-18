@@ -39,6 +39,7 @@ import BugDetails from './Bugs/BugDetails';
 import DailyTimesheet from './DailyTimesheets/DailyTimeSheet';
 import MonthlyTimesheet from './DailyTimesheets/UserRangeTimeSheet';
 import AdminRangeTimeSheet from './DailyTimesheets/AdminRangeTimeSheet';
+import TimesheetExcelExport from './DailyTimesheets/TimesheetExcelExport';
 
 // 🔹 Small component for logout route
 const Logout = ({ onLogout }) => {
@@ -112,6 +113,8 @@ function App() {
               <Route path="/Monthly-time-sheets" element={<MonthlyTimesheet/>} />
                <Route path="/timesheet/:date" element={<DailyTimesheet />} />
                <Route path="/admin/timesheets" element={<AdminRangeTimeSheet />} />
+               <Route path="/timesheet-export" element={<TimesheetExcelExport />} />
+
               {/* 🔹 Logout Route */}
               <Route path="/logout" element={<Logout onLogout={handleLogout} />} />
             </Routes>

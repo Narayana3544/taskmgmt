@@ -239,7 +239,20 @@ public class Taskservice {
     }
 
     public List<task> findUnassignedTasks(int featureId) {
-        return repo.findBySprint_idIsNullAndFeature_id(featureId);
+        Project p=featureRepo.findById(featureId).get().getProject();
+        List<Feature> features=featureRepo.findByProjectId(p.getId());
+        List<task> backlogTasks=new ArrayList<>();
+        for(Feature f:features){
+            List<task> alltasks=new ArrayList<>();
+           alltasks.addAll(repo.findByFeature_id(f.getId()));
+           for(task t:alltasks){
+               if(t.getTaskStatus().getDecription().equalsIgnoreCase("Backlog") || t.getTaskStatus().getDecription().equalsIgnoreCase("In Progress")){
+                   backlogTasks.add(t);
+               }
+           }
+        }
+//        return repo.findBySprint_idIsNullAndFeature_id(featureId);
+        return backlogTasks;
     }
 
     public void assignTasksToSprint(int sprintId, List<Integer> taskIds) {

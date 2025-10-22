@@ -3,6 +3,7 @@ package com.telusko.demo.controller;
 
 import com.telusko.demo.Model.User;
 import com.telusko.demo.config.CustomUserDetails;
+import com.telusko.demo.dto.UserDTO;
 import com.telusko.demo.repo.userrepo;
 import com.telusko.demo.service.CustomUserDetailsService;
 import com.telusko.demo.service.loginservice;
@@ -116,7 +117,10 @@ public class logincontroller {
 //            return ResponseEntity.ok(authentication.getPrincipal());
 //        }
 
-
+    @GetMapping("/user/{UserId}")
+    public UserDTO getuserbyid(@PathVariable int UserId){
+        return service.getUser(UserId);
+    }
 }
 
 

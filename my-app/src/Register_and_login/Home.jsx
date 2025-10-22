@@ -17,7 +17,7 @@ const Home = () => {
     const fetchData = async () => {
       try {
         // 1️⃣ Fetch tasks
-      const tasksRes = await api.get("/user/Sprintactive/tasks", { withCredentials: true });
+        const tasksRes = await api.get("/user/Sprintactive/tasks", { withCredentials: true });
         let allTasks = tasksRes.data;
 
         // 2️⃣ Fetch bugs assigned to user
@@ -65,11 +65,11 @@ const Home = () => {
     return ["todo", "inprogress", "done"].includes(key) ? key : "todo";
   };
 
-  const openPopup = (task) => {
-    setSelectedTask(task);
-    setSelectedUserId("");
-    setSelectedStatusId("");
-  };
+const openPopup = (task) => {
+  setSelectedTask(task);
+  setSelectedUserId(task.user?.id || task.assignedUser?.id || "");
+  setSelectedStatusId(task.taskStatus?.id || "");
+};
 
   const closePopup = () => setSelectedTask(null);
 
@@ -187,47 +187,47 @@ const Home = () => {
             <p>{selectedTask.description}</p>
 
             {/* Assign User */}
-            <div className="popup-section">
-              <label>Select User:</label>
-              <select
-                value={selectedUserId}
-                onChange={(e) => setSelectedUserId(e.target.value)}
-              >
-                <option value="">-- Select User --</option>
-                {users.map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.preffered_name || u.username}
-                  </option>
-                ))}
-              </select>
-              <button className="assign-btn" onClick={handleAssignUser}>
-                Assign User
-              </button>
-            </div>
+           <div className="popup-section">
+            <label>Assigned User:</label>
+            <select
+              value={selectedUserId}
+              onChange={(e) => setSelectedUserId(e.target.value)}
+            >
+              <option value="">-- Select User --</option>
+              {users.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.preffered_name || u.username}
+                </option>
+              ))}
+            </select>
+            <button className="assign-btn" onClick={handleAssignUser}>
+              Assign User
+            </button>
+          </div>
 
-            {/* Change Status */}
-            <div className="popup-section">
-              <label>Change Status:</label>
-              <select
-                value={selectedStatusId}
-                onChange={(e) => setSelectedStatusId(e.target.value)}
-              >
-                <option value="">-- Select Status --</option>
-                {statuses.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.decription}
-                  </option>
-                ))}
-              </select>
-              <button
-                className="status-btn"
-                onClick={() =>
-                  selectedStatusId && handleStatusChange(selectedTask.id, selectedStatusId)
-                }
-              >
-                Change Status
-              </button>
-            </div>
+          {/* Change Status */}
+          <div className="popup-section">
+            <label>Change Status:</label>
+            <select
+              value={selectedStatusId}
+              onChange={(e) => setSelectedStatusId(e.target.value)}
+            >
+              <option value="">-- Select Status --</option>
+              {statuses.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.decription}
+                </option>
+              ))}
+            </select>
+            <button
+              className="status-btn"
+              onClick={() =>
+                selectedStatusId && handleStatusChange(selectedTask.id, selectedStatusId)
+              }
+            >
+              Change Status
+            </button>
+          </div>
           </div>
         </div>
       )}

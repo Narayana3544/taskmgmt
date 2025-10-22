@@ -3,12 +3,14 @@ package com.telusko.demo.service;
 import com.telusko.demo.Model.Timesheet;
 import com.telusko.demo.config.CustomUserDetails;
 import com.telusko.demo.dto.DailySummaryDTO;
+import com.telusko.demo.dto.DailySummaryWithLogsDTO;
 import com.telusko.demo.repo.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
+import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -33,7 +35,7 @@ public class TimeSheetService {
     public WorkTypeRepo workTypeRepo;
 
     public Timesheet saveEntry(Timesheet entry) {
-        entry.setPermission_granted(true);
+//        entry.setPermission_granted(true);
         LocalDate today = LocalDate.now();
         if (!entry.getDate().isEqual(today)) {
             throw new IllegalStateException("Timesheet entries can only be created/edited for today.");
@@ -162,6 +164,44 @@ public class TimeSheetService {
         return summaries;
     }
 
+//
+//    public List<DailySummaryDTO> getRangeSummaryforUser(LocalDate start, LocalDate end, int userId) {
+//        List<DailySummaryDTO> summaries = new ArrayList<>();
+//
+    ////        if (userId == null && !userRepo.existsById(Long.valueOf(userId))) {
+    ////            throw new RuntimeException("Record not found for userId: " + userId);
+    ////        }
+//
+//        for (LocalDate date = start; !date.isAfter(end); date = date.plusDays(1)) {
+//            List<Timesheet> entries;
+//
+//            if (userId==0) {
+//                entries = repo.findByDateAndUserId(date, userId);
+//            } else {
+//                entries = repo.findByDate(date);
+//            }
+//
+//            if (entries.isEmpty()) {
+//                summaries.add(new DailySummaryDTO(date, 0, "Leave"));
+//            } else {
+//                double totalHours = entries.stream()
+//                        .mapToDouble(e -> Duration.between(e.getStart_time(), e.getEnd_time()).toMinutes() / 60.0)
+//                        .sum();
+//
+//                String status;
+//                if (entries.stream().anyMatch(e -> e.getWorkType().getDescription().equalsIgnoreCase("Official"))) {
+//                    status = "Official";
+//                } else if (entries.stream().anyMatch(e -> e.getWorkType().getDescription().equalsIgnoreCase("Time Off"))) {
+//                    status = "Time Off";
+//                } else {
+//                    status = "Worked";
+//                }
+//                summaries.add(new DailySummaryDTO(date, totalHours, status));
+//            }
+//        }
+//
+//        return summaries;
+//    }
 
     public List<DailySummaryDTO> getRangeSummaryforUser(LocalDate start, LocalDate end, int userId) {
         List<DailySummaryDTO> summaries = new ArrayList<>();
@@ -197,4 +237,54 @@ public class TimeSheetService {
 
         return summaries;
     }
+
+    public List<DailySummaryWithLogsDTO> getRangeSummaryWithLogsForUser(LocalDate start, LocalDate end, int userId) {
+        List<DailySummaryWithLogsDTO> result = new ArrayList<>();
+
+        if (!userRepo.existsById(userId)) {
+            throw new RuntimeException("Record not found for userId: " + userId);
+        }
+
+        for (LocalDate date = start; !date.isAfter(end); date = date.plusDays(1)) {
+            // Fetch daily logs
+            List<Timesheet> logs = getEntriesByUserAndDate(userId, date);
+
+            // Calculate total hours
+            double totalHours = logs.stream()
+                    .mapToDouble(e -> Duration.between(e.getStart_time(), e.getEnd_time()).toMinutes() / 60.0)
+                    .sum();
+
+            // Determine status
+            String status;
+            if (logs.isEmpty()) {
+                if (date.getDayOfWeek() == DayOfWeek.SATURDAY || date.getDayOfWeek() == DayOfWeek.SUNDAY) {
+                    status = "Weekend";
+                } else if (isHoliday(date)) { // implement holiday check logic
+                    status = "Holiday";
+                } else {
+                    status = "LOP";
+                }
+            } else if (logs.stream().anyMatch(e -> e.getWorkType().getDescription().equalsIgnoreCase("Official"))) {
+                status = "Official";
+            } else if (logs.stream().anyMatch(e -> e.getWorkType().getDescription().equalsIgnoreCase("Time Off"))) {
+                status = "Time Off";
+            } else {
+                status = "Worked";
+            }
+
+            result.add(new DailySummaryWithLogsDTO(date, totalHours, status, logs));
+        }
+
+        return result;
+    }
+
+    // Example holiday check (you can replace with your repo/logic)
+    private boolean isHoliday(LocalDate date) {
+        List<LocalDate> holidays = List.of(
+                LocalDate.of(2025, 10, 2),
+                LocalDate.of(2025, 10, 3)
+        );
+        return holidays.contains(date);
+    }
+
 }

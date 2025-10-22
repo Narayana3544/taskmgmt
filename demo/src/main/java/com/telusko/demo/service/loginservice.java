@@ -1,6 +1,7 @@
 package com.telusko.demo.service;
 
 import com.telusko.demo.Model.User;
+import com.telusko.demo.dto.UserDTO;
 import com.telusko.demo.repo.Rolerepo;
 import com.telusko.demo.repo.userrepo;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -66,5 +67,11 @@ public class loginservice {
 
     public List<User> getManagers() {
         return repo.findByRoleDescription("Project Manager");
+    }
+
+    public UserDTO getUser(int userId) {
+        User user = repo.findById(userId);
+
+        return new UserDTO(user.getId(), user.getFirst_name(), user.getEmail());
     }
 }

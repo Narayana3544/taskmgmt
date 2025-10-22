@@ -361,7 +361,7 @@ public List<task> findUnassignedTasks(int featureId) {
                 List<task> usertasks = new ArrayList<>();
                 usertasks.addAll(repo.findBySprint_id(s.getId()));
                 for (task t : usertasks) {
-                    if (t.getUser().getId() == userId) {
+                    if (t.getUser() != null && t.getUser().getId() == userId) {
                         tasks.add(t);
                     }
                 }

@@ -35,19 +35,19 @@ const ManageSprints = () => {
   }, []);
 
   const fetchProjects = () => {
-   api.get('/projects', { withCredentials: true })
+    api.get('/projects', { withCredentials: true })
       .then(res => setProjects(res.data))
       .catch(err => console.error('Error fetching projects:', err));
   };
 
   const fetchFeatures = (projectId) => {
-   api.get(`/features/project/${projectId}`, { withCredentials: true })
+    api.get(`/features/project/${projectId}`, { withCredentials: true })
       .then(res => setFeatures(res.data))
       .catch(err => console.error('Error fetching features:', err));
   };
 
   const fetchSprints = () => {
-   api.get(`/sprints`, { withCredentials: true })
+    api.get(`/sprints`, { withCredentials: true })
       .then(res => {
         setSprints(res.data);
         setFilteredSprints(res.data);
@@ -56,7 +56,7 @@ const ManageSprints = () => {
   };
 
   const fetchUser = () => {
-   api.get('/user/profile', { withCredentials: true })
+    api.get('/user/profile', { withCredentials: true })
       .then(res => setUserName(res.data.preffered_name))
       .catch(err => console.error('Error fetching user profile:', err));
   };
@@ -105,13 +105,22 @@ const ManageSprints = () => {
     sessionStorage.removeItem('selectedFeature');
   };
 
+  // Helper: check if sprint is completed
+  const isSprintCompleted = (endDate) => {
+    const today = new Date();
+    const sprintEnd = new Date(endDate);
+    return sprintEnd < today; // true if sprint end date is in the past
+  };
+
   return (
     <div className="manage-sprints-page">
       <div className="sprint-header">
         <h2>Manage Sprints</h2>
         <div className="top-actions">
           <span className="user-label">{userName}</span>
-          <button className="create-sprint-btn" onClick={() => navigate('/create-sprint')}>+ Create Sprint</button>
+          <button className="create-sprint-btn" onClick={() => navigate('/create-sprint')}>
+            + Create Sprint
+          </button>
         </div>
       </div>
 
@@ -124,7 +133,6 @@ const ManageSprints = () => {
           isClearable
           placeholder="-- Select Project --"
         />
-
         <Select
           options={featureOptions}
           value={selectedFeature}
@@ -133,11 +141,9 @@ const ManageSprints = () => {
           placeholder="-- Select Feature --"
           isDisabled={!features.length}
         />
-
         <button className="search-btn" onClick={handleSearch}>Search</button>
         <button className="reset-btn" onClick={handleReset}>Reset</button>
       </div>
-
       <table className="sprint-table">
         <thead>
           <tr>
@@ -152,26 +158,49 @@ const ManageSprints = () => {
         <tbody>
           {!selectedProject ? (
             <tr>
-              <td colSpan="6" style={{ textAlign: 'center' }}>Please select a project to view sprints.</td>
+              <td colSpan="6" style={{ textAlign: 'center' }}>
+                Please select a project to view sprints.
+              </td>
             </tr>
           ) : filteredSprints.length === 0 ? (
             <tr>
-              <td colSpan="6" style={{ textAlign: 'center' }}>No sprints found.</td>
+              <td colSpan="6" style={{ textAlign: 'center' }}>
+                No sprints found.
+              </td>
             </tr>
           ) : (
-            filteredSprints.map(sprint => (
-              <tr key={sprint.id}>
-                <td>{sprint.id}</td>
-                <td>{sprint.name}</td>
-                <td>{sprint.startDate}</td>
-                <td>{sprint.endDate}</td>
-                <td>{sprint.feature?.name || '-'}</td>
-                <td>
-                  <button onClick={() => navigate(`/sprints/${sprint.id}/assign-stories/${sprint.feature?.id}`)}>Assign Tasks</button>
-                  <button onClick={() => navigate(`/sprints/overview/${sprint.id}`)}>View</button>
-                </td>
-              </tr>
-            ))
+            filteredSprints.map(sprint => {
+              const completed = isSprintCompleted(sprint.endDate);
+              return (
+                <tr key={sprint.id}>
+                  <td>{sprint.id}</td>
+                  <td>{sprint.name}</td>
+                  <td>{sprint.startDate}</td>
+                  <td>{sprint.endDate}</td>
+                  <td>{sprint.feature?.name || '-'}</td>
+                  <td>
+                    {/* Only show Assign Tasks button if sprint is not completed */}
+                    {!completed && (
+                      <button
+                        onClick={() =>
+                          navigate(`/sprints/${sprint.id}/assign-stories/${sprint.feature?.id}`)
+                        }
+                        className="active-btn"
+                      >
+                        Assign Tasks
+                      </button>
+                    )}
+
+                    <button
+                      onClick={() => navigate(`/sprints/overview/${sprint.id}`)}
+                      className="view-btn"
+                    >
+                      View
+                    </button>
+                  </td>
+                </tr>
+              );
+            })
           )}
         </tbody>
       </table>

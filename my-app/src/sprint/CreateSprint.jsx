@@ -41,7 +41,7 @@ const CreateSprint = () => {
     console.log("Fetching features for projectId:", projectId);
 
     api
-      .get(`/features/by-project/${projectId}`, { withCredentials: true })
+      .get(`/features/project/${projectId}`, { withCredentials: true })
       .then((res) => {
         console.log("✅ Features fetched:", res.data);
         setFeatures(res.data);

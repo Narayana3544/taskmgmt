@@ -242,12 +242,15 @@ public class Taskservice {
         Project p=featureRepo.findById(featureId).get().getProject();
         List<Feature> features=featureRepo.findByProjectId(p.getId());
         List<task> backlogTasks=new ArrayList<>();
+//        String task_status=taskStatusRepository.findByStatusCodeId(1).get(1);
         for(Feature f:features){
             List<task> alltasks=new ArrayList<>();
            alltasks.addAll(repo.findByFeature_id(f.getId()));
            for(task t:alltasks){
-               if(t.getTaskStatus().getDecription().equalsIgnoreCase("Backlog") || t.getTaskStatus().getDecription().equalsIgnoreCase("In Progress")){
-                   backlogTasks.add(t);
+               if(t.getSprint()==null) {
+                   if (t.getTaskStatus().getDecription().equalsIgnoreCase("Backlog") || t.getTaskStatus().getDecription().equalsIgnoreCase("In Progress")) {
+                       backlogTasks.add(t);
+                   }
                }
            }
         }
@@ -262,6 +265,9 @@ public class Taskservice {
         List<task> Tasks = repo.findAllById(taskIds);
         for (task Task : Tasks) {
             Task.setSprint(sprint);
+            //System.out.println(taskStatusRepository.findByStatusCodeId(1).toArray());
+           // Task.setTaskStatus(taskStatusRepository.findByStatusCodeId(1).get(0));
+           // repo.save(Task);
         }
 
         repo.saveAll(Tasks);
@@ -361,7 +367,7 @@ public class Taskservice {
                 List<task> usertasks = new ArrayList<>();
                 usertasks.addAll(repo.findBySprint_id(s.getId()));
                 for (task t : usertasks) {
-                    if (t.getUser().getId() == userId) {
+                    if (t.getUser() != null && t.getUser().getId() == userId) {
                         tasks.add(t);
                     }
                 }

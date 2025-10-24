@@ -1,5 +1,5 @@
 package com.telusko.demo.Model;
-import javax.persistence.*;
+import jakarta.persistence.*;
 import lombok.Data;
 
 import java.sql.Date;

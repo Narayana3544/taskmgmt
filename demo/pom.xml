@@ -8,8 +8,8 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>2.7.15</version>
-		<relativePath/> <!-- lookup parent from repository -->
+		<version>3.3.3</version> <!-- Spring Boot 3.x for Tomcat 10 / Jakarta EE -->
+		<relativePath/>
 	</parent>
 
 	<groupId>com.telusko</groupId>
@@ -29,11 +29,10 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-tomcat</artifactId>
-			<scope>compile</scope>
-<!--			<scope>provided</scope>-->
+			<scope>provided</scope>
 		</dependency>
 
-		<!-- Spring Boot Starters -->
+		<!-- Spring Boot Starters (3.x versions use jakarta.* internally) -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-jdbc</artifactId>
@@ -113,7 +112,7 @@
 				</configuration>
 			</plugin>
 
-			<!-- WAR Plugin (optional but recommended) -->
+			<!-- WAR Plugin -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-war-plugin</artifactId>

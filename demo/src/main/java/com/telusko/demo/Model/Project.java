@@ -1,6 +1,6 @@
 package com.telusko.demo.Model;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
 

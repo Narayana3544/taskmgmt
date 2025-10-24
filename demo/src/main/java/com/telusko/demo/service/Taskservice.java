@@ -3,7 +3,7 @@ package com.telusko.demo.service;
 import com.telusko.demo.Model.*;
 import com.telusko.demo.config.CustomUserDetails;
 import com.telusko.demo.repo.*;
-import javax.persistence.*;
+import jakarta.persistence.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;

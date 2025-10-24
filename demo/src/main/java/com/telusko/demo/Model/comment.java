@@ -2,7 +2,7 @@ package com.telusko.demo.Model;
 
 
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Entity
 @Table

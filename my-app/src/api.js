@@ -1,6 +1,8 @@
 import axios from "axios";
 
-const baseURL = "http://192.168.14.191:8080/task-mgmt";
+// const baseURL = "http://192.168.14.191:8080/task-mgmt";
+
+const baseURL = "http://192.168.14.109:8080/task-mgmt";
 // const baseURL="http://localhost:8081";
 
 // const api = axios.create({
@@ -67,7 +69,7 @@ function showSessionPopup() {
   document.getElementById("go-login-btn").onclick = () => {
     localStorage.clear();
     sessionStorage.clear();
-    window.location.href = "/login";
+    window.location.href = "/taskmgmt";
   };
 }
 

@@ -16,7 +16,7 @@ public class WebConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList(
                 "http://localhost:3000",    // React dev
-                "http://192.168.14.191:3000","http://localhost:8080", "http://192.168.14.191:8080" // if you access React via LAN
+                "http://192.168.14.191:3000","http://localhost:8080", "http://192.168.14.191:8080","http://192.168.14.109:8080" // if you access React via LAN
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));

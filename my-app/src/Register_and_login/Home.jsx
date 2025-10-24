@@ -187,7 +187,7 @@ const openPopup = (task) => {
             <p>{selectedTask.description}</p>
 
             {/* Assign User */}
-           <div className="popup-section">
+           {/* <div className="popup-section">
             <label>Assigned User:</label>
             <select
               value={selectedUserId}
@@ -203,7 +203,7 @@ const openPopup = (task) => {
             <button className="assign-btn" onClick={handleAssignUser}>
               Assign User
             </button>
-          </div>
+          </div> */}
 
           {/* Change Status */}
           <div className="popup-section">

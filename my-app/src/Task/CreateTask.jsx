@@ -34,7 +34,7 @@ export default function CreateTask() {
   useEffect(() => {
     api.get("/features", { withCredentials: true }).then(res => setFeatures(res.data));
     api.get("/users", { withCredentials: true }).then(res => setUsers(res.data));
-    api.get("/managers", { withCredentials: true }).then(res => setManagers(res.data));
+    api.get("/users", { withCredentials: true }).then(res => setManagers(res.data));
     api.get("/gettype", { withCredentials: true }).then(res => setTaskTypes(res.data));
     api.get("/getstatusForTask", { withCredentials: true }).then(res => setTaskStatuses(res.data));
   }, []);

@@ -86,13 +86,13 @@ const Sidebar = ({ onToggle }) => {
               {/* <div className="nav-item" onClick={() => navigate('/manage-sprints')}>
                 <FaChartBar /><span>Sprints</span>
               </div> */}
-              {user.role?.description === "Admin" && (
+              {/* {user.role?.description === "Admin" && (
               <div className="nav-item" onClick={() => navigate('/task')}>
                 <FaChartBar /><span>Search Task</span>
               </div>
-              )}
+              )} */}
               {/* <div className="nav-item" onClick={() => navigate('/profile')}><FaUser /><span>Profile</span></div> */}
-               <div className="nav-item" onClick={() => navigate('/view-projectsByUserId')}><FaUser /><span>My Projects</span></div>
+               {/* <div className="nav-item" onClick={() => navigate('/view-projectsByUserId')}><FaUser /><span>My Projects</span></div> */}
               <div className="nav-item" onClick={() => navigate('/active-sprints')}>
                 <FaChartBar /><span>Your Active Sprints</span>
               </div>

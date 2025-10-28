@@ -68,20 +68,30 @@ function showSessionPopup() {
   };
 }
 
+
+
 // Axios interceptor for catching session expiry or backend down
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    const url = error.config?.url || "";
+
+    // ✅ Ignore login/register errors — let LoginForm handle them
+    const isAuthEndpoint = url.includes("/login") || url.includes("/register");
+
     if (error.response) {
-      if (error.response.status === 401 || error.response.status === 403) {
+      const status = error.response.status;
+
+      if (!isAuthEndpoint && (status === 401 || status === 403)) {
+        // Only trigger popup for session expiry on secured routes
         showSessionPopup();
       }
     } else if (error.request) {
-      // backend unreachable
+      // Backend unreachable — safe to show popup
       showSessionPopup();
     }
+
     return Promise.reject(error);
   }
 );
-
 export default api;

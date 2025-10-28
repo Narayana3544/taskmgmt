@@ -40,6 +40,8 @@ import DailyTimesheet from './DailyTimesheets/DailyTimeSheet';
 import MonthlyTimesheet from './DailyTimesheets/UserRangeTimeSheet';
 import AdminRangeTimeSheet from './DailyTimesheets/AdminRangeTimeSheet';
 import TimesheetExcelExport from './DailyTimesheets/TimesheetExcelExport';
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 // 🔹 Small component for logout route
 const Logout = ({ onLogout }) => {
@@ -127,6 +129,16 @@ function App() {
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       )}
+        <ToastContainer
+        position="top-right"
+        autoClose={2000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        pauseOnHover
+        draggable
+        theme="colored"
+      />
     </Router>
   );
 }

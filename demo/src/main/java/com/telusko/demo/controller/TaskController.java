@@ -327,6 +327,22 @@ public ResponseEntity<?> getAttachment(@PathVariable int id) {
         return service.viewActiveSprintTasksByUserId(userId);
     }
 
+    @PostMapping("/tasks/{taskId}/clone")
+    public ResponseEntity<?> cloneTask(@PathVariable int taskId, Authentication authentication) {
+        try {
+            CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+            int userId = userDetails.getUser().getId();
+
+            task clonedTask = service.cloneTask(taskId);
+            return ResponseEntity.ok(clonedTask);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Error cloning task: " + e.getMessage()));
+        }
+    }
+
 
 
 }

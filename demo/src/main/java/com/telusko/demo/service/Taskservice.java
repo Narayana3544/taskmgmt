@@ -434,4 +434,29 @@ public List<task> findUnassignedTasks(int featureId) {
 
         return tasks;
     }
+
+    public task cloneTask(int taskId) {
+        task originalTask = repo.findById(taskId)
+                .orElseThrow(() -> new RuntimeException("Task not found"));
+
+        task clonedTask = new task();
+        clonedTask.setUserstory(originalTask.getUserstory() + " (Clone)");
+        clonedTask.setDescription(originalTask.getDescription());
+        clonedTask.setAcceptance_criteria(originalTask.getAcceptance_criteria());
+        clonedTask.setStorypoints(originalTask.getStorypoints());
+        clonedTask.setAttachmentPath(originalTask.getAttachmentPath());
+        clonedTask.setAttachmentName(originalTask.getAttachmentName());
+        clonedTask.setAttachmentType(originalTask.getAttachmentType());
+        clonedTask.setAttachment_flag(originalTask.getAttachment_flag());
+        clonedTask.setFeature(originalTask.getFeature());
+        clonedTask.setSprint(originalTask.getSprint());
+//    clonedTask.setUser(originalTask.getUser());
+        clonedTask.setReportedTo(originalTask.getReportedTo());
+        clonedTask.setTaskType(originalTask.getTaskType());
+        clonedTask.setTaskStatus(originalTask.getTaskStatus());
+        clonedTask.setStart_date(LocalDateTime.now());
+        clonedTask.setEnd_date(null); // fresh task, not completed yet
+
+        return repo.save(clonedTask);
+    }
 }

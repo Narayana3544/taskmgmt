@@ -161,6 +161,7 @@ export default function TaskList() {
 
   return (
     <div className="task-list-page">
+       <h2>Search Tasks</h2>
       <div className="header-bar">
         <select value={selectedProject || ""} onChange={handleProjectChange}>
           <option value="">-- Select Project --</option>

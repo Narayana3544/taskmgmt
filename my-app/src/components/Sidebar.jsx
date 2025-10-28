@@ -57,7 +57,10 @@ const Sidebar = ({ onToggle }) => {
 
             <div className="nav-section">
             <div className="nav-item" onClick={() => navigate('/home')}><FaThList /> Dashboard</div>
-            <div className="nav-item"onClick={() => navigate('/my-stories')}><FaChartBar /> Search Task</div>
+            <div className="nav-item"onClick={() => navigate('/my-stories')}><FaChartBar />My Tasks</div>
+            <div className="nav-item" onClick={() => navigate('/task')}>
+                <FaChartBar /><span> Search Task</span>
+              </div>
 
             {user.role?.description === "Admin" && (
             <div className="nav-item" onClick={() => navigate('/manage-projects')}>
@@ -81,9 +84,7 @@ const Sidebar = ({ onToggle }) => {
               {/* <div className="nav-item" onClick={() => navigate('/manage-sprints')}>
                 <FaChartBar /><span>Sprints</span>
               </div> */}
-              <div className="nav-item" onClick={() => navigate('/task')}>
-                <FaChartBar /><span>Task</span>
-              </div>
+              
               
               {/* <div className="nav-item" onClick={() => navigate('/profile')}><FaUser /><span>Profile</span></div> */}
                {/* <div className="nav-item" onClick={() => navigate('/view-projectsByUserId')}><FaUser /><span>My Projects</span></div> */}

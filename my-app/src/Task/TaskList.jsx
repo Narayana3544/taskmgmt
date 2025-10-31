@@ -163,15 +163,18 @@ export default function TaskList() {
     <div className="task-list-page">
        <h2>Search Tasks</h2>
       <div className="header-bar">
+        <div className="filter-section">
         <select value={selectedProject || ""} onChange={handleProjectChange}>
           <option value="">-- Select Project --</option>
           {projects.map((p) => (
             <option key={p.id} value={p.id}>{p.name}</option>
           ))}
         </select>
+        </div>
         <button className="create-btn" onClick={() => navigate("/create-task")}>
           <FaPlus /> Create Task
         </button>
+        
       </div>
 
       {loading && <p>Loading tasks...</p>}

@@ -43,6 +43,7 @@
   padding-bottom: 0.5rem;
 }
 
+
 /* ================= Task Card ================= */
 .task-card {
   position: relative;
@@ -219,4 +220,51 @@
 .assign-btn:hover,
 .status-btn:hover {
   background-color: #2980b9;
+}
+.sprint-progress-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.sprint-progress-card {
+  flex: 1 1 280px;
+  background: #f4f5f7;
+  border: 1px solid #dfe1e6;
+  border-radius: 6px;
+  padding: 12px 16px;
+  box-shadow: 0 1px 2px rgba(9, 30, 66, 0.1);
+  transition: all 0.2s ease;
+}
+
+.sprint-progress-card:hover {
+  background: #ebecf0;
+  transform: translateY(-1px);
+}
+
+.sprint-progress-card h4 {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #172b4d;
+}
+
+.sprint-progress-card p {
+  font-size: 13px;
+  color: #5e6c84;
+  margin-bottom: 6px;
+}
+
+.progress-bar {
+  height: 6px;
+  background: #dfe1e6;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: #36b37e; /* Jira green */
+  transition: width 0.3s ease;
 }

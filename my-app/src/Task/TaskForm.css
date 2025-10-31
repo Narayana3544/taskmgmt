@@ -50,7 +50,12 @@
   cursor: pointer;
   margin-bottom: 15px;
 } */
-.task-form {
+
+
+
+
+
+/* .task-form {
   background-color: #ffffff;
   padding: 2rem;
   border-radius: 16px;
@@ -182,6 +187,153 @@
   justify-content: center;
   font-size: 12px;
 }
+.remove-btn:hover {
+  background: #dc2626;
+} */
+
+
+.task-form {
+  background-color: #ffffff;
+  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: 0 0 25px rgba(0, 0, 0, 0.08);
+  font-family: 'Segoe UI', sans-serif;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem 1rem;
+  max-width: 700px;
+  margin: 2rem auto;
+}
+
+.task-form h2 {
+  grid-column: 1 / -1;
+  text-align: center;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 1rem;
+}
+
+.task-form .form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.task-form .full-width {
+  grid-column: 1 / -1;
+}
+
+.task-form label {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #334155;
+  margin-bottom: 0.25rem;
+}
+
+.task-form input,
+.task-form textarea,
+.task-form select {
+  padding: 0.8rem 1rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 1rem;
+  width: 100%;
+  transition: border-color 0.3s ease;
+}
+
+.task-form input:focus,
+.task-form textarea:focus,
+.task-form select:focus {
+  border-color: #2563eb;
+  outline: none;
+}
+
+.task-form textarea {
+  resize: none;
+}
+
+.task-form button {
+  background-color: #4caf50;
+  color: #ffffff;
+  padding: 0.8rem 1rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.task-form button:hover {
+  background-color: #1e40af;
+}
+
+.btn-container {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 1rem;
+}
+
+.task-form .btn-cancel {
+  background-color: #6b7280;
+}
+
+.task-form .btn-cancel:hover {
+  background-color: #4b5563;
+}
+
+.task-form .back-btn {
+  grid-column: 1 / -1;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  width: fit-content;
+  justify-self: start;
+}
+
+.attachment-container {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.attachment-file {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #f3f4f6;
+  padding: 5px 10px;
+  border-radius: 5px;
+  border: 1px solid #d1d5db;
+  max-width: 400px;
+}
+
+.attachment-file span {
+  color: black;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.remove-btn {
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+}
+
 .remove-btn:hover {
   background: #dc2626;
 }

@@ -3,6 +3,7 @@ import api from '../api';
 import Select from 'react-select';
 import './ManageSprints.css';
 import { useNavigate } from 'react-router-dom';
+import { FaTasks, FaPlus, FaEye } from 'react-icons/fa';
 
 const ManageSprints = () => {
   const [sprints, setSprints] = useState([]);
@@ -14,13 +15,12 @@ const ManageSprints = () => {
   const [userName, setUserName] = useState('');
   const navigate = useNavigate();
 
-  // Fetch initial data
+  // ✅ Fetch all required data
   useEffect(() => {
     fetchProjects();
     fetchSprints();
     fetchUser();
 
-    // Restore filter from sessionStorage
     const storedProject = sessionStorage.getItem('selectedProject');
     const storedFeature = sessionStorage.getItem('selectedFeature');
 
@@ -61,11 +61,9 @@ const ManageSprints = () => {
       .catch(err => console.error('Error fetching user profile:', err));
   };
 
-  // react-select options
   const projectOptions = projects.map(p => ({ value: p.id, label: p.name }));
   const featureOptions = features.map(f => ({ value: f.id, label: f.name }));
 
-  // Load features when project changes
   useEffect(() => {
     if (selectedProject) {
       fetchFeatures(selectedProject.value);
@@ -75,14 +73,12 @@ const ManageSprints = () => {
     }
   }, [selectedProject]);
 
-  // Handle Search button
   const handleSearch = () => {
     if (!selectedProject) {
       setFilteredSprints([]);
       return;
     }
 
-    // Save selection to sessionStorage
     sessionStorage.setItem('selectedProject', JSON.stringify(selectedProject));
     sessionStorage.setItem('selectedFeature', JSON.stringify(selectedFeature));
 
@@ -95,7 +91,6 @@ const ManageSprints = () => {
     setFilteredSprints(tempSprints);
   };
 
-  // Handle Reset button
   const handleReset = () => {
     setSelectedProject(null);
     setSelectedFeature(null);
@@ -105,11 +100,15 @@ const ManageSprints = () => {
     sessionStorage.removeItem('selectedFeature');
   };
 
-  // Helper: check if sprint is completed
-  const isSprintCompleted = (endDate) => {
+  // ✅ Check if sprint is completed or end date has passed
+  const isSprintDisabled = (sprint) => {
     const today = new Date();
-    const sprintEnd = new Date(endDate);
-    return sprintEnd < today; // true if sprint end date is in the past
+    const endDate = new Date(sprint.endDate);
+    return (
+      sprint.status?.toLowerCase() === 'completed' ||
+      sprint.status?.toLowerCase() === 'closed' ||
+      endDate < today
+    );
   };
 
   return (
@@ -119,7 +118,7 @@ const ManageSprints = () => {
         <div className="top-actions">
           <span className="user-label">{userName}</span>
           <button className="create-sprint-btn" onClick={() => navigate('/create-sprint')}>
-            + Create Sprint
+            <FaPlus className="icon" /> Create Sprint
           </button>
         </div>
       </div>
@@ -144,6 +143,8 @@ const ManageSprints = () => {
         <button className="search-btn" onClick={handleSearch}>Search</button>
         <button className="reset-btn" onClick={handleReset}>Reset</button>
       </div>
+
+      {/* Table Section */}
       <table className="sprint-table">
         <thead>
           <tr>
@@ -151,52 +152,55 @@ const ManageSprints = () => {
             <th>Name</th>
             <th>Start Date</th>
             <th>End Date</th>
-            <th>Feature Name</th>
+            <th>Status</th>
+            <th>Feature</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           {!selectedProject ? (
             <tr>
-              <td colSpan="6" style={{ textAlign: 'center' }}>
-                Please select a project to view sprints.
-              </td>
+              <td colSpan="7" style={{ textAlign: 'center' }}>Please select a project to view sprints.</td>
             </tr>
           ) : filteredSprints.length === 0 ? (
             <tr>
-              <td colSpan="6" style={{ textAlign: 'center' }}>
-                No sprints found.
-              </td>
+              <td colSpan="7" style={{ textAlign: 'center' }}>No sprints found.</td>
             </tr>
           ) : (
             filteredSprints.map(sprint => {
-              const completed = isSprintCompleted(sprint.endDate);
+              const disabled = isSprintDisabled(sprint);
               return (
-                <tr key={sprint.id}>
+                <tr key={sprint.id} className={disabled ? 'disabled-row' : ''}>
                   <td>{sprint.id}</td>
                   <td>{sprint.name}</td>
                   <td>{sprint.startDate}</td>
                   <td>{sprint.endDate}</td>
+                  <td>{sprint.status}</td>
                   <td>{sprint.feature?.name || '-'}</td>
-                  <td>
-                    {/* Only show Assign Tasks button if sprint is not completed */}
-                    {!completed && (
-                      <button
-                        onClick={() =>
-                          navigate(`/sprints/${sprint.id}/assign-stories/${sprint.feature?.id}`)
-                        }
-                        className="active-btn"
-                      >
-                        Assign Tasks
-                      </button>
-                    )}
+                  <td className="action-buttons">
 
-                    <button
-                      onClick={() => navigate(`/sprints/overview/${sprint.id}`)}
-                      className="view-btn"
-                    >
-                      View
-                    </button>
+                    {/* ✅ Assign Task Icon */}
+                    <div className="tooltip">
+                      <FaTasks
+                        className={`icon-btn assign-icon ${disabled ? 'disabled' : ''}`}
+                        onClick={() => {
+                          if (!disabled)
+                            navigate(`/sprints/${sprint.id}/assign-stories/${sprint.feature?.id}`);
+                        }}
+                      />
+                      <span className="tooltip-text">
+                        {disabled ? 'Sprint closed or past date' : 'Assign Tasks'}
+                      </span>
+                    </div>
+
+                    {/* ✅ View Sprint Icon */}
+                    <div className="tooltip">
+                      <FaEye
+                        className="icon-btn view-icon"
+                        onClick={() => navigate(`/sprints/overview/${sprint.id}`)}
+                      />
+                      <span className="tooltip-text">View Sprint</span>
+                    </div>
                   </td>
                 </tr>
               );

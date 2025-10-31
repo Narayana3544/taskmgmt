@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import api from '../api';
-// import Navbar from '../components/Navbar';
 import './ManageProject.css';
-import { FaEdit, FaPlus } from 'react-icons/fa';
+import { FaEdit, FaPlus, FaUsers, FaListUl } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 
 export default function ManageProjects() {
@@ -15,119 +14,118 @@ export default function ManageProjects() {
   }, []);
 
   const fetchProjects = () => {
-   api.get('/projects', { withCredentials: true })
-      .then(res => setProjects(res.data))
-      .catch(err => console.error('Error fetching projects:', err));
+    api
+      .get('/projects', { withCredentials: true })
+      .then((res) => setProjects(res.data))
+      .catch((err) => console.error('Error fetching projects:', err));
   };
 
-  const deleteProject = (id) => {
-    if (window.confirm('Are you sure you want to delete this project?')) {
-     api.delete(`/projects/${id}`)
-        .then(() => fetchProjects())
-        .catch(err => console.error('Error deleting project:', err));
-    }
-  };
-
-  const handleEdit = (id) => {
-    navigate(`/edit-project/${id}`);
-  };
-
-  const handleView = (project) => {
-    alert(`Viewing Project:\nID: ${project.id}\nName: ${project.name}\nDescription: ${project.description}`);
-  };
-
-  const handleStatusChange = (id, newStatus) => {
-   api.patch(`/projects/${id}`, { status: newStatus }, { withCredentials: true })
-      .then(() => fetchProjects())
-      .catch(err => console.error('Failed to update status:', err));
-  };
-
-const filteredProjects = Array.isArray(projects)
-  ? projects.filter(project => {
-      const search = searchTerm.toLowerCase();
-      return (
-        project.name?.toLowerCase().includes(search) ||
-        project.status?.decription?.toLowerCase().includes(search) || 
-        project.id?.toString() === searchTerm.trim()
-      );
-    })
-  : [];
-
+  const filteredProjects = Array.isArray(projects)
+    ? projects.filter((project) => {
+        const search = searchTerm.toLowerCase();
+        return (
+          project.name?.toLowerCase().includes(search) ||
+          project.status?.decription?.toLowerCase().includes(search) ||
+          project.id?.toString() === searchTerm.trim()
+        );
+      })
+    : [];
 
   return (
     <div className="manage-projects-page">
-      <div className="manage-main">
-        {/* <Navbar /> */}
-        <div className="manage-container">
-          <div className="manage-header">
-            <h1 className="manage-title">Manage Projects</h1>
-            <button className="create-btn" onClick={() => navigate('/create-project')}>
-              <FaPlus /> Create Project
-            </button>
-          </div>
-
-          <div className="search-bar">
-            <input
-              type="text"
-              placeholder="Search by name or ID"
-              className="search-input"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-
-          <table className="projects-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Description</th>
-                <th>Status</th>
-                {/* <th>Change Status</th> */}
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredProjects.length === 0 ? (
-                <tr><td colSpan="6">No projects found.</td></tr>
-              ) : (
-                filteredProjects.map(project => (
-                  <tr key={project.id}>
-                    <td>{project.id}</td>
-                    <td>{project.name}</td>
-                    <td>{project.description}</td>
-                    <td>
-                      <span
-                        className={`status-tag ${
-                          project.status?.decription?.toLowerCase().replace(/\s+/g, '-') || ''
-                        }`}
-                      >
-                        {project.status?.decription || "No status"}
-                      </span>
-                    </td>
-                     <td>
-                        
-                      {/* <button 
-                    className="view-btn" 
-                    onClick={() => navigate(`/view-project/${project.id}`)}
-                  >
-                    View
-                  </button> */}
-                  <button onClick={() => navigate(`/view-project/${project.id}`)}>Assign Users</button>
-                  <button onClick={() => navigate(`/view-featuresByprojectid/${project.id}`)}>view Features</button>
-                  <button 
-                        className="edit-btn" 
-                        onClick={() => navigate(`/edit-project/${project.id}`)}
-                      > 
-                      <FaEdit />
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+      <div className="manage-container">
+        <div className="manage-header">
+          <h1 className="manage-title">📁 Manage Projects</h1>
+          <button
+            className="create-btn"
+            onClick={() => navigate('/create-project')}
+          >
+            <FaPlus /> Create Project
+          </button>
         </div>
+
+        {/* 🔍 Search */}
+        <div className="search-bar">
+          <input
+            type="text"
+            placeholder="Search by name or ID"
+            className="search-input"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+
+        <table className="projects-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Description</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredProjects.length === 0 ? (
+              <tr>
+                <td colSpan="5">No projects found.</td>
+              </tr>
+            ) : (
+              filteredProjects.map((project) => (
+                <tr key={project.id}>
+                  <td>{project.id}</td>
+                  <td>{project.name}</td>
+                  <td>{project.description}</td>
+                  <td>
+                    <span
+                      className={`status-tag ${
+                        project.status?.decription
+                          ?.toLowerCase()
+                          .replace(/\s+/g, '-') || ''
+                      }`}
+                    >
+                      {project.status?.decription || 'No status'}
+                    </span>
+                  </td>
+                  <td className="action-buttons">
+                    {/* 👥 Assign Users */}
+                    <div className="tooltip">
+                      <FaUsers
+                        className="icon-btn assign-icon"
+                        onClick={() =>
+                          navigate(`/view-project/${project.id}`)
+                        }
+                      />
+                      <span className="tooltip-text">Assign Users</span>
+                    </div>
+
+                    {/* 📋 View Features */}
+                    <div className="tooltip">
+                      <FaListUl
+                        className="icon-btn view-icon"
+                        onClick={() =>
+                          navigate(`/view-featuresByprojectid/${project.id}`)
+                        }
+                      />
+                      <span className="tooltip-text">View Features</span>
+                    </div>
+
+                    {/* ✏️ Edit */}
+                    <div className="tooltip">
+                      <FaEdit
+                        className="icon-btn edit-icon"
+                        onClick={() =>
+                          navigate(`/edit-project/${project.id}`)
+                        }
+                      />
+                      <span className="tooltip-text">Edit Project</span>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   );

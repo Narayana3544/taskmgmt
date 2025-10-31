@@ -15,7 +15,7 @@ export default function AdminRangeTimeSheet() {
   const [loadingDaily, setLoadingDaily] = useState(false);
   const navigate = useNavigate();
 
-  // Fetch all users for admin
+  // Fetch all users
   const fetchUsers = async () => {
     try {
       const res = await api.get("/users", { withCredentials: true });
@@ -30,65 +30,59 @@ export default function AdminRangeTimeSheet() {
     fetchUsers();
   }, []);
 
-  // Fetch range summary for selected user
+  // Fetch range summary
   const fetchRange = async () => {
-  if (!selectedUser || !startDate || !endDate) {
-    alert("Please select user and both start and end dates.");
-    return;
-  }
+    if (!selectedUser || !startDate || !endDate) {
+      alert("Please select user and both start and end dates.");
+      return;
+    }
 
-  setLoading(true);
-  try {
-    const res = await api.get(`/timesheets/range-summary/${selectedUser}`, {
-      params: { start: startDate, end: endDate },
-      withCredentials: true,
-    });
+    setLoading(true);
+    try {
+      const res = await api.get(`/timesheets/range-summary/${selectedUser}`, {
+        params: { start: startDate, end: endDate },
+        withCredentials: true,
+      });
+      setEntries(res.data);
+      setDailyDetails([]);
+      setSelectedDate(null);
+    } catch (err) {
+      console.error("Error fetching range summary:", err);
+      alert("Failed to fetch data.");
+    }
+    setLoading(false);
+  };
 
-    setEntries(res.data);
-    setDailyDetails([]);
-    setSelectedDate(null);
-  } catch (err) {
-    console.error("Error fetching range summary:", err);
-    alert("Failed to fetch data.");
-  }
-  setLoading(false);
-};
-  // Fetch daily entries
+  // View daily details
   const handleViewDay = async (date) => {
-  setLoadingDaily(true);
-  try {
-    const res = await api.get(`/timesheets/day/${selectedUser}/${date}`, {
-      withCredentials: true,
-    });
+    setLoadingDaily(true);
+    try {
+      const res = await api.get(`/timesheets/day/${selectedUser}/${date}`, {
+        withCredentials: true,
+      });
+      const sortedDaily = res.data.sort((a, b) => {
+        if (!a.start_time) return 1;
+        if (!b.start_time) return -1;
+        return a.start_time.localeCompare(b.start_time);
+      });
+      setDailyDetails(sortedDaily);
+      setSelectedDate(date);
+    } catch (err) {
+      console.error("Error fetching daily entries:", err);
+      alert("Failed to fetch daily details.");
+      setDailyDetails([]);
+      setSelectedDate(null);
+    }
+    setLoadingDaily(false);
+  };
 
-    // Sort entries by start_time
-    const sortedDaily = res.data.sort((a, b) => {
-      if (!a.start_time) return 1;
-      if (!b.start_time) return -1;
-      return a.start_time.localeCompare(b.start_time);
-    });
-
-    setDailyDetails(sortedDaily);
-    setSelectedDate(date);
-  } catch (err) {
-    console.error("Error fetching daily entries:", err);
-    alert("Failed to fetch daily details.");
-    setDailyDetails([]);
-    setSelectedDate(null);
-  }
-  setLoadingDaily(false);
-};
-
-
-  // Utility functions
   const isWeekend = (dateStr) => {
     const d = new Date(dateStr);
     return d.getDay() === 0 || d.getDay() === 6;
   };
 
   const isHoliday = (dateStr) => {
-    // Add your logic to check holidays
-    const holidays = ["2025-09-21", "2025-10-02","2025-10-03"]; // Example
+    const holidays = ["2025-09-21", "2025-10-02", "2025-10-03"];
     return holidays.includes(dateStr);
   };
 
@@ -96,6 +90,7 @@ export default function AdminRangeTimeSheet() {
     <div className="admin-timesheet-container">
       <h2>Admin Timesheets</h2>
 
+      {/* Filters Row */}
       <div className="filters">
         <label>
           User:
@@ -130,15 +125,22 @@ export default function AdminRangeTimeSheet() {
           />
         </label>
 
-        <button onClick={fetchRange}>Fetch</button>
+        <button className="fetch-btn" onClick={fetchRange}>
+          Fetch
+        </button>
       </div>
-            <button
-  onClick={() =>
-    navigate("/timesheet-export", { state: { userId: selectedUser, startDate, endDate } })
-  }
->
-  Export to Excel
-</button>
+
+      <button
+        className="export-btn"
+        onClick={() =>
+          navigate("/timesheet-export", {
+            state: { userId: selectedUser, startDate, endDate },
+          })
+        }
+      >
+        Export to Excel
+      </button>
+
       {loading ? (
         <p>Loading...</p>
       ) : (
@@ -147,7 +149,6 @@ export default function AdminRangeTimeSheet() {
             <tr>
               <th>Date</th>
               <th>Total Hours</th>
-              {/* <th>Status</th> */}
               <th>Action</th>
             </tr>
           </thead>
@@ -156,28 +157,21 @@ export default function AdminRangeTimeSheet() {
               entries.map((entry, idx) => {
                 const weekend = isWeekend(entry.date);
                 const holiday = isHoliday(entry.date);
-
                 let rowClass = "";
-                let statusText = entry.status;
 
-                if (holiday) {
-                  rowClass = "holiday-row";
-                  statusText = "Holiday";
-                } else if (weekend) {
-                  rowClass = "weekend-row";
-                  statusText = "Weekend";
-                } else if (entry.status === "Leave") {
-                  rowClass = "leave-row";
-                  statusText = "Leave";
-                }
+                if (holiday) rowClass = "holiday-row";
+                else if (weekend) rowClass = "weekend-row";
+                else if (entry.status === "Leave") rowClass = "leave-row";
 
                 return (
                   <tr key={idx} className={rowClass}>
                     <td>{entry.date}</td>
                     <td>{entry.totalHours.toFixed(2)} h</td>
-                    {/* <td>{statusText}</td> */}
                     <td>
-                      <button onClick={() => handleViewDay(entry.date)}>
+                      <button
+                        className="view-btn"
+                        onClick={() => handleViewDay(entry.date)}
+                      >
                         View
                       </button>
                     </td>
@@ -195,7 +189,6 @@ export default function AdminRangeTimeSheet() {
         </table>
       )}
 
-      {/* Detailed view for selected date */}
       {selectedDate && (
         <div className="daily-details">
           <h3>Details for {selectedDate}</h3>

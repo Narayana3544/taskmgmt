@@ -35,6 +35,9 @@ public class Taskservice {
     private createsprintrepo sprintRepo;
 
     @Autowired
+    public sprintservice SprintService;
+
+    @Autowired
     private Task_statusrepo taskStatusRepository;
 
     @Autowired

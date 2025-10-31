@@ -59,3 +59,157 @@
 .daily-details {
   margin-top: 20px;
 }
+/* Container */
+.admin-timesheet-container {
+  background-color: #f8f9fb;
+  padding: 20px;
+  border-radius: 10px;
+  max-width: 1000px;
+  margin: 30px auto;
+}
+
+/* Title */
+.admin-timesheet-container h2 {
+  margin-bottom: 15px;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+/* Filters Row */
+.filters {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+/* Labels */
+.filters label {
+  font-weight: 500;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* Inputs, dropdowns, and fetch button — unified size */
+.filters select,
+.filters input[type="date"],
+.fetch-btn {
+  padding: 6px 10px;
+  font-size: 14px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  height: 34px;
+  box-sizing: border-box;
+}
+
+/* Fetch button */
+.fetch-btn {
+  background-color: #e9ecef !important;
+  color: #000;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.fetch-btn:hover {
+  background-color: #d6d8db !important;
+}
+.admin-timesheet-container {
+  padding: 20px;
+}
+
+.filters {
+  display: flex;
+  align-items: center; /* ✅ Ensures perfect vertical alignment */
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.filters label {
+  display: flex;
+  flex-direction: column;
+  font-size: 14px;
+  color: #333;
+}
+
+.filters select,
+.filters input[type="date"],
+.fetch-btn {
+  padding: 6px 10px;
+  font-size: 14px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  height: 36px;
+  box-sizing: border-box;
+}
+
+/* ✅ Ensures button matches height of inputs */
+.fetch-btn {
+  background-color: #e9ecef;
+  color: #000;
+  border: 1px solid #ccc;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  height: 36px; /* same as inputs */
+  margin-top: 0;
+}
+
+.fetch-btn:hover {
+  background-color: #d6d8db;
+}
+
+.export-btn {
+  background-color: #007bff;
+  color: #fff;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-bottom: 20px;
+}
+
+.export-btn:hover {
+  background-color: #0056b3;
+}
+
+/* Table styling */
+.timesheet-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.timesheet-table th,
+.timesheet-table td {
+  border: 1px solid #ccc;
+  padding: 8px;
+  text-align: center;
+}
+
+.weekend-row {
+  background-color: #f8f9fa;
+}
+
+.holiday-row {
+  background-color: #fff3cd;
+}
+
+.leave-row {
+  background-color: #f5c6cb;
+}
+
+.view-btn {
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.view-btn:hover {
+  background-color: #5a6268;
+}

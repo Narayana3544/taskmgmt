@@ -28,4 +28,6 @@ public interface TaskRepository  extends JpaRepository<task,Integer> {
 
 
     List<task> findByFeature_Project_Id(Integer projectId);
+
+    List<task> findBySprintId(int id);
 }

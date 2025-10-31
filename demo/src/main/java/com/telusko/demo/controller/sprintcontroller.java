@@ -18,6 +18,7 @@ import java.security.Principal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -217,6 +218,11 @@ public class sprintcontroller {
     @GetMapping("/sprintsforUser")
     public List<createsprint> getsprintsforUser(Authentication authentication){
         return service.findSprintsforUsers(authentication);
+    }
+
+    @GetMapping("/user/sprint-progress")
+    public ResponseEntity<List<Map<String, Object>>> getAllSprintProgressByUser(Authentication authentication){
+        return ResponseEntity.ok(service.getSprintProgressForUser(authentication));
     }
 
 

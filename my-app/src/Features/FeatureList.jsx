@@ -2,85 +2,53 @@ import React, { useEffect, useState } from 'react';
 import api from '../api';
 import { useNavigate } from 'react-router-dom';
 import './FeatureList.css';
-import { FaEdit } from "react-icons/fa";
-
+import { FaEdit, FaEye } from 'react-icons/fa'; // ✅ Icons
 
 const FeatureList = () => {
   const [features, setFeatures] = useState([]);
-const [filteredFeatures, setFilteredFeatures] = useState([]);
-  const [searchProjectId, setSearchProjectId] = useState('');
+  const [filteredFeatures, setFilteredFeatures] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
     api.get('/features', { withCredentials: true })
-  .then(res => {
-    console.log("Features from API:", res.data);
-    setFeatures(res.data);
-    setFilteredFeatures(res.data);
-  })
-  .catch(err => {
-    console.error('Error fetching features:', err);
-  });
+      .then(res => {
+        setFeatures(res.data);
+        setFilteredFeatures(res.data);
+      })
+      .catch(err => console.error('Error fetching features:', err));
   }, []);
 
-  const [searchTerm, setSearchTerm] = useState('');
-
-
-useEffect(() => {
-  if (searchTerm.trim() === '') {
-    setFilteredFeatures(features);
-  } else {
-    const term = searchTerm.toLowerCase();
-    const filtered = features.filter(feature =>
-      JSON.stringify(feature).toLowerCase().includes(term)
-    );
-    setFilteredFeatures(filtered);
-  }
-}, [searchTerm, features]);
-
-// const handleSearch = () => {
-//   if (searchProjectId.trim() === '') {
-//     setFilteredFeatures(features);
-//   } else {
-//     const searchTerm = searchProjectId.trim().toLowerCase();
-//     const filtered = features.filter(feature =>
-//       JSON.stringify(feature).toLowerCase().includes(searchTerm)
-//     );
-//     setFilteredFeatures(filtered);
-//   }
-// };
-
-  const handleEdit = (id) => {
-    navigate(`/edit-feature/${id}`);
-  };
-
-  const handleDelete = (id) => {
-    if (window.confirm('Are you sure you want to delete this feature?')) {
-      api.delete(`/features/${id}`)
-        .then(() => {
-          const updated = features.filter(f => f.id !== id);
-          setFeatures(updated);
-          setFilteredFeatures(updated);
-        })
-        .catch(err => console.error('Error deleting feature:', err));
+  useEffect(() => {
+    if (searchTerm.trim() === '') {
+      setFilteredFeatures(features);
+    } else {
+      const term = searchTerm.toLowerCase();
+      const filtered = features.filter(feature =>
+        JSON.stringify(feature).toLowerCase().includes(term)
+      );
+      setFilteredFeatures(filtered);
     }
-  };
+  }, [searchTerm, features]);
 
   return (
     <div className="features-list-page">
       <div className="header-bar">
         <h2>📋 All Features</h2>
-        <button className="create-feature-btn" onClick={() => navigate('/features')}>+ Create Feature</button>
+        <button className="create-feature-btn" onClick={() => navigate('/features')}>
+          + Create Feature
+        </button>
       </div>
 
+      {/* 🔍 Medium Search Bar */}
       <div className="search-bar">
         <input
-      type="text"
-      placeholder="Search..."
-      value={searchTerm}
-      onChange={e => setSearchTerm(e.target.value)}
-    />
-        {/* <button onClick={handleSearch}>Search</button> */}
+          type="text"
+          placeholder="Search features..."
+          value={searchTerm}
+          onChange={e => setSearchTerm(e.target.value)}
+          className="medium-search-input"
+        />
       </div>
 
       {filteredFeatures.length === 0 ? (
@@ -105,27 +73,28 @@ useEffect(() => {
                 <td>{feature.name}</td>
                 <td>{feature.description}</td>
                 <td>
-                  <span
-                        className={`status-tag ${
-                          feature.status?.decription?.toLowerCase().replace(/\s+/g, '-') || ''
-                        }`}
-                      >
-                        {feature.status?.decription || "No status"}
-                      </span>
+                  <span className="status-tag">
+                    {feature.status?.decription || 'Unknown'}
+                  </span>
                 </td>
-                <td>
-                   <button 
-                    className="edit-btn" 
-                    onClick={() => navigate(`/edit-feature/${feature.id}`)}
-                  > 
-                  <FaEdit />
-                  </button>
-                  <button 
-                    className="view-btn" 
-                    onClick={() => navigate(`/ViewSprintsByFeatureid/${feature.id}`)}
-                  >
-                    View Sprints
-                  </button>
+                <td className="action-buttons">
+                  {/* 🖊️ Edit */}
+                  <div className="tooltip">
+                    <FaEdit
+                      className="icon-btn edit-icon"
+                      onClick={() => navigate(`/edit-feature/${feature.id}`)}
+                    />
+                    <span className="tooltip-text">Edit Feature</span>
+                  </div>
+
+                  {/* 👁️ View Sprints */}
+                  <div className="tooltip">
+                    <FaEye
+                      className="icon-btn view-icon"
+                      onClick={() => navigate(`/ViewSprintsByFeatureid/${feature.id}`)}
+                    />
+                    <span className="tooltip-text">View Sprints</span>
+                  </div>
                 </td>
               </tr>
             ))}

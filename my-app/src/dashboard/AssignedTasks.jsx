@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import api from '../api';
 import { useNavigate } from "react-router-dom";
+import { FaEye } from "react-icons/fa"; // 👁️ View icon
 import "./AssignedTasks.css";
 
 export default function AssignedTasks() {
@@ -80,6 +81,7 @@ export default function AssignedTasks() {
       .catch(err => console.error("Error updating status:", err));
   };
 
+  // Pagination Logic
   const indexOfLastTask = currentPage * tasksPerPage;
   const indexOfFirstTask = indexOfLastTask - tasksPerPage;
   const currentTasks = tasks.slice(indexOfFirstTask, indexOfLastTask);
@@ -159,8 +161,16 @@ export default function AssignedTasks() {
                   </select>
                 </td>
                 <td>{task.start_date ? new Date(task.start_date).toLocaleDateString() : "-"}</td>
+
+                {/* 👁️ View icon with tooltip */}
                 <td>
-                  <button className="view-btn" onClick={() => navigate(`/task/${task.id}`)}>View</button>
+                  <div className="icon-tooltip">
+                    <FaEye
+                      className="view-icon"
+                      onClick={() => navigate(`/task/${task.id}`)}
+                    />
+                    <span className="tooltip-text">View Task</span>
+                  </div>
                 </td>
               </tr>
             ))}

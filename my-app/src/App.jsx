@@ -42,6 +42,8 @@ import AdminRangeTimeSheet from './DailyTimesheets/AdminRangeTimeSheet';
 import TimesheetExcelExport from './DailyTimesheets/TimesheetExcelExport';
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import TimesheetSummary from './DailyTimesheets/AllTimesheetSummary';
+import AdminAllTimesheets from './DailyTimesheets/AdminAllTimesheets';
 
 // 🔹 Small component for logout route
 const Logout = ({ onLogout }) => {
@@ -116,7 +118,9 @@ function App() {
                <Route path="/timesheet/:date" element={<DailyTimesheet />} />
                <Route path="/admin/timesheets" element={<AdminRangeTimeSheet />} />
                <Route path="/timesheet-export" element={<TimesheetExcelExport />} />
-
+                <Route path="/timesheet-summary" element={<TimesheetSummary/>} />
+                <Route path="/admin/timesheet-export" element={<TimesheetExcelExport />} />
+                <Route path="/admin/timesheet" element={<AdminAllTimesheets />} />
               {/* 🔹 Logout Route */}
               <Route path="/logout" element={<Logout onLogout={handleLogout} />} />
             </Routes>

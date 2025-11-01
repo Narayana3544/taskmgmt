@@ -1,0 +1,111 @@
+.admin-all-container {
+  max-width: 1000px;
+  margin: auto;
+  padding: 20px;
+  background: #f4f6f8;
+  color: #222;
+  border-radius: 12px;
+}
+
+.admin-all-container h2 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #1d4ed8;
+}
+
+.filter-section {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.filter-section input,
+.filter-section button {
+  padding: 6px 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+.filter-section button {
+  background-color: #2875e7;
+  color: white;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.filter-section button:hover {
+  background-color: #1e56c2;
+}
+
+/* Table Styling */
+.summary-table,
+.timesheet-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+.summary-table th,
+.timesheet-table th {
+  background: #2875e7;
+  color: white;
+  padding: 10px;
+}
+
+.summary-table td,
+.timesheet-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: center;
+}
+
+.summary-table tr:nth-child(even),
+.timesheet-table tr:nth-child(even) {
+  background: #f9fafb;
+}
+
+.actions-cell {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+.excel-icon {
+  color: green;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.excel-icon:hover {
+  color: #006400;
+  transform: scale(1.1);
+}
+
+.view-icon {
+  color: #2875e7;
+  font-size: 1.4rem;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.view-icon:hover {
+  color: #1e56c2;
+  transform: scale(1.1);
+}
+
+.range-section,
+.daily-section {
+  margin-top: 25px;
+  background: #fff;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+}
+
+.range-section h3,
+.daily-section h3 {
+  margin-bottom: 10px;
+  color: #1e40af;
+}

@@ -34,7 +34,7 @@ const FeatureList = () => {
   return (
     <div className="features-list-page">
       <div className="header-bar">
-        <h2>📋 All Features</h2>
+        <h2>Features</h2>
         <button className="create-feature-btn" onClick={() => navigate('/features')}>
           + Create Feature
         </button>
@@ -44,7 +44,7 @@ const FeatureList = () => {
       <div className="search-bar">
         <input
           type="text"
-          placeholder="Search features..."
+          placeholder="Search"
           value={searchTerm}
           onChange={e => setSearchTerm(e.target.value)}
           className="medium-search-input"
@@ -73,7 +73,7 @@ const FeatureList = () => {
                 <td>{feature.name}</td>
                 <td>{feature.description}</td>
                 <td>
-                  <span className="status-tag">
+                  <span className="status">
                     {feature.status?.decription || 'Unknown'}
                   </span>
                 </td>

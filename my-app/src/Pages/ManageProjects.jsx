@@ -35,7 +35,7 @@ export default function ManageProjects() {
     <div className="manage-projects-page">
       <div className="manage-container">
         <div className="manage-header">
-          <h1 className="manage-title">📁 Manage Projects</h1>
+          <h1 className="manage-title">Projects</h1>
           <button
             className="create-btn"
             onClick={() => navigate('/create-project')}
@@ -78,7 +78,7 @@ export default function ManageProjects() {
                   <td>{project.description}</td>
                   <td>
                     <span
-                      className={`status-tag ${
+                      className={`status ${
                         project.status?.decription
                           ?.toLowerCase()
                           .replace(/\s+/g, '-') || ''

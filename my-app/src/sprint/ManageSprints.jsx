@@ -114,7 +114,7 @@ const ManageSprints = () => {
   return (
     <div className="manage-sprints-page">
       <div className="sprint-header">
-        <h2>Manage Sprints</h2>
+        <h2>Sprints</h2>
         <div className="top-actions">
           <span className="user-label">{userName}</span>
           <button className="create-sprint-btn" onClick={() => navigate('/create-sprint')}>
@@ -141,7 +141,7 @@ const ManageSprints = () => {
           isDisabled={!features.length}
         />
         <button className="search-btn" onClick={handleSearch}>Search</button>
-        <button className="reset-btn" onClick={handleReset}>Reset</button>
+        {/* <button className="reset-btn" onClick={handleReset}>Reset</button> */}
       </div>
 
       {/* Table Section */}

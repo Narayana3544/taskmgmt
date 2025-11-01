@@ -96,14 +96,14 @@ const ManageSprints = () => {
   };
 
   // Handle Reset button
-  const handleReset = () => {
-    setSelectedProject(null);
-    setSelectedFeature(null);
-    setFeatures([]);
-    setFilteredSprints([]);
-    sessionStorage.removeItem('selectedProject');
-    sessionStorage.removeItem('selectedFeature');
-  };
+  // const handleReset = () => {
+  //   setSelectedProject(null);
+  //   setSelectedFeature(null);
+  //   setFeatures([]);
+  //   setFilteredSprints([]);
+  //   sessionStorage.removeItem('selectedProject');
+  //   sessionStorage.removeItem('selectedFeature');
+  // };
 
   // Helper: check if sprint is completed
   const isSprintCompleted = (endDate) => {
@@ -142,7 +142,7 @@ const ManageSprints = () => {
           isDisabled={!features.length}
         />
         <button className="search-btn" onClick={handleSearch}>Search</button>
-        <button className="reset-btn" onClick={handleReset}>Reset</button>
+        {/* <button className="reset-btn" onClick={handleReset}>Reset</button> */}
       </div>
       <table className="sprint-table">
         <thead>

@@ -175,7 +175,7 @@ const Home = () => {
         ))}
       </div>
 
-      <h2 className="board-title">🗂️ Task Board</h2>
+      <h2 className="board-title">DashBoard</h2>
 
       {/* ✅ Task Columns */}
 <div className="columns">

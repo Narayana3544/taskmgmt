@@ -22,14 +22,6 @@ public class createsprint {
     @Column(nullable = false)
     private String status = "Active";
 
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
     @ManyToMany
     @JoinTable(
             name = "sprint_users",
@@ -37,6 +29,24 @@ public class createsprint {
             inverseJoinColumns = @JoinColumn(name = "user_id")
     )
     private List<User> users;
+
+    private String sprintGoals;
+
+    public String getSprintGoals() {
+        return sprintGoals;
+    }
+
+    public void setSprintGoals(String sprintGoals) {
+        this.sprintGoals = sprintGoals;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
 
     public List<User> getUsers() {
         return users;

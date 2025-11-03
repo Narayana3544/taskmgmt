@@ -50,6 +50,12 @@ public class sprintcontroller {
         return service.create(sprint);
     }
 
+    @PutMapping("/update/{id}")
+    public ResponseEntity<createsprint> updateSprint(@PathVariable int id,@RequestBody createsprint updatedSprint) {
+        createsprint sprint = service.updateSprint(id, updatedSprint);
+        return ResponseEntity.ok(sprint);
+    }
+
     @GetMapping("/sprints")
     public List<createsprint> viewsprints(){
         return service.view();
@@ -197,6 +203,11 @@ public class sprintcontroller {
     @GetMapping("/project/sprints/{ProjectId}")
     public List<createsprint> getSprintsByProject(@PathVariable int ProjectId) {
         return service.findByProjectId(ProjectId);
+    }
+
+    @GetMapping("/project/activeSprints/{ProjectId}")
+    public List<createsprint> findActiveSprintsByProjectId(@PathVariable int ProjectId){
+        return service.findActiveSprintsByProjectId(ProjectId);
     }
 
     @GetMapping("/sprintsforUser")

@@ -176,7 +176,14 @@ useEffect(() => {
           Status: {sprint.status} | Targeted SP: {sprint.targetedSP} | Achieved
           SP: {sprint.achievedSP}
         </p>
+        
       </div>
+      {sprint.sprintGoals && (
+        <div className="sprint-goals-block">
+          <h4>Sprint Goals</h4>
+          <p>{sprint.sprintGoals}</p>
+        </div>
+      )}
 
       {/* Users Section 
       <div className="users-section">

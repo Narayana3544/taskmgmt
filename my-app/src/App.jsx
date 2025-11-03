@@ -44,6 +44,7 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import TimesheetSummary from './DailyTimesheets/AllTimesheetSummary';
 import AdminAllTimesheets from './DailyTimesheets/AdminAllTimesheets';
+import EditSprint from './sprint/EditSprint';
 
 // 🔹 Small component for logout route
 const Logout = ({ onLogout }) => {
@@ -121,6 +122,7 @@ function App() {
                 <Route path="/timesheet-summary" element={<TimesheetSummary/>} />
                 <Route path="/admin/timesheet-export" element={<TimesheetExcelExport />} />
                 <Route path="/admin/timesheet" element={<AdminAllTimesheets />} />
+                <Route path="/edit-sprint/:id" element={<EditSprint />} />
               {/* 🔹 Logout Route */}
               <Route path="/logout" element={<Logout onLogout={handleLogout} />} />
             </Routes>

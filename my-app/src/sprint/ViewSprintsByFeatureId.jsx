@@ -2,12 +2,13 @@ import React, { useEffect, useState } from 'react';
 import api from '../api';
 import './ManageSprints.css';
 import { useNavigate, useParams } from 'react-router-dom';
+import { FaEye } from 'react-icons/fa'; // 👈 Import Eye icon
 
 const ViewSprintsByFeatureid = () => {
   const [sprints, setSprints] = useState([]);
   const [userName, setUserName] = useState('');
   const navigate = useNavigate();
-  const {featureId}=useParams();
+  const { featureId } = useParams();
 
   useEffect(() => {
     fetchSprints();
@@ -31,12 +32,13 @@ const ViewSprintsByFeatureid = () => {
 
   return (
     <div className="manage-sprints-page">
-        <button className="back-btn" onClick={() => navigate(-1)}>⬅ Back</button>
+      <button className="back-btn" onClick={() => navigate(-1)}>⬅ Back</button>
+
       <div className="sprint-header">
         <h2>📅 Your Sprints</h2>
       </div>
 
-      <table className="sprint-table">
+      <table className="sprint-table">cd my 
         <thead>
           <tr>
             <th>Sprint ID</th>
@@ -48,19 +50,26 @@ const ViewSprintsByFeatureid = () => {
           </tr>
         </thead>
         <tbody>
-          {sprints.map((sprint) => (
-            <tr key={sprint.id}>
-              <td>{sprint.id}</td>
-              <td>{sprint.name}</td>
-              <td>{sprint.startDate}</td>
-              <td>{sprint.endDate}</td>
-              <td>{sprint.feature.name}</td>
-              <td>
-                <button onClick={() => navigate(`/sprints/overview/${sprint.id}`)}>view</button>
-              </td>
-            </tr>
-          ))}
-          {sprints.length === 0 && (
+          {sprints.length > 0 ? (
+            sprints.map((sprint) => (
+              <tr key={sprint.id}>
+                <td>{sprint.id}</td>
+                <td>{sprint.name}</td>
+                <td>{sprint.startDate}</td>
+                <td>{sprint.endDate}</td>
+                <td>{sprint.feature?.name}</td>
+                <td>
+                  <button
+                    className="view-btn"
+                    title="View Sprint Overview"
+                    onClick={() => navigate(`/sprints/overview/${sprint.id}`)}
+                  >
+                    <FaEye /> {/* 👁 Eye icon */}
+                  </button>
+                </td>
+              </tr>
+            ))
+          ) : (
             <tr>
               <td colSpan="6">No sprints found.</td>
             </tr>

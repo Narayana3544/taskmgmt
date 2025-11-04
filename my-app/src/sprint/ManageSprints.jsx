@@ -115,9 +115,9 @@ const ManageSprints = () => {
   return (
     <div className="manage-sprints-page">
       <div className="sprint-header">
-        <h2>Manage Sprints</h2>
+        <h2>Sprints</h2>
         <div className="top-actions">
-          <span className="user-label">{userName}</span>
+          {/* <span className="user-label">{userName}</span> */}
           <button className="create-sprint-btn" onClick={() => navigate('/create-sprint')}>
             + Create Sprint
           </button>

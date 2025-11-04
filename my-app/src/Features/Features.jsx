@@ -11,9 +11,8 @@ const Features = () => {
     name: '',
     description: '',
    status: "",
-  });
+  });  
     const [statuses, setStatuses] = useState([]);
-
     useEffect(() => {
     api
       .get("/getstatusForFeature", { withCredentials: true })

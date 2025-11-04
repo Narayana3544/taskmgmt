@@ -45,10 +45,12 @@
   padding: 10px;
   border: 1px solid #ddd;
   text-align: left;
+ 
 }
 
 .sprint-table th {
    background-color: #2875e7;
+
 }
 
 .sprint-table button {
@@ -59,4 +61,10 @@
   border: none;
   border-radius: 4px;
   cursor: pointer;
+}
+.filter-section {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+    gap: 1rem;
 }

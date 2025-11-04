@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { FaEdit } from "react-icons/fa";
 import api from '../api';
 import Select from 'react-select';
 import './ManageSprints.css';
@@ -143,71 +144,78 @@ const ManageSprints = () => {
         <button className="search-btn" onClick={handleSearch}>Search</button>
         <button className="reset-btn" onClick={handleReset}>Reset</button>
       </div>
-
-      {/* Table Section */}
-      <table className="sprint-table">
-        <thead>
-          <tr>
-            <th>Sprint ID</th>
-            <th>Name</th>
-            <th>Start Date</th>
-            <th>End Date</th>
-            <th>Status</th>
-            <th>Feature</th>
-            <th>Actions</th>
+<table className="sprint-table">
+  <thead>
+    <tr>
+      <th>Sprint ID</th>
+      <th>Name</th>
+      <th>Start Date</th>
+      <th>End Date</th>
+      <th>Feature Name</th>
+      <th>Sprint Goals</th> {/* ✅ New Column */}
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {!selectedProject ? (
+      <tr>
+        <td colSpan="7" style={{ textAlign: "center" }}>
+          Please select a project to view sprints.
+        </td>
+      </tr>
+    ) : filteredSprints.length === 0 ? (
+      <tr>
+        <td colSpan="7" style={{ textAlign: "center" }}>
+          No sprints found.
+        </td>
+      </tr>
+    ) : (
+      filteredSprints.map((sprint) => {
+        const completed = isSprintCompleted(sprint.endDate);
+        const shortGoal =
+          sprint.sprintGoals && sprint.sprintGoals.length > 50
+            ? sprint.sprintGoals.substring(0, 50) + "..."
+            : sprint.sprintGoals || "-";
+        return (
+          <tr key={sprint.id}>
+            <td>{sprint.id}</td>
+            <td>{sprint.name}</td>
+            <td>{sprint.startDate}</td>
+            <td>{sprint.endDate}</td>
+            <td>{sprint.feature?.name || "-"}</td>
+            <td title={sprint.sprintGoals || ""}>{shortGoal}</td> {/* ✅ Tooltip */}
+            <td>
+              {!completed && (
+                <button
+                  onClick={() =>
+                    navigate(`/sprints/${sprint.id}/assign-stories/${sprint.feature?.id}`)
+                  }
+                  className="active-btn"
+                >
+                  Assign Tasks
+                </button>
+              )}
+              <button
+                onClick={() => navigate(`/sprints/overview/${sprint.id}`)}
+                className="view-btn"
+              >
+                View
+              </button>
+              <button
+            onClick={() => navigate(`/edit-sprint/${sprint.id}`)}
+            className="edit-btn"
+            style={{ backgroundColor: "#ffc107", color: "#000", marginLeft: "5px" }}
+          >
+            {FaEdit}
+          </button>
+            </td>
           </tr>
-        </thead>
-        <tbody>
-          {!selectedProject ? (
-            <tr>
-              <td colSpan="7" style={{ textAlign: 'center' }}>Please select a project to view sprints.</td>
-            </tr>
-          ) : filteredSprints.length === 0 ? (
-            <tr>
-              <td colSpan="7" style={{ textAlign: 'center' }}>No sprints found.</td>
-            </tr>
-          ) : (
-            filteredSprints.map(sprint => {
-              const disabled = isSprintDisabled(sprint);
-              return (
-                <tr key={sprint.id} className={disabled ? 'disabled-row' : ''}>
-                  <td>{sprint.id}</td>
-                  <td>{sprint.name}</td>
-                  <td>{sprint.startDate}</td>
-                  <td>{sprint.endDate}</td>
-                  <td>{sprint.status}</td>
-                  <td>{sprint.feature?.name || '-'}</td>
-                  <td className="action-buttons">
+        );
+      })
+    )}
+  </tbody>
+</table>
 
-                    {/* ✅ Assign Task Icon */}
-                    <div className="tooltip">
-                      <FaTasks
-                        className={`icon-btn assign-icon ${disabled ? 'disabled' : ''}`}
-                        onClick={() => {
-                          if (!disabled)
-                            navigate(`/sprints/${sprint.id}/assign-stories/${sprint.feature?.id}`);
-                        }}
-                      />
-                      <span className="tooltip-text">
-                        {disabled ? 'Sprint closed or past date' : 'Assign Tasks'}
-                      </span>
-                    </div>
-
-                    {/* ✅ View Sprint Icon */}
-                    <div className="tooltip">
-                      <FaEye
-                        className="icon-btn view-icon"
-                        onClick={() => navigate(`/sprints/overview/${sprint.id}`)}
-                      />
-                      <span className="tooltip-text">View Sprint</span>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })
-          )}
-        </tbody>
-      </table>
     </div>
   );
 };

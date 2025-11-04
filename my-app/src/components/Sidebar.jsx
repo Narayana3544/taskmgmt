@@ -134,6 +134,15 @@ const Sidebar = ({ onToggle }) => {
               <span>Admin Timesheets</span>
             </div>
           )}
+          {user.role?.description === "Admin" && (
+            <div
+              className="nav-item"
+              onClick={() => navigate("/admin/timesheet")}
+            >
+              <FaClipboardList />
+              <span>All Timesheets</span>
+            </div>
+          )}
         </div>
       )}
     </div>

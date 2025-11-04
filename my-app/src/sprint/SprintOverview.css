@@ -74,3 +74,16 @@
   font-size: 18px;
   padding: 50px;
 }
+.sprint-goals-block {
+  background: #f9fafb;
+  border-left: 4px solid #3b82f6;
+  padding: 12px 16px;
+  margin-top: 10px;
+  border-radius: 8px;
+}
+
+.sprint-goals-block h4 {
+  margin: 0 0 4px;
+  color: #2563eb;
+}
+

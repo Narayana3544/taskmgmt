@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import api from "../api";
 import "./CreateSprint.css";
-import { useNavigate } from "react-router-dom";
 
-const CreateSprint = () => {
+const EditSprint = () => {
+  const { id } = useParams();
   const navigate = useNavigate();
 
   const [projects, setProjects] = useState([]);
   const [features, setFeatures] = useState([]);
   const [loadingFeatures, setLoadingFeatures] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const [sprint, setSprint] = useState({
     name: "",
@@ -16,77 +18,84 @@ const CreateSprint = () => {
     endDate: "",
     projectId: "",
     featureId: "",
-    sprintGoals: "", // ✅ Added sprintGoals field
+    sprintGoals: "",
   });
 
-  // ✅ Fetch all projects when page loads
+  // ✅ Fetch projects first, then sprint
   useEffect(() => {
-    api
-      .get("/projects", { withCredentials: true })
-      .then((res) => setProjects(res.data))
-      .catch((err) => console.error("❌ Error fetching projects:", err));
-  }, []);
+    const fetchData = async () => {
+      try {
+        const projectRes = await api.get("/projects", { withCredentials: true });
+        setProjects(projectRes.data);
+
+        const sprintRes = await api.get(`/sprints/${id}`, { withCredentials: true });
+        const data = sprintRes.data;
+
+        setSprint({
+          name: data.name,
+          startDate: data.startDate,
+          endDate: data.endDate,
+          sprintGoals: data.sprintGoals || "",
+          projectId: data.project?.id?.toString() || "",
+          featureId: data.feature?.id?.toString() || "",
+        });
+      } catch (err) {
+        console.error("Error loading sprint or projects:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [id]);
 
   // ✅ Fetch features when project changes
   useEffect(() => {
-    if (!sprint.projectId) {
-      setFeatures([]);
-      return;
-    }
-
+    if (!sprint.projectId) return;
     setLoadingFeatures(true);
-    const projectId = parseInt(sprint.projectId, 10);
 
     api
-      .get(`/features/project/${projectId}`, { withCredentials: true })
+      .get(`/features/project/${sprint.projectId}`, { withCredentials: true })
       .then((res) => setFeatures(res.data))
       .catch((err) => {
-        console.error("❌ Error fetching features:", err);
+        console.error("Error fetching features:", err);
         setFeatures([]);
       })
       .finally(() => setLoadingFeatures(false));
   }, [sprint.projectId]);
 
-  // ✅ Handle input change
   const handleChange = (e) => {
     const { name, value } = e.target;
     setSprint((prev) => ({ ...prev, [name]: value }));
   };
 
-  // ✅ Handle form submit
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    const sprintData = {
+    const updatedSprint = {
       name: sprint.name,
       startDate: sprint.startDate,
       endDate: sprint.endDate,
-      sprintGoals: sprint.sprintGoals, // ✅ Added here
+      sprintGoals: sprint.sprintGoals,
       feature: { id: parseInt(sprint.featureId) },
       project: { id: parseInt(sprint.projectId) },
     };
 
-    console.log("Submitting sprint:", sprintData);
-
     api
-      .post("/sprints/create-sprints", sprintData, { withCredentials: true })
+      .put(`/update/${id}`, updatedSprint, { withCredentials: true })
       .then(() => {
-        alert("✅ Sprint created successfully!");
-        setSprint({
-          name: "",
-          startDate: "",
-          endDate: "",
-          projectId: "",
-          featureId: "",
-          sprintGoals: "",
-        });
+        alert("✅ Sprint updated successfully!");
         navigate("/manage-sprints");
       })
       .catch((err) => {
-        console.error("❌ Error creating sprint:", err);
-        alert("Failed to create sprint. Please try again.");
+        console.error("Error updating sprint:", err);
+        alert("Failed to update sprint.");
       });
   };
+
+  if (loading) {
+    return <div className="loading-message">Loading sprint details...</div>;
+  }
 
   return (
     <div className="create-sprint-container">
@@ -94,10 +103,9 @@ const CreateSprint = () => {
         ⬅ Back
       </button>
 
-      <h2>Create Sprint</h2>
+      <h2>Edit Sprint</h2>
 
       <form onSubmit={handleSubmit} className="sprint-form">
-        {/* Sprint Name */}
         <div className="form-group">
           <label>Sprint Name:</label>
           <input
@@ -109,20 +117,17 @@ const CreateSprint = () => {
           />
         </div>
 
-        {/* Sprint Goals */}
         <div className="form-group">
           <label>Sprint Goals:</label>
           <textarea
             name="sprintGoals"
             value={sprint.sprintGoals}
             onChange={handleChange}
-            placeholder="Enter key goals or objectives for this sprint..."
             rows="3"
             required
           />
         </div>
 
-        {/* Start Date */}
         <div className="form-group">
           <label>Start Date:</label>
           <input
@@ -134,7 +139,6 @@ const CreateSprint = () => {
           />
         </div>
 
-        {/* End Date */}
         <div className="form-group">
           <label>End Date:</label>
           <input
@@ -146,7 +150,6 @@ const CreateSprint = () => {
           />
         </div>
 
-        {/* Project Dropdown */}
         <div className="form-group">
           <label>Project:</label>
           <select
@@ -164,7 +167,6 @@ const CreateSprint = () => {
           </select>
         </div>
 
-        {/* Feature Dropdown */}
         <div className="form-group">
           <label>Feature:</label>
           <select
@@ -177,8 +179,6 @@ const CreateSprint = () => {
             <option value="">
               {loadingFeatures
                 ? "Loading features..."
-                : !sprint.projectId
-                ? "-- Select a project first --"
                 : "-- Select Feature --"}
             </option>
             {features.map((feature) => (
@@ -190,11 +190,11 @@ const CreateSprint = () => {
         </div>
 
         <button type="submit" className="submit-btn">
-          Create Sprint
+          Update Sprint
         </button>
       </form>
     </div>
   );
 };
 
-export default CreateSprint;
+export default EditSprint;

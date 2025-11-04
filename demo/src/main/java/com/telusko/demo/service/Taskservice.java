@@ -50,6 +50,9 @@ public class Taskservice {
     private featurerepo FeatureRepo;
 
     @Autowired
+    public sprintservice SprintService;
+
+    @Autowired
     private Task_typerepo taskTypeRepo;
 
     public task createtask(task Task){
@@ -262,16 +265,29 @@ public class Taskservice {
         createsprint sprint = sprintRepo.findById(sprintId)
                 .orElseThrow(() -> new RuntimeException("Sprint not found"));
 
-        List<task> Tasks = repo.findAllById(taskIds);
-        for (task Task : Tasks) {
-            Task.setSprint(sprint);
-            //System.out.println(taskStatusRepository.findByStatusCodeId(1).toArray());
-           // Task.setTaskStatus(taskStatusRepository.findByStatusCodeId(1).get(0));
-           // repo.save(Task);
+        // 🔹 Fetch default status (e.g., "To Do" or id = 1)
+        String defaults="";
+        List<Task_status> taskStatuses=taskStatusRepository.findByStatusCodeId(1);
+        for(Task_status s:taskStatuses){
+            if(s.getDecription().equalsIgnoreCase("To Do")) {
+                 defaults += s.getDecription();
+            }
         }
 
-        repo.saveAll(Tasks);
+        Task_status defaultStatus = taskStatusRepository.findByStatusCodeId(3)
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Default task status not found"));
+        System.out.println(defaults);
 
+        List<task> tasks = repo.findAllById(taskIds);
+
+        for (task Task : tasks) {
+            Task.setSprint(sprint);
+            Task.setTaskStatus(defaultStatus);  // ✅ set default status here
+        }
+
+        repo.saveAll(tasks); // ✅ persist all tasks
     }
 
     public void assignTaskByUser(int taskId, Authentication authentication) {
@@ -362,6 +378,7 @@ public class Taskservice {
         System.out.println("Features: " + features.size());
         System.out.println("Sprints: " + sprints.size());
         for (createsprint s : sprints) {
+            SprintService.updateSprintStatus(s);
             System.out.println("Sprint " + s.getId() + " status = " + s.getStatus());
             if (s.getStatus().equals("Active") || s.getStatus().equals("ACTIVE")) {
                 List<task> usertasks = new ArrayList<>();

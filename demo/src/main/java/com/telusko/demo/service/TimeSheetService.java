@@ -1,9 +1,12 @@
 package com.telusko.demo.service;
 
 import com.telusko.demo.Model.Timesheet;
+import com.telusko.demo.Model.User;
 import com.telusko.demo.config.CustomUserDetails;
 import com.telusko.demo.dto.DailySummaryDTO;
 import com.telusko.demo.dto.DailySummaryWithLogsDTO;
+import com.telusko.demo.dto.DateUtils;
+import com.telusko.demo.dto.TimesheetSummaryDTO;
 import com.telusko.demo.repo.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -285,6 +288,53 @@ public class TimeSheetService {
                 LocalDate.of(2025, 10, 3)
         );
         return holidays.contains(date);
+    }
+
+    public List<TimesheetSummaryDTO> getAllUsersSummary(LocalDate start, LocalDate end) {
+        List<User> users = userRepo.findAll();
+        List<LocalDate> workingDays = DateUtils.getWorkingDays(start, end);
+        int totalWorkingDays = workingDays.size();
+
+        List<TimesheetSummaryDTO> summaries = new ArrayList<>();
+
+        for (User user : users) {
+            // Use your existing daily method
+            List<DailySummaryDTO> dailySummaries = getRangeSummaryforUser(start, end, user.getId());
+
+            // Filter working days only
+            List<DailySummaryDTO> workingSummaries = dailySummaries.stream()
+                    .filter(d -> workingDays.contains(d.getDate()))
+                    .toList();
+
+            double totalHours = workingSummaries.stream()
+                    .mapToDouble(DailySummaryDTO::getTotalHours)
+                    .sum();
+
+            int daysFilled = (int) workingSummaries.stream()
+                    .filter(d -> d.getTotalHours() > 0)
+                    .count();
+
+            List<LocalDate> missingDates = workingDays.stream()
+                    .filter(d -> workingSummaries.stream()
+                            .noneMatch(s -> s.getDate().equals(d) && s.getTotalHours() > 0))
+                    .toList();
+
+            int missingDays = missingDates.size();
+            double avgHours = daysFilled > 0 ? totalHours / daysFilled : 0.0;
+
+            summaries.add(new TimesheetSummaryDTO(
+                    user.getId(),
+                    user.getFirst_name(),
+                    totalHours,
+                    daysFilled,
+                    totalWorkingDays,
+                    missingDays,
+                    avgHours,
+                    missingDates
+            ));
+        }
+
+        return summaries;
     }
 
 }

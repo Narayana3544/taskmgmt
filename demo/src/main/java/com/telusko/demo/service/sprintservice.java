@@ -11,9 +11,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -37,6 +35,18 @@ public class sprintservice {
     public createsprint create(createsprint sprint){
         createsprint updatedSprint = updateSprintStatus(sprint);
         return repo.save(sprint);
+    }
+    public createsprint updateSprint(int id, createsprint updatedSprint) {
+        createsprint existingSprint = repo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Sprint not found with id " + id));
+
+        existingSprint.setName(updatedSprint.getName());
+        existingSprint.setStartDate(updatedSprint.getStartDate());
+        existingSprint.setEndDate(updatedSprint.getEndDate());
+        existingSprint.setSprintGoals(updatedSprint.getSprintGoals());
+        existingSprint.setFeature(updatedSprint.getFeature());
+
+        return repo.save(existingSprint);
     }
 
     public List<createsprint> view() {
@@ -88,6 +98,7 @@ public class sprintservice {
         } else if (today.isAfter(sprint.getEndDate().toLocalDate())) {
             sprint.setStatus("Completed");
         }
+        repo.save(sprint);
 
         return sprint;
     }
@@ -138,6 +149,43 @@ public class sprintservice {
         return usersprints;
     }
 
+    public List<Map<String, Object>> getSprintProgressForUser(Authentication authentication) {
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        int userId = userDetails.getUser().getId();
+
+        List<createsprint> activeSprints =findSprintsforUsers(authentication);
+        List<Map<String, Object>> progressList = new ArrayList<>();
+        for (createsprint sprint : activeSprints) {
+            if (sprint.getStatus().equals("Active") || sprint.getStatus().equals("ACTIVE")) {
+                List<task> tasks = taskrepo.findBySprintId(sprint.getId());
+                int total = tasks.size();
+                int completed = (int) tasks.stream()
+                        .filter(t -> t.getTaskStatus().getDecription().equalsIgnoreCase("Done"))
+                        .count();
+                int completedsp=0;
+                int targettedsp=0;
+                for(task t:tasks){
+                    if(t.getTaskStatus().getDecription().equalsIgnoreCase("Done")){
+                        completedsp+=t.getStorypoints();
+                    }
+                    targettedsp+=t.getStorypoints();
+                }
+                Map<String, Object> map = new HashMap<>();
+                map.put("sprintId", sprint.getId());
+                map.put("sprintName", sprint.getName());
+                map.put("projectName", sprint.getFeature().getProject().getName());
+                map.put("totalTasks", total);
+                map.put("completedTasks", completed);
+                map.put("completedStoryPoints",completedsp);
+                map.put("TargettedStoryPoints",targettedsp);
+                map.put("progress1", targettedsp == 0 ? 0 : (completedsp * 100) / targettedsp);
+                map.put("progress", total == 0 ? 0 : (completed * 100) / total);
+                progressList.add(map);
+            }
+        }
+        return progressList;
+    }
+
 //    public List<createsprint> findSprintsforUsers(Authentication authentication) {
 //        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
 //        int userId = userDetails.getUser().getId();
@@ -155,4 +203,23 @@ public class sprintservice {
 ////        }
 //        return usersprints;
 //    }
+
+public List<createsprint> findActiveSprintsByProjectId(int projectId) {
+    List<Feature> featureList=Featurerepo.findByProjectId(projectId);
+    List<Integer> featureids=new ArrayList<>();
+    List<createsprint> sprints=new ArrayList<>();
+    for(Feature f :featureList){
+        featureids.add(f.getId());
+    }
+    for(int i: featureids){
+        List<createsprint> allsprints=new ArrayList<>();
+        allsprints.addAll(repo.findByFeatureId(i));
+        for(createsprint s:allsprints){
+            if(s.getStatus().equalsIgnoreCase("Active")){
+                sprints.add(s);
+            }
+        }
+    }
+    return sprints;
+}
 }

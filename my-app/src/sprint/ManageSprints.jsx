@@ -4,6 +4,7 @@ import api from '../api';
 import Select from 'react-select';
 import './ManageSprints.css';
 import { useNavigate } from 'react-router-dom';
+import { FaTasks, FaPlus, FaEye } from 'react-icons/fa';
 
 const ManageSprints = () => {
   const [sprints, setSprints] = useState([]);
@@ -15,13 +16,12 @@ const ManageSprints = () => {
   const [userName, setUserName] = useState('');
   const navigate = useNavigate();
 
-  // Fetch initial data
+  // ✅ Fetch all required data
   useEffect(() => {
     fetchProjects();
     fetchSprints();
     fetchUser();
 
-    // Restore filter from sessionStorage
     const storedProject = sessionStorage.getItem('selectedProject');
     const storedFeature = sessionStorage.getItem('selectedFeature');
 
@@ -62,11 +62,9 @@ const ManageSprints = () => {
       .catch(err => console.error('Error fetching user profile:', err));
   };
 
-  // react-select options
   const projectOptions = projects.map(p => ({ value: p.id, label: p.name }));
   const featureOptions = features.map(f => ({ value: f.id, label: f.name }));
 
-  // Load features when project changes
   useEffect(() => {
     if (selectedProject) {
       fetchFeatures(selectedProject.value);
@@ -76,14 +74,12 @@ const ManageSprints = () => {
     }
   }, [selectedProject]);
 
-  // Handle Search button
   const handleSearch = () => {
     if (!selectedProject) {
       setFilteredSprints([]);
       return;
     }
 
-    // Save selection to sessionStorage
     sessionStorage.setItem('selectedProject', JSON.stringify(selectedProject));
     sessionStorage.setItem('selectedFeature', JSON.stringify(selectedFeature));
 
@@ -96,7 +92,6 @@ const ManageSprints = () => {
     setFilteredSprints(tempSprints);
   };
 
-  // Handle Reset button
   const handleReset = () => {
     setSelectedProject(null);
     setSelectedFeature(null);
@@ -106,11 +101,15 @@ const ManageSprints = () => {
     sessionStorage.removeItem('selectedFeature');
   };
 
-  // Helper: check if sprint is completed
-  const isSprintCompleted = (endDate) => {
+  // ✅ Check if sprint is completed or end date has passed
+  const isSprintDisabled = (sprint) => {
     const today = new Date();
-    const sprintEnd = new Date(endDate);
-    return sprintEnd < today; // true if sprint end date is in the past
+    const endDate = new Date(sprint.endDate);
+    return (
+      sprint.status?.toLowerCase() === 'completed' ||
+      sprint.status?.toLowerCase() === 'closed' ||
+      endDate < today
+    );
   };
 
   return (
@@ -120,7 +119,7 @@ const ManageSprints = () => {
         <div className="top-actions">
           <span className="user-label">{userName}</span>
           <button className="create-sprint-btn" onClick={() => navigate('/create-sprint')}>
-            + Create Sprint
+            <FaPlus className="icon" /> Create Sprint
           </button>
         </div>
       </div>

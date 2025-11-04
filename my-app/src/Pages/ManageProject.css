@@ -129,3 +129,11 @@
 .edit-btn:hover {
   background-color: #f4b400;
 }
+.action-buttons {
+  display: flex;
+  justify-content: flex-start; /* 👈 Aligns buttons to the left */
+  align-items: center;
+  gap: 14px; /* space between icons */
+  padding-left: 10px; /* small left padding for balance */
+  float: left;
+}

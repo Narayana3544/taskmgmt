@@ -168,3 +168,10 @@ td:last-child {
   border-style: solid;
   border-color: #333 transparent transparent transparent;
 }
+
+.filter-section {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+    gap: 1rem;
+}

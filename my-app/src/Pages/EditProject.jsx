@@ -18,13 +18,15 @@ export default function EditProject() {
   // Fetch project + statuses
   useEffect(() => {
     // Get statuses for dropdown
-    api.get('/getstatusForProject', { withCredentials: true })
-      .then(res => setStatuses(res.data))
-      .catch(err => console.error('Failed to load statuses:', err));
+       api
+      .get('/getstatusForProject', { withCredentials: true })
+      .then((res) => setStatuses(res.data))
+      .catch((err) => console.error('Failed to load statuses:', err));
 
     // Get project details
-    api.get(`/projects/${id}`, { withCredentials: true })
-      .then(res => {
+     api
+      .get(`/projects/${id}`, { withCredentials: true })
+      .then((res) => {
         const proj = res.data;
         setProject({
           name: proj.name,
@@ -32,7 +34,7 @@ export default function EditProject() {
           status: proj.status?.id || '' // store ID
         });
       })
-      .catch(err => console.error('Failed to load project:', err));
+      .catch((err) => console.error('Failed to load project:', err));
   }, [id]);
 
   const handleChange = (e) => {
@@ -56,7 +58,7 @@ export default function EditProject() {
         alert('Project updated successfully!');
         navigate('/manage-projects');
       })
-      .catch(err => console.error('Failed to update project:', err));
+     .catch((err) => console.error('Failed to update project:', err));
   };
 
   const handleDelete = () => {
@@ -64,12 +66,12 @@ export default function EditProject() {
       api
         .delete(`/projects/${id}`, { withCredentials: true })
         .then(() => {
-          alert("Project deleted successfully!");
-          navigate("/manage-projects");
+                 alert('Project deleted successfully!');
+          navigate('/manage-projects');
         })
         .catch((err) => {
-          console.error("Error deleting project:", err);
-          alert("It may be linked to other features");
+           console.error('Error deleting project:', err);
+          alert('It may be linked to other features');
         });
     }
   };
@@ -78,7 +80,7 @@ export default function EditProject() {
     <div className="edit-project-page">
       <div className="edit-main">
         <div className="edit-container">
-          <h1>Edit Project</h1>
+           <h3>Edit Project</h3>
           <form onSubmit={handleSubmit} className="edit-form">
             <label>Project Name</label>
             <input
@@ -109,16 +111,18 @@ export default function EditProject() {
               required
             >
               <option value="">Select a status</option>
-              {statuses.map(status => (
+                {statuses.map((status) => (
                 <option key={status.id} value={status.id}>
                   {status.decription}
                 </option>
               ))}
             </select>
 
-            <div className="button-group">
-              <button type="submit" className="save-btn">Save</button>
-              <button type="button" className="delete-btn" onClick={handleDelete}>Delete</button>
+            <div className="edit-buttons">
+              <button type="submit">Save</button>
+              <button type="button" onClick={handleDelete}>
+                Delete
+              </button>
               <button
                 type="button"
                 className="cancel-btn"

@@ -253,15 +253,15 @@ export default function CreateTask() {
 }, [selectedProject]);
   // Fetch sprints when feature changes
   useEffect(() => {
-    if (selectedFeature) {
-      api.get(`/features/${selectedFeature}/sprints`, { withCredentials: true })
+    if (selectedProject) {
+      api.get(`/project/activeSprints/${selectedProject}`, { withCredentials: true })
         .then(res => setSprints(res.data))
         .catch(err => console.error(err));
     } else {
       setSprints([]);
       setSelectedSprint("");
     }
-  }, [selectedFeature]);
+ }, [selectedProject]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

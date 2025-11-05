@@ -44,7 +44,7 @@
 
 /* ===== CREATE BUTTON ===== */
 .create-btn {
-  background: #5cb85c;
+  background: #1a71e2;
   border: none;
   padding: 8px 14px;
   border-radius: 6px;
@@ -58,7 +58,7 @@
 }
 
 .create-btn:hover {
-  background: #4cae4c;
+  background: #3e76ee;
 }
 
 /* ===== TABLE ===== */

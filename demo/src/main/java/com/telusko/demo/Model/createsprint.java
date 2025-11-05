@@ -37,6 +37,17 @@ public class createsprint {
     )
     private List<User> users;
 
+    private String sprintGoals;
+
+    public String getSprintGoals() {
+        return sprintGoals;
+    }
+
+    public void setSprintGoals(String sprintGoals) {
+        this.sprintGoals = sprintGoals;
+    }
+
+
     public List<User> getUsers() {
         return users;
     }

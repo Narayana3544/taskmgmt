@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import api from '../api';
 import './ManageSprints.css';
+import { FaEye } from 'react-icons/fa';
 import { useNavigate, useParams } from 'react-router-dom';
 
 const ViewSprintsByFeatureid = () => {
@@ -48,19 +49,26 @@ const ViewSprintsByFeatureid = () => {
           </tr>
         </thead>
         <tbody>
-          {sprints.map((sprint) => (
-            <tr key={sprint.id}>
-              <td>{sprint.id}</td>
-              <td>{sprint.name}</td>
-              <td>{sprint.startDate}</td>
-              <td>{sprint.endDate}</td>
-              <td>{sprint.feature.name}</td>
-              <td>
-                <button onClick={() => navigate(`/sprints/overview/${sprint.id}`)}>view</button>
-              </td>
-            </tr>
-          ))}
-          {sprints.length === 0 && (
+           {sprints.length > 0 ? (
+            sprints.map((sprint) => (
+              <tr key={sprint.id}>
+                <td>{sprint.id}</td>
+                <td>{sprint.name}</td>
+                <td>{sprint.startDate}</td>
+                <td>{sprint.endDate}</td>
+                <td>{sprint.feature?.name}</td>
+                <td>
+                  <button
+                    className="view-btn"
+                    title="View Sprint Overview"
+                    onClick={() => navigate(`/sprints/overview/${sprint.id}`)}
+                  >
+                    <FaEye /> {/* 👁 Eye icon */}
+                  </button>
+                </td>
+              </tr>
+            ))
+          ) : (
             <tr>
               <td colSpan="6">No sprints found.</td>
             </tr>

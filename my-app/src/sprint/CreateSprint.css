@@ -68,3 +68,11 @@
   border: 1px solid #c3e6cb;
   text-align: center;
 }
+.sprint-form textarea {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  resize: vertical;
+  font-family: inherit;
+}

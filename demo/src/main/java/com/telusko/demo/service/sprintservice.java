@@ -75,6 +75,36 @@ public class sprintservice {
                 .collect(Collectors.toList());
 
     }
+    public createsprint updateSprint(int id, createsprint updatedSprint) {
+        createsprint existingSprint = repo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Sprint not found with id " + id));
+
+        existingSprint.setName(updatedSprint.getName());
+        existingSprint.setStartDate(updatedSprint.getStartDate());
+        existingSprint.setEndDate(updatedSprint.getEndDate());
+        existingSprint.setSprintGoals(updatedSprint.getSprintGoals());
+        existingSprint.setFeature(updatedSprint.getFeature());
+
+        return repo.save(existingSprint);
+    }
+    public List<createsprint> findActiveSprintsByProjectId(int projectId) {
+        List<Feature> featureList=Featurerepo.findByProjectId(projectId);
+        List<Integer> featureids=new ArrayList<>();
+        List<createsprint> sprints=new ArrayList<>();
+        for(Feature f :featureList){
+            featureids.add(f.getId());
+        }
+        for(int i: featureids){
+            List<createsprint> allsprints=new ArrayList<>();
+            allsprints.addAll(repo.findByFeatureId(i));
+            for(createsprint s:allsprints){
+                if(s.getStatus().equalsIgnoreCase("Active")){
+                    sprints.add(s);
+                }
+            }
+        }
+        return sprints;
+    }
 
     public createsprint updateSprintStatus(createsprint sprint) {
         LocalDate today = LocalDate.now();

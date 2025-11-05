@@ -7,6 +7,7 @@ import com.telusko.demo.Model.WorkType;
 import com.telusko.demo.config.CustomUserDetails;
 import com.telusko.demo.dto.DailySummaryDTO;
 import com.telusko.demo.dto.DailySummaryWithLogsDTO;
+import com.telusko.demo.dto.TimesheetSummaryDTO;
 import com.telusko.demo.repo.WorkTypeRepo;
 import com.telusko.demo.service.TimeSheetService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -113,6 +115,18 @@ public class TimeSheetController {
 
         List<DailySummaryWithLogsDTO> data = service.getRangeSummaryWithLogsForUser(start, end, userId);
         return ResponseEntity.ok(data);
+    }
+    @GetMapping("/timesheet/all-summary")
+    public ResponseEntity<List<TimesheetSummaryDTO>> getAllUsersSummary(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end) {
+
+        List<TimesheetSummaryDTO> summaries = service.getAllUsersSummary(start, end);
+        return ResponseEntity.ok(summaries);
+    }
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<String> handleDateError(MethodArgumentTypeMismatchException ex) {
+        return ResponseEntity.badRequest().body("Invalid date format. Please use YYYY-MM-DD.");
     }
 
 }

@@ -117,7 +117,6 @@ const ManageSprints = () => {
       <div className="sprint-header">
         <h2>Sprints</h2>
         <div className="top-actions">
-          <span className="user-label">{userName}</span>
           <button className="create-sprint-btn" onClick={() => navigate('/create-sprint')}>
             <FaPlus className="icon" /> Create Sprint
           </button>
@@ -125,7 +124,7 @@ const ManageSprints = () => {
       </div>
 
       {/* Filter Section */}
-      <div className="filter-section">
+      <div className="filter-sections">
         <Select
           options={projectOptions}
           value={selectedProject}
@@ -147,76 +146,89 @@ const ManageSprints = () => {
 
       {/* Table Section */}
       <table className="sprint-table">
-  <thead>
-    <tr>
-      <th>Sprint ID</th>
-      <th>Name</th>
-      <th>Start Date</th>
-      <th>End Date</th>
-      <th>Feature Name</th>
-      <th>Sprint Goals</th> {/* ✅ New Column */}
-      <th>Actions</th>
-    </tr>
-  </thead>
-  <tbody>
-    {!selectedProject ? (
-      <tr>
-        <td colSpan="7" style={{ textAlign: "center" }}>
-          Please select a project to view sprints.
-        </td>
-      </tr>
-    ) : filteredSprints.length === 0 ? (
-      <tr>
-        <td colSpan="7" style={{ textAlign: "center" }}>
-          No sprints found.
-        </td>
-      </tr>
-    ) : (
-      filteredSprints.map((sprint) => {
-        const completed = isSprintDisabled(sprint);
-        const shortGoal =
-          sprint.sprintGoals && sprint.sprintGoals.length > 50
-            ? sprint.sprintGoals.substring(0, 50) + "..."
-            : sprint.sprintGoals || "-";
-        return (
-          <tr key={sprint.id}>
-            <td>{sprint.id}</td>
-            <td>{sprint.name}</td>
-            <td>{sprint.startDate}</td>
-            <td>{sprint.endDate}</td>
-            <td>{sprint.feature?.name || "-"}</td>
-            <td title={sprint.sprintGoals || ""}>{shortGoal}</td> {/* ✅ Tooltip */}
-            <td>
-              {!completed && (
-                <button
-                  onClick={() =>
-                    navigate(`/sprints/${sprint.id}/assign-stories/${sprint.feature?.id}`)
-                  }
-                  className="active-btn"
-                >
-                  Assign Tasks
-                </button>
-              )}
-              <button
-                onClick={() => navigate(`/sprints/overview/${sprint.id}`)}
-                className="view-btn"
-              >
-                View
-              </button>
-              <button
-            onClick={() => navigate(`/edit-sprint/${sprint.id}`)}
-            className="edit-btn"
-            style={{ backgroundColor: "#ffc107", color: "#000", marginLeft: "5px" }}
-          >
-            {FaEdit}
-          </button>
+      <thead>
+        <tr>
+          <th>Sprint ID</th>
+          <th>Name</th>
+          <th>Start Date</th>
+          <th>End Date</th>
+          <th>Feature</th>
+          <th>Goals</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {!selectedProject ? (
+          <tr>
+            <td colSpan="7" className="no-data">
+              Please select a project to view sprints.
             </td>
-                </tr>
-              );
-            })
-          )}
-        </tbody>
-      </table>
+          </tr>
+        ) : filteredSprints.length === 0 ? (
+          <tr>
+            <td colSpan="7" className="no-data">
+              No sprints found.
+            </td>
+          </tr>
+        ) : (
+          filteredSprints.map((sprint) => {
+            const completed = isSprintDisabled(sprint);
+            const shortGoal =
+              sprint.sprintGoals && sprint.sprintGoals.length > 50
+                ? sprint.sprintGoals.substring(0, 50) + "..."
+                : sprint.sprintGoals || "-";
+
+            return (
+              <tr key={sprint.id} className={completed ? "disabled-row" : ""}>
+                <td>{sprint.id}</td>
+                <td>{sprint.name}</td>
+                <td>{sprint.startDate}</td>
+                <td>{sprint.endDate}</td>
+                <td>{sprint.feature?.name || "-"}</td>
+                <td title={sprint.sprintGoals}>{shortGoal}</td>
+
+                <td>
+                  <div className="action-buttons">
+
+                    {/* View */}
+                    <button
+                      className="icon-small-btn"
+                      title="View Sprint"
+                      onClick={() => navigate(`/sprints/overview/${sprint.id}`)}
+                    >
+                      <FaEye />
+                    </button>
+
+                    {/* Edit */}
+                    <button
+                      className="icon-small-btn"
+                      title="Edit Sprint"
+                      onClick={() => navigate(`/edit-sprint/${sprint.id}`)}
+                    >
+                      <FaEdit />
+                    </button>
+                      {/* Assign Stories */}
+                    {!completed && (
+                      <button
+                        className="icon-small-btn"
+                        title="Assign Tasks"
+                        onClick={() =>
+                          navigate(`/sprints/${sprint.id}/assign-stories/${sprint.feature?.id}`)
+                        }
+                      >
+                        <FaTasks />
+                      </button>
+                    )}
+
+                  </div>
+                </td>
+              </tr>
+            );
+          })
+        )}
+      </tbody>
+    </table>
     </div>
   );
 };

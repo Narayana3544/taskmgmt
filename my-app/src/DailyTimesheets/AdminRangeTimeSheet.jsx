@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
 import "./AdminRangeTimeSheet.css";
+import { FaEye } from "react-icons/fa";
 
 export default function AdminRangeTimeSheet() {
   const [users, setUsers] = useState([]);
@@ -171,8 +172,23 @@ export default function AdminRangeTimeSheet() {
                       <button
                         className="view-btn"
                         onClick={() => handleViewDay(entry.date)}
+                         style={{
+                        border: "none",
+                        background: "#e9f2ff",
+                        color: "#007bff",
+                        width: "28px",
+                        height: "28px",
+                        borderRadius: "50%",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        cursor: "pointer",
+                        fontSize: "17px",
+                        transition: "0.2s",
+                        margin: "0 auto"   // ✅ aligns inside table cell
+                      }}
                       >
-                        View
+                       <FaEye/>
                       </button>
                     </td>
                   </tr>

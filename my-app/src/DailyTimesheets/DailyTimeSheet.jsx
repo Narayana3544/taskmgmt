@@ -278,6 +278,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { FaEdit, FaEye } from "react-icons/fa";
 import api from "../api"; 
 import "./DailyTimeSheet.css";
 
@@ -561,7 +562,23 @@ export default function DailyTimesheet() {
               </td>
               {canEdit && (
                 <td>
-                  <button onClick={() => handleEdit(entry)}>Edit</button>
+                  <button
+                  onClick={() => handleEdit(entry)}
+                  style={{
+                    background: "#007bff",
+                    border: "none",
+                    width: "28px",
+                    height: "28px",
+                    borderRadius: "50%",
+                    cursor: "pointer",
+                    color: "#fff",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center"
+                  }}
+                >
+                  <FaEdit/>
+                </button>
                 </td>
               )}
             </tr>

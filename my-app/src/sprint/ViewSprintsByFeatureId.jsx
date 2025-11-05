@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import api from '../api';
 import './ManageSprints.css';
 import { FaEye } from 'react-icons/fa';
+
 import { useNavigate, useParams } from 'react-router-dom';
 
 const ViewSprintsByFeatureid = () => {
@@ -34,7 +35,7 @@ const ViewSprintsByFeatureid = () => {
     <div className="manage-sprints-page">
         <button className="back-btn" onClick={() => navigate(-1)}>⬅ Back</button>
       <div className="sprint-header">
-        <h2>📅 Your Sprints</h2>
+        <h2>Your Sprints</h2>
       </div>
 
       <table className="sprint-table">
@@ -59,12 +60,36 @@ const ViewSprintsByFeatureid = () => {
                 <td>{sprint.feature?.name}</td>
                 <td>
                   <button
-                    className="view-btn"
-                    title="View Sprint Overview"
-                    onClick={() => navigate(`/sprints/overview/${sprint.id}`)}
-                  >
-                    <FaEye /> {/* 👁 Eye icon */}
-                  </button>
+                  title="View Sprint Overview"
+                  onClick={() => navigate(`/sprints/overview/${sprint.id}`)}
+                  style={{
+                    border: "none",
+                    background: "#e9f2ff",
+                    color: "#007bff",
+                    width: "28px",
+                    height: "28px",
+                    borderRadius: "50%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                    fontSize: "17px",
+                    transition: "0.2s",
+                    margin: "0 auto" 
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.background = "#007bff";
+                    e.target.style.color = "#fff";
+                    e.target.style.transform = "scale(1.1)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.background = "#e9f2ff";
+                    e.target.style.color = "#007bff";
+                    e.target.style.transform = "scale(1)";
+                  }}
+                >
+                  <FaEye />
+                </button>
                 </td>
               </tr>
             ))

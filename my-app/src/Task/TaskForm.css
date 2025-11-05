@@ -253,7 +253,7 @@
 }
 
 .task-form button {
-  background-color: #4caf50;
+  background-color: #007bff;
   color: #ffffff;
   padding: 0.8rem 1rem;
   border: none;
@@ -285,7 +285,7 @@
 
 .task-form .back-btn {
   grid-column: 1 / -1;
-  background-color: #4caf50;
+  background-color: #007bff;
   color: white;
   border: none;
   padding: 10px 14px;

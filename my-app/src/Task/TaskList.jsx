@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import api from "../api";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import Select from "react-select";
 import "./TaskList.css";
 import { FaEdit, FaPlus, FaEye } from "react-icons/fa";
+import { useDebounce } from "use-debounce";
 
 export default function TaskList() {
   const [projects, setProjects] = useState([]);
@@ -23,15 +24,51 @@ export default function TaskList() {
   const [selectedStatus, setSelectedStatus] = useState("");
   const [searchStory, setSearchStory] = useState("");
 
+  // Debounced search
+  const [debouncedStory] = useDebounce(searchStory, 350);
+
   // Pagination
   const [currentPage, setCurrentPage] = useState(0);
   const tasksPerPage = 5;
-  const navigate = useNavigate();
 
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // ✅ Load filters from URL on initial mount
   useEffect(() => {
+    const project = searchParams.get("project") || "";
+    const feature = searchParams.get("feature") || "";
+    const sprint = searchParams.get("sprint") || "";
+    const user = searchParams.get("user") || "";
+    const status = searchParams.get("status") || "";
+    const story = searchParams.get("story") || "";
+
+    setSelectedProject(project);
+    setSelectedFeature(feature);
+    setSelectedSprint(sprint);
+    setSelectedUser(user);
+    setSelectedStatus(status);
+    setSearchStory(story);
+
     fetchProjects();
     fetchStatuses();
+
+    if (project) {
+      Promise.all([
+        fetchTasks(project),
+        fetchFeatures(project),
+        fetchUsers(project),
+        fetchSprints(project)
+      ]);
+    }
   }, []);
+
+  // ✅ Update URL helper
+  const updateURL = (key, value) => {
+    if (value) searchParams.set(key, value);
+    else searchParams.delete(key);
+    setSearchParams(searchParams);
+  };
 
   const fetchProjects = async () => {
     try {
@@ -83,7 +120,7 @@ export default function TaskList() {
     try {
       const res = await api.get(`/viewTaskByProjectId/${projectId}`, { withCredentials: true });
       setTasks(res.data);
-      setCurrentPage(0);
+      setCurrentPage(0); // Reset to page 0 on project change
     } catch {
       setError("Failed to load tasks.");
     } finally {
@@ -91,20 +128,24 @@ export default function TaskList() {
     }
   };
 
-  const handleProjectChange = (option) => {
-    const projectId = option ? option.value : null;
+  const handleProjectChange = async (option) => {
+    const projectId = option ? option.value : "";
+
     setSelectedProject(projectId);
-    setSelectedFeature("");
-    setSelectedSprint("");
-    setSelectedUser("");
-    setSelectedStatus("");
-    setSearchStory("");
+    updateURL("project", projectId);
 
     if (projectId) {
-      fetchTasks(projectId);
-      fetchFeatures(projectId);
-      fetchUsers(projectId);
-      fetchSprints(projectId);
+      setLoading(true);
+      try {
+        await Promise.all([
+          fetchTasks(projectId),
+          fetchFeatures(projectId),
+          fetchUsers(projectId),
+          fetchSprints(projectId)
+        ]);
+      } finally {
+        setLoading(false);
+      }
     } else {
       setTasks([]);
       setFeatures([]);
@@ -113,12 +154,15 @@ export default function TaskList() {
     }
   };
 
-  const filteredTasks = tasks
-    .filter((t) => (selectedFeature ? t.feature?.id === parseInt(selectedFeature) : true))
-    .filter((t) => (selectedSprint ? t.sprint?.id === parseInt(selectedSprint) : true))
-    .filter((t) => (selectedUser ? t.user?.id === parseInt(selectedUser) : true))
-    .filter((t) => (selectedStatus ? t.taskStatus?.id === parseInt(selectedStatus) : true))
-    .filter((t) => t.userstory?.toLowerCase().includes(searchStory.toLowerCase()));
+  // ✅ Optimized Filtering with useMemo
+  const filteredTasks = useMemo(() => {
+    return tasks
+      .filter((t) => (selectedFeature ? t.feature?.id === parseInt(selectedFeature) : true))
+      .filter((t) => (selectedSprint ? t.sprint?.id === parseInt(selectedSprint) : true))
+      .filter((t) => (selectedUser ? t.user?.id === parseInt(selectedUser) : true))
+      .filter((t) => (selectedStatus ? t.taskStatus?.id === parseInt(selectedStatus) : true))
+      .filter((t) => t.userstory?.toLowerCase().includes(debouncedStory.toLowerCase()));
+  }, [tasks, selectedFeature, selectedSprint, selectedUser, selectedStatus, debouncedStory]);
 
   const indexOfLastTask = (currentPage + 1) * tasksPerPage;
   const currentTasks = filteredTasks.slice(indexOfLastTask - tasksPerPage, indexOfLastTask);
@@ -130,12 +174,13 @@ export default function TaskList() {
 
       <div className="header-bar">
         <div className="filter-section">
-          {/* ✅ Searchable dropdown using react-select */}
           <Select
             options={projects.map((p) => ({ value: p.id, label: p.name }))}
-            value={projects.find((p) => p.id === selectedProject)
-              ? { value: selectedProject, label: projects.find((p) => p.id === selectedProject)?.name }
-              : null}
+            value={
+              projects.find((p) => p.id == selectedProject)
+                ? { value: selectedProject, label: projects.find((p) => p.id == selectedProject)?.name }
+                : null
+            }
             onChange={handleProjectChange}
             placeholder="Select Project..."
             isClearable
@@ -163,6 +208,7 @@ export default function TaskList() {
                   value={searchStory}
                   onChange={(e) => {
                     setSearchStory(e.target.value);
+                    updateURL("story", e.target.value);
                     setCurrentPage(0);
                   }}
                 />
@@ -170,7 +216,14 @@ export default function TaskList() {
               <th>Story Points</th>
               <th>
                 Sprint<br />
-                <select value={selectedSprint} onChange={(e) => setSelectedSprint(e.target.value)}>
+                <select
+                  value={selectedSprint}
+                  onChange={(e) => {
+                    setSelectedSprint(e.target.value);
+                    updateURL("sprint", e.target.value);
+                    setCurrentPage(0);
+                  }}
+                >
                   <option value="">All</option>
                   {sprints.map((s) => (
                     <option key={s.id} value={s.id}>{s.name}</option>
@@ -179,7 +232,14 @@ export default function TaskList() {
               </th>
               <th>
                 Feature<br />
-                <select value={selectedFeature} onChange={(e) => setSelectedFeature(e.target.value)}>
+                <select
+                  value={selectedFeature}
+                  onChange={(e) => {
+                    setSelectedFeature(e.target.value);
+                    updateURL("feature", e.target.value);
+                    setCurrentPage(0);
+                  }}
+                >
                   <option value="">All</option>
                   {features.map((f) => (
                     <option key={f.id} value={f.id}>{f.name}</option>
@@ -188,7 +248,14 @@ export default function TaskList() {
               </th>
               <th>
                 Assigned User<br />
-                <select value={selectedUser} onChange={(e) => setSelectedUser(e.target.value)}>
+                <select
+                  value={selectedUser}
+                  onChange={(e) => {
+                    setSelectedUser(e.target.value);
+                    updateURL("user", e.target.value);
+                    setCurrentPage(0);
+                  }}
+                >
                   <option value="">All</option>
                   {users.map((u) => (
                     <option key={u.id} value={u.id}>
@@ -200,7 +267,14 @@ export default function TaskList() {
               <th>Task Type</th>
               <th>
                 Status<br />
-                <select value={selectedStatus} onChange={(e) => setSelectedStatus(e.target.value)}>
+                <select
+                  value={selectedStatus}
+                  onChange={(e) => {
+                    setSelectedStatus(e.target.value);
+                    updateURL("status", e.target.value);
+                    setCurrentPage(0);
+                  }}
+                >
                   <option value="">All</option>
                   {statuses.map((s) => (
                     <option key={s.id} value={s.id}>{s.decription}</option>
@@ -230,18 +304,12 @@ export default function TaskList() {
                   <td>{task.start_date ? new Date(task.start_date).toLocaleDateString() : "-"}</td>
                   <td>
                     <div className="action-buttons">
-                      <div className="tooltip">
-                        <button className="icon-btn" onClick={() => navigate(`/task/${task.id}`)}>
-                          <FaEye />
-                        </button>
-                        <span className="tooltip-text">View Task</span>
-                      </div>
-                      <div className="tooltip">
-                        <button className="icon-btn" onClick={() => navigate(`/edit-task/${task.id}`)}>
-                          <FaEdit />
-                        </button>
-                        <span className="tooltip-text">Edit Task</span>
-                      </div>
+                      <button className="icon-btn" onClick={() => navigate(`/task/${task.id}`)}>
+                        <FaEye />
+                      </button>
+                      <button className="icon-btn" onClick={() => navigate(`/edit-task/${task.id}`)}>
+                        <FaEdit />
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -249,17 +317,30 @@ export default function TaskList() {
             )}
           </tbody>
         </table>
+
         {selectedProject && totalPages > 1 && (
           <div className="pagination">
-            <button onClick={() => setCurrentPage((p) => Math.max(p - 1, 0))} disabled={currentPage === 0}>
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(p - 1, 0))}
+              disabled={currentPage === 0}
+            >
               Prev
             </button>
+
             {[...Array(totalPages)].map((_, i) => (
-              <button key={i} onClick={() => setCurrentPage(i)} className={currentPage === i ? "active" : ""}>
+              <button
+                key={i}
+                onClick={() => setCurrentPage(i)}
+                className={currentPage === i ? "active" : ""}
+              >
                 {i + 1}
               </button>
             ))}
-            <button onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages - 1))} disabled={currentPage === totalPages - 1}>
+
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages - 1))}
+              disabled={currentPage === totalPages - 1}
+            >
               Next
             </button>
           </div>

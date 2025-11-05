@@ -123,8 +123,7 @@ export default function UserSprints() {
 
   return (
     <div className="sprints-page">
-      <button onClick={() => navigate(-1)} className="back-btn">Back</button>
-      <h2 className="page-title">My Active Sprints</h2>
+      <h2 className="page-title">Active Sprint Tasks</h2>
 
       {sprints.length === 0 ? (
         <p className="no-sprints">No active sprints assigned.</p>

@@ -64,7 +64,7 @@ useEffect(() => {
        <button className="back-btn" onClick={() => navigate(-1)}>⬅ Back</button>
       <div className="header-bar">
         
-        <h2>📋 Features for Project {projectId}</h2>
+        <h2>Features for Project {projectId}</h2>
       </div>
       <div className="search-bar">
         <input
@@ -98,7 +98,7 @@ useEffect(() => {
                 <td>{feature.description}</td>
                 <td>
                   <span
-                    className={`status-tag ${
+                    className={`status-tags ${
                       feature.status?.description?.toLowerCase().replace(/\s+/g, '-') || ''
                     }`}
                   >

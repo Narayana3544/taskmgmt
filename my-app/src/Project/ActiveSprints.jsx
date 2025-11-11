@@ -177,13 +177,15 @@ export default function UserSprints() {
                 <thead>
                   {activeTab[sprint.id] === "all" ? (
                     <tr>
+                      <th>ID</th>
                       <th>Task</th>
                       <th>Description</th>
-                      <th>Assigned User</th>
+                      <th>Assigned To</th>
                       <th>Action</th>
                     </tr>
                   ) : (
                     <tr>
+                      <th>ID</th>
                       <th>Story</th>
                       <th>Story Points</th>
                       <th>Sprint</th>
@@ -206,6 +208,7 @@ export default function UserSprints() {
                     currentTasks.map((task) =>
                       activeTab[sprint.id] === "all" ? (
                         <tr key={task.id}>
+                          <td >{task.id}</td>
                           <td>{task.userstory}</td>
                           <td>{task.description}</td>
                           <td>{task.user?.first_name || "-"}</td>
@@ -235,6 +238,7 @@ export default function UserSprints() {
                         </tr>
                       ) : (
                         <tr key={task.id}>
+                          <td >{task.id}</td>
                           <td>{task.userstory || "-"}</td>
                           <td>{task.storypoints ?? "-"}</td>
                           <td>{task.sprint?.sprintName || task.sprint?.name || "-"}({task.sprint.status})</td>

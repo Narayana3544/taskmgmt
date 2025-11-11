@@ -32,7 +32,7 @@ const Navbar = ({ collapsed, onToggleSidebar }) => {
       <div className="navbar-right" ref={dropdownRef}>
         <div className="profile" onClick={handleToggle}>
           <FaUserCircle className="profile" />
-           <SlArrowDown  className="dropdown"/>
+           {/* <SlArrowDown  className="dropdown"/> */}
           
         </div>
 

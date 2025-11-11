@@ -51,7 +51,8 @@
 /* Buttons container */
 .btn-container {
   margin-top: 20px;
-  display: flex;
+  display: inline-flex;
+  align-items: center;
   gap: 10px;
 }
 

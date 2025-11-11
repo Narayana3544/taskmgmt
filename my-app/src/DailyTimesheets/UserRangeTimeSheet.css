@@ -19,6 +19,9 @@
   padding: 5px 10px;
   font-size: 14px;
   cursor: pointer;
+  background-color: #2875e7;
+  color: white;
+  border-radius: 4px;
 }
 
 .timesheet-table,

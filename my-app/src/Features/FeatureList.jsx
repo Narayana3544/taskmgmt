@@ -57,9 +57,9 @@ const FeatureList = () => {
         <table className="features-table">
           <thead>
             <tr>
-              <th>Feature ID</th>
+              <th>ID</th>
               <th>Project Name</th>
-              <th>Feature Name</th>
+              <th>Name</th>
               <th>Description</th>
               <th>Status</th>
               <th>Actions</th>

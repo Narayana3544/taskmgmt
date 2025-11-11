@@ -98,6 +98,7 @@ export default function AssignedTasks() {
         <table className="task-table">
           <thead>
             <tr>
+              <th>ID</th>
               <th>Story</th>
               <th>Story Points</th>
               <th>
@@ -144,6 +145,7 @@ export default function AssignedTasks() {
             )}
             {currentTasks.map(task => (
               <tr key={task.id}>
+                <td >{task.id}</td>
                 <td>{task.userstory || "-"}</td>
                 <td>{task.storypoints ?? "-"}</td>
                 <td>{task.sprint?.name || "-"}</td>

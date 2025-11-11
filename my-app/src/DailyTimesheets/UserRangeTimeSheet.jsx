@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import api from "../api";
 import { useNavigate } from "react-router-dom";
 import "./UserRangeTimeSheet.css";
+import { FaEye } from "react-icons/fa";
 
 export default function UserRangeTimeSheet() {
   const [startDate, setStartDate] = useState("");
@@ -136,8 +137,16 @@ export default function UserRangeTimeSheet() {
                 <td>{entry.totalHours.toFixed(2)} h</td>
                 <td>{statusText}</td>
                 <td>
-                  <button onClick={() => handleViewDay(entry.date)}>View</button>
+                  {/* <button onClick={() => handleViewDay(entry.date)}>View</button> */}
+                  <div className="tooltip">
+                                    <FaEye
+                                      className="icon-btn view-icon"
+                                      onClick={() => handleViewDay(entry.date)}
+                                    />
+                                    <span className="tooltip-text">View</span>
+                   </div>
                 </td>
+                
               </tr>
             );
           })}

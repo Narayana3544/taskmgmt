@@ -247,7 +247,7 @@ export default function TaskList() {
                 </select>
               </th>
               <th>
-                Assigned User<br />
+                Assigned To<br />
                 <select
                   value={selectedUser}
                   onChange={(e) => {

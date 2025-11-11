@@ -58,7 +58,9 @@
 
 /* Buttons Container */
 .form-actions {
-  display: flex;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
   justify-content: space-between;
   margin-top: 15px;
 }

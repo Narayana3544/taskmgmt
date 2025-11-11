@@ -91,6 +91,22 @@ export default function AdminRangeTimeSheet() {
     const holidays = ["2025-09-21", "2025-10-02","2025-10-03"]; // Example
     return holidays.includes(dateStr);
   };
+const formatHours = (entry) => {
+    // Prefer backend-provided formatted string if available
+    if (entry?.totalHoursAndMinutes) return entry.totalHoursAndMinutes;
+
+    // Fallback: compute from totalHours (decimal)
+    const th = entry?.totalHours;
+
+    if (th === null || th === undefined || Number.isNaN(Number(th))) return "-";
+
+    // round to nearest minute to avoid weird fractions
+    const totalMinutes = Math.round(Number(th) * 60);
+    const hoursPart = Math.floor(totalMinutes / 60);
+    const minutesPart = Math.abs(totalMinutes % 60);
+
+    return `${hoursPart}h ${String(minutesPart).padStart(2, "0")}m`;
+  };
 
   return (
     <div className="admin-timesheet-container">
@@ -174,7 +190,7 @@ export default function AdminRangeTimeSheet() {
                 return (
                   <tr key={idx} className={rowClass}>
                     <td>{entry.date}</td>
-                    <td>{entry.totalHours.toFixed(2)} h</td>
+                     <td>{formatHours(entry)}</td>
                     {/* <td>{statusText}</td> */}
                     <td>
                       <button onClick={() => handleViewDay(entry.date)}>

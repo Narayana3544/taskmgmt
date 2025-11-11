@@ -18,6 +18,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class TimeSheetService {
@@ -249,33 +250,57 @@ public class TimeSheetService {
         }
 
         for (LocalDate date = start; !date.isAfter(end); date = date.plusDays(1)) {
-            // Fetch daily logs
             List<Timesheet> logs = getEntriesByUserAndDate(userId, date);
 
-            // Calculate total hours
-            double totalHours = logs.stream()
-                    .mapToDouble(e -> Duration.between(e.getStart_time(), e.getEnd_time()).toMinutes() / 60.0)
+            // Defensive: ignore any entries with null start/end to avoid exceptions
+            List<Timesheet> validLogs = logs.stream()
+                    .filter(e -> e.getStart_time() != null && e.getEnd_time() != null)
+                    .collect(Collectors.toList());
+
+            // sum minutes to avoid floating-point rounding issues
+            long totalMinutes = validLogs.stream()
+                    .mapToLong(e -> {
+                        try {
+                            return Duration.between(e.getStart_time(), e.getEnd_time()).toMinutes();
+                        } catch (Exception ex) {
+                            // if something odd happens for a single entry, ignore it
+                            return 0L;
+                        }
+                    })
                     .sum();
 
-            // Determine status
+
+            if (totalMinutes < 0) totalMinutes = Math.abs(totalMinutes);
+
+            long hoursPart = totalMinutes / 60;
+            long minutesPart = totalMinutes % 60;
+            double totalHoursRaw = totalMinutes / 60.0;
+
+
+            double totalHours = Math.round(totalHoursRaw * 100.0) / 100.0;
+
+
+            String totalHoursAndMinutes = String.format("%dh %02dm", hoursPart, minutesPart);
+
             String status;
             if (logs.isEmpty()) {
                 if (date.getDayOfWeek() == DayOfWeek.SATURDAY || date.getDayOfWeek() == DayOfWeek.SUNDAY) {
                     status = "Weekend";
-                } else if (isHoliday(date)) { // implement holiday check logic
+                } else if (isHoliday(date)) {
                     status = "Holiday";
                 } else {
                     status = "LOP";
                 }
-            } else if (logs.stream().anyMatch(e -> e.getWorkType().getDescription().equalsIgnoreCase("Official"))) {
+            } else if (logs.stream().anyMatch(e -> e.getWorkType() != null && e.getWorkType().getDescription().equalsIgnoreCase("Official"))) {
                 status = "Official";
-            } else if (logs.stream().anyMatch(e -> e.getWorkType().getDescription().equalsIgnoreCase("Time Off"))) {
+            } else if (logs.stream().anyMatch(e -> e.getWorkType() != null && e.getWorkType().getDescription().equalsIgnoreCase("Time Off"))) {
                 status = "Time Off";
             } else {
                 status = "Worked";
             }
 
-            result.add(new DailySummaryWithLogsDTO(date, totalHours, status, logs));
+            // Use new constructor that includes totalHoursAndMinutes
+            result.add(new DailySummaryWithLogsDTO(date, totalHours, totalHoursAndMinutes, status, logs));
         }
 
         return result;

@@ -167,7 +167,22 @@ export default function AdminAllTimesheets() {
     XLSX.utils.book_append_sheet(wb, ws, "Timesheet");
     XLSX.writeFile(wb, `Timesheet_${username}_${startDate}_to_${endDate}.xlsx`);
   };
+const formatHours = (entry) => {
+    // Prefer backend-provided formatted string if available
+    if (entry?.totalHoursAndMinutes) return entry.totalHoursAndMinutes;
 
+    // Fallback: compute from totalHours (decimal)
+    const th = entry?.totalHours;
+
+    if (th === null || th === undefined || Number.isNaN(Number(th))) return "-";
+
+    // round to nearest minute to avoid weird fractions
+    const totalMinutes = Math.round(Number(th) * 60);
+    const hoursPart = Math.floor(totalMinutes / 60);
+    const minutesPart = Math.abs(totalMinutes % 60);
+
+    return `${hoursPart}h ${String(minutesPart).padStart(2, "0")}m`;
+  };
   return (
     <div className="admin-all-container">
       <h2>Admin Timesheet Overview</h2>
@@ -227,7 +242,7 @@ export default function AdminAllTimesheets() {
               {entries.map((e, idx) => (
                 <tr key={idx}>
                   <td>{e.date}</td>
-                  <td>{e.totalHours.toFixed(2)} h</td>
+                   <td>{formatHours(e)}</td>
                   <td>
                     <button onClick={() => handleViewDay(e.date)}>View</button>
                   </td>

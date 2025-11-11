@@ -18,6 +18,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class TimeSheetService {
@@ -139,72 +140,55 @@ public class TimeSheetService {
             List<Timesheet> entries;
             if (userId != 0) {
                 entries = repo.findByDateAndUserId(date, userId);
-            }
-            else {
+            } else {
                 entries = repo.findByDate(date); // all users
             }
 
-            if (entries.isEmpty()) {
-                summaries.add(new DailySummaryDTO(date, 0, "Leave"));
+            if (entries == null || entries.isEmpty()) {
+                // Use new ctor: date, totalHours, totalHoursAndMinutes, status
+                summaries.add(new DailySummaryDTO(date, 0.0, "0h 00m", "Leave"));
             } else {
-                double totalHours = entries.stream()
-                        .mapToDouble(e -> Duration.between(e.getStart_time(), e.getEnd_time()).toMinutes() / 60.0)
+                // filter out bad rows that would NPE or throw in Duration.between
+                List<Timesheet> valid = entries.stream()
+                        .filter(e -> e.getStart_time() != null && e.getEnd_time() != null)
+                        .collect(Collectors.toList());
+
+                long totalMinutes = valid.stream()
+                        .mapToLong(e -> {
+                            try {
+                                return Duration.between(e.getStart_time(), e.getEnd_time()).toMinutes();
+                            } catch (Exception ex) {
+                                // Ignore problematic single record
+                                return 0L;
+                            }
+                        })
                         .sum();
 
+                if (totalMinutes < 0) totalMinutes = Math.abs(totalMinutes);
+
+                long hoursPart = totalMinutes / 60;
+                long minutesPart = totalMinutes % 60;
+                double totalHoursRaw = totalMinutes / 60.0;
+                double totalHours = Math.round(totalHoursRaw * 100.0) / 100.0; // 2 decimals
+
+                String totalHoursAndMinutes = String.format("%dh %02dm", hoursPart, minutesPart);
+
                 String status;
-                if (entries.stream().anyMatch(e -> e.getWorkType().getDescription().equalsIgnoreCase("Official"))) {
+                if (entries.stream().anyMatch(e -> e.getWorkType() != null && e.getWorkType().getDescription().equalsIgnoreCase("Official"))) {
                     status = "Official";
-                } else if (entries.stream().anyMatch(e -> e.getWorkType().getDescription().equalsIgnoreCase("Time Off"))) {
+                } else if (entries.stream().anyMatch(e -> e.getWorkType() != null && e.getWorkType().getDescription().equalsIgnoreCase("Time Off"))) {
                     status = "Time Off";
                 } else {
                     status = "Worked";
                 }
 
-                summaries.add(new DailySummaryDTO(date, totalHours, status));
+                summaries.add(new DailySummaryDTO(date, totalHours, totalHoursAndMinutes, status));
             }
         }
 
         return summaries;
     }
 
-//
-//    public List<DailySummaryDTO> getRangeSummaryforUser(LocalDate start, LocalDate end, int userId) {
-//        List<DailySummaryDTO> summaries = new ArrayList<>();
-//
-    ////        if (userId == null && !userRepo.existsById(Long.valueOf(userId))) {
-    ////            throw new RuntimeException("Record not found for userId: " + userId);
-    ////        }
-//
-//        for (LocalDate date = start; !date.isAfter(end); date = date.plusDays(1)) {
-//            List<Timesheet> entries;
-//
-//            if (userId==0) {
-//                entries = repo.findByDateAndUserId(date, userId);
-//            } else {
-//                entries = repo.findByDate(date);
-//            }
-//
-//            if (entries.isEmpty()) {
-//                summaries.add(new DailySummaryDTO(date, 0, "Leave"));
-//            } else {
-//                double totalHours = entries.stream()
-//                        .mapToDouble(e -> Duration.between(e.getStart_time(), e.getEnd_time()).toMinutes() / 60.0)
-//                        .sum();
-//
-//                String status;
-//                if (entries.stream().anyMatch(e -> e.getWorkType().getDescription().equalsIgnoreCase("Official"))) {
-//                    status = "Official";
-//                } else if (entries.stream().anyMatch(e -> e.getWorkType().getDescription().equalsIgnoreCase("Time Off"))) {
-//                    status = "Time Off";
-//                } else {
-//                    status = "Worked";
-//                }
-//                summaries.add(new DailySummaryDTO(date, totalHours, status));
-//            }
-//        }
-//
-//        return summaries;
-//    }
 
     public List<DailySummaryDTO> getRangeSummaryforUser(LocalDate start, LocalDate end, int userId) {
         List<DailySummaryDTO> summaries = new ArrayList<>();
@@ -249,33 +233,57 @@ public class TimeSheetService {
         }
 
         for (LocalDate date = start; !date.isAfter(end); date = date.plusDays(1)) {
-            // Fetch daily logs
             List<Timesheet> logs = getEntriesByUserAndDate(userId, date);
 
-            // Calculate total hours
-            double totalHours = logs.stream()
-                    .mapToDouble(e -> Duration.between(e.getStart_time(), e.getEnd_time()).toMinutes() / 60.0)
+            // Defensive: ignore any entries with null start/end to avoid exceptions
+            List<Timesheet> validLogs = logs.stream()
+                    .filter(e -> e.getStart_time() != null && e.getEnd_time() != null)
+                    .collect(Collectors.toList());
+
+            // sum minutes to avoid floating-point rounding issues
+            long totalMinutes = validLogs.stream()
+                    .mapToLong(e -> {
+                        try {
+                            return Duration.between(e.getStart_time(), e.getEnd_time()).toMinutes();
+                        } catch (Exception ex) {
+                            // if something odd happens for a single entry, ignore it
+                            return 0L;
+                        }
+                    })
                     .sum();
 
-            // Determine status
+            // defensive: if negative durations might exist, make non-negative
+            if (totalMinutes < 0) totalMinutes = Math.abs(totalMinutes);
+
+            long hoursPart = totalMinutes / 60;
+            long minutesPart = totalMinutes % 60;
+            double totalHoursRaw = totalMinutes / 60.0;
+
+            // Round to 2 decimals for stable display (e.g., 7.50)
+            double totalHours = Math.round(totalHoursRaw * 100.0) / 100.0;
+
+            // formatted string e.g. "7h 05m" (minutes zero-padded)
+            String totalHoursAndMinutes = String.format("%dh %02dm", hoursPart, minutesPart);
+
             String status;
             if (logs.isEmpty()) {
                 if (date.getDayOfWeek() == DayOfWeek.SATURDAY || date.getDayOfWeek() == DayOfWeek.SUNDAY) {
                     status = "Weekend";
-                } else if (isHoliday(date)) { // implement holiday check logic
+                } else if (isHoliday(date)) {
                     status = "Holiday";
                 } else {
                     status = "LOP";
                 }
-            } else if (logs.stream().anyMatch(e -> e.getWorkType().getDescription().equalsIgnoreCase("Official"))) {
+            } else if (logs.stream().anyMatch(e -> e.getWorkType() != null && e.getWorkType().getDescription().equalsIgnoreCase("Official"))) {
                 status = "Official";
-            } else if (logs.stream().anyMatch(e -> e.getWorkType().getDescription().equalsIgnoreCase("Time Off"))) {
+            } else if (logs.stream().anyMatch(e -> e.getWorkType() != null && e.getWorkType().getDescription().equalsIgnoreCase("Time Off"))) {
                 status = "Time Off";
             } else {
                 status = "Worked";
             }
 
-            result.add(new DailySummaryWithLogsDTO(date, totalHours, status, logs));
+            // Use new constructor that includes totalHoursAndMinutes
+            result.add(new DailySummaryWithLogsDTO(date, totalHours, totalHoursAndMinutes, status, logs));
         }
 
         return result;

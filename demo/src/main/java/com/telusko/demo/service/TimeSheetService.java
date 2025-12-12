@@ -11,8 +11,10 @@ import com.telusko.demo.repo.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.sql.Date;
 import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalDate;
@@ -38,13 +40,44 @@ public class TimeSheetService {
     @Autowired
     public WorkTypeRepo workTypeRepo;
 
-    public Timesheet saveEntry(Timesheet entry) {
+    @Autowired
+    public userrepo Userrepository;
+
+    public boolean getloggedUser(Authentication authentication){
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        int userId = userDetails.getUser().getId();
+       String role= Userrepository.findById(userId).getRole().getDescription();
+        System.out.println(role);
+       if(role.equalsIgnoreCase("Admin")){
+           return true;
+       }
+       return false;
+    }
+
+
+    public Timesheet saveEntry(Timesheet entry,Authentication authentication) {
 //        entry.setPermission_granted(true);
         LocalDate today = LocalDate.now();
-        if (!entry.getDate().isEqual(today)) {
-            throw new IllegalStateException("Timesheet entries can only be created/edited for today.");
+        boolean flag=getloggedUser(authentication);
+        if ( !flag) {
+            throw new IllegalStateException("You can only create timesheet for today's date.");
         }
         List<Timesheet> existingEntries=repo.findAll();
+        return repo.save(entry);
+    }
+
+    public Timesheet savepastEntry(Timesheet entry, Authentication authentication,int userid, Date date) {
+//        entry.setPermission_granted(true);
+//        LocalDate today = LocalDate.now();
+        boolean flag=getloggedUser(authentication);
+        if ( !flag) {
+            throw new IllegalStateException("You can only create timesheet for today's date.");
+        }
+        List<Timesheet> existingEntries=repo.findAll();
+        System.out.println("user"+userid);
+        User user=userRepo.findById(userid);
+        entry.setUser(user);
+        entry.setDate(date.toLocalDate());
         return repo.save(entry);
     }
 
@@ -53,16 +86,39 @@ public class TimeSheetService {
     }
 
 
-    public Timesheet updateEntry(int id, Timesheet updatedEntry) {
+    public Timesheet updateEntry(int id, Timesheet updatedEntry,Authentication authentication) {
         Timesheet existing = repo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Entry not found"));
 
         LocalDate today = LocalDate.now();
-        if (!existing.getDate().isEqual(today)) {
-            throw new IllegalStateException("Past timesheet entries cannot be updated.");
+        boolean flag=getloggedUser(authentication);
+        if ( !flag) {
+            throw new IllegalStateException("You cannot update past timesheet entries.");
         }
 
         // copy fields
+        existing.setStart_time(updatedEntry.getStart_time());
+        existing.setEnd_time(updatedEntry.getEnd_time());
+        existing.setWorkType(updatedEntry.getWorkType());
+        existing.setTask(updatedEntry.getTask());
+        existing.setDescription(updatedEntry.getDescription());
+        existing.setPermission_granted(updatedEntry.isPermission_granted());
+
+        return repo.save(existing);
+    }
+
+    public Timesheet updatePastEntry(int id, Timesheet updatedEntry,Authentication authentication,int UserId) {
+        Timesheet existing = repo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Entry not found"));
+
+//        LocalDate today = LocalDate.now();
+        boolean flag=getloggedUser(authentication);
+        if ( !flag) {
+            throw new IllegalStateException("You cannot update past timesheet entries.");
+        }
+
+        // copy fields
+        existing.setUser(userRepo.findById(UserId));
         existing.setStart_time(updatedEntry.getStart_time());
         existing.setEnd_time(updatedEntry.getEnd_time());
         existing.setWorkType(updatedEntry.getWorkType());

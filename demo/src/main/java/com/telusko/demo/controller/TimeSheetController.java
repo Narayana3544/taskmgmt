@@ -17,6 +17,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
+import java.sql.Date;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -34,7 +35,15 @@ public class TimeSheetController {
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
         User user = userDetails.getUser();
         entry.setUser(user);
-        Timesheet saved = service.saveEntry(entry);
+        Timesheet saved = service.saveEntry(entry,authentication);
+        return ResponseEntity.ok(saved);
+    }
+    @PostMapping("/timesheet/user/{userId}/date/{date}")
+    public ResponseEntity<Timesheet> createpastEntries(@RequestBody Timesheet entry, Authentication authentication, @PathVariable int userId, @PathVariable Date date) {
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        User user = userDetails.getUser();
+//        entry.setUser(user);
+        Timesheet saved = service.savepastEntry(entry,authentication,userId,date);
         return ResponseEntity.ok(saved);
     }
 
@@ -45,6 +54,16 @@ public class TimeSheetController {
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
         int userId = userDetails.getUser().getId();
         List<Timesheet> entries = service.getEntriesByUserAndDate(userId, date);
+        return ResponseEntity.ok(entries);
+    }
+
+    @GetMapping("/timesheet/user/{UserId}/day/{date}")
+    public ResponseEntity<List<Timesheet>> getEntriesForDay(
+            Authentication authentication,
+            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,@PathVariable int UserId) {
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+//        int userId = userDetails.getUser().getId();
+        List<Timesheet> entries = service.getEntriesByUserAndDate(UserId, date);
         return ResponseEntity.ok(entries);
     }
 
@@ -60,8 +79,16 @@ public class TimeSheetController {
     @PutMapping("/timesheet/{id}")
     public ResponseEntity<Timesheet> updateEntry(
             @PathVariable int id,
-            @RequestBody Timesheet updatedEntry) {
-        Timesheet saved = service.updateEntry(id, updatedEntry);
+            @RequestBody Timesheet updatedEntry,Authentication authentication) {
+        Timesheet saved = service.updateEntry(id, updatedEntry,authentication);
+        return ResponseEntity.ok(saved);
+    }
+
+    @PutMapping("/timesheets/{id}/{UserId}")
+    public ResponseEntity<Timesheet> updatePastEntry(
+            @PathVariable int id,
+            @RequestBody Timesheet updatedEntry,Authentication authentication ,@PathVariable int UserId) {
+        Timesheet saved = service.updatePastEntry(id, updatedEntry,authentication,UserId);
         return ResponseEntity.ok(saved);
     }
 

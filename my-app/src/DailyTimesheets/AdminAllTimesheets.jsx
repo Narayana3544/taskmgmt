@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../api";
 import * as XLSX from "xlsx";
 import { FaFileExcel, FaEye } from "react-icons/fa";
@@ -15,6 +16,7 @@ export default function AdminAllTimesheets() {
   const [end, setEnd] = useState("2025-10-31");
   const [loading, setLoading] = useState(false);
   const [loadingDaily, setLoadingDaily] = useState(false);
+  const navigate=useNavigate();
 
   // Fetch users
   useEffect(() => {
@@ -245,6 +247,9 @@ const formatHours = (entry) => {
                    <td>{formatHours(e)}</td>
                   <td>
                     <button onClick={() => handleViewDay(e.date)}>View</button>
+<button onClick={() => navigate(`/timesheet/edit/${selectedUser}/${e.date}`)}>
+  Edit
+</button>
                   </td>
                 </tr>
               ))}

@@ -104,7 +104,6 @@ public class logincontroller {
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
         int userId = userDetails.getUser().getId();
         return repo.findById(userId);
-
     }
 
 

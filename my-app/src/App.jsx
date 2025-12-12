@@ -44,13 +44,7 @@ import { ToastContainer } from "react-toastify";
 import EditSprint from './sprint/EditSprint';
 import TimesheetSummary from './DailyTimesheets/AllTimesheetSummary';
 import AdminAllTimesheets from './DailyTimesheets/AdminAllTimesheets';
-<<<<<<< Updated upstream
-import "react-toastify/dist/ReactToastify.css";
-=======
-import EditSprint from './sprint/EditSprint';
-import EdittTimesheets from './DailyTimesheets/EditTimesheets';
 import EditAnyTimesheet from './DailyTimesheets/EditTimesheets';
->>>>>>> Stashed changes
 
 // 🔹 Small component for logout route
 const Logout = ({ onLogout }) => {
@@ -129,12 +123,8 @@ function App() {
                 <Route path="/timesheet-summary" element={<TimesheetSummary/>} />
                 <Route path="/admin/timesheet-export" element={<TimesheetExcelExport />} />
                 <Route path="/admin/timesheet" element={<AdminAllTimesheets />} />
-<<<<<<< Updated upstream
-               
-=======
                 <Route path="/edit-sprint/:id" element={<EditSprint />} />
                <Route path="/timesheet/edit/:userId/:date" element={<EditAnyTimesheet />} />
->>>>>>> Stashed changes
               {/* 🔹 Logout Route */}
               <Route path="/logout" element={<Logout onLogout={handleLogout} />} />
             </Routes>

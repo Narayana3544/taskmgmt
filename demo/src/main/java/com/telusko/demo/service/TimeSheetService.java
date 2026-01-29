@@ -58,9 +58,8 @@ public class TimeSheetService {
     public Timesheet saveEntry(Timesheet entry,Authentication authentication) {
 //        entry.setPermission_granted(true);
         LocalDate today = LocalDate.now();
-        boolean flag=getloggedUser(authentication);
-        if ( !flag) {
-            throw new IllegalStateException("You can only create timesheet for today's date.");
+        if (!entry.getDate().isEqual(today)) {
+            throw new IllegalStateException("Timesheet entries can only be created/edited for today.");
         }
         List<Timesheet> existingEntries=repo.findAll();
         return repo.save(entry);
@@ -91,9 +90,8 @@ public class TimeSheetService {
                 .orElseThrow(() -> new RuntimeException("Entry not found"));
 
         LocalDate today = LocalDate.now();
-        boolean flag=getloggedUser(authentication);
-        if ( !flag) {
-            throw new IllegalStateException("You cannot update past timesheet entries.");
+        if (!updatedEntry.getDate().isEqual(today)) {
+            throw new IllegalStateException("Timesheet entries can only be created/edited for today.");
         }
 
         // copy fields

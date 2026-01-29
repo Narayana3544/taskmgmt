@@ -1,44 +1,110 @@
 package com.telusko.demo.config;
 
+import com.telusko.demo.security.JwtAuthenticationFilter;
 import com.telusko.demo.service.CustomUserDetailsService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Security configuration with JWT-based stateless authentication.
+ * Supports both JWT auth for the new frontend and legacy session auth during migration.
+ */
 @Configuration
+@EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
     private final CustomUserDetailsService customUserDetailsService;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    
+    @Value("${cors.allowed-origins:http://localhost:3000,http://localhost:8080}")
+    private String allowedOrigins;
 
-    public SecurityConfig(CustomUserDetailsService customUserDetailsService) {
+    public SecurityConfig(
+            CustomUserDetailsService customUserDetailsService,
+            JwtAuthenticationFilter jwtAuthenticationFilter
+    ) {
         this.customUserDetailsService = customUserDetailsService;
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // enable CORS
-                .csrf(csrf -> csrf.disable()) // disable CSRF for REST
+                // Enable CORS
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                
+                // Disable CSRF for stateless REST API
+                .csrf(csrf -> csrf.disable())
+                
+                // Configure authorization
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login", "/register", "/register/*").permitAll()
-                        .requestMatchers("/**").authenticated()
+                        // Public endpoints - authentication
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/login", "/register", "/register/**").permitAll()
+                        
+                        // Public endpoints - static resources
+                        .requestMatchers("/", "/index.html", "/static/**", "/favicon.ico").permitAll()
+                        .requestMatchers("/error").permitAll()
+                        
+                        // WebSocket endpoints
+                        .requestMatchers("/ws/**").permitAll()
+                        
+                        // Actuator endpoints (for health checks in production)
+                        .requestMatchers("/actuator/health", "/actuator/info").permitAll()
+                        
+                        // All other endpoints require authentication
+                        .anyRequest().authenticated()
                 )
-                .formLogin(form -> form.disable()) // disable default form login
-                .httpBasic(basic -> basic.disable()) // disable basic auth
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED));
+                
+                // Disable form login (not needed for REST API)
+                .formLogin(form -> form.disable())
+                
+                // Disable HTTP Basic auth
+                .httpBasic(basic -> basic.disable())
+                
+                // Stateless session management for JWT
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+                
+                // Add JWT filter before UsernamePasswordAuthenticationFilter
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                
+                // Exception handling
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setContentType("application/json");
+                            response.setStatus(401);
+                            response.getWriter().write(
+                                    "{\"error\":\"Unauthorized\",\"message\":\"" + 
+                                    authException.getMessage() + "\"}"
+                            );
+                        })
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            response.setContentType("application/json");
+                            response.setStatus(403);
+                            response.getWriter().write(
+                                    "{\"error\":\"Forbidden\",\"message\":\"Access denied\"}"
+                            );
+                        })
+                );
 
         return http.build();
     }
@@ -46,15 +112,31 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of(
-                "http://localhost:3000",
-                "http://192.168.14.191:3000",
-                "http://localhost:8080",
-                "http://192.168.14.191:8080"
+        
+        // Parse allowed origins from configuration
+        List<String> origins = Arrays.asList(allowedOrigins.split(","));
+        configuration.setAllowedOrigins(origins);
+        
+        // Allow all standard HTTP methods
+        configuration.setAllowedMethods(List.of(
+                "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"
         ));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        
+        // Allow all headers
         configuration.setAllowedHeaders(List.of("*"));
+        
+        // Expose custom headers
+        configuration.setExposedHeaders(List.of(
+                "Authorization", 
+                "X-Correlation-ID",
+                "Content-Disposition"
+        ));
+        
+        // Allow credentials (for refresh token cookies if needed)
         configuration.setAllowCredentials(true);
+        
+        // Cache preflight response
+        configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
@@ -80,89 +162,3 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 }
-
-
-
-
-
-
-
-
-//import com.telusko.demo.service.CustomUserDetailsService;
-//import org.springframework.context.annotation.Bean;
-//import org.springframework.context.annotation.Configuration;
-//import org.springframework.security.authentication.AuthenticationManager;
-//import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-//import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-//import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-//import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-//import org.springframework.security.crypto.password.PasswordEncoder;
-//import org.springframework.security.web.SecurityFilterChain;
-//
-//@Configuration
-//@EnableWebSecurity
-//public class SecurityConfig {
-//
-//    private final CustomUserDetailsService userDetailsService;
-//
-//    public SecurityConfig(CustomUserDetailsService userDetailsService) {
-//        this.userDetailsService = userDetailsService;
-//    }
-//
-//    @Bean
-//    public PasswordEncoder passwordEncoder() {
-//        return new BCryptPasswordEncoder();
-//    }
-//
-//    // AuthenticationManager bean
-//    @Bean
-//    public AuthenticationManager authManager(HttpSecurity http) throws Exception {
-//        AuthenticationManagerBuilder authBuilder =
-//                http.getSharedObject(AuthenticationManagerBuilder.class);
-//
-//        authBuilder
-//                .userDetailsService(userDetailsService)
-//                .passwordEncoder(passwordEncoder());
-//
-//        return authBuilder.build();
-//    }
-//
-//
-//    @Bean
-//    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-//        http
-//                .csrf(csrf -> csrf.disable())
-//                .cors(cors -> {})
-//                .csrf(csrf -> csrf.disable()) // new way to disable CSRF in 6.1+
-//                .authorizeHttpRequests(auth -> auth
-//                        .requestMatchers("/login", "/register").permitAll()
-//                        .anyRequest().authenticated()
-//                )
-//                .formLogin(form -> form.disable()) // disable default login form
-//                .logout(logout -> logout.permitAll())
-//                .sessionManagement(session -> session.maximumSessions(1)); // optional
-//
-//        return http.build();
-//    }
-//    @Bean
-//    public org.springframework.web.cors.CorsConfigurationSource corsConfigurationSource() {
-//        org.springframework.web.cors.CorsConfiguration configuration =
-//                new org.springframework.web.cors.CorsConfiguration();
-//
-//        configuration.setAllowedOrigins(
-//                java.util.List.of("http://localhost:3000")
-////                http://192.168.14.188:3000
-//        );
-//        configuration.setAllowedMethods(
-//                java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")
-//        );
-//        configuration.setAllowedHeaders(java.util.List.of("*"));
-//        configuration.setAllowCredentials(true);
-//
-//        org.springframework.web.cors.UrlBasedCorsConfigurationSource source =
-//                new org.springframework.web.cors.UrlBasedCorsConfigurationSource();
-//        source.registerCorsConfiguration("/**", configuration);
-//
-//        return source;
-//    }
-//}

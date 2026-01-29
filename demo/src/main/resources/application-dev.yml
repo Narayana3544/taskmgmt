@@ -1,0 +1,87 @@
+# ========================================
+# Development Configuration
+# ========================================
+spring:
+  application:
+    name: Taskmgmt
+
+  # Database Configuration
+  datasource:
+    url: jdbc:postgresql://localhost:5432/task_mgmt
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      idle-timeout: 300000
+      connection-timeout: 20000
+
+  # JPA Configuration
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  # Kafka Configuration (optional for dev - can be disabled)
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: taskmgmt-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: com.telusko.demo.event
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+  # File upload configuration
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+# Server Configuration
+server:
+  address: 0.0.0.0
+  port: 8080
+  error:
+    include-message: always
+
+# JWT Configuration
+jwt:
+  secret: devSecretKeyForDevelopmentOnlyPleaseChangeInProductionEnvironment123456789
+  access-token:
+    expiration: 900000  # 15 minutes
+  refresh-token:
+    expiration: 604800000  # 7 days
+
+# CORS Configuration
+cors:
+  allowed-origins: http://localhost:3000,http://localhost:8080,http://192.168.14.191:3000,http://192.168.14.191:8080,http://192.168.14.109:3000
+
+# Logging Configuration
+logging:
+  level:
+    root: INFO
+    com.telusko.demo: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.web: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%X{correlationId}] %-5level %logger{36} - %msg%n"
+
+# File Storage Configuration
+file:
+  upload-dir: ./uploads
+  max-size: 10485760  # 10MB
+
+# Feature Flags
+features:
+  kafka:
+    enabled: false  # Set to true when Kafka is running

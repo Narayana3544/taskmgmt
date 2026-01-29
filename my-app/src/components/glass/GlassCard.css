@@ -1,0 +1,86 @@
+/* GlassCard Component Styles */
+
+.glass-card {
+    background: rgba(40, 40, 70, 0.8);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+}
+
+.glass-card-hoverable {
+    cursor: pointer;
+}
+
+.glass-card-dark {
+    background: rgba(30, 30, 47, 0.9);
+}
+
+.glass-card-light {
+    background: rgba(60, 60, 95, 0.65);
+}
+
+/* Padding Variants */
+.glass-card-p-none {
+    padding: 0;
+}
+
+.glass-card-p-sm {
+    padding: 0.75rem;
+}
+
+.glass-card-p-md {
+    padding: 1rem;
+}
+
+.glass-card-p-lg {
+    padding: 1.5rem;
+}
+
+.glass-card-p-xl {
+    padding: 2rem;
+}
+
+/* Header */
+.glass-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-card-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.glass-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Body */
+.glass-card-body {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+/* Footer */
+.glass-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}

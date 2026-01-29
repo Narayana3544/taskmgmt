@@ -44,10 +44,20 @@ public class userRegisterController
                     .body("Email already exists. Please login.");
         }
 
+        // Find or create default USER role
+        var defaultRole = rolerepo.findByName("USER")
+            .orElseGet(() -> {
+                var newRole = new com.telusko.demo.Model.Role();
+                newRole.setName("USER");
+                newRole.setDescription("Default user role");
+                newRole.setActive(true);
+                return rolerepo.save(newRole);
+            });
+
         // Save new user
         user.setPassword(encoder.encode(user.getPassword()));
-        user.setRole(rolerepo.findById(1).orElseThrow(()->new RuntimeException("role not found")));
-        repo.save(user); // implement this in your service
+        user.setRole(defaultRole);
+        repo.save(user);
         return ResponseEntity.ok("Registration successful!");
     }
 

@@ -22,6 +22,25 @@ const api = axios.create({
   withCredentials: true, // important if you're using session cookies
 });
 
+// ✅ Add request interceptor to inject Bearer Token
+api.interceptors.request.use(
+  (config) => {
+    const userStr = localStorage.getItem("user");
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        if (user.accessToken) {
+          config.headers.Authorization = `Bearer ${user.accessToken}`;
+        }
+      } catch (e) {
+        console.error("Error parsing user from localStorage", e);
+      }
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
 // Create a small popup dynamically when session expires
 function showSessionPopup() {
   // Prevent showing multiple times

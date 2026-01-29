@@ -1,4 +1,4 @@
-import  { useState } from 'react';
+import { useState } from 'react';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import { FaEnvelope, FaLock, FaUserCircle } from 'react-icons/fa';
@@ -23,7 +23,7 @@ const LoginForm = ({ onLogin }) => {
 
     try {
       const res = await api.post(
-        "/login",
+        "/api/auth/login",
         { email, password },
         { withCredentials: true }
       );

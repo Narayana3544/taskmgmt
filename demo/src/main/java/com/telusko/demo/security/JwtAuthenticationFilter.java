@@ -1,6 +1,7 @@
 package com.telusko.demo.security;
 
 import com.telusko.demo.Model.User;
+import com.telusko.demo.config.CustomUserDetails;
 import com.telusko.demo.repo.userrepo;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -29,44 +30,43 @@ import java.util.stream.Collectors;
  */
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-    
+
     private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String BEARER_PREFIX = "Bearer ";
     private static final String CORRELATION_ID_KEY = "correlationId";
-    
+
     private final JwtService jwtService;
     private final userrepo userRepo;
-    
+
     public JwtAuthenticationFilter(JwtService jwtService, userrepo userRepo) {
         this.jwtService = jwtService;
         this.userRepo = userRepo;
     }
-    
+
     @Override
     protected void doFilterInternal(
             @NonNull HttpServletRequest request,
             @NonNull HttpServletResponse response,
-            @NonNull FilterChain filterChain
-    ) throws ServletException, IOException {
-        
+            @NonNull FilterChain filterChain) throws ServletException, IOException {
+
         // Set correlation ID for request tracing
         String correlationId = UUID.randomUUID().toString();
         MDC.put(CORRELATION_ID_KEY, correlationId);
         response.setHeader("X-Correlation-ID", correlationId);
-        
+
         try {
             final String authHeader = request.getHeader(AUTHORIZATION_HEADER);
-            
+
             // Skip if no Authorization header or not Bearer token
             if (authHeader == null || !authHeader.startsWith(BEARER_PREFIX)) {
                 filterChain.doFilter(request, response);
                 return;
             }
-            
+
             final String jwt = authHeader.substring(BEARER_PREFIX.length());
             final String username;
-            
+
             try {
                 username = jwtService.extractUsername(jwt);
             } catch (Exception e) {
@@ -74,10 +74,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 filterChain.doFilter(request, response);
                 return;
             }
-            
+
             // If username extracted and no authentication in context
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                
+
                 // Verify token type is access token
                 String tokenType = jwtService.getTokenType(jwt);
                 if (!"access".equals(tokenType)) {
@@ -85,57 +85,58 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     filterChain.doFilter(request, response);
                     return;
                 }
-                
+
                 // Load user from database
                 Optional<User> userOptional = userRepo.findByEmail(username);
-                
+
                 if (userOptional.isPresent() && jwtService.isTokenValid(jwt, username)) {
                     User user = userOptional.get();
-                    
+
                     // Check if user is active
                     if (!user.isIs_active()) {
                         logger.warn("Inactive user attempted access: {}", username);
                         filterChain.doFilter(request, response);
                         return;
                     }
-                    
+
                     // Extract permissions from token
                     List<String> permissions = jwtService.extractPermissions(jwt);
                     String role = jwtService.extractRole(jwt);
-                    
+
                     // Build authorities from permissions and role
-                    List<SimpleGrantedAuthority> authorities = permissions != null 
+                    List<SimpleGrantedAuthority> authorities = permissions != null
                             ? permissions.stream()
-                                .map(SimpleGrantedAuthority::new)
-                                .collect(Collectors.toList())
+                                    .map(SimpleGrantedAuthority::new)
+                                    .collect(Collectors.toList())
                             : List.of();
-                    
+
                     // Add role as authority
                     if (role != null) {
                         authorities.add(new SimpleGrantedAuthority("ROLE_" + role));
                     }
-                    
+
+                    // Create CustomUserDetails
+                    CustomUserDetails userDetails = new CustomUserDetails(user);
+
                     // Create authentication token
-                    UsernamePasswordAuthenticationToken authToken = 
-                            new UsernamePasswordAuthenticationToken(
-                                    user,
-                                    null,
-                                    authorities
-                            );
-                    
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                            userDetails,
+                            null,
+                            authorities);
+
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
-                    
+
                     // Add user info to MDC for logging
                     MDC.put("userId", String.valueOf(user.getId()));
                     MDC.put("userEmail", user.getEmail());
-                    
+
                     logger.debug("Successfully authenticated user: {}", username);
                 }
             }
-            
+
             filterChain.doFilter(request, response);
-            
+
         } finally {
             // Clean up MDC
             MDC.remove(CORRELATION_ID_KEY);
@@ -143,14 +144,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             MDC.remove("userEmail");
         }
     }
-    
+
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
-        // Skip JWT filter for public endpoints
-        return path.startsWith("/api/auth/") || 
-               path.equals("/login") || 
-               path.equals("/register") ||
-               path.startsWith("/register/");
+        return path.equals("/api/auth/login") ||
+                path.equals("/api/auth/refresh") ||
+                path.equals("/api/auth/forgot-password") ||
+                path.equals("/api/auth/reset-password") ||
+                path.equals("/login") ||
+                path.equals("/register") ||
+                path.startsWith("/register/");
     }
 }

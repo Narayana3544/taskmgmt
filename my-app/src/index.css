@@ -1,26 +1,58 @@
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gradient-to-br from-[#1e1e2f] to-[#11111e] text-white min-h-screen font-sans antialiased overflow-x-hidden;
+    background-attachment: fixed;
+  }
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
-}
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+@layer components {
+  /* Glass Card */
+  .glass-card {
+    @apply bg-glass-bg-card backdrop-blur-glass border border-glass-border-light rounded-2xl shadow-lg transition-all duration-300;
+  }
+  .glass-card:hover {
+    @apply shadow-xl border-white/20 -translate-y-1;
+  }
+
+  /* Glass Button */
+  .glass-btn {
+    @apply px-4 py-2 rounded-xl border border-glass-border-light bg-glass-bg-medium/50 backdrop-blur-md text-white font-medium transition-all duration-200 flex items-center gap-2;
+  }
+  .glass-btn:hover {
+    @apply bg-glass-bg-light/70 shadow-lg -translate-y-0.5;
+  }
+  .glass-btn:active {
+    @apply translate-y-0;
+  }
+  
+  /* Primary Action Button */
+  .glass-btn-primary {
+    @apply bg-indigo-600/80 hover:bg-indigo-600 border-indigo-500/50 shadow-indigo-500/20;
+  }
+
+  /* Glass Input */
+  .glass-input {
+    @apply w-full bg-glass-bg-dark/40 border border-glass-border-light rounded-xl px-4 py-2.5 text-white placeholder-glass-text-muted focus:outline-none focus:border-glass-accent-primary focus:ring-1 focus:ring-glass-accent-primary/50 transition-all;
+  }
+
+  /* Glass Panel (Sidebar/Modal) */
+  .glass-panel {
+    @apply bg-glass-bg-dark backdrop-blur-heavy border-r border-glass-border-medium;
+  }
 }
 
-html, body {
-  width: 100%;
-  height: 100%;
-  overflow-x: hidden;
-  background-color: #1e1e2f;
-  font-family: 'Segoe UI', sans-serif;
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-white/10 rounded-full hover:bg-white/20 transition-colors;
 }

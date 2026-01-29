@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import Sidebar from './components/Sidebar';
-import Navbar from './components/Navbar';
+import Layout from './components/Layout';
 import Home from './Register_and_login/Home';
 import Profile from './Pages/Profile';
 import LoginForm from './Register_and_login/LoginForm';
@@ -45,6 +44,9 @@ import EditSprint from './sprint/EditSprint';
 import TimesheetSummary from './DailyTimesheets/AllTimesheetSummary';
 import AdminAllTimesheets from './DailyTimesheets/AdminAllTimesheets';
 import EditAnyTimesheet from './DailyTimesheets/EditTimesheets';
+import GlassDashboard from './dashboard/GlassDashboard';
+import AdminRoles from './Pages/AdminRoles';
+import AdminUsers from './Pages/AdminUsers';
 
 // 🔹 Small component for logout route
 const Logout = ({ onLogout }) => {
@@ -62,7 +64,6 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(() => {
     return localStorage.getItem("user") ? true : false;
   });
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const handleLogout = () => {
     localStorage.removeItem("user");
@@ -72,64 +73,65 @@ function App() {
   return (
     <Router>
       {isLoggedIn ? (
-        <>
-          <Sidebar collapsed={sidebarCollapsed} onToggle={setSidebarCollapsed} />
-          <Navbar
-            collapsed={sidebarCollapsed}
-            onToggleSidebar={() => setSidebarCollapsed(prev => !prev)}
-          />
-          <div className={`home-container ${sidebarCollapsed ? 'full' : ''}`}>
-            <Routes>
-              <Route path="/home" element={<Home />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/project" element={<Project />} />
-              <Route path="/create-project" element={<CreateProject />} />    
-              <Route path="/manage-projects" element={<ManageProjects />} />
-              <Route path="/features" element={<Features />} />
-              <Route path="/projects/:projectId/features" element={<Features />} />
-              <Route path="/features/:projectId" element={<FeatureList />} />
-              <Route path="/view-features" element={<FeatureList />} />
-              <Route path="/userstories" element={<UserStories />} />
-              <Route path="/view-stories" element={<ViewUserStories />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/create-sprint" element={<CreateSprint />} />
-              <Route path="/manage-sprints" element={<ManageSprints />} />
-              <Route path="/sprint/:sprintId/assign-users" element={<AssignUsersToSprint />} />
-              <Route path="/sprints/:sprintId/assign-stories/:featureId" element={<AssignTasksToSprint />} />
-              <Route path="/sprints/overview/:sprintId" element={<SprintOverview />} />
-              <Route path="/my-stories" element={<AssignedStories />} />
-              <Route path="/edit-project/:id" element={<EditProject />} />
-              <Route path="/edit-userstory/:id" element={<EditUserStory />} />
-              <Route path="/edit-feature/:id" element={<EditFeature />} />
-              <Route path="/create-task" element={<TaskForm />} /> 
-              <Route path="/task" element={<TaskList />} />
-              <Route path="/task/:id" element={<TaskDetails />} />
-              <Route path="/edit-task/:id" element={<EditTask />} />
-              <Route path="/view-project/:id" element={<ViewProject />} />
-              <Route path="/view-projectsByUserId" element={<ViewProjectById />} />
-              <Route path="/view-featuresByprojectid/:projectId" element={<ViewFeaturesByProjectId />} />
-              <Route path="/ViewSprintsByFeatureid/:featureId" element={<ViewSprintsByFeatureid />} />
-              <Route path="/active-sprints" element={<ActiveSprints />} />
-              <Route path="/time-sheets" element={<TimesheetForm />} />
-              <Route path="/task/:id/buglist" element={<BugList/>} />
-              <Route path="/task/:id/bug" element={<BugForm />} />
-              <Route path="/bug/:id" element={<BugDetails/>} />
-              {/* <Route path="/Daily-time-sheets" element={<DailyTimesheet/>} /> */}
-              <Route path="/Monthly-time-sheets" element={<MonthlyTimesheet/>} />
-               <Route path="/timesheet/:date" element={<DailyTimesheet />} />
-               <Route path="/admin/timesheets" element={<AdminRangeTimeSheet />} />
-               <Route path="/timesheet-export" element={<TimesheetExcelExport />} />
-               <Route path="/edit-sprint/:id" element={<EditSprint />} />
-                <Route path="/timesheet-summary" element={<TimesheetSummary/>} />
-                <Route path="/admin/timesheet-export" element={<TimesheetExcelExport />} />
-                <Route path="/admin/timesheet" element={<AdminAllTimesheets />} />
-                <Route path="/edit-sprint/:id" element={<EditSprint />} />
-               <Route path="/timesheet/edit/:userId/:date" element={<EditAnyTimesheet />} />
-              {/* 🔹 Logout Route */}
-              <Route path="/logout" element={<Logout onLogout={handleLogout} />} />
-            </Routes>
-          </div>
-        </>
+        <Layout>
+          <Routes>
+            {/* Redirect root to Dashboard */}
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+
+            {/* Main Dashboard - Swapped to GlassDashboard */}
+            <Route path="/dashboard" element={<GlassDashboard />} />
+            <Route path="/home" element={<Home />} /> {/* Keep legacy home available if needed */}
+
+            {/* Admin Routes */}
+            <Route path="/admin/roles" element={<AdminRoles />} />
+
+            {/* Existing Routes */}
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/project" element={<Project />} />
+            <Route path="/create-project" element={<CreateProject />} />
+            <Route path="/manage-projects" element={<ManageProjects />} />
+            <Route path="/features" element={<Features />} />
+            <Route path="/projects/:projectId/features" element={<Features />} />
+            <Route path="/features/:projectId" element={<FeatureList />} />
+            <Route path="/view-features" element={<FeatureList />} />
+            <Route path="/userstories" element={<UserStories />} />
+            <Route path="/view-stories" element={<ViewUserStories />} />
+            <Route path="/create-sprint" element={<CreateSprint />} />
+            <Route path="/manage-sprints" element={<ManageSprints />} />
+            <Route path="/sprint/:sprintId/assign-users" element={<AssignUsersToSprint />} />
+            <Route path="/sprints/:sprintId/assign-stories/:featureId" element={<AssignTasksToSprint />} />
+            <Route path="/sprints/overview/:sprintId" element={<SprintOverview />} />
+            <Route path="/my-stories" element={<AssignedStories />} />
+            <Route path="/edit-project/:id" element={<EditProject />} />
+            <Route path="/edit-userstory/:id" element={<EditUserStory />} />
+            <Route path="/edit-feature/:id" element={<EditFeature />} />
+            <Route path="/create-task" element={<TaskForm />} />
+            <Route path="/task" element={<TaskList />} />
+            <Route path="/task/:id" element={<TaskDetails />} />
+            <Route path="/edit-task/:id" element={<EditTask />} />
+            <Route path="/view-project/:id" element={<ViewProject />} />
+            <Route path="/view-projectsByUserId" element={<ViewProjectById />} />
+            <Route path="/view-featuresByprojectid/:projectId" element={<ViewFeaturesByProjectId />} />
+            <Route path="/ViewSprintsByFeatureid/:featureId" element={<ViewSprintsByFeatureid />} />
+            <Route path="/active-sprints" element={<ActiveSprints />} />
+            <Route path="/time-sheets" element={<TimesheetForm />} />
+            <Route path="/task/:id/buglist" element={<BugList />} />
+            <Route path="/task/:id/bug" element={<BugForm />} />
+            <Route path="/bug/:id" element={<BugDetails />} />
+            <Route path="/Monthly-time-sheets" element={<MonthlyTimesheet />} />
+            <Route path="/timesheet/:date" element={<DailyTimesheet />} />
+            <Route path="/admin/timesheets" element={<AdminRangeTimeSheet />} />
+            <Route path="/timesheet-export" element={<TimesheetExcelExport />} />
+            <Route path="/edit-sprint/:id" element={<EditSprint />} />
+            <Route path="/timesheet-summary" element={<TimesheetSummary />} />
+            <Route path="/admin/timesheet-export" element={<TimesheetExcelExport />} />
+            <Route path="/admin/timesheet" element={<AdminAllTimesheets />} />
+            <Route path="/edit-sprint/:id" element={<EditSprint />} />
+            <Route path="/timesheet/edit/:userId/:date" element={<EditAnyTimesheet />} />
+            {/* 🔹 Logout Route */}
+            <Route path="/logout" element={<Logout onLogout={handleLogout} />} />
+          </Routes>
+        </Layout>
       ) : (
         <Routes>
           <Route path="/" element={<LoginForm onLogin={() => setIsLoggedIn(true)} />} />

@@ -1,0 +1,102 @@
+# ========================================
+# Production Configuration
+# ========================================
+spring:
+  application:
+    name: Taskmgmt
+
+  # Database Configuration - Use environment variables
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/task_mgmt}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 10
+      idle-timeout: 300000
+      connection-timeout: 20000
+      max-lifetime: 1800000
+
+  # JPA Configuration
+  jpa:
+    hibernate:
+      ddl-auto: validate  # Never auto-update in production
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+
+  # Kafka Configuration
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: taskmgmt-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: com.telusko.demo.event
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+  # File upload configuration
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+# Server Configuration
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    context-path: ${CONTEXT_PATH:/}
+  error:
+    include-message: never
+    include-stacktrace: never
+
+# JWT Configuration - Use strong secret in production
+jwt:
+  secret: ${JWT_SECRET}
+  access-token:
+    expiration: ${JWT_ACCESS_EXPIRATION:900000}  # 15 minutes
+  refresh-token:
+    expiration: ${JWT_REFRESH_EXPIRATION:604800000}  # 7 days
+
+# CORS Configuration
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
+
+# Logging Configuration - Structured JSON logging for production
+logging:
+  level:
+    root: WARN
+    com.telusko.demo: INFO
+    org.springframework.security: WARN
+  pattern:
+    console: '{"timestamp":"%d{yyyy-MM-dd HH:mm:ss.SSS}","correlationId":"%X{correlationId}","level":"%level","logger":"%logger{36}","message":"%msg"}%n'
+
+# File Storage Configuration
+file:
+  upload-dir: ${FILE_UPLOAD_DIR:/var/lib/taskmgmt/uploads}
+  max-size: 10485760  # 10MB
+
+# Feature Flags
+features:
+  kafka:
+    enabled: true
+
+# Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized

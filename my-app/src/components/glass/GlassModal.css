@@ -1,0 +1,102 @@
+/* GlassModal Component Styles */
+
+.glass-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+}
+
+.glass-modal {
+    background: rgba(30, 30, 47, 0.95);
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 24px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    width: 100%;
+    max-height: 90vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Size Variants */
+.glass-modal-sm {
+    max-width: 400px;
+}
+
+.glass-modal-md {
+    max-width: 560px;
+}
+
+.glass-modal-lg {
+    max-width: 768px;
+}
+
+.glass-modal-xl {
+    max-width: 1024px;
+}
+
+.glass-modal-full {
+    max-width: calc(100% - 2rem);
+    max-height: calc(100vh - 2rem);
+}
+
+/* Header */
+.glass-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-modal-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #ffffff;
+    margin: 0;
+}
+
+.glass-modal-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: rgba(60, 60, 95, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.glass-modal-close:hover {
+    background: rgba(239, 68, 68, 0.3);
+    color: #fca5a5;
+}
+
+/* Content */
+.glass-modal-content {
+    padding: 1.5rem;
+    overflow-y: auto;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* Footer */
+.glass-modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding: 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}

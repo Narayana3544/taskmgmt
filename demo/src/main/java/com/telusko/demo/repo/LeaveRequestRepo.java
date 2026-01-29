@@ -4,7 +4,12 @@ import com.telusko.demo.Model.LeaveRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-@Repository
-public interface LeaveRequestRepo extends JpaRepository<LeaveRequest,Integer> {
+import java.util.List;
 
+@Repository
+public interface LeaveRequestRepo extends JpaRepository<LeaveRequest, Integer> {
+    
+    List<LeaveRequest> findByUserId(int userId);
+    
+    List<LeaveRequest> findByManagerId(int managerId);
 }

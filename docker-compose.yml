@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:15
+    image: postgres:17
     container_name: taskmgmt-db
     environment:
       POSTGRES_DB: task_mgmt
@@ -56,7 +56,7 @@ services:
   backend:
     build:
       context: ./demo
-      dockerfile: Dockerfile
+      dockerfile:  Dockerfile.dev
     container_name: taskmgmt-backend
     depends_on:
       postgres:

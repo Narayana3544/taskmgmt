@@ -1,64 +1,47 @@
-import React, { useState, useRef, useEffect } from "react";
-import { Link } from "react-router-dom";
-import "./Navbar.css";
-import { FaUserCircle, FaUser, FaTag, FaLock, FaCog, FaSignOutAlt } from "react-icons/fa";
-import { SlArrowDown } from "react-icons/sl";
+import React, { useState, useEffect } from 'react';
+import { Bell, Menu, ChevronLeft } from 'lucide-react';
+import api from '../api';
 
-const Navbar = ({ collapsed, onToggleSidebar }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef(null);
+const Navbar = ({ collapsed, onToggle, title }) => {
+    const [unreadCount, setUnreadCount] = useState(0);
 
-  const handleToggle = () => {
-    setIsOpen(!isOpen);
-  };
+    useEffect(() => {
+        const fetchUnread = async () => {
+            try {
+                const res = await api.get('/api/notifications/unread-count');
+                if (res.data?.data?.count !== undefined) {
+                    setUnreadCount(res.data.data.count);
+                }
+            } catch (err) {
+                // Silently handle — notification count is non-critical
+            }
+        };
 
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+        fetchUnread();
+        const interval = setInterval(fetchUnread, 30000); // Poll every 30 seconds
+        return () => clearInterval(interval);
+    }, []);
 
-  return (
-    <nav className={`main-navbar ${collapsed ? "collapsed" : ""}`}>
-      <div className="navbar-left">
-        <div className="logo">TaskBoard</div>
-      </div>
-
-      <div className="navbar-right" ref={dropdownRef}>
-        <div className="profile" onClick={handleToggle}>
-          <FaUserCircle className="profile" />
-           {/* <SlArrowDown  className="dropdown"/> */}
-          
-        </div>
-
-        {isOpen && (
-          <div className="dropdown-menu">
-            <Link to="/profile" className="dropdown-item">
-              <FaUser /> Profile
-            </Link>
-            {/* <Link to="/tags" className="dropdown-item">
-              <FaTag /> Tags
-            </Link>
-            <Link to="/privacy" className="dropdown-item">
-              <FaLock /> Privacy
-            </Link> */}
-            <Link to="/view-projectsByUserId" className="dropdown-item">
-              <FaCog /> Projects
-            </Link>
-            <Link to="/logout" className="dropdown-item">
-              <FaSignOutAlt /> Log out
-            </Link>
-          </div>
-        )}
-      </div>
-    </nav>
-  );
+    return (
+        <header className={`navbar${collapsed ? ' collapsed' : ''}`}>
+            <div className="navbar-left">
+                <button className="navbar-toggle" onClick={onToggle} title="Toggle sidebar">
+                    {collapsed ? <Menu size={20} /> : <ChevronLeft size={20} />}
+                </button>
+                <h1 className="navbar-title">{title}</h1>
+            </div>
+            <div className="navbar-right">
+                <button className="navbar-icon-btn" title="Notifications">
+                    <Bell size={20} />
+                    {unreadCount > 0 && (
+                        <span className="notification-badge">
+                            {unreadCount > 9 ? '9+' : unreadCount}
+                        </span>
+                    )}
+                </button>
+            </div>
+        </header>
+    );
 };
 
 export default Navbar;
-

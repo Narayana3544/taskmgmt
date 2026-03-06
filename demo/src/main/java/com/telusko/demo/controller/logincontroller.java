@@ -18,6 +18,8 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 
 import java.util.HashMap;
 import java.util.List;
@@ -69,15 +71,26 @@ public class logincontroller {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody User request, HttpServletRequest req) {
         Authentication auth = authManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+                new UsernamePasswordAuthenticationToken(
+                        request.getEmail(),
+                        request.getPassword()
+                )
         );
-        System.out.println("Authorities: " + auth.getAuthorities()); // should print ROLE_ADMIN, etc.
-        System.out.println("Principal: " + auth.getPrincipal());
-        SecurityContextHolder.getContext().setAuthentication(auth);
 
-        req.getSession().setAttribute(
+        System.out.println("Authorities: " + auth.getAuthorities());
+        System.out.println("Principal: " + auth.getPrincipal());
+
+        // Create new security context
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
+        context.setAuthentication(auth);
+
+        // Set it in holder
+        SecurityContextHolder.setContext(context);
+
+        // Store it in session
+        req.getSession(true).setAttribute(
                 HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
-                SecurityContextHolder.getContext()
+                context
         );
 
         return ResponseEntity.ok("Login successful");

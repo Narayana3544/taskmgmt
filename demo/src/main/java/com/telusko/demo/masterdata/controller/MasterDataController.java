@@ -59,8 +59,27 @@ public class MasterDataController {
     @PostMapping("/values")
     public ResponseEntity<ApiResponse<MasterValue>> createValue(@RequestBody Map<String, Object> body) {
         log.info("POST /api/master-data/values - code: {}", body.get("code"));
+
+        // Resolve typeId — accept either typeId (number) or typeCode (string)
+        Long typeId = null;
+        if (body.get("typeId") != null) {
+            typeId = Long.valueOf(body.get("typeId").toString());
+        } else if (body.get("typeCode") != null) {
+            String typeCode = body.get("typeCode").toString();
+            MasterType type = masterDataService.getTypeByCode(typeCode);
+            if (type != null) {
+                typeId = type.getId();
+            } else {
+                return ResponseEntity.badRequest()
+                        .body(ApiResponse.error("MasterType not found for code: " + typeCode));
+            }
+        } else {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("Either typeId or typeCode is required"));
+        }
+
         MasterValue value = masterDataService.createValue(
-                Long.valueOf(body.get("typeId").toString()),
+                typeId,
                 (String) body.get("code"),
                 (String) body.get("displayName"),
                 (String) body.get("description"),

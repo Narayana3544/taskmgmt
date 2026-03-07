@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Folder, CheckSquare, Layers, Clock, TrendingUp, ArrowRight } from 'lucide-react';
+import { Folder, CheckSquare, Layers, TrendingUp, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import Layout from '../components/Layout';

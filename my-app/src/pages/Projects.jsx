@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, Edit2, Users, X } from 'lucide-react';
 import api from '../api';
 import Layout from '../components/Layout';
+import { showToast } from '../utils/toast';
 
 const Projects = () => {
     const navigate = useNavigate();
@@ -17,7 +18,6 @@ const Projects = () => {
     // Members modal state
     const [showMembers, setShowMembers] = useState(null);
     const [members, setMembers] = useState([]);
-    const [orgUsers, setOrgUsers] = useState([]);
     const [addMemberId, setAddMemberId] = useState('');
 
     const fetchProjects = async () => {
@@ -27,6 +27,7 @@ const Projects = () => {
         } catch (err) { console.error(err); } finally { setLoading(false); }
     };
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => { fetchProjects(); }, []);
 
     const openCreate = () => {
@@ -48,15 +49,18 @@ const Projects = () => {
         e.preventDefault();
         setSaving(true);
         try {
+            const payload = { ...form, organizationId: user.organizationId };
             if (editProject) {
-                await api.put(`/api/projects/${editProject.id}`, form);
+                await api.put(`/api/projects/${editProject.id}`, payload);
+                showToast.success('Project updated successfully');
             } else {
-                await api.post(`/api/projects?orgId=${user.organizationId}`, form);
+                await api.post('/api/projects', payload);
+                showToast.success('Project created successfully');
             }
             setShowModal(false);
             fetchProjects();
         } catch (err) {
-            alert(err.response?.data?.message || 'Operation failed');
+            showToast.error(err.response?.data?.message || 'Operation failed');
         } finally { setSaving(false); }
     };
 

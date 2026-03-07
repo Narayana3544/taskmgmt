@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Plus, Filter, Edit2 } from 'lucide-react';
+import { Plus, Edit2 } from 'lucide-react';
 import api from '../api';
 import Layout from '../components/Layout';
+import { showToast } from '../utils/toast';
 
 const WorkItems = () => {
     const navigate = useNavigate();
@@ -18,6 +19,7 @@ const WorkItems = () => {
     const [saving, setSaving] = useState(false);
     const [projects, setProjects] = useState([]);
     const [masterData, setMasterData] = useState({ types: [], statuses: [], priorities: [] });
+    const [projectMembers, setProjectMembers] = useState([]);
 
     const fetchItems = async () => {
         try {
@@ -48,6 +50,7 @@ const WorkItems = () => {
         } catch (err) { console.error(err); }
     };
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => { fetchItems(); fetchMasterData(); }, [projectId]);
 
     const openCreate = () => {
@@ -80,18 +83,30 @@ const WorkItems = () => {
                 statusId: form.statusId ? parseInt(form.statusId) : null,
                 ownerId: form.ownerId ? parseInt(form.ownerId) : null,
                 assigneeId: form.assigneeId ? parseInt(form.assigneeId) : null,
-                storyPoints: form.storyPoints ? parseInt(form.storyPoints) : null
+                storyPoints: form.storyPoints ? parseInt(form.storyPoints) : null,
+                organizationId: user.organizationId
             };
             if (editItem) {
                 await api.put(`/api/work-items/${editItem.id}`, payload);
+                showToast.success('Work item updated');
             } else {
                 await api.post('/api/work-items', payload);
+                showToast.success('Work item created');
             }
             setShowModal(false);
             fetchItems();
         } catch (err) {
-            alert(err.response?.data?.message || 'Operation failed');
+            showToast.error(err.response?.data?.message || 'Operation failed');
         } finally { setSaving(false); }
+    };
+
+    // Fetch project members when project changes in the form
+    const fetchProjectMembers = async (projId) => {
+        if (!projId) { setProjectMembers([]); return; }
+        try {
+            const res = await api.get(`/api/projects/${projId}/members`);
+            setProjectMembers(res.data?.data || []);
+        } catch (err) { console.error('Failed to fetch members', err); setProjectMembers([]); }
     };
 
     const getBadgeClass = (name) => {
@@ -171,7 +186,7 @@ const WorkItems = () => {
                                     <div className="form-group">
                                         <label className="form-label">Project *</label>
                                         <select className="form-select" value={form.projectId}
-                                            onChange={(e) => setForm({ ...form, projectId: e.target.value })} required>
+                                            onChange={(e) => { setForm({ ...form, projectId: e.target.value }); fetchProjectMembers(e.target.value); }} required>
                                             <option value="">Select project</option>
                                             {projects.map(p => <option key={p.id} value={p.id}>{p.name} ({p.code})</option>)}
                                         </select>
@@ -222,15 +237,29 @@ const WorkItems = () => {
                                 )}
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                                     <div className="form-group">
-                                        <label className="form-label">Owner ID {editItem?.ownerName && <span style={{ color: 'var(--color-text-muted)', fontSize: 11 }}>(immutable)</span>}</label>
-                                        <input type="number" className="form-input" placeholder="User ID"
+                                        <label className="form-label">Owner {editItem?.ownerName && <span style={{ color: 'var(--color-text-muted)', fontSize: 11 }}>(immutable)</span>}</label>
+                                        <select className="form-select"
                                             value={form.ownerId} onChange={(e) => setForm({ ...form, ownerId: e.target.value })}
-                                            disabled={!!editItem?.ownerId} />
+                                            disabled={!!editItem?.ownerId}>
+                                            <option value="">Select owner</option>
+                                            {projectMembers.map(m => (
+                                                <option key={m.userId || m.id} value={m.userId || m.id}>
+                                                    {m.fullName || m.userName || `User #${m.userId || m.id}`}
+                                                </option>
+                                            ))}
+                                        </select>
                                     </div>
                                     <div className="form-group">
-                                        <label className="form-label">Assignee ID</label>
-                                        <input type="number" className="form-input" placeholder="User ID"
-                                            value={form.assigneeId} onChange={(e) => setForm({ ...form, assigneeId: e.target.value })} />
+                                        <label className="form-label">Assignee</label>
+                                        <select className="form-select"
+                                            value={form.assigneeId} onChange={(e) => setForm({ ...form, assigneeId: e.target.value })}>
+                                            <option value="">Select assignee</option>
+                                            {projectMembers.map(m => (
+                                                <option key={m.userId || m.id} value={m.userId || m.id}>
+                                                    {m.fullName || m.userName || `User #${m.userId || m.id}`}
+                                                </option>
+                                            ))}
+                                        </select>
                                     </div>
                                 </div>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>

@@ -16,12 +16,32 @@ const Login = ({ onLogin }) => {
 
         try {
             const res = await api.post('/api/auth/login', { email, password });
-            const userData = res.data.data;
+            console.log('Login response:', res.data);
+
+            // Handle different response structures from backend
+            const userData = res.data?.data || res.data;
+
+            if (!userData) {
+                setError('Invalid response from server.');
+                return;
+            }
+
+            // Store user data
             localStorage.setItem('user', JSON.stringify(userData));
-            onLogin();
+
+            // Store token separately for ProtectedRoute
+            if (userData.accessToken) {
+                localStorage.setItem('token', userData.accessToken);
+            } else if (userData.token) {
+                localStorage.setItem('token', userData.token);
+            }
+
+            // Notify app of login (guard against missing prop)
+            if (onLogin) onLogin();
             navigate('/dashboard');
         } catch (err) {
-            const msg = err.response?.data?.message || 'Login failed. Please try again.';
+            console.error('Login error:', err);
+            const msg = err.response?.data?.message || err.message || 'Login failed. Please try again.';
             setError(msg);
         } finally {
             setLoading(false);

@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Plus, Play, Square, ChevronRight, GripVertical, X } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+import { Plus, Play, Square, GripVertical } from 'lucide-react';
 import api from '../api';
 import Layout from '../components/Layout';
 
 const Sprints = () => {
-    const navigate = useNavigate();
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
     const [searchParams] = useSearchParams();
     const projectId = searchParams.get('projectId');
 
@@ -21,14 +19,13 @@ const Sprints = () => {
 
     // Sprint planning state
     const [planSprint, setPlanSprint] = useState(null);
-    const [sprintItems, setSprintItems] = useState([]);
     const [backlogItems, setBacklogItems] = useState([]);
 
-    // Fetch projects
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         const fetchProjects = async () => {
             try {
-                const res = await api.get('/api/projects', { params: { orgId: user.organizationId, page: 0, size: 100 } });
+                const res = await api.get('/api/projects', { params: { page: 0, size: 100 } });
                 setProjects(res.data?.data?.content || []);
             } catch (err) { console.error(err); }
         };
@@ -118,6 +115,7 @@ const Sprints = () => {
         } catch (err) { alert(err.response?.data?.message || 'Failed to add item'); }
     };
 
+    // eslint-disable-next-line no-unused-vars
     const removeItemFromSprint = async (workItemId) => {
         try {
             await api.delete(`/api/sprints/${planSprint.id}/items/${workItemId}`);

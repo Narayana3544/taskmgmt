@@ -26,6 +26,7 @@ public class MasterType extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "organization_id")
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private Organization organization;
 
     @Column(nullable = false, length = 100)

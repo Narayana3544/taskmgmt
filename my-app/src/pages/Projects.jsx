@@ -49,12 +49,16 @@ const Projects = () => {
         e.preventDefault();
         setSaving(true);
         try {
-            const payload = { ...form, organizationId: user.organizationId };
+            const payload = { ...form };
+            if (!payload.startDate) delete payload.startDate;
+            if (!payload.endDate) delete payload.endDate;
+            delete payload.organizationId; // Ensure it's not in body
+
             if (editProject) {
                 await api.put(`/api/projects/${editProject.id}`, payload);
                 showToast.success('Project updated successfully');
             } else {
-                await api.post('/api/projects', payload);
+                await api.post(`/api/projects?orgId=${user.organizationId}`, payload);
                 showToast.success('Project created successfully');
             }
             setShowModal(false);

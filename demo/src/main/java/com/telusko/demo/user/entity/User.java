@@ -60,6 +60,10 @@ public class User extends BaseEntity {
     @Column(length = 50)
     private String timezone;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "manager_id")
+    private User manager;
+
     @Column(length = 20, nullable = false)
     @Builder.Default
     private String status = "ACTIVE";

@@ -83,11 +83,15 @@ public class AuthService {
 
         log.info("User {} authenticated successfully", user.getEmail());
 
+        String roleName = user.getRole() != null ? user.getRole().getName() : "Employee";
+
         return AuthResponse.builder()
                 .userId(user.getId())
                 .fullName(user.getFullName())
                 .email(user.getEmail())
                 .role(roleCode)
+                .roleCode(roleCode)
+                .roleName(roleName)
                 .organizationId(user.getOrganization() != null ? user.getOrganization().getId() : null)
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
@@ -165,11 +169,15 @@ public class AuthService {
 
         log.info("User {} registered successfully", user.getEmail());
 
+        String roleName = role.getName();
+
         return AuthResponse.builder()
                 .userId(user.getId())
                 .fullName(user.getFullName())
                 .email(user.getEmail())
                 .role(roleCode)
+                .roleCode(roleCode)
+                .roleName(roleName)
                 .organizationId(org.getId())
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)

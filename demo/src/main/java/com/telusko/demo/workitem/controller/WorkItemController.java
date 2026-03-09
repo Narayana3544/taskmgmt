@@ -70,6 +70,24 @@ public class WorkItemController {
         return ResponseEntity.ok(ApiResponse.success(workItemService.updateWorkItem(id, request, userId)));
     }
 
+    // Quick Assign
+    @PatchMapping("/{id}/assign")
+    public ResponseEntity<ApiResponse<Void>> assign(
+            @PathVariable Long id, @RequestBody Map<String, Long> body, Authentication auth) {
+        Long userId = Long.valueOf(auth.getName());
+        workItemService.assignWorkItem(id, body.get("assigneeId"), userId);
+        return ResponseEntity.ok(ApiResponse.success("Assigned successfully", null));
+    }
+
+    // Quick Status Update
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<ApiResponse<Void>> updateStatus(
+            @PathVariable Long id, @RequestBody Map<String, String> body, Authentication auth) {
+        Long userId = Long.valueOf(auth.getName());
+        workItemService.updateWorkItemStatus(id, body.get("statusCode"), userId);
+        return ResponseEntity.ok(ApiResponse.success("Status updated", null));
+    }
+
     // Handoff to Owner — mandatory comment
     @PostMapping("/{id}/handoff")
     public ResponseEntity<ApiResponse<WorkItemResponse>> handoff(
@@ -85,19 +103,19 @@ public class WorkItemController {
     public ResponseEntity<ApiResponse<Void>> addComment(
             @PathVariable Long id, @RequestBody Map<String, String> body, Authentication auth) {
         Long userId = Long.valueOf(auth.getName());
-        workItemService.addComment(id, body.get("text"), userId);
+        workItemService.addComment(id, body.get("content"), userId);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("Comment added", null));
     }
 
     @GetMapping("/{id}/comments")
-    public ResponseEntity<ApiResponse<List<WorkItemComment>>> getComments(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getComments(@PathVariable Long id) {
         return ResponseEntity.ok(ApiResponse.success(workItemService.getComments(id)));
     }
 
     // History
     @GetMapping("/{id}/history")
-    public ResponseEntity<ApiResponse<List<WorkItemHistory>>> getHistory(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getHistory(@PathVariable Long id) {
         return ResponseEntity.ok(ApiResponse.success(workItemService.getHistory(id)));
     }
 }

@@ -83,6 +83,11 @@ public class MasterDataService {
     }
 
     @Transactional(readOnly = true)
+    public MasterType getTypeByCode(Long orgId, String code) {
+        return typeRepository.findByOrganizationIdAndCode(orgId, code).orElse(null);
+    }
+
+    @Transactional(readOnly = true)
     public List<MasterValue> getValuesByTypeCode(String typeCode) {
         return valueRepository.findByMasterTypeCodeAndActiveTrue(typeCode);
     }
@@ -187,6 +192,25 @@ public class MasterDataService {
         createValueIfNotExists(notifType, "LEAVE_APPROVED", "Leave Approved", 10, false);
         createValueIfNotExists(notifType, "LEAVE_REJECTED", "Leave Rejected", 11, false);
         createValueIfNotExists(notifType, "TIME_OFF_APPROVAL", "Time Off Approval Required", 12, false);
+
+        // === Roles (For UI Data Driven fields) ===
+        MasterType roleType = createTypeIfNotExists(org, "ROLE", "Role");
+        createValueIfNotExists(roleType, "ADMIN", "Administrator", 1, false);
+        createValueIfNotExists(roleType, "MANAGER", "Manager", 2, false);
+        createValueIfNotExists(roleType, "EMPLOYEE", "Employee", 3, true);
+
+        // === Leave Reasons (Additional dummy data) ===
+        MasterType leaveReason = createTypeIfNotExists(org, "LEAVE_REASON", "Leave Reason");
+        createValueIfNotExists(leaveReason, "MEDICAL", "Medical Issue", 1, false);
+        createValueIfNotExists(leaveReason, "VACATION", "Vacation / Travel", 2, false);
+        createValueIfNotExists(leaveReason, "FAMILY", "Family Emergency", 3, false);
+        createValueIfNotExists(leaveReason, "OTHER", "Other", 4, true);
+
+        // === Project Categories (Additional dummy data) ===
+        MasterType projCat = createTypeIfNotExists(org, "PROJECT_CATEGORY", "Project Category");
+        createValueIfNotExists(projCat, "INTERNAL", "Internal Project", 1, false);
+        createValueIfNotExists(projCat, "CLIENT", "Client Project", 2, true);
+        createValueIfNotExists(projCat, "RESEARCH", "R&D", 3, false);
 
         // === Seed EMPLOYEE role + default RBAC permissions ===
         seedRolesAndPermissions(org);

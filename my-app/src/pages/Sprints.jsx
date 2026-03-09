@@ -7,6 +7,7 @@ import Layout from '../components/Layout';
 const Sprints = () => {
     const [searchParams] = useSearchParams();
     const projectId = searchParams.get('projectId');
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
 
     const [projects, setProjects] = useState([]);
     const [selectedProject, setSelectedProject] = useState(projectId || '');
@@ -25,7 +26,7 @@ const Sprints = () => {
     useEffect(() => {
         const fetchProjects = async () => {
             try {
-                const res = await api.get('/api/projects', { params: { page: 0, size: 100 } });
+                const res = await api.get('/api/projects', { params: { orgId: user.organizationId, page: 0, size: 100 } });
                 setProjects(res.data?.data?.content || []);
             } catch (err) { console.error(err); }
         };
@@ -47,13 +48,13 @@ const Sprints = () => {
 
     const openCreate = () => {
         setEditSprint(null);
-        setForm({ name: '', goal: '', startDate: '', endDate: '' });
+        setForm({ name: '', goal: '', startDate: '', endDate: '', projectId: selectedProject || '' });
         setShowCreate(true);
     };
 
     const openEdit = (sprint) => {
         setEditSprint(sprint);
-        setForm({ name: sprint.name, goal: sprint.goal, startDate: sprint.startDate || '', endDate: sprint.endDate || '' });
+        setForm({ name: sprint.name, goal: sprint.goal, startDate: sprint.startDate || '', endDate: sprint.endDate || '', projectId: sprint.projectId || selectedProject });
         setShowCreate(true);
     };
 
@@ -61,15 +62,23 @@ const Sprints = () => {
         e.preventDefault();
         setSaving(true);
         try {
-            const payload = { ...form, projectId: parseInt(selectedProject) };
+            const projId = form.projectId || selectedProject;
+            if (!projId) {
+                alert('Please select a project');
+                setSaving(false);
+                return;
+            }
+            const payload = { ...form, projectId: parseInt(projId) };
             if (editSprint) {
                 await api.put(`/api/sprints/${editSprint.id}`, payload);
             } else {
                 await api.post('/api/sprints', payload);
             }
             setShowCreate(false);
+            // Update selected project to match the newly created sprint's project
+            setSelectedProject(projId);
             // Refetch
-            const res = await api.get('/api/sprints', { params: { projectId: selectedProject, page: 0, size: 50 } });
+            const res = await api.get('/api/sprints', { params: { projectId: projId, page: 0, size: 50 } });
             setSprints(res.data?.data?.content || []);
         } catch (err) {
             alert(err.response?.data?.message || 'Operation failed');
@@ -147,9 +156,7 @@ const Sprints = () => {
                         <option value="">Select project</option>
                         {projects.map(p => <option key={p.id} value={p.id}>{p.name} ({p.code})</option>)}
                     </select>
-                    {selectedProject && (
-                        <button className="btn btn-primary" onClick={openCreate}><Plus size={16} /> New Sprint</button>
-                    )}
+                    <button className="btn btn-primary" onClick={openCreate}><Plus size={16} /> New Sprint</button>
                 </div>
             </div>
 
@@ -230,6 +237,16 @@ const Sprints = () => {
                         </div>
                         <form onSubmit={handleSave}>
                             <div className="modal-body">
+                                {!editSprint && (
+                                    <div className="form-group">
+                                        <label className="form-label">Project *</label>
+                                        <select className="form-select" value={form.projectId}
+                                            onChange={(e) => setForm({ ...form, projectId: e.target.value })} required>
+                                            <option value="">-- Select Project --</option>
+                                            {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                                        </select>
+                                    </div>
+                                )}
                                 <div className="form-group">
                                     <label className="form-label">Sprint Name *</label>
                                     <input type="text" className="form-input" placeholder="Sprint 1"

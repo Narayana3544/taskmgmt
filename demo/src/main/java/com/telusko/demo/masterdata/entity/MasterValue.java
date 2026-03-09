@@ -25,6 +25,7 @@ public class MasterValue extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "master_type_id", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private MasterType masterType;
 
     @Column(nullable = false, length = 100)

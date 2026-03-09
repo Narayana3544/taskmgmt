@@ -20,6 +20,8 @@ import com.telusko.demo.workitem.entity.WorkItemHistory;
 import com.telusko.demo.workitem.repository.WorkItemCommentRepository;
 import com.telusko.demo.workitem.repository.WorkItemHistoryRepository;
 import com.telusko.demo.workitem.repository.WorkItemRepository;
+import com.telusko.demo.sprint.repository.SprintWorkItemRepository;
+import com.telusko.demo.sprint.entity.SprintWorkItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -56,6 +58,7 @@ public class WorkItemService {
     private final PermissionService permissionService;
     private final AuditService auditService;
     private final NotificationService notificationService;
+    private final SprintWorkItemRepository sprintWorkItemRepository;
 
     public WorkItemService(WorkItemRepository workItemRepository,
             WorkItemCommentRepository commentRepository,
@@ -65,7 +68,8 @@ public class WorkItemService {
             MasterValueRepository masterValueRepository,
             PermissionService permissionService,
             AuditService auditService,
-            NotificationService notificationService) {
+            NotificationService notificationService,
+            SprintWorkItemRepository sprintWorkItemRepository) {
         this.workItemRepository = workItemRepository;
         this.commentRepository = commentRepository;
         this.historyRepository = historyRepository;
@@ -75,6 +79,7 @@ public class WorkItemService {
         this.permissionService = permissionService;
         this.auditService = auditService;
         this.notificationService = notificationService;
+        this.sprintWorkItemRepository = sprintWorkItemRepository;
     }
 
     // ==================== CREATE ====================
@@ -242,6 +247,83 @@ public class WorkItemService {
         return mapToResponse(workItem);
     }
 
+    // ==================== ASSIGN ====================
+    @Transactional
+    public void assignWorkItem(Long workItemId, Long assigneeId, Long userId) {
+        permissionService.requirePermission(userId, "WORK_ITEM", "UPDATE");
+
+        WorkItem workItem = workItemRepository.findById(workItemId)
+                .orElseThrow(() -> new ResourceNotFoundException("WorkItem", "id", workItemId));
+
+        User oldAssignee = workItem.getAssignee();
+        User newAssignee = assigneeId != null ? findUser(assigneeId) : null;
+
+        if ((oldAssignee == null && newAssignee != null) ||
+            (oldAssignee != null && (newAssignee == null || !oldAssignee.getId().equals(newAssignee.getId())))) {
+            
+            workItem.setAssignee(newAssignee);
+            workItem.setUpdatedBy(userId);
+            
+            recordHistory(workItem, "ASSIGNED", oldAssignee, newAssignee, null, null, userId);
+            
+            String oldName = oldAssignee != null ? oldAssignee.getFullName() : "Unassigned";
+            String newName = newAssignee != null ? newAssignee.getFullName() : "Unassigned";
+            auditService.logAction("WORK_ITEM", workItemId, "ASSIGNED", oldName, newName, userId);
+
+            if (newAssignee != null) {
+                notificationService.createNotification(
+                        newAssignee.getId(),
+                        "WORK_ITEM", workItemId,
+                        "Task Assigned",
+                        "Work item '" + workItem.getTitle() + "' has been assigned to you",
+                        userId);
+            }
+            
+            workItemRepository.save(workItem);
+        }
+    }
+
+    // ==================== QUICK STATUS UPDATE ====================
+    @Transactional
+    public void updateWorkItemStatus(Long workItemId, String statusCode, Long userId) {
+        permissionService.requirePermission(userId, "WORK_ITEM", "UPDATE");
+
+        WorkItem workItem = workItemRepository.findById(workItemId)
+                .orElseThrow(() -> new ResourceNotFoundException("WorkItem", "id", workItemId));
+
+        MasterValue newStatus = masterValueRepository.findByMasterTypeCodeAndCode("WORK_ITEM_STATUS", statusCode)
+                .orElseThrow(() -> new BadRequestException("Status not configured: " + statusCode));
+
+        MasterValue oldStatus = workItem.getStatus();
+        
+        if (oldStatus == null || !oldStatus.getId().equals(newStatus.getId())) {
+            
+            // RULE: Only Assignee or Owner can change the status
+            boolean isOwner = workItem.getOwner() != null && workItem.getOwner().getId().equals(userId);
+            boolean isAssignee = workItem.getAssignee() != null && workItem.getAssignee().getId().equals(userId);
+            
+            if (!isOwner && !isAssignee) {
+                throw new BadRequestException("Only the Assignee or Owner can change the status of this work item");
+            }
+
+            // RULE: Only Owner can move to DONE
+            if ("DONE".equals(newStatus.getCode()) && !isOwner) {
+                throw new BadRequestException("Only the Owner can mark a work item as DONE");
+            }
+
+            workItem.setStatus(newStatus);
+            workItem.setUpdatedBy(userId);
+
+            String oldName = oldStatus != null ? oldStatus.getCode() : "NONE";
+            recordHistory(workItem, "STATUS_CHANGED", null, null, oldStatus, newStatus, userId);
+            auditService.logAction("WORK_ITEM", workItemId, "STATUS_CHANGED", oldName, newStatus.getCode(), userId);
+            
+            // If moved to DONE, maybe trigger notification? (Optional)
+            
+            workItemRepository.save(workItem);
+        }
+    }
+
     // ==================== HANDOFF TO OWNER ====================
     @Transactional
     public WorkItemResponse handoffToOwner(Long workItemId, String comment, Long userId) {
@@ -312,13 +394,37 @@ public class WorkItemService {
     }
 
     @Transactional(readOnly = true)
-    public List<WorkItemComment> getComments(Long workItemId) {
-        return commentRepository.findByWorkItemIdAndActiveTrueOrderByCommentedAtDesc(workItemId);
+    public List<java.util.Map<String, Object>> getComments(Long workItemId) {
+        return commentRepository.findByWorkItemIdAndActiveTrueOrderByCommentedAtDesc(workItemId).stream()
+                .map(c -> {
+                    java.util.Map<String, Object> map = new java.util.HashMap<>();
+                    map.put("id", c.getId());
+                    map.put("content", c.getCommentText());
+                    map.put("authorName", c.getCommentedBy() != null ? c.getCommentedBy().getFullName() : "System");
+                    map.put("createdAt", c.getCommentedAt());
+                    return map;
+                }).toList();
     }
 
     @Transactional(readOnly = true)
-    public List<WorkItemHistory> getHistory(Long workItemId) {
-        return historyRepository.findByWorkItemIdOrderByPerformedAtDesc(workItemId);
+    public List<java.util.Map<String, Object>> getHistory(Long workItemId) {
+        return historyRepository.findByWorkItemIdOrderByPerformedAtDesc(workItemId).stream()
+                .map(h -> {
+                    java.util.Map<String, Object> map = new java.util.HashMap<>();
+                    map.put("id", h.getId());
+                    map.put("eventType", h.getEventType());
+                    map.put("performedByName", h.getPerformedBy() != null ? h.getPerformedBy().getFullName() : "System");
+                    map.put("performedAt", h.getPerformedAt());
+                    map.put("comment", h.getComment());
+                    
+                    if (h.getOldStatus() != null) map.put("oldValue", h.getOldStatus().getDisplayName());
+                    else if (h.getFromUser() != null) map.put("oldValue", h.getFromUser().getFullName());
+                    
+                    if (h.getNewStatus() != null) map.put("newValue", h.getNewStatus().getDisplayName());
+                    else if (h.getToUser() != null) map.put("newValue", h.getToUser().getFullName());
+                    
+                    return map;
+                }).toList();
     }
 
     // ==================== HELPERS ====================
@@ -370,6 +476,21 @@ public class WorkItemService {
     }
 
     private WorkItemResponse mapToResponse(WorkItem w) {
+        Long sprintId = null;
+        String sprintName = null;
+        try {
+            List<SprintWorkItem> swiList = sprintWorkItemRepository.findActiveByWorkItemId(w.getId());
+            if (!swiList.isEmpty()) {
+                SprintWorkItem activeSwi = swiList.get(0);
+                if (activeSwi.getSprint() != null) {
+                    sprintId = activeSwi.getSprint().getId();
+                    sprintName = activeSwi.getSprint().getName();
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Failed to map sprint for work item {}: {}", w.getId(), e.getMessage());
+        }
+
         return WorkItemResponse.builder()
                 .id(w.getId())
                 .projectId(w.getProject().getId())
@@ -393,6 +514,8 @@ public class WorkItemService {
                 .reportedById(w.getReportedBy() != null ? w.getReportedBy().getId() : null)
                 .reportedByName(w.getReportedBy() != null ? w.getReportedBy().getFullName() : null)
                 .storyPoints(w.getStoryPoints())
+                .sprintId(sprintId)
+                .sprintName(sprintName)
                 .dueDate(w.getDueDate())
                 .active(w.getActive())
                 .createdAt(w.getCreatedAt())

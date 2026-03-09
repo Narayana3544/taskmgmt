@@ -57,6 +57,7 @@ const WorkItems = () => {
         setEditItem(null);
         setForm({ title: '', description: '', projectId: projectId || '', typeId: '', priorityId: '', ownerId: '', assigneeId: '', storyPoints: '', dueDate: '' });
         setShowModal(true);
+        if (projectId) fetchProjectMembers(projectId);
     };
 
     const openEdit = (item) => {
@@ -69,6 +70,7 @@ const WorkItems = () => {
             statusId: item.statusId || ''
         });
         setShowModal(true);
+        if (item.projectId) fetchProjectMembers(item.projectId);
     };
 
     const handleSave = async (e) => {
@@ -83,9 +85,10 @@ const WorkItems = () => {
                 statusId: form.statusId ? parseInt(form.statusId) : null,
                 ownerId: form.ownerId ? parseInt(form.ownerId) : null,
                 assigneeId: form.assigneeId ? parseInt(form.assigneeId) : null,
-                storyPoints: form.storyPoints ? parseInt(form.storyPoints) : null,
-                organizationId: user.organizationId
+                storyPoints: form.storyPoints ? parseInt(form.storyPoints) : null
             };
+            if (!payload.dueDate) delete payload.dueDate;
+            delete payload.organizationId; // Not required by backend for WorkItems
             if (editItem) {
                 await api.put(`/api/work-items/${editItem.id}`, payload);
                 showToast.success('Work item updated');
@@ -249,18 +252,20 @@ const WorkItems = () => {
                                             ))}
                                         </select>
                                     </div>
-                                    <div className="form-group">
-                                        <label className="form-label">Assignee</label>
-                                        <select className="form-select"
-                                            value={form.assigneeId} onChange={(e) => setForm({ ...form, assigneeId: e.target.value })}>
-                                            <option value="">Select assignee</option>
-                                            {projectMembers.map(m => (
-                                                <option key={m.userId || m.id} value={m.userId || m.id}>
-                                                    {m.fullName || m.userName || `User #${m.userId || m.id}`}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
+                                    {editItem && (
+                                        <div className="form-group">
+                                            <label className="form-label">Assignee</label>
+                                            <select className="form-select"
+                                                value={form.assigneeId} onChange={(e) => setForm({ ...form, assigneeId: e.target.value })}>
+                                                <option value="">Select assignee</option>
+                                                {projectMembers.map(m => (
+                                                    <option key={m.userId || m.id} value={m.userId || m.id}>
+                                                        {m.fullName || m.userName || `User #${m.userId || m.id}`}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    )}
                                 </div>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                                     <div className="form-group">

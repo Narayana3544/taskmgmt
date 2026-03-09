@@ -254,6 +254,29 @@ public class SprintService {
                                 .build();
                 sprintWorkItemRepository.save(swi);
 
+                // Change status from BACKLOG to OPEN
+                if (workItem.getStatus() != null && "BACKLOG".equals(workItem.getStatus().getCode())) {
+                        MasterValue oldStatus = workItem.getStatus();
+                        MasterValue openStatus = masterValueRepository
+                                        .findByMasterTypeCodeAndCode("WORK_ITEM_STATUS", "OPEN")
+                                        .orElseThrow(() -> new BadRequestException("OPEN status not configured"));
+                                        
+                        workItem.setStatus(openStatus);
+                        workItem.setUpdatedBy(userId);
+                        workItemRepository.save(workItem);
+                        
+                        historyRepository.save(WorkItemHistory.builder()
+                                        .workItem(workItem)
+                                        .eventType("STATUS_CHANGED")
+                                        .oldStatus(oldStatus)
+                                        .newStatus(openStatus)
+                                        .performedBy(addedBy)
+                                        .performedAt(LocalDateTime.now())
+                                        .build());
+                                        
+                        auditService.logAction("WORK_ITEM", workItemId, "STATUS_CHANGED", "BACKLOG", "OPEN", userId);
+                }
+
                 auditService.logAction("SPRINT", sprintId, "ITEM_ADDED", null, workItem.getTitle(), userId);
         }
 

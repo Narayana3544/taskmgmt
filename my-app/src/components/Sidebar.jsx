@@ -57,6 +57,11 @@ const Sidebar = ({ collapsed, onToggle }) => {
         return location.pathname.startsWith(path);
     };
 
+    const filteredNavItems = NAV_ITEMS.filter(section => {
+        if (section.section === 'Admin' && user.roleCode !== 'ADMIN') return false;
+        return true;
+    });
+
     return (
         <aside className={`sidebar ${collapsed ? 'sidebar-collapsed' : ''}`}>
             {/* Logo */}
@@ -69,7 +74,7 @@ const Sidebar = ({ collapsed, onToggle }) => {
 
             {/* Navigation */}
             <nav className="sidebar-nav">
-                {NAV_ITEMS.map((section) => (
+                {filteredNavItems.map((section) => (
                     <div key={section.section}>
                         {!collapsed && <div className="sidebar-section-title">{section.section}</div>}
                         {section.items.map((item) => {

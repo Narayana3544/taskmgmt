@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, Save } from 'lucide-react';
+import { Plus, Edit2, Trash2, Save, Database } from 'lucide-react';
 import api from '../../api';
 import Layout from '../../components/Layout';
 import { showToast } from '../../utils/toast';
@@ -56,9 +56,27 @@ const RolePermissions = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => { if (selectedRole) fetchPermissions(selectedRole); }, [selectedRole]);
 
-    const togglePermission = (feature, action) => {
+    const togglePermission = async (feature, action) => {
         const key = `${feature}_${action}`;
-        setPermissions(prev => ({ ...prev, [key]: !prev[key] }));
+        const newAllowed = !permissions[key];
+        
+        // Optimistic UI update
+        const updatedPermissions = { ...permissions, [key]: newAllowed };
+        setPermissions(updatedPermissions);
+        
+        // Auto-save to backend
+        try {
+            const perms = Object.entries(updatedPermissions).map(([k, allowed]) => {
+                const [f, a] = k.split('_');
+                return { roleCode: selectedRole, feature: f, action: a, allowed };
+            });
+            await api.put('/api/permissions', { roleCode: selectedRole, permissions: perms });
+            showToast.success(`Permission updated`);
+        } catch(err) {
+            // Revert on failure
+            setPermissions(permissions);
+            showToast.error('Failed to update permission');
+        }
     };
 
     const savePermissions = async () => {
@@ -72,6 +90,21 @@ const RolePermissions = () => {
             showToast.success('Permissions saved successfully');
         } catch (err) { showToast.error(err.response?.data?.message || 'Failed to save'); }
         finally { setSaving(false); }
+    };
+
+    const seedMasterData = async () => {
+        if (!window.confirm("Seed default master data? This will add initial values for Roles, Leave Reasons, Priorities, and Statuses.")) return;
+        setSaving(true);
+        try {
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            await api.post(`/api/master-data/seed/${user.organizationId || 1}`);
+            showToast.success('Master data seeded successfully');
+            fetchRoles();
+        } catch (err) {
+            showToast.error(err.response?.data?.message || 'Failed to seed data');
+        } finally {
+            setSaving(false);
+        }
     };
 
     // ── Role CRUD handlers ──
@@ -130,6 +163,9 @@ const RolePermissions = () => {
                     <p className="page-header-subtitle">Manage roles and RBAC permissions</p>
                 </div>
                 <div className="flex gap-2">
+                    <button className="btn btn-secondary" onClick={seedMasterData} disabled={saving} title="Seeds default Master Data (Roles, Statuses, etc)">
+                        <Database size={16} /> Seed Master Data
+                    </button>
                     <button className="btn btn-secondary" onClick={openCreateRole}>
                         <Plus size={16} /> New Role
                     </button>

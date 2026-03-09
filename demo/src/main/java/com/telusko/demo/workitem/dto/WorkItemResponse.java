@@ -39,6 +39,8 @@ public class WorkItemResponse {
     private String reportedByName;
 
     private Integer storyPoints;
+    private Long sprintId;
+    private String sprintName;
     private LocalDate dueDate;
     private Boolean active;
     private LocalDateTime createdAt;

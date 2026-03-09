@@ -64,18 +64,19 @@ public class MasterDataController {
         Long typeId = null;
         if (body.get("typeId") != null) {
             typeId = Long.valueOf(body.get("typeId").toString());
-        } else if (body.get("typeCode") != null) {
+        } else if (body.get("typeCode") != null && body.get("organizationId") != null) {
             String typeCode = body.get("typeCode").toString();
-            MasterType type = masterDataService.getTypeByCode(typeCode);
+            Long orgId = Long.valueOf(body.get("organizationId").toString());
+            MasterType type = masterDataService.getTypeByCode(orgId, typeCode);
             if (type != null) {
                 typeId = type.getId();
             } else {
                 return ResponseEntity.badRequest()
-                        .body(ApiResponse.error("MasterType not found for code: " + typeCode));
+                        .body(ApiResponse.error("MasterType not found for code: " + typeCode + " in org " + orgId));
             }
         } else {
             return ResponseEntity.badRequest()
-                    .body(ApiResponse.error("Either typeId or typeCode is required"));
+                    .body(ApiResponse.error("Either typeId, or (typeCode AND organizationId) are required"));
         }
 
         MasterValue value = masterDataService.createValue(

@@ -14,6 +14,8 @@ const WorkItemDetails = () => {
     const [comments, setComments] = useState([]);
     const [history, setHistory] = useState([]);
     const [attachments, setAttachments] = useState([]);
+    const [projectMembers, setProjectMembers] = useState([]);
+    const [isAssigning, setIsAssigning] = useState(false);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('details');
     const [commentText, setCommentText] = useState('');
@@ -28,10 +30,17 @@ const WorkItemDetails = () => {
                 api.get(`/api/work-items/${id}/history`),
                 api.get(`/api/work-items/${id}/attachments`).catch(() => ({ data: { data: [] } }))
             ]);
-            setItem(itemRes.data?.data);
+            
+            const wi = itemRes.data?.data;
+            setItem(wi);
             setComments(commRes.data?.data || []);
             setHistory(histRes.data?.data || []);
             setAttachments(attRes.data?.data || []);
+            
+            if (wi?.projectId) {
+                const memRes = await api.get(`/api/projects/${wi.projectId}/members`).catch(() => ({ data: { data: [] } }));
+                setProjectMembers(memRes.data?.data || []);
+            }
         } catch (err) { console.error(err); }
         finally { setLoading(false); }
     };
@@ -47,6 +56,16 @@ const WorkItemDetails = () => {
             const commRes = await api.get(`/api/work-items/${id}/comments`);
             setComments(commRes.data?.data || []);
         } catch (err) { alert(err.response?.data?.message || 'Failed'); }
+    };
+
+    const handleAssign = async (userId) => {
+        try {
+            await api.patch(`/api/work-items/${id}/assign`, { assigneeId: userId });
+            setIsAssigning(false);
+            fetchAll();
+        } catch (err) {
+            alert(err.response?.data?.message || 'Failed to assign');
+        }
     };
 
     const doHandoff = async () => {
@@ -113,10 +132,31 @@ const WorkItemDetails = () => {
                             </div>
                             <div>
                                 <div style={{ fontSize: 11, color: 'var(--color-text-muted)', marginBottom: 2 }}>Assignee</div>
-                                <div className="flex items-center gap-2">
-                                    <User size={12} color="var(--color-text-muted)" />
-                                    <span style={{ fontSize: 14, fontWeight: 500 }}>{item.assigneeName || '—'}</span>
-                                </div>
+                                {isAssigning ? (
+                                    <select 
+                                        className="form-select form-select-sm" 
+                                        style={{ padding: '2px 24px 2px 8px', fontSize: 13, height: 28, width: '100%', maxWidth: 150 }}
+                                        value={item.assigneeId || ''} 
+                                        onChange={(e) => handleAssign(e.target.value ? parseInt(e.target.value) : null)}
+                                        onBlur={() => setIsAssigning(false)}
+                                        autoFocus
+                                    >
+                                        <option value="">Unassigned</option>
+                                        {projectMembers.map(m => (
+                                            <option key={m.userId || m.id} value={m.userId || m.id}>{m.fullName || m.name}</option>
+                                        ))}
+                                    </select>
+                                ) : (
+                                    <div className="flex items-center gap-2" 
+                                         style={{ cursor: 'pointer', padding: '2px 4px', margin: '-2px -4px', borderRadius: 4 }}
+                                         onClick={() => setIsAssigning(true)}
+                                         title="Click to assign">
+                                        <User size={12} color="var(--color-text-muted)" />
+                                        <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--color-secondary)' }}>
+                                            {item.assigneeName || 'Unassigned'}
+                                        </span>
+                                    </div>
+                                )}
                             </div>
                             <div>
                                 <div style={{ fontSize: 11, color: 'var(--color-text-muted)', marginBottom: 2 }}>Sprint</div>

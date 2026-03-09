@@ -12,7 +12,7 @@ const UserManagement = () => {
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [editUser, setEditUser] = useState(null);
-    const [form, setForm] = useState({ fullName: '', email: '', password: '', roleId: '', status: 'ACTIVE' });
+    const [form, setForm] = useState({ fullName: '', email: '', password: '', roleId: '', managerId: '', status: 'ACTIVE' });
     const [saving, setSaving] = useState(false);
     const [roles, setRoles] = useState([]);
 
@@ -37,13 +37,13 @@ const UserManagement = () => {
 
     const openCreate = () => {
         setEditUser(null);
-        setForm({ fullName: '', email: '', password: '', roleId: '', status: 'ACTIVE' });
+        setForm({ fullName: '', email: '', password: '', roleId: '', managerId: '', status: 'ACTIVE' });
         setShowModal(true);
     };
 
     const openEdit = (u) => {
         setEditUser(u);
-        setForm({ fullName: u.fullName, email: u.email, password: '', roleId: u.roleId || '', status: u.status || 'ACTIVE' });
+        setForm({ fullName: u.fullName, email: u.email, password: '', roleId: u.roleId || '', managerId: u.managerId || '', status: u.status || 'ACTIVE' });
         setShowModal(true);
     };
 
@@ -94,7 +94,7 @@ const UserManagement = () => {
                         <div className="table-container">
                             <table className="table">
                                 <thead>
-                                    <tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th></th></tr>
+                                    <tr><th>Name</th><th>Email</th><th>Role</th><th>Manager</th><th>Status</th><th></th></tr>
                                 </thead>
                                 <tbody>
                                     {users.map(u => (
@@ -112,6 +112,7 @@ const UserManagement = () => {
                                             </td>
                                             <td style={{ color: 'var(--color-text-secondary)' }}>{u.email}</td>
                                             <td>{u.roleName || '—'}</td>
+                                            <td style={{ color: 'var(--color-text-secondary)' }}>{u.managerName || '—'}</td>
                                             <td><StatusBadge code={u.status || 'ACTIVE'} label={u.status || 'Active'} /></td>
                                             <td>
                                                 <div className="flex gap-2">
@@ -164,6 +165,16 @@ const UserManagement = () => {
                                             onChange={(e) => setForm({ ...form, roleId: e.target.value })}>
                                             <option value="">Select role</option>
                                             {roles.map(r => <option key={r.id} value={r.id}>{r.displayName}</option>)}
+                                        </select>
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Reporting Manager</label>
+                                        <select className="form-select" value={form.managerId}
+                                            onChange={(e) => setForm({ ...form, managerId: e.target.value })}>
+                                            <option value="">Select manager</option>
+                                            {users.filter(u => u.id !== editUser?.id).map(u => (
+                                                <option key={u.id} value={u.id}>{u.fullName}</option>
+                                            ))}
                                         </select>
                                     </div>
                                     {editUser && (

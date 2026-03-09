@@ -54,23 +54,11 @@ const KanbanBoard = () => {
         ));
 
         try {
-            await api.put(`/api/work-items/${draggedItem.id}`, {
-                ...draggedItem,
-                statusId: null, // Let backend lookup by code
-                title: draggedItem.title,
-                description: draggedItem.description,
-                projectId: draggedItem.projectId,
-                storyPoints: draggedItem.storyPoints,
-                dueDate: draggedItem.dueDate,
-                ownerId: draggedItem.ownerId,
-                assigneeId: draggedItem.assigneeId,
-                typeId: draggedItem.typeId,
-                priorityId: draggedItem.priorityId,
-            });
+            await api.patch(`/api/work-items/${draggedItem.id}/status`, { statusCode: targetStatusCode });
             fetchItems(); // Reload from server to get accurate state
         } catch (err) {
             alert(err.response?.data?.message || 'Cannot update status');
-            fetchItems(); // Revert
+            fetchItems(); // Revert on failure
         }
 
         setDraggedItem(null);

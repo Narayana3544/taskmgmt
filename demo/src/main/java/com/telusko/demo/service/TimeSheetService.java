@@ -105,27 +105,57 @@ public class TimeSheetService {
         return repo.save(existing);
     }
 
-    public Timesheet updatePastEntry(int id, Timesheet updatedEntry,Authentication authentication,int UserId) {
-        Timesheet existing = repo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Entry not found"));
+//    public Timesheet updatePastEntry(int id, Timesheet updatedEntry,Authentication authentication,int UserId) {
+//        Timesheet existing = repo.findById(id)
+//                .orElseThrow(() -> new RuntimeException("Entry not found"));
+//
+////        LocalDate today = LocalDate.now();
+//        boolean flag=getloggedUser(authentication);
+//        if ( !flag) {
+//            throw new IllegalStateException("You cannot update past timesheet entries.");
+//        }
+//
+//        // copy fields
+//        existing.setUser(userRepo.findById(UserId));
+//        existing.setStart_time(updatedEntry.getStart_time());
+//        existing.setEnd_time(updatedEntry.getEnd_time());
+//        existing.setWorkType(updatedEntry.getWorkType());
+//        existing.setTask(updatedEntry.getTask());
+//        existing.setDescription(updatedEntry.getDescription());
+//        existing.setPermission_granted(updatedEntry.isPermission_granted());
+//
+//        return repo.save(existing);
+//    }
 
-//        LocalDate today = LocalDate.now();
-        boolean flag=getloggedUser(authentication);
-        if ( !flag) {
-            throw new IllegalStateException("You cannot update past timesheet entries.");
-        }
+public Timesheet updatePastEntry(int id, Timesheet updatedEntry, Authentication authentication, int userId) {
 
-        // copy fields
-        existing.setUser(userRepo.findById(UserId));
-        existing.setStart_time(updatedEntry.getStart_time());
-        existing.setEnd_time(updatedEntry.getEnd_time());
-        existing.setWorkType(updatedEntry.getWorkType());
-        existing.setTask(updatedEntry.getTask());
-        existing.setDescription(updatedEntry.getDescription());
-        existing.setPermission_granted(updatedEntry.isPermission_granted());
+    Timesheet existing = repo.findById(id)
+            .orElseThrow(() -> new RuntimeException("Entry not found"));
 
-        return repo.save(existing);
+    boolean flag = getloggedUser(authentication);
+
+    if (!flag) {
+        throw new IllegalStateException("You cannot update past timesheet entries.");
     }
+
+    existing.setUser(userRepo.findById(userId));
+
+    existing.setStart_time(updatedEntry.getStart_time());
+    existing.setEnd_time(updatedEntry.getEnd_time());
+
+    if (updatedEntry.getWorkType() != null) {
+        existing.setWorkType(
+                workTypeRepo.findById(updatedEntry.getWorkType().getId())
+                        .orElseThrow(() -> new RuntimeException("WorkType not found"))
+        );
+    }
+
+    existing.setTask(updatedEntry.getTask());
+    existing.setDescription(updatedEntry.getDescription());
+    existing.setPermission_granted(updatedEntry.isPermission_granted());
+
+    return repo.save(existing);
+}
 
     public void deleteEntry(int id) {
         Timesheet existing = repo.findById(id)
@@ -139,34 +169,6 @@ public class TimeSheetService {
         repo.delete(existing);
     }
 
-//    public List<Timesheet> getEntriesForWeek(int userId, LocalDate startDate, LocalDate endDate) {
-//        // Fetch existing entries from DB
-//        List<Timesheet> entries = repo.findByUserIdAndDateBetween(userId, startDate, endDate);
-//
-//        // Map existing entries by date for quick lookup
-//        Map<LocalDate, Timesheet> entryMap = entries.stream()
-//                .collect(Collectors.toMap(Timesheet::getDate, e -> e));
-//
-//        // Fill in missing days with "Leave" placeholder
-//        List<Timesheet> fullWeek = new ArrayList<>();
-//        LocalDate current = startDate;
-//
-//        while (!current.isAfter(endDate)) {
-//            if (entryMap.containsKey(current)) {
-//                fullWeek.add(entryMap.get(current));
-//            } else {
-//                Timesheet leaveEntry = new Timesheet();
-//                leaveEntry.setDate(current);
-//                leaveEntry.setDescription("Absent (auto-marked)");
-//                leaveEntry.setPermission_granted(true);
-//                // You can set a default WorkType = TIME_OFF if you want
-//                fullWeek.add(leaveEntry);
-//            }
-//            current = current.plusDays(1);
-//        }
-//
-//        return fullWeek;
-//    }
 
     public void validateTimesheet(Timesheet newEntry, List<Timesheet> existingEntries) {
         for (Timesheet entry : existingEntries) {
@@ -203,11 +205,13 @@ public class TimeSheetService {
                 summaries.add(new DailySummaryDTO(date, 0.0, "0h 00m", "Leave"));
             } else {
                 // filter out bad rows that would NPE or throw in Duration.between
-                List<Timesheet> valid = entries.stream()
+                List<Timesheet> workEntries = entries.stream()
+                        .filter(e -> e.getWorkType() != null &&
+                                "Work".equalsIgnoreCase(e.getWorkType().getDescription()))
                         .filter(e -> e.getStart_time() != null && e.getEnd_time() != null)
                         .collect(Collectors.toList());
 
-                long totalMinutes = valid.stream()
+                long totalMinutes = workEntries.stream()
                         .mapToLong(e -> {
                             try {
                                 return Duration.between(e.getStart_time(), e.getEnd_time()).toMinutes();
@@ -260,6 +264,9 @@ public class TimeSheetService {
                 summaries.add(new DailySummaryDTO(date, 0, "Leave"));
             } else {
                 double totalHours = entries.stream()
+                        .filter(e -> e.getWorkType() != null &&
+                                "Work".equalsIgnoreCase(e.getWorkType().getDescription()))
+                        .filter(e -> e.getStart_time() != null && e.getEnd_time() != null)
                         .mapToDouble(e -> Duration.between(e.getStart_time(), e.getEnd_time()).toMinutes() / 60.0)
                         .sum();
 
@@ -368,6 +375,7 @@ public class TimeSheetService {
                     .toList();
 
             double totalHours = workingSummaries.stream()
+                    .filter(d -> "Worked".equalsIgnoreCase(d.getStatus()))
                     .mapToDouble(DailySummaryDTO::getTotalHours)
                     .sum();
 

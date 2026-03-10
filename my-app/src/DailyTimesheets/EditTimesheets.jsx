@@ -100,17 +100,17 @@ export default function EditAnyTimesheet() {
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
-  const resetForm = () => {
-    setForm({
-      startTime: "",
-      endTime: "",
-      taskId: "",
-      workTypeId: "",
-      description: "",
-      isPermissionGranted: false
-    });
-    setEditingId(null);
-  };
+const resetForm = () => {
+  setForm({
+    startTime: "",
+    endTime: "",
+    taskId: "",
+    workTypeId: workTypes[0]?.id || "",
+    description: "",
+    isPermissionGranted: false
+  });
+  setEditingId(null);
+};
 
   // --------------- Add Entry ---------------
   const handleAdd = async () => {
@@ -141,17 +141,18 @@ export default function EditAnyTimesheet() {
   };
 
   // --------------- Edit Entry ---------------
-  const handleEdit = (entry) => {
-    setEditingId(entry.id);
-    setForm({
-      startTime: entry.start_time,
-      endTime: entry.end_time,
-      taskId: entry.task?.id || "",
-      workTypeId: entry.workType?.id || "",
-      description: entry.description,
-      isPermissionGranted: entry.permission_granted
-    });
-  };
+const handleEdit = (entry) => {
+  setEditingId(entry.id);
+
+  setForm({
+    startTime: entry.start_time,
+    endTime: entry.end_time,
+    taskId: entry.task?.id?.toString() || "",
+    workTypeId: entry.workType?.id?.toString() || "",
+    description: entry.description,
+    isPermissionGranted: entry.permission_granted
+  });
+};
 
   const handleUpdate = async () => {
     const payload = {

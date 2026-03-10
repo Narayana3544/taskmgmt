@@ -3,10 +3,12 @@ import api from "../api";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Select from "react-select";
 import "./TaskList.css";
-import { FaEdit, FaPlus, FaEye } from "react-icons/fa";
+import { FaEdit, FaPlus, FaEye, FaDownload } from "react-icons/fa";
 import { useDebounce } from "use-debounce";
+import * as XLSX from "xlsx";
 
 export default function TaskList() {
+
   const [projects, setProjects] = useState([]);
   const [selectedProject, setSelectedProject] = useState(null);
   const [features, setFeatures] = useState([]);
@@ -34,8 +36,9 @@ export default function TaskList() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // ✅ Load filters from URL on initial mount
+  // Load filters from URL
   useEffect(() => {
+
     const project = searchParams.get("project") || "";
     const feature = searchParams.get("feature") || "";
     const sprint = searchParams.get("sprint") || "";
@@ -61,9 +64,9 @@ export default function TaskList() {
         fetchSprints(project)
       ]);
     }
+
   }, []);
 
-  // ✅ Update URL helper
   const updateURL = (key, value) => {
     if (value) searchParams.set(key, value);
     else searchParams.delete(key);
@@ -75,7 +78,7 @@ export default function TaskList() {
       const res = await api.get("/projects", { withCredentials: true });
       setProjects(res.data);
     } catch (err) {
-      console.error("Error fetching projects:", err);
+      console.error(err);
     }
   };
 
@@ -84,7 +87,7 @@ export default function TaskList() {
       const res = await api.get("/getstatusForTask", { withCredentials: true });
       setStatuses(res.data);
     } catch (err) {
-      console.error("Error fetching statuses:", err);
+      console.error(err);
     }
   };
 
@@ -120,7 +123,7 @@ export default function TaskList() {
     try {
       const res = await api.get(`/viewTaskByProjectId/${projectId}`, { withCredentials: true });
       setTasks(res.data);
-      setCurrentPage(0); // Reset to page 0 on project change
+      setCurrentPage(0);
     } catch {
       setError("Failed to load tasks.");
     } finally {
@@ -129,13 +132,16 @@ export default function TaskList() {
   };
 
   const handleProjectChange = async (option) => {
+
     const projectId = option ? option.value : "";
 
     setSelectedProject(projectId);
     updateURL("project", projectId);
 
     if (projectId) {
+
       setLoading(true);
+
       try {
         await Promise.all([
           fetchTasks(projectId),
@@ -146,62 +152,123 @@ export default function TaskList() {
       } finally {
         setLoading(false);
       }
+
     } else {
       setTasks([]);
       setFeatures([]);
       setUsers([]);
       setSprints([]);
     }
+
   };
 
-  // ✅ Optimized Filtering with useMemo
+  // Filtering
   const filteredTasks = useMemo(() => {
+
     return tasks
       .filter((t) => (selectedFeature ? t.feature?.id === parseInt(selectedFeature) : true))
       .filter((t) => (selectedSprint ? t.sprint?.id === parseInt(selectedSprint) : true))
       .filter((t) => (selectedUser ? t.user?.id === parseInt(selectedUser) : true))
       .filter((t) => (selectedStatus ? t.taskStatus?.id === parseInt(selectedStatus) : true))
       .filter((t) => t.userstory?.toLowerCase().includes(debouncedStory.toLowerCase()));
+
   }, [tasks, selectedFeature, selectedSprint, selectedUser, selectedStatus, debouncedStory]);
 
+  // Pagination
   const indexOfLastTask = (currentPage + 1) * tasksPerPage;
   const currentTasks = filteredTasks.slice(indexOfLastTask - tasksPerPage, indexOfLastTask);
   const totalPages = Math.ceil(filteredTasks.length / tasksPerPage);
 
+  // Download Excel
+  const downloadExcel = () => {
+
+    if (!selectedUser) {
+      alert("Please select a user to download tasks");
+      return;
+    }
+
+    const userTasks = filteredTasks.filter(
+      (task) => task.user?.id === parseInt(selectedUser)
+    );
+
+    if (userTasks.length === 0) {
+      alert("No tasks found for selected user");
+      return;
+    }
+
+    const data = userTasks.map((task) => ({
+      Story: task.userstory || "-",
+      StoryPoints: task.storypoints || "-",
+      Sprint: task.sprint?.name || "-",
+      Feature: task.feature?.name || "-",
+      AssignedTo: task.user?.first_name || "-",
+      TaskType: task.taskType?.description || "-",
+      Status: task.taskStatus?.description || "-",
+      StartDate: task.start_date
+        ? new Date(task.start_date).toLocaleDateString()
+        : "-"
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(workbook, worksheet, "UserTasks");
+
+    XLSX.writeFile(workbook, "User_Tasks.xlsx");
+
+  };
+
   return (
+
     <div className="task-list-page">
+
       <h2>Search Tasks</h2>
 
-      <div className="header-bar">
-        <div className="filter-section">
-          <Select
-            options={projects.map((p) => ({ value: p.id, label: p.name }))}
-            value={
-              projects.find((p) => p.id == selectedProject)
-                ? { value: selectedProject, label: projects.find((p) => p.id == selectedProject)?.name }
-                : null
-            }
-            onChange={handleProjectChange}
-            placeholder="Select Project..."
-            isClearable
-            className="project-select"
-          />
-        </div>
+<div className="header-bar">
 
-        <button className="create-btn" onClick={() => navigate("/create-task")}>
-          <FaPlus /> Create Task
-        </button>
-      </div>
+  <div className="filter-section">
+    <Select
+      options={projects.map((p) => ({ value: p.id, label: p.name }))}
+      value={
+        projects.find((p) => p.id == selectedProject)
+          ? { value: selectedProject, label: projects.find((p) => p.id == selectedProject)?.name }
+          : null
+      }
+      onChange={handleProjectChange}
+      placeholder="Select Project..."
+      isClearable
+      className="project-select"
+    />
+  </div>
+
+  <div className="header-actions">
+
+    <button className="icon-download-btn" onClick={downloadExcel}>
+      <FaDownload />
+    </button>
+
+    <button className="create-btn" onClick={() => navigate("/create-task")}>
+      <FaPlus /> Create Task
+    </button>
+
+  </div>
+
+</div>
 
       {loading && <p>Loading tasks...</p>}
       {error && <p>{error}</p>}
-
+            
       <div className="task-table-container">
+
         <table className="task-table">
+
           <thead>
+
             <tr>
+
               <th>
-                Story<br />
+                Story
+                <br />
                 <input
                   type="text"
                   placeholder="Search Story"
@@ -213,9 +280,12 @@ export default function TaskList() {
                   }}
                 />
               </th>
+
               <th>Story Points</th>
+
               <th>
-                Sprint<br />
+                Sprint
+                <br />
                 <select
                   value={selectedSprint}
                   onChange={(e) => {
@@ -230,8 +300,10 @@ export default function TaskList() {
                   ))}
                 </select>
               </th>
+
               <th>
-                Feature<br />
+                Feature
+                <br />
                 <select
                   value={selectedFeature}
                   onChange={(e) => {
@@ -246,8 +318,10 @@ export default function TaskList() {
                   ))}
                 </select>
               </th>
+
               <th>
-                Assigned To<br />
+                Assigned To
+                <br />
                 <select
                   value={selectedUser}
                   onChange={(e) => {
@@ -264,9 +338,12 @@ export default function TaskList() {
                   ))}
                 </select>
               </th>
+
               <th>Task Type</th>
+
               <th>
-                Status<br />
+                Status
+                <br />
                 <select
                   value={selectedStatus}
                   onChange={(e) => {
@@ -281,45 +358,68 @@ export default function TaskList() {
                   ))}
                 </select>
               </th>
+
               <th>Start Date</th>
+
               <th>Actions</th>
+
             </tr>
+
           </thead>
 
           <tbody>
+
             {!selectedProject ? (
-              <tr><td colSpan="9" className="no-data">Select a project to see tasks.</td></tr>
+              <tr>
+                <td colSpan="9" className="no-data">
+                  Select a project to see tasks.
+                </td>
+              </tr>
             ) : currentTasks.length === 0 ? (
-              <tr><td colSpan="9" className="no-data">No tasks found.</td></tr>
+              <tr>
+                <td colSpan="9" className="no-data">
+                  No tasks found.
+                </td>
+              </tr>
             ) : (
               currentTasks.map((task) => (
                 <tr key={task.id}>
+
                   <td>{task.userstory || "-"}</td>
                   <td>{task.storypoints ?? "-"}</td>
                   <td>{task.sprint?.name || "-"}</td>
                   <td>{task.feature?.name || "-"}</td>
                   <td>{task.user?.first_name || "-"}</td>
                   <td>{task.taskType?.description || "-"}</td>
-                  <td>{task.taskStatus?.decription || task.taskStatus?.description || "No Status"}</td>
+                  <td>{task.taskStatus?.description || "-"}</td>
                   <td>{task.start_date ? new Date(task.start_date).toLocaleDateString() : "-"}</td>
+
                   <td>
                     <div className="action-buttons">
+
                       <button className="icon-btn" onClick={() => navigate(`/task/${task.id}`)}>
                         <FaEye />
                       </button>
+
                       <button className="icon-btn" onClick={() => navigate(`/edit-task/${task.id}`)}>
                         <FaEdit />
                       </button>
+
                     </div>
                   </td>
+
                 </tr>
               ))
             )}
+
           </tbody>
+
         </table>
 
         {selectedProject && totalPages > 1 && (
+
           <div className="pagination">
+
             <button
               onClick={() => setCurrentPage((p) => Math.max(p - 1, 0))}
               disabled={currentPage === 0}
@@ -343,9 +443,15 @@ export default function TaskList() {
             >
               Next
             </button>
+
           </div>
+
         )}
+
       </div>
+
     </div>
+
   );
+
 }

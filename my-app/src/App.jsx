@@ -1,153 +1,120 @@
-import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import Sidebar from './components/Sidebar';
-import Navbar from './components/Navbar';
-import Home from './Register_and_login/Home';
-import Profile from './Pages/Profile';
-import LoginForm from './Register_and_login/LoginForm';
-import RegisterForm from './Register_and_login/RegisterForm';
-import Project from './Pages/Project';
-import CreateProject from './Pages/CreateProject';
-import ManageProjects from './Pages/ManageProjects';
-import EditProject from './Pages/EditProject';
-import Features from './Features/Features';
-import FeatureList from './Features/FeatureList';
-import UserStories from './userstories/UserStories';
-import ViewUserStories from './userstories/ViewUserStories';
-import Dashboard from './dashboard/Dashboard';
-import CreateSprint from './sprint/CreateSprint';
-import AssignUsersToSprint from './sprint/AssignUsers';
-import ManageSprints from './sprint/ManageSprints';
-import AssignTasksToSprint from './sprint/AssignTasksToSprint';
-import SprintOverview from './sprint/SprintOverview';
-import AssignedStories from './dashboard/AssignedTasks';
-import EditUserStory from './userstories/EdituserStories';
-import EditFeature from './Features/EditFeature';
-import TaskForm from './Task/CreateTask';
-import TaskList from './Task/TaskList';
-import TaskDetails from './Task/TaskDetails';
-import EditTask from './Task/EditTask';
-import ViewProject from './Pages/ViewProject';
-import ViewProjectById from './Project/AssignedProjects'
-import ViewFeaturesByProjectId from './Features/ViewFeaturesByProjectId'
-import ViewSprintsByFeatureid from './sprint/ViewSprintsByFeatureId';
-import ActiveSprints from './Project/ActiveSprints';
-import TimesheetForm from './TimeSheets/TimeSheetForm';
-import BugForm from './Bugs/Bugform';
-import BugList from './Bugs/BugList';
-import BugDetails from './Bugs/BugDetails';
-import DailyTimesheet from './DailyTimesheets/DailyTimeSheet';
-import MonthlyTimesheet from './DailyTimesheets/UserRangeTimeSheet';
-import AdminRangeTimeSheet from './DailyTimesheets/AdminRangeTimeSheet';
-import TimesheetExcelExport from './DailyTimesheets/TimesheetExcelExport';
-import { ToastContainer } from "react-toastify";
-import EditSprint from './sprint/EditSprint';
-import TimesheetSummary from './DailyTimesheets/AllTimesheetSummary';
-import AdminAllTimesheets from './DailyTimesheets/AdminAllTimesheets';
-import EditAnyTimesheet from './DailyTimesheets/EditTimesheets';
+import React, { useState } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
+import ErrorBoundary from './components/ErrorBoundary';
 
-// 🔹 Small component for logout route
-const Logout = ({ onLogout }) => {
-  const navigate = useNavigate();
+// Auth pages
+import Login from './pages/auth/Login';
+import Register from './pages/auth/Register';
 
-  useEffect(() => {
-    onLogout();
-    navigate("/"); // redirect to login after logout
-  }, [onLogout, navigate]);
+// Existing pages (kept in /pages — they use the old Layout wrapper)
+import KanbanBoard from './pages/KanbanBoard';
+import Dashboard from './pages/Dashboard';
+import Projects from './pages/Projects';
+import WorkItems from './pages/WorkItems';
+import Sprints from './pages/Sprints';
 
-  return null; // nothing to render
+// Features — Enhanced detail pages
+import WorkItemDetails from './features/workitems/WorkItemDetails';
+import SprintDetails from './features/sprints/SprintDetails';
+import ProjectDashboard from './features/projects/ProjectDashboard';
+
+// Features — Holidays
+import Holidays from './features/holidays/Holidays';
+import HolidayCalendar from './features/holidays/HolidayCalendar';
+import HolidayDetails from './features/holidays/HolidayDetails';
+
+// Features — Leaves
+import LeaveManagement from './features/leaves/LeaveManagement';
+import LeaveDetails from './features/leaves/LeaveDetails';
+
+// Features — Timesheets
+import MyTimesheets from './features/timesheets/MyTimesheets';
+import TimesheetApproval from './features/timesheets/TimesheetApproval';
+import TimesheetDetails from './features/timesheets/TimesheetDetails';
+
+// Features — Master Data
+import MasterData from './features/masterdata/MasterData';
+
+// Features — Users
+import UserManagement from './features/users/UserManagement';
+import UserProfile from './features/users/UserProfile';
+import UserActivity from './features/users/UserActivity';
+
+// Features — Notifications
+import Notifications from './features/notifications/Notifications';
+
+// Features — Audit & Activity
+import AuditLog from './features/audit/AuditLog';
+import ActivityFeed from './features/activity/ActivityFeed';
+
+// Features — Profile & Roles
+import Profile from './features/profile/Profile';
+import RolePermissions from './features/roles/RolePermissions';
+
+const ProtectedRoute = ({ children }) => {
+  const token = localStorage.getItem('token');
+  const user = localStorage.getItem('user');
+  return (token || user) ? children : <Navigate to="/login" replace />;
 };
 
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(() => {
-    return localStorage.getItem("user") ? true : false;
-  });
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  // eslint-disable-next-line no-unused-vars
+  const [isAuthenticated, setIsAuthenticated] = useState(
+    () => !!(localStorage.getItem('token') || localStorage.getItem('user'))
+  );
 
-  const handleLogout = () => {
-    localStorage.removeItem("user");
-    setIsLoggedIn(false);
+  const handleLogin = () => {
+    setIsAuthenticated(true);
   };
 
   return (
-    <Router>
-      {isLoggedIn ? (
-        <>
-          <Sidebar collapsed={sidebarCollapsed} onToggle={setSidebarCollapsed} />
-          <Navbar
-            collapsed={sidebarCollapsed}
-            onToggleSidebar={() => setSidebarCollapsed(prev => !prev)}
-          />
-          <div className={`home-container ${sidebarCollapsed ? 'full' : ''}`}>
-            <Routes>
-              <Route path="/home" element={<Home />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/project" element={<Project />} />
-              <Route path="/create-project" element={<CreateProject />} />    
-              <Route path="/manage-projects" element={<ManageProjects />} />
-              <Route path="/features" element={<Features />} />
-              <Route path="/projects/:projectId/features" element={<Features />} />
-              <Route path="/features/:projectId" element={<FeatureList />} />
-              <Route path="/view-features" element={<FeatureList />} />
-              <Route path="/userstories" element={<UserStories />} />
-              <Route path="/view-stories" element={<ViewUserStories />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/create-sprint" element={<CreateSprint />} />
-              <Route path="/manage-sprints" element={<ManageSprints />} />
-              <Route path="/sprint/:sprintId/assign-users" element={<AssignUsersToSprint />} />
-              <Route path="/sprints/:sprintId/assign-stories/:featureId" element={<AssignTasksToSprint />} />
-              <Route path="/sprints/overview/:sprintId" element={<SprintOverview />} />
-              <Route path="/my-stories" element={<AssignedStories />} />
-              <Route path="/edit-project/:id" element={<EditProject />} />
-              <Route path="/edit-userstory/:id" element={<EditUserStory />} />
-              <Route path="/edit-feature/:id" element={<EditFeature />} />
-              <Route path="/create-task" element={<TaskForm />} /> 
-              <Route path="/task" element={<TaskList />} />
-              <Route path="/task/:id" element={<TaskDetails />} />
-              <Route path="/edit-task/:id" element={<EditTask />} />
-              <Route path="/view-project/:id" element={<ViewProject />} />
-              <Route path="/view-projectsByUserId" element={<ViewProjectById />} />
-              <Route path="/view-featuresByprojectid/:projectId" element={<ViewFeaturesByProjectId />} />
-              <Route path="/ViewSprintsByFeatureid/:featureId" element={<ViewSprintsByFeatureid />} />
-              <Route path="/active-sprints" element={<ActiveSprints />} />
-              <Route path="/time-sheets" element={<TimesheetForm />} />
-              <Route path="/task/:id/buglist" element={<BugList/>} />
-              <Route path="/task/:id/bug" element={<BugForm />} />
-              <Route path="/bug/:id" element={<BugDetails/>} />
-              {/* <Route path="/Daily-time-sheets" element={<DailyTimesheet/>} /> */}
-              <Route path="/Monthly-time-sheets" element={<MonthlyTimesheet/>} />
-               <Route path="/timesheet/:date" element={<DailyTimesheet />} />
-               <Route path="/admin/timesheets" element={<AdminRangeTimeSheet />} />
-               <Route path="/timesheet-export" element={<TimesheetExcelExport />} />
-               <Route path="/edit-sprint/:id" element={<EditSprint />} />
-                <Route path="/timesheet-summary" element={<TimesheetSummary/>} />
-                <Route path="/admin/timesheet-export" element={<TimesheetExcelExport />} />
-                <Route path="/admin/timesheet" element={<AdminAllTimesheets />} />
-                <Route path="/edit-sprint/:id" element={<EditSprint />} />
-               <Route path="/timesheet/edit/:userId/:date" element={<EditAnyTimesheet />} />
-              {/* 🔹 Logout Route */}
-              <Route path="/logout" element={<Logout onLogout={handleLogout} />} />
-            </Routes>
-          </div>
-        </>
-      ) : (
+    <ErrorBoundary>
+      <Toaster position="top-right" toastOptions={{ style: { fontFamily: "'Inter', sans-serif" } }} />
+      <BrowserRouter>
         <Routes>
-          <Route path="/" element={<LoginForm onLogin={() => setIsLoggedIn(true)} />} />
-          <Route path="/register" element={<RegisterForm />} />
-          <Route path="*" element={<Navigate to="/" />} />
+          {/* Auth */}
+          <Route path="/login" element={<Login onLogin={handleLogin} />} />
+          <Route path="/register" element={<Register onLogin={handleLogin} />} />
+
+          {/* Main */}
+          <Route path="/" element={<ProtectedRoute><KanbanBoard /></ProtectedRoute>} />
+          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
+          <Route path="/projects/:id/dashboard" element={<ProtectedRoute><ProjectDashboard /></ProtectedRoute>} />
+          <Route path="/work-items" element={<ProtectedRoute><WorkItems /></ProtectedRoute>} />
+          <Route path="/work-items/:id" element={<ProtectedRoute><WorkItemDetails /></ProtectedRoute>} />
+          <Route path="/sprints" element={<ProtectedRoute><Sprints /></ProtectedRoute>} />
+          <Route path="/sprints/:id" element={<ProtectedRoute><SprintDetails /></ProtectedRoute>} />
+
+          {/* HR */}
+          <Route path="/leaves" element={<ProtectedRoute><LeaveManagement /></ProtectedRoute>} />
+          <Route path="/leaves/:id" element={<ProtectedRoute><LeaveDetails /></ProtectedRoute>} />
+          <Route path="/timesheets" element={<ProtectedRoute><MyTimesheets /></ProtectedRoute>} />
+          <Route path="/timesheets/approvals" element={<ProtectedRoute><TimesheetApproval /></ProtectedRoute>} />
+          <Route path="/timesheets/:id" element={<ProtectedRoute><TimesheetDetails /></ProtectedRoute>} />
+          <Route path="/holidays" element={<ProtectedRoute><Holidays /></ProtectedRoute>} />
+          <Route path="/holidays/calendar" element={<ProtectedRoute><HolidayCalendar /></ProtectedRoute>} />
+          <Route path="/holidays/:id" element={<ProtectedRoute><HolidayDetails /></ProtectedRoute>} />
+
+          {/* Admin */}
+          <Route path="/master-data" element={<ProtectedRoute><MasterData /></ProtectedRoute>} />
+          <Route path="/users" element={<ProtectedRoute><UserManagement /></ProtectedRoute>} />
+          <Route path="/users/:id" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
+          <Route path="/users/:id/activity" element={<ProtectedRoute><UserActivity /></ProtectedRoute>} />
+          <Route path="/roles" element={<ProtectedRoute><RolePermissions /></ProtectedRoute>} />
+          <Route path="/audit-log" element={<ProtectedRoute><AuditLog /></ProtectedRoute>} />
+          <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+
+          {/* Personal */}
+          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route path="/activity" element={<ProtectedRoute><ActivityFeed /></ProtectedRoute>} />
+
+          {/* Catch-all */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-      )}
-      <ToastContainer
-        position="top-right"
-        autoClose={2000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        pauseOnHover
-        draggable
-        theme="colored"
-      />
-    </Router>
+      </BrowserRouter>
+    </ErrorBoundary>
   );
 }
 

@@ -52,10 +52,11 @@ import ActivityFeed from './features/activity/ActivityFeed';
 import Profile from './features/profile/Profile';
 import RolePermissions from './features/roles/RolePermissions';
 
+const routerBasename = process.env.PUBLIC_URL || '';
+
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('token');
-  const user = localStorage.getItem('user');
-  return (token || user) ? children : <Navigate to="/login" replace />;
+  return token ? children : <Navigate to="/login" replace />;
 };
 
 function App() {
@@ -71,7 +72,7 @@ function App() {
   return (
     <ErrorBoundary>
       <Toaster position="top-right" toastOptions={{ style: { fontFamily: "'Inter', sans-serif" } }} />
-      <BrowserRouter>
+      <BrowserRouter basename={routerBasename}>
         <Routes>
           {/* Auth */}
           <Route path="/login" element={<Login onLogin={handleLogin} />} />

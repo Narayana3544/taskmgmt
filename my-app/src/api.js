@@ -1,6 +1,9 @@
 import axios from "axios";
 
 const baseURL = "http://localhost:8080";
+const appBasePath = process.env.PUBLIC_URL || "";
+
+const toAppPath = (path) => `${appBasePath}${path}`;
 
 const api = axios.create({
   baseURL: baseURL,
@@ -33,8 +36,9 @@ api.interceptors.response.use(
     if (error.response && !isAuthEndpoint) {
       const status = error.response.status;
       if (status === 401 || status === 403) {
+        localStorage.removeItem("token");
         localStorage.removeItem("user");
-        window.location.href = "/";
+        window.location.replace(toAppPath("/login"));
       }
     }
     return Promise.reject(error);

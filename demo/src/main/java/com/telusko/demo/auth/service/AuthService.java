@@ -95,6 +95,7 @@ public class AuthService {
                 .organizationId(user.getOrganization() != null ? user.getOrganization().getId() : null)
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
+                .requiresPasswordChange(user.getRequiresPasswordChange())
                 .build();
     }
 
@@ -182,5 +183,31 @@ public class AuthService {
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .build();
+    }
+
+    /**
+     * Change a user's password.
+     */
+    @Transactional
+    public void changePassword(Long userId, String oldPassword, String newPassword) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UnauthorizedException("User not found"));
+
+        UserAuth auth = userAuthRepository.findByUserId(userId)
+                .orElseThrow(() -> new UnauthorizedException("User credentials not found"));
+
+        if (!passwordEncoder.matches(oldPassword, auth.getPasswordHash())) {
+            throw new BadRequestException("Current password is incorrect");
+        }
+
+        // Update password hash and reset flag
+        auth.setPasswordHash(passwordEncoder.encode(newPassword));
+        auth.setPasswordUpdatedAt(LocalDateTime.now());
+        userAuthRepository.save(auth);
+
+        user.setRequiresPasswordChange(false);
+        userRepository.save(user);
+
+        log.info("Password changed successfully for user: {}", user.getEmail());
     }
 }

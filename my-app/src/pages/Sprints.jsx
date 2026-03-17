@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Plus, Play, Square, GripVertical } from 'lucide-react';
+import { Plus, Play, Square, GripVertical, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import api from '../api';
 import Layout from '../components/Layout';
 
@@ -33,18 +33,35 @@ const Sprints = () => {
         fetchProjects();
     }, []);
 
+    // Pagination and Search
+    const [page, setPage] = useState(0);
+    const [totalPages, setTotalPages] = useState(1);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(searchTerm);
+            setPage(0); // Reset to first page on new search
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
+
     // Fetch sprints for selected project
     useEffect(() => {
         if (!selectedProject) return;
         const fetchSprints = async () => {
             setLoading(true);
             try {
-                const res = await api.get('/api/sprints', { params: { projectId: selectedProject, page: 0, size: 50 } });
+                const params = { projectId: selectedProject, page, size: 10 };
+                if (debouncedSearch) params.search = debouncedSearch;
+                const res = await api.get('/api/sprints', { params });
                 setSprints(res.data?.data?.content || []);
+                setTotalPages(res.data?.data?.totalPages || 1);
             } catch (err) { console.error(err); } finally { setLoading(false); }
         };
         fetchSprints();
-    }, [selectedProject]);
+    }, [selectedProject, page, debouncedSearch]);
 
     const openCreate = () => {
         setEditSprint(null);
@@ -150,13 +167,19 @@ const Sprints = () => {
                     <h1>Sprints</h1>
                     <p className="page-header-subtitle">Sprint planning and management</p>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex gap-3 items-center">
+                    <div className="search-bar" style={{ position: 'relative', width: 220 }}>
+                        <Search size={16} style={{ position: 'absolute', left: 10, top: 10, color: 'var(--color-text-muted)' }} />
+                        <input type="text" className="form-input" placeholder="Search sprints..." 
+                            style={{ paddingLeft: 34, height: 36 }}
+                            value={searchTerm} onChange={e => setSearchTerm(e.target.value)} disabled={!selectedProject} />
+                    </div>
                     <select className="form-select" style={{ width: 200 }} value={selectedProject}
                         onChange={(e) => setSelectedProject(e.target.value)}>
                         <option value="">Select project</option>
                         {projects.map(p => <option key={p.id} value={p.id}>{p.name} ({p.code})</option>)}
                     </select>
-                    <button className="btn btn-primary" onClick={openCreate}><Plus size={16} /> New Sprint</button>
+                    <button className="btn btn-primary" onClick={openCreate} disabled={!selectedProject}><Plus size={16} /> New Sprint</button>
                 </div>
             </div>
 
@@ -224,6 +247,18 @@ const Sprints = () => {
                             </div>
                         </div>
                     ))}
+                </div>
+            )}
+
+            {totalPages > 1 && (
+                <div className="flex justify-center items-center gap-4" style={{ marginTop: 24 }}>
+                    <button className="btn btn-secondary btn-sm" disabled={page === 0} onClick={() => setPage(p => p - 1)}>
+                        <ChevronLeft size={16} /> Prev
+                    </button>
+                    <span style={{ fontSize: 13, fontWeight: 500 }}>Page {page + 1} of {totalPages}</span>
+                    <button className="btn btn-secondary btn-sm" disabled={page >= totalPages - 1} onClick={() => setPage(p => p + 1)}>
+                        Next <ChevronRight size={16} />
+                    </button>
                 </div>
             )}
 

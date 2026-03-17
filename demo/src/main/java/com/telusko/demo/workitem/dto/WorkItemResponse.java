@@ -44,4 +44,5 @@ public class WorkItemResponse {
     private LocalDate dueDate;
     private Boolean active;
     private LocalDateTime createdAt;
+    private java.util.List<String> attachments;
 }

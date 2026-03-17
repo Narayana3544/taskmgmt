@@ -32,8 +32,10 @@ public class ProjectController {
 
     @GetMapping
     public ResponseEntity<ApiResponse<PageResponse<ProjectResponse>>> getAll(
-            @RequestParam Long orgId, Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.success(projectService.getProjects(orgId, pageable)));
+            @RequestParam Long orgId,
+            @RequestParam(required = false) String search,
+            @org.springframework.data.web.PageableDefault(sort = "createdAt", direction = org.springframework.data.domain.Sort.Direction.DESC) Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.success(projectService.getProjects(orgId, search, pageable)));
     }
 
     @GetMapping("/{id}")

@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import ErrorBoundary from './components/ErrorBoundary';
 
 // Auth pages
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
+import ChangePassword from './pages/auth/ChangePassword';
 
 // Existing pages (kept in /pages — they use the old Layout wrapper)
 import KanbanBoard from './pages/KanbanBoard';
@@ -56,7 +57,24 @@ const routerBasename = process.env.PUBLIC_URL || '';
 
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('token');
-  return token ? children : <Navigate to="/login" replace />;
+  const userStr = localStorage.getItem('user');
+  const location = useLocation();
+  
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Prevent users who need password change from accessing anything else
+  if (userStr) {
+    try {
+      const user = JSON.parse(userStr);
+      if (user.requiresPasswordChange && location.pathname !== '/change-password') {
+        return <Navigate to="/change-password" replace />;
+      }
+    } catch(e) {}
+  }
+
+  return children;
 };
 
 function App() {
@@ -77,6 +95,7 @@ function App() {
           {/* Auth */}
           <Route path="/login" element={<Login onLogin={handleLogin} />} />
           <Route path="/register" element={<Register onLogin={handleLogin} />} />
+          <Route path="/change-password" element={<ProtectedRoute><ChangePassword /></ProtectedRoute>} />
 
           {/* Main */}
           <Route path="/" element={<ProtectedRoute><KanbanBoard /></ProtectedRoute>} />

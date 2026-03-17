@@ -19,4 +19,5 @@ public class AuthResponse {
     private Long organizationId;
     private String accessToken;
     private String refreshToken;
+    private Boolean requiresPasswordChange;
 }

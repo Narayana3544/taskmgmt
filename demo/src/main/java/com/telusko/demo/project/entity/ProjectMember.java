@@ -36,8 +36,8 @@ public class ProjectMember extends BaseEntity {
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "reporting_manager_id")
-    private User reportingManager;
+    @JoinColumn(name = "manager_id")
+    private User manager;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "responsibility_id")

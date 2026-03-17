@@ -101,6 +101,19 @@ const MyTimesheets = () => {
 
     const dayName = new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 
+    // --- Constraints Logic ---
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const limitDateObj = new Date();
+    limitDateObj.setDate(limitDateObj.getDate() - 2);
+    const limitDateStr = limitDateObj.toISOString().slice(0, 10);
+
+    const isFuture = selectedDate > todayStr;
+    const isPast2Days = selectedDate < limitDateStr;
+    const tsCode = timesheet?.statusCode || timesheet?.status?.code || 'DRAFT';
+    const isLockedByStatus = tsCode === 'SUBMITTED' || tsCode === 'APPROVED';
+    
+    const canEdit = !isFuture && !isPast2Days && !isLockedByStatus;
+
     return (
         <Layout title="My Timesheets">
             <div className="page-header">
@@ -113,6 +126,18 @@ const MyTimesheets = () => {
                 </button>
             </div>
 
+            {/* Constraints Warnings */}
+            {isPast2Days && (
+                <div style={{ padding: '12px', background: 'var(--color-warning-light)', color: '#8a6d3b', borderRadius: '4px', marginBottom: '16px', fontSize: '14px' }}>
+                    <strong>Locked:</strong> Timesheets older than 2 days cannot be edited or submitted.
+                </div>
+            )}
+            {isLockedByStatus && (
+                <div style={{ padding: '12px', background: 'var(--color-info-light)', color: '#31708f', borderRadius: '4px', marginBottom: '16px', fontSize: '14px' }}>
+                    <strong>Locked:</strong> Timesheet is already {tsCode}. Edits are disabled.
+                </div>
+            )}
+
             {/* Date Navigator */}
             <div className="card" style={{ marginBottom: 16 }}>
                 <div className="card-body">
@@ -123,9 +148,11 @@ const MyTimesheets = () => {
                         <div style={{ textAlign: 'center' }}>
                             <h3 style={{ margin: 0 }}>{dayName}</h3>
                             <input type="date" className="form-input" style={{ width: 160, marginTop: 4, textAlign: 'center' }}
-                                value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} />
+                                value={selectedDate} max={todayStr} onChange={(e) => {
+                                    if (e.target.value <= todayStr) setSelectedDate(e.target.value);
+                                }} />
                         </div>
-                        <button className="btn btn-sm btn-secondary" onClick={() => changeDate(1)}>
+                        <button className="btn btn-sm btn-secondary" onClick={() => changeDate(1)} disabled={selectedDate >= todayStr}>
                             Next <ChevronRight size={16} />
                         </button>
                     </div>
@@ -144,13 +171,17 @@ const MyTimesheets = () => {
                     </span>
                 </div>
                 <div className="flex gap-2">
-                    <button className="btn btn-primary btn-sm" onClick={() => setShowAddEntry(true)}>
-                        <Plus size={14} /> Add Entry
-                    </button>
-                    {timesheet && (!timesheet.statusCode || timesheet.statusCode === 'DRAFT') && entries.length > 0 && (
-                        <button className="btn btn-sm btn-primary" onClick={submitTimesheet}>
-                            <Send size={14} /> Submit
-                        </button>
+                    {canEdit && (
+                        <>
+                            <button className="btn btn-primary btn-sm" onClick={() => setShowAddEntry(true)}>
+                                <Plus size={14} /> Add Entry
+                            </button>
+                            {timesheet && entries.length > 0 && (
+                                <button className="btn btn-sm btn-primary" onClick={submitTimesheet}>
+                                    <Send size={14} /> Submit
+                                </button>
+                            )}
+                        </>
                     )}
                 </div>
             </div>
@@ -165,9 +196,11 @@ const MyTimesheets = () => {
                             <Clock size={40} />
                             <h3>No entries for this day</h3>
                             <p>Add your first time entry to get started.</p>
-                            <button className="btn btn-primary" style={{ marginTop: 16 }} onClick={() => setShowAddEntry(true)}>
-                                <Plus size={16} /> Add Entry
-                            </button>
+                            {canEdit && (
+                                <button className="btn btn-primary" style={{ marginTop: 16 }} onClick={() => setShowAddEntry(true)}>
+                                    <Plus size={16} /> Add Entry
+                                </button>
+                            )}
                         </div>
                     ) : (
                         <div className="table-container">

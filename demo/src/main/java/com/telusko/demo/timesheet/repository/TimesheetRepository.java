@@ -17,7 +17,7 @@ public interface TimesheetRepository extends JpaRepository<Timesheet, Long> {
     Optional<Timesheet> findByUserIdAndWorkDateAndActiveTrue(Long userId, LocalDate workDate);
 
     @Query("SELECT t FROM Timesheet t INNER JOIN t.user u " +
-           "WHERE u.manager.id = :managerId " +
+           "WHERE EXISTS (SELECT 1 FROM ProjectMember pm WHERE pm.user = u AND pm.manager.id = :managerId AND pm.active = true) " +
            "AND t.status.code = 'SUBMITTED' AND t.active = true " +
            "ORDER BY t.workDate ASC")
     Page<Timesheet> findPendingApprovalsByManager(@Param("managerId") Long managerId, Pageable pageable);

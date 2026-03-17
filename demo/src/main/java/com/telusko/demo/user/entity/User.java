@@ -60,10 +60,6 @@ public class User extends BaseEntity {
     @Column(length = 50)
     private String timezone;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "manager_id")
-    private User manager;
-
     @Column(length = 20, nullable = false)
     @Builder.Default
     private String status = "ACTIVE";
@@ -71,6 +67,10 @@ public class User extends BaseEntity {
     @Column(nullable = false)
     @Builder.Default
     private Boolean active = true;
+
+    @Column(name = "requires_password_change", nullable = false, columnDefinition = "boolean default true")
+    @Builder.Default
+    private Boolean requiresPasswordChange = true;
 
     @Column(name = "last_login_at")
     private LocalDateTime lastLoginAt;

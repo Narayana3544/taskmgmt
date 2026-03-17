@@ -4,8 +4,6 @@ import com.telusko.demo.common.dto.ApiResponse;
 import com.telusko.demo.common.dto.PageResponse;
 import com.telusko.demo.workitem.dto.WorkItemRequest;
 import com.telusko.demo.workitem.dto.WorkItemResponse;
-import com.telusko.demo.workitem.entity.WorkItemComment;
-import com.telusko.demo.workitem.entity.WorkItemHistory;
 import com.telusko.demo.workitem.service.WorkItemService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -42,13 +40,16 @@ public class WorkItemController {
 
     @GetMapping
     public ResponseEntity<ApiResponse<PageResponse<WorkItemResponse>>> getByProject(
-            @RequestParam Long projectId, Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.success(workItemService.getWorkItemsByProject(projectId, pageable)));
+            @RequestParam Long projectId,
+            @RequestParam(required = false) String search,
+            @org.springframework.data.web.PageableDefault(sort = "createdAt", direction = org.springframework.data.domain.Sort.Direction.DESC) Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.success(workItemService.getWorkItemsByProject(projectId, search, pageable)));
     }
 
     @GetMapping("/my")
     public ResponseEntity<ApiResponse<PageResponse<WorkItemResponse>>> getMyItems(
-            Authentication auth, Pageable pageable) {
+            Authentication auth, 
+            @org.springframework.data.web.PageableDefault(sort = "createdAt", direction = org.springframework.data.domain.Sort.Direction.DESC) Pageable pageable) {
         Long userId = Long.valueOf(auth.getName());
         return ResponseEntity.ok(ApiResponse.success(workItemService.getMyWorkItems(userId, pageable)));
     }

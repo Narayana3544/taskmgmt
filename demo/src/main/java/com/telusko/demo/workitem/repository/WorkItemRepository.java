@@ -14,6 +14,10 @@ import java.util.List;
 public interface WorkItemRepository extends JpaRepository<WorkItem, Long> {
     Page<WorkItem> findByProjectIdAndActiveTrue(Long projectId, Pageable pageable);
 
+    @Query("SELECT w FROM WorkItem w WHERE w.project.id = :projectId AND w.active = true " +
+           "AND LOWER(w.title) LIKE LOWER(CONCAT('%', :search, '%'))")
+    Page<WorkItem> findByProjectIdAndActiveTrueAndSearch(@Param("projectId") Long projectId, @Param("search") String search, Pageable pageable);
+
     List<WorkItem> findByAssigneeIdAndActiveTrue(Long assigneeId);
 
     Page<WorkItem> findByAssigneeIdAndActiveTrue(Long assigneeId, Pageable pageable);

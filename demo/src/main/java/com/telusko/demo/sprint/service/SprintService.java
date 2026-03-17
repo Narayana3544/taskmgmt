@@ -299,9 +299,19 @@ public class SprintService {
 
         // ==================== READ ====================
         @Transactional(readOnly = true)
-        public Page<SprintResponse> getSprintsByProject(Long projectId, Pageable pageable) {
-                return sprintRepository.findByProjectIdAndActiveTrue(projectId, pageable)
-                                .map(this::mapToResponse);
+        public Page<SprintResponse> getSprintsByProject(Long projectId, String search, Pageable pageable) {
+                if (search != null && !search.trim().isEmpty()) {
+                        return sprintRepository.findByProjectIdAndActiveTrueAndSearch(projectId, search.trim(), pageable)
+                                        .map(this::mapToResponse);
+                } else {
+                        return sprintRepository.findByProjectIdAndActiveTrue(projectId, pageable)
+                                        .map(this::mapToResponse);
+                }
+        }
+
+        @Transactional(readOnly = true)
+        public com.telusko.demo.sprint.dto.SprintOverviewResponse getSprintOverview(Long sprintId) {
+                return sprintWorkItemRepository.getSprintOverview(sprintId);
         }
 
         @Transactional(readOnly = true)

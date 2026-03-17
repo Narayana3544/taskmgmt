@@ -17,8 +17,8 @@ public class ProjectMemberResponse {
     private String userEmail;
     private Long projectRoleId;
     private String projectRoleName;
-    private Long reportingManagerId;
-    private String reportingManagerName;
+    private Long managerId;
+    private String managerName;
     private LocalDate startDate;
     private LocalDate endDate;
     private Boolean active;

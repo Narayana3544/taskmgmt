@@ -12,13 +12,12 @@ public class UserResponse {
     private String email;
     private Long roleId;
     private String roleName;
-    
-    private Long managerId;
-    private String managerName;
     private String status;
     private String phoneNumber;
     private Long organizationId;
+    private String profileImageUrl;
     private Boolean active;
     private LocalDateTime createdAt;
     private LocalDateTime lastLoginAt;
+    private String tempPassword;
 }

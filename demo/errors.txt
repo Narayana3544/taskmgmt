@@ -1,0 +1,8 @@
+[ERROR] /C:/Users/laksh/taskmgmt/demo/src/main/java/com/telusko/demo/project/service/ProjectService.java:[185,20] cannot find symbol
+[ERROR] /C:/Users/laksh/taskmgmt/demo/src/main/java/com/telusko/demo/project/service/ProjectService.java:[186,73] cannot find symbol
+[ERROR] /C:/Users/laksh/taskmgmt/demo/src/main/java/com/telusko/demo/project/service/ProjectService.java:[206,20] cannot find symbol
+[ERROR] /C:/Users/laksh/taskmgmt/demo/src/main/java/com/telusko/demo/project/service/ProjectService.java:[207,73] cannot find symbol
+[ERROR] /C:/Users/laksh/taskmgmt/demo/src/main/java/com/telusko/demo/project/service/ProjectService.java:[185,20] cannot find symbol
+[ERROR] /C:/Users/laksh/taskmgmt/demo/src/main/java/com/telusko/demo/project/service/ProjectService.java:[186,73] cannot find symbol
+[ERROR] /C:/Users/laksh/taskmgmt/demo/src/main/java/com/telusko/demo/project/service/ProjectService.java:[206,20] cannot find symbol
+[ERROR] /C:/Users/laksh/taskmgmt/demo/src/main/java/com/telusko/demo/project/service/ProjectService.java:[207,73] cannot find symbol

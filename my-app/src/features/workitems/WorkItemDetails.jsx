@@ -35,7 +35,7 @@ const WorkItemDetails = () => {
             setItem(wi);
             setComments(commRes.data?.data || []);
             setHistory(histRes.data?.data || []);
-            setAttachments(attRes.data?.data || []);
+            setAttachments(wi?.attachments || []); // List of strings from backend
             
             if (wi?.projectId) {
                 const memRes = await api.get(`/api/projects/${wi.projectId}/members`).catch(() => ({ data: { data: [] } }));
@@ -338,14 +338,26 @@ const WorkItemDetails = () => {
                             <h3>Attachments ({attachments.length})</h3>
                             <label className="btn btn-sm btn-secondary" style={{ cursor: 'pointer' }}>
                                 <Upload size={14} /> Upload
-                                <input type="file" style={{ display: 'none' }} onChange={async (e) => {
+                                <input type="file" style={{ display: 'none' }} accept="image/jpeg,image/png,application/pdf" onChange={async (e) => {
                                     const file = e.target.files?.[0];
                                     if (!file) return;
+                                    if (file.size > 2 * 1024 * 1024) {
+                                        alert('File size must be less than 2MB');
+                                        return;
+                                    }
                                     const formData = new FormData();
                                     formData.append('file', file);
+                                    formData.append('folder', `workitems/${id}`);
                                     try {
-                                        await api.post(`/api/work-items/${id}/attachments`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
-                                        fetchAll();
+                                        // 1. Upload file
+                                        const uploadRes = await api.post('/api/files/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+                                        const fileUrl = uploadRes.data.data.url;
+                                        
+                                        // 2. Update work item
+                                        const newAttachments = [...attachments, fileUrl];
+                                        await api.put(`/api/work-items/${id}`, { ...item, attachments: newAttachments });
+                                        
+                                        fetchAll(); // Refresh page data
                                     } catch (err) { alert(err.response?.data?.message || 'Upload failed'); }
                                 }} />
                             </label>
@@ -359,20 +371,18 @@ const WorkItemDetails = () => {
                                 </div>
                             ) : (
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                                    {attachments.map((a, i) => (
-                                        <div key={i} className="flex items-center gap-3" style={{ padding: '8px 12px', background: 'var(--color-bg-alt)', borderRadius: 6 }}>
-                                            <Paperclip size={14} color="var(--color-text-muted)" />
-                                            <div style={{ flex: 1 }}>
-                                                <div style={{ fontWeight: 500, fontSize: 13 }}>{a.fileName || a.name || 'File'}</div>
-                                                <div style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>
-                                                    {a.fileSize ? `${(a.fileSize / 1024).toFixed(1)} KB` : ''} · {a.uploadedByName || '—'} · {a.createdAt ? new Date(a.createdAt).toLocaleString() : ''}
+                                    {attachments.map((url, i) => {
+                                        const fileName = url.split('/').pop() || `Attachment ${i + 1}`;
+                                        return (
+                                            <div key={i} className="flex items-center gap-3" style={{ padding: '8px 12px', background: 'var(--color-bg-alt)', borderRadius: 6 }}>
+                                                <Paperclip size={14} color="var(--color-text-muted)" />
+                                                <div style={{ flex: 1 }}>
+                                                    <div style={{ fontWeight: 500, fontSize: 13, wordBreak: 'break-all' }}>{fileName}</div>
                                                 </div>
+                                                <a href={url} target="_blank" rel="noreferrer" className="btn btn-sm btn-secondary">Open</a>
                                             </div>
-                                            {a.downloadUrl && (
-                                                <a href={a.downloadUrl} target="_blank" rel="noreferrer" className="btn btn-sm btn-secondary">Download</a>
-                                            )}
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             )}
                         </div>

@@ -73,4 +73,9 @@ public class WorkItem extends BaseEntity {
     @Column(nullable = false)
     @Builder.Default
     private Boolean active = true;
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "work_item_attachments", joinColumns = @JoinColumn(name = "work_item_id"))
+    @Column(name = "attachment_url")
+    private java.util.List<String> attachments;
 }

@@ -106,6 +106,7 @@ public class WorkItemService {
                 .description(request.getDescription())
                 .storyPoints(request.getStoryPoints())
                 .dueDate(request.getDueDate())
+                .attachments(request.getAttachments())
                 .status(backlogStatus) // Forced to BACKLOG
                 .active(true)
                 .build();
@@ -145,8 +146,13 @@ public class WorkItemService {
 
     // ==================== READ ====================
     @Transactional(readOnly = true)
-    public PageResponse<WorkItemResponse> getWorkItemsByProject(Long projectId, Pageable pageable) {
-        Page<WorkItem> page = workItemRepository.findByProjectIdAndActiveTrue(projectId, pageable);
+    public PageResponse<WorkItemResponse> getWorkItemsByProject(Long projectId, String search, Pageable pageable) {
+        Page<WorkItem> page;
+        if (search != null && !search.trim().isEmpty()) {
+            page = workItemRepository.findByProjectIdAndActiveTrueAndSearch(projectId, search.trim(), pageable);
+        } else {
+            page = workItemRepository.findByProjectIdAndActiveTrue(projectId, pageable);
+        }
         return buildPageResponse(page);
     }
 
@@ -197,6 +203,11 @@ public class WorkItemService {
         workItem.setDescription(request.getDescription());
         workItem.setStoryPoints(request.getStoryPoints());
         workItem.setDueDate(request.getDueDate());
+        
+        if (request.getAttachments() != null) {
+            workItem.setAttachments(request.getAttachments());
+        }
+
         workItem.setUpdatedBy(userId);
 
         resolveType(workItem, request.getTypeId());
@@ -517,6 +528,7 @@ public class WorkItemService {
                 .sprintId(sprintId)
                 .sprintName(sprintName)
                 .dueDate(w.getDueDate())
+                .attachments(w.getAttachments())
                 .active(w.getActive())
                 .createdAt(w.getCreatedAt())
                 .build();

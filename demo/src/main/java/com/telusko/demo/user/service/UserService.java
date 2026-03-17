@@ -70,16 +70,9 @@ public class UserService {
             role = roleRepository.findByOrganizationIdAndCode(org.getId(), "EMPLOYEE").orElse(null);
         }
 
-        User manager = null;
-        if (request.getManagerId() != null) {
-            manager = userRepository.findById(request.getManagerId())
-                    .orElseThrow(() -> new ResourceNotFoundException("User (Manager)", "id", request.getManagerId()));
-        }
-
         User user = User.builder()
                 .organization(org)
                 .role(role)
-                .manager(manager)
                 .email(request.getEmail())
                 .fullName(request.getFullName())
                 .status("ACTIVE")
@@ -87,15 +80,40 @@ public class UserService {
                 .build();
         user = userRepository.save(user);
 
-        if (request.getPassword() != null && !request.getPassword().isEmpty()) {
-            UserAuth auth = UserAuth.builder()
-                    .user(user)
-                    .passwordHash(passwordEncoder.encode(request.getPassword()))
-                    .passwordUpdatedAt(LocalDateTime.now())
-                    .build();
-            userAuthRepository.save(auth);
+        String rawPassword = request.getPassword();
+        boolean generated = false;
+        if (rawPassword == null || rawPassword.trim().isEmpty()) {
+            rawPassword = java.util.UUID.randomUUID().toString().substring(0, 10);
+            generated = true;
         }
 
+        UserAuth auth = UserAuth.builder()
+                .user(user)
+                .passwordHash(passwordEncoder.encode(rawPassword))
+                .passwordUpdatedAt(LocalDateTime.now())
+                .build();
+        userAuthRepository.save(auth);
+
+        UserResponse response = mapToResponse(user);
+        if (generated) {
+            response.setTempPassword(rawPassword);
+        }
+        return response;
+    }
+
+    @Transactional(readOnly = true)
+    public UserResponse getUserById(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
+        return mapToResponse(user);
+    }
+
+    @Transactional
+    public UserResponse updateAvatar(Long id, String profileImageUrl) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
+        user.setProfileImageUrl(profileImageUrl);
+        user = userRepository.save(user);
         return mapToResponse(user);
     }
 
@@ -111,6 +129,10 @@ public class UserService {
         user.setFullName(request.getFullName());
         user.setEmail(request.getEmail());
 
+        if (request.getProfileImageUrl() != null) {
+            user.setProfileImageUrl(request.getProfileImageUrl());
+        }
+
         if (request.getStatus() != null) {
             user.setStatus(request.getStatus());
             user.setActive("ACTIVE".equalsIgnoreCase(request.getStatus()));
@@ -120,14 +142,6 @@ public class UserService {
             Role role = roleRepository.findById(request.getRoleId())
                     .orElseThrow(() -> new ResourceNotFoundException("Role", "id", request.getRoleId()));
             user.setRole(role);
-        }
-
-        if (request.getManagerId() != null) {
-            User manager = userRepository.findById(request.getManagerId())
-                    .orElseThrow(() -> new ResourceNotFoundException("User (Manager)", "id", request.getManagerId()));
-            user.setManager(manager);
-        } else {
-            user.setManager(null);
         }
 
         user = userRepository.save(user);
@@ -150,11 +164,10 @@ public class UserService {
                 .email(user.getEmail())
                 .roleId(user.getRole() != null ? user.getRole().getId() : null)
                 .roleName(user.getRole() != null ? user.getRole().getName() : null)
-                .managerId(user.getManager() != null ? user.getManager().getId() : null)
-                .managerName(user.getManager() != null ? user.getManager().getFullName() : null)
                 .status(user.getStatus())
                 .phoneNumber(user.getPhoneNumber())
                 .organizationId(user.getOrganization() != null ? user.getOrganization().getId() : null)
+                .profileImageUrl(user.getProfileImageUrl())
                 .active(user.getActive())
                 .createdAt(user.getCreatedAt())
                 .lastLoginAt(user.getLastLoginAt())

@@ -4,6 +4,7 @@ import { ArrowLeft, ChevronRight } from 'lucide-react';
 import api from '../../api';
 import Layout from '../../components/Layout';
 import StatusBadge from '../../components/StatusBadge';
+import SprintOverview from './SprintOverview';
 
 const SprintDetails = () => {
     const { id } = useParams();
@@ -62,25 +63,8 @@ const SprintDetails = () => {
                             </div>
                         )}
 
-                        {/* Stats */}
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
-                            <div className="stat-card" style={{ padding: 12 }}>
-                                <div className="stat-card-value" style={{ fontSize: 22 }}>{items.length}</div>
-                                <div className="stat-card-label">Total Items</div>
-                            </div>
-                            <div className="stat-card" style={{ padding: 12 }}>
-                                <div className="stat-card-value" style={{ fontSize: 22, color: 'var(--color-success)' }}>{doneItems.length}</div>
-                                <div className="stat-card-label">Done</div>
-                            </div>
-                            <div className="stat-card" style={{ padding: 12 }}>
-                                <div className="stat-card-value" style={{ fontSize: 22 }}>{velocity}</div>
-                                <div className="stat-card-label">Velocity (SP)</div>
-                            </div>
-                            <div className="stat-card" style={{ padding: 12 }}>
-                                <div className="stat-card-value" style={{ fontSize: 22 }}>{totalSP}</div>
-                                <div className="stat-card-label">Total SP</div>
-                            </div>
-                        </div>
+                        {/* Stats - Replaced with Advanced Overview Metrics */}
+                        <SprintOverview sprintId={id} />
 
                         {/* Progress Bar */}
                         {items.length > 0 && (

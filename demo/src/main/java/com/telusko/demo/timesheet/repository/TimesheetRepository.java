@@ -21,4 +21,9 @@ public interface TimesheetRepository extends JpaRepository<Timesheet, Long> {
            "AND t.status.code = 'SUBMITTED' AND t.active = true " +
            "ORDER BY t.workDate ASC")
     Page<Timesheet> findPendingApprovalsByManager(@Param("managerId") Long managerId, Pageable pageable);
+
+    @Query("SELECT t FROM Timesheet t " +
+           "WHERE t.status.code = 'SUBMITTED' AND t.active = true " +
+           "ORDER BY t.workDate ASC")
+    Page<Timesheet> findAllPendingApprovals(Pageable pageable);
 }

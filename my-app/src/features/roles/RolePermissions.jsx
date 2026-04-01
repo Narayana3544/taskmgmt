@@ -25,7 +25,8 @@ const RolePermissions = () => {
 
     const fetchRoles = async () => {
         try {
-            const res = await api.get('/api/master-data/values/by-code', { params: { typeCode: 'ROLE' } });
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            const res = await api.get('/api/roles', { params: { orgId: user.organizationId || 1 } });
             const roleList = res.data?.data || [];
             setRoles(roleList);
             if (roleList.length > 0 && !selectedRole) setSelectedRole(roleList[0].code || roleList[0].id);
@@ -129,12 +130,12 @@ const RolePermissions = () => {
         setSaving(true);
         try {
             const user = JSON.parse(localStorage.getItem('user') || '{}');
-            const payload = { ...roleForm, typeCode: 'ROLE', organizationId: user.organizationId };
+            const payload = { ...roleForm, organizationId: user.organizationId || 1 };
             if (editRole) {
-                await api.put(`/api/master-data/values/${editRole.id}`, payload);
+                await api.put(`/api/roles/${editRole.id}`, payload);
                 showToast.success('Role updated');
             } else {
-                await api.post('/api/master-data/values', payload);
+                await api.post('/api/roles', payload);
                 showToast.success('Role created');
             }
             setShowRoleModal(false);
@@ -146,7 +147,7 @@ const RolePermissions = () => {
     const deleteRole = async (role) => {
         if (!window.confirm(`Delete role "${role.displayName || role.code}"? This cannot be undone.`)) return;
         try {
-            await api.delete(`/api/master-data/values/${role.id}`);
+            await api.delete(`/api/roles/${role.id}`);
             showToast.success('Role deleted');
             fetchRoles();
             if (selectedRole === (role.code || role.id)) setSelectedRole('');

@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Builder
@@ -44,5 +45,10 @@ public class WorkItemResponse {
     private LocalDate dueDate;
     private Boolean active;
     private LocalDateTime createdAt;
-    private java.util.List<String> attachments;
+    private LocalDateTime updatedAt;
+    private Long createdById;
+    private String createdByName;
+    private Long updatedById;
+    private String updatedByName;
+    private List<String> attachments;
 }

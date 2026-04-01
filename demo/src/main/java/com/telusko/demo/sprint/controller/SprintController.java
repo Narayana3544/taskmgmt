@@ -40,6 +40,11 @@ public class SprintController {
         return ResponseEntity.ok(ApiResponse.success(sprintService.getSprintOverview(id)));
     }
 
+    @GetMapping("/{id}/dashboard")
+    public ResponseEntity<ApiResponse<com.telusko.demo.sprint.dto.SprintDashboardResponse>> getDashboard(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.success(sprintService.getSprintDashboard(id)));
+    }
+
     @PostMapping
     public ResponseEntity<ApiResponse<SprintResponse>> create(
             @Valid @RequestBody SprintRequest request, Authentication auth) {

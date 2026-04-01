@@ -502,6 +502,22 @@ public class WorkItemService {
             log.warn("Failed to map sprint for work item {}: {}", w.getId(), e.getMessage());
         }
 
+        // Resolve createdBy / updatedBy user names
+        String createdByName = null;
+        if (w.getCreatedBy() != null) {
+            try {
+                createdByName = userRepository.findById(w.getCreatedBy())
+                        .map(User::getFullName).orElse(null);
+            } catch (Exception e) { /* ignore */ }
+        }
+        String updatedByName = null;
+        if (w.getUpdatedBy() != null) {
+            try {
+                updatedByName = userRepository.findById(w.getUpdatedBy())
+                        .map(User::getFullName).orElse(null);
+            } catch (Exception e) { /* ignore */ }
+        }
+
         return WorkItemResponse.builder()
                 .id(w.getId())
                 .projectId(w.getProject().getId())
@@ -520,8 +536,8 @@ public class WorkItemService {
                 .priorityCode(w.getPriority() != null ? w.getPriority().getCode() : null)
                 .ownerId(w.getOwner() != null ? w.getOwner().getId() : null)
                 .ownerName(w.getOwner() != null ? w.getOwner().getFullName() : null)
-                .assigneeId(w.getAssignee() != null ? w.getAssignee().getId() : null)
-                .assigneeName(w.getAssignee() != null ? w.getAssignee().getFullName() : null)
+                .assigneeId(w.getAssignee() != null ? w.getAssignee().getId() : (w.getOwner() != null ? w.getOwner().getId() : null))
+                .assigneeName(w.getAssignee() != null ? w.getAssignee().getFullName() : (w.getOwner() != null ? w.getOwner().getFullName() : null))
                 .reportedById(w.getReportedBy() != null ? w.getReportedBy().getId() : null)
                 .reportedByName(w.getReportedBy() != null ? w.getReportedBy().getFullName() : null)
                 .storyPoints(w.getStoryPoints())
@@ -531,6 +547,11 @@ public class WorkItemService {
                 .attachments(w.getAttachments())
                 .active(w.getActive())
                 .createdAt(w.getCreatedAt())
+                .updatedAt(w.getUpdatedAt())
+                .createdById(w.getCreatedBy())
+                .createdByName(createdByName)
+                .updatedById(w.getUpdatedBy())
+                .updatedByName(updatedByName)
                 .build();
     }
 }

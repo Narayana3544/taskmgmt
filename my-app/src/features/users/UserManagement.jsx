@@ -27,7 +27,7 @@ const UserManagement = () => {
 
     const fetchRoles = async () => {
         try {
-            const res = await api.get('/api/master-data/values/by-code', { params: { typeCode: 'ROLE' } });
+            const res = await api.get('/api/roles', { params: { orgId: user.organizationId || 1 } });
             setRoles(res.data?.data || []);
         } catch (err) { console.error(err); }
     };

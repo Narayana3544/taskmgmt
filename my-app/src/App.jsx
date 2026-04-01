@@ -18,6 +18,7 @@ import Sprints from './pages/Sprints';
 // Features — Enhanced detail pages
 import WorkItemDetails from './features/workitems/WorkItemDetails';
 import SprintDetails from './features/sprints/SprintDetails';
+import SprintDashboard from './features/sprints/SprintDashboard';
 import ProjectDashboard from './features/projects/ProjectDashboard';
 
 // Features — Holidays
@@ -106,6 +107,7 @@ function App() {
           <Route path="/work-items/:id" element={<ProtectedRoute><WorkItemDetails /></ProtectedRoute>} />
           <Route path="/sprints" element={<ProtectedRoute><Sprints /></ProtectedRoute>} />
           <Route path="/sprints/:id" element={<ProtectedRoute><SprintDetails /></ProtectedRoute>} />
+          <Route path="/sprints/:id/dashboard" element={<ProtectedRoute><SprintDashboard /></ProtectedRoute>} />
 
           {/* HR */}
           <Route path="/leaves" element={<ProtectedRoute><LeaveManagement /></ProtectedRoute>} />

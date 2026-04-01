@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, ChevronRight, BarChart3 } from 'lucide-react';
 import api from '../../api';
 import Layout from '../../components/Layout';
 import StatusBadge from '../../components/StatusBadge';
@@ -51,9 +51,14 @@ const SprintDetails = () => {
                                 <h1 style={{ fontSize: 20, margin: 0 }}>{sprint.name}</h1>
                                 <StatusBadge code={sprint.statusCode} label={sprint.statusName} />
                             </div>
-                            <span style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>
-                                {sprint.startDate || '—'} → {sprint.endDate || '—'}
-                            </span>
+                            <div className="flex items-center gap-2">
+                                <button className="btn btn-primary btn-sm" onClick={() => navigate(`/sprints/${id}/dashboard`)}>
+                                    <BarChart3 size={14} /> View Dashboard
+                                </button>
+                                <span style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>
+                                    {sprint.startDate || '—'} → {sprint.endDate || '—'}
+                                </span>
+                            </div>
                         </div>
 
                         {sprint.goal && (

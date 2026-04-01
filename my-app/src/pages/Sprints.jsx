@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { Plus, Play, Square, GripVertical, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { Plus, Play, Square, GripVertical, Search, ChevronLeft, ChevronRight, BarChart3 } from 'lucide-react';
 import api from '../api';
 import Layout from '../components/Layout';
 
@@ -8,6 +8,7 @@ const Sprints = () => {
     const [searchParams] = useSearchParams();
     const projectId = searchParams.get('projectId');
     const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const navigate = useNavigate();
 
     const [projects, setProjects] = useState([]);
     const [selectedProject, setSelectedProject] = useState(projectId || '');
@@ -205,6 +206,9 @@ const Sprints = () => {
                                         <span className={`badge ${getStatusBadge(sprint.statusCode)}`}>{sprint.statusName}</span>
                                     </div>
                                     <div className="flex gap-2">
+                                        <button className="btn btn-sm btn-secondary" onClick={() => navigate(`/sprints/${sprint.id}/dashboard`)}>
+                                            <BarChart3 size={14} /> Dashboard
+                                        </button>
                                         {sprint.statusCode === 'PLANNED' && (
                                             <>
                                                 <button className="btn btn-sm btn-secondary" onClick={() => openPlanning(sprint)}>

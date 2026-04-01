@@ -36,10 +36,10 @@ public class LocalFileStorageService implements FileStorageService {
             throw new BadRequestException("Failed to store empty file.");
         }
         
-        // Validate MIME type. jpg, jpeg, png only
+        // Validate MIME type. jpg, jpeg, png, pdf
         String contentType = file.getContentType();
-        if (contentType == null || (!contentType.equals("image/jpeg") && !contentType.equals("image/png"))) {
-            throw new BadRequestException("Only JPEG and PNG files are allowed.");
+        if (contentType == null || (!contentType.equals("image/jpeg") && !contentType.equals("image/png") && !contentType.equals("application/pdf"))) {
+            throw new BadRequestException("Only JPEG, PNG and PDF files are allowed.");
         }
         
         // Validate size (2MB max)

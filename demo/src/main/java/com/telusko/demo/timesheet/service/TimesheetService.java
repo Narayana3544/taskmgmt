@@ -169,7 +169,13 @@ public class TimesheetService {
 
     @Transactional(readOnly = true)
     public PageResponse<TimesheetResponse> getPendingApprovals(Long managerId, Pageable pageable) {
-        Page<Timesheet> page = timesheetRepository.findPendingApprovalsByManager(managerId, pageable);
+        User manager = userRepository.findById(managerId).orElse(null);
+        boolean isAdmin = manager != null && manager.getRole() != null && "ADMIN".equals(manager.getRole().getCode());
+
+        Page<Timesheet> page = isAdmin
+                ? timesheetRepository.findAllPendingApprovals(pageable)
+                : timesheetRepository.findPendingApprovalsByManager(managerId, pageable);
+
         return PageResponse.<TimesheetResponse>builder()
                 .content(page.getContent().stream().map(this::mapToResponse).collect(Collectors.toList()))
                 .page(page.getNumber())

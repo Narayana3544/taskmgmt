@@ -7,6 +7,8 @@ import com.telusko.demo.masterdata.entity.MasterValue;
 import com.telusko.demo.masterdata.repository.MasterValueRepository;
 import com.telusko.demo.notification.service.NotificationService;
 import com.telusko.demo.project.entity.Project;
+import com.telusko.demo.project.entity.ProjectMember;
+import com.telusko.demo.project.repository.ProjectMemberRepository;
 import com.telusko.demo.project.repository.ProjectRepository;
 import com.telusko.demo.rbac.service.PermissionService;
 import com.telusko.demo.sprint.dto.SprintRequest;
@@ -56,6 +58,7 @@ public class SprintService {
         private final PermissionService permissionService;
         private final AuditService auditService;
         private final NotificationService notificationService;
+        private final ProjectMemberRepository memberRepository;
 
         public SprintService(SprintRepository sprintRepository,
                         SprintWorkItemRepository sprintWorkItemRepository,
@@ -66,7 +69,8 @@ public class SprintService {
                         UserRepository userRepository,
                         PermissionService permissionService,
                         AuditService auditService,
-                        NotificationService notificationService) {
+                        NotificationService notificationService,
+                        ProjectMemberRepository memberRepository) {
                 this.sprintRepository = sprintRepository;
                 this.sprintWorkItemRepository = sprintWorkItemRepository;
                 this.projectRepository = projectRepository;
@@ -77,6 +81,7 @@ public class SprintService {
                 this.permissionService = permissionService;
                 this.auditService = auditService;
                 this.notificationService = notificationService;
+                this.memberRepository = memberRepository;
         }
 
         @Transactional
@@ -312,6 +317,189 @@ public class SprintService {
         @Transactional(readOnly = true)
         public com.telusko.demo.sprint.dto.SprintOverviewResponse getSprintOverview(Long sprintId) {
                 return sprintWorkItemRepository.getSprintOverview(sprintId);
+        }
+
+        @Transactional(readOnly = true)
+        public com.telusko.demo.sprint.dto.SprintDashboardResponse getSprintDashboard(Long sprintId) {
+                Sprint sprint = sprintRepository.findById(sprintId)
+                                .orElseThrow(() -> new ResourceNotFoundException("Sprint", "id", sprintId));
+
+                List<SprintWorkItem> swiList = sprintWorkItemRepository.findBySprintIdWithWorkItemDetails(sprintId);
+                List<WorkItem> workItems = swiList.stream()
+                                .map(SprintWorkItem::getWorkItem).toList();
+
+                // --- Status counts ---
+                int totalItems = workItems.size();
+                int completedItems = 0, inProgressItems = 0, openItems = 0, backlogItems = 0;
+                int totalSP = 0, completedSP = 0;
+
+                for (WorkItem wi : workItems) {
+                        String sc = wi.getStatus() != null ? wi.getStatus().getCode() : "BACKLOG";
+                        int sp = wi.getStoryPoints() != null ? wi.getStoryPoints() : 0;
+                        totalSP += sp;
+                        switch (sc) {
+                                case "DONE": completedItems++; completedSP += sp; break;
+                                case "IN_PROGRESS": inProgressItems++; break;
+                                case "OPEN": openItems++; break;
+                                default: backlogItems++; break;
+                        }
+                }
+
+                double completionPct = totalItems > 0 ? Math.round((completedItems * 100.0) / totalItems * 10) / 10.0 : 0;
+
+                // --- Burndown chart data ---
+                java.time.LocalDate start = sprint.getStartDate() != null ? sprint.getStartDate() : sprint.getCreatedAt().toLocalDate();
+                java.time.LocalDate end = sprint.getEndDate() != null ? sprint.getEndDate() : start.plusDays(14);
+                java.time.LocalDate today = java.time.LocalDate.now();
+                if (today.isAfter(end)) today = end;
+
+                long totalDays = java.time.temporal.ChronoUnit.DAYS.between(start, end);
+                if (totalDays <= 0) totalDays = 1;
+
+                List<com.telusko.demo.sprint.dto.SprintDashboardResponse.BurndownPoint> burndownPoints = new java.util.ArrayList<>();
+                // Count items done per day from history
+                java.util.Map<java.time.LocalDate, Integer> doneByDay = new java.util.HashMap<>();
+                for (WorkItem wi : workItems) {
+                        if (wi.getStatus() != null && "DONE".equals(wi.getStatus().getCode())) {
+                                // Use updatedAt as the completion date
+                                java.time.LocalDate doneDate = wi.getUpdatedAt() != null ?
+                                        wi.getUpdatedAt().toLocalDate() : today;
+                                if (doneDate.isBefore(start)) doneDate = start;
+                                if (doneDate.isAfter(end)) doneDate = end;
+                                doneByDay.merge(doneDate, wi.getStoryPoints() != null ? wi.getStoryPoints() : 1,
+                                        Integer::sum);
+                        }
+                }
+
+                int remaining = totalSP > 0 ? totalSP : totalItems;
+                int cumulativeDone = 0;
+                for (java.time.LocalDate d = start; !d.isAfter(end); d = d.plusDays(1)) {
+                        long dayIndex = java.time.temporal.ChronoUnit.DAYS.between(start, d);
+                        int ideal = (int) Math.round(remaining * (1.0 - (double) dayIndex / totalDays));
+
+                        if (!d.isAfter(today)) {
+                                cumulativeDone += doneByDay.getOrDefault(d, 0);
+                        }
+                        int actual = d.isAfter(today) ? -1 : remaining - cumulativeDone;
+                        if (actual < 0 && d.isAfter(today)) actual = -1; // placeholder for future
+
+                        burndownPoints.add(com.telusko.demo.sprint.dto.SprintDashboardResponse.BurndownPoint.builder()
+                                .date(d.toString())
+                                .ideal(ideal)
+                                .actual(actual < 0 && !d.isAfter(today) ? 0 : actual)
+                                .build());
+                }
+
+                // --- User performance (include ALL project members) ---
+                java.util.Map<Long, com.telusko.demo.sprint.dto.SprintDashboardResponse.UserPerformance> userMap = new java.util.LinkedHashMap<>();
+
+                // Pre-populate with all project members
+                try {
+                        List<ProjectMember> members = memberRepository.findByProjectIdAndEndDateIsNull(sprint.getProject().getId());
+                        for (ProjectMember pm : members) {
+                                User u = pm.getUser();
+                                if (u != null && !userMap.containsKey(u.getId())) {
+                                        userMap.put(u.getId(), com.telusko.demo.sprint.dto.SprintDashboardResponse.UserPerformance.builder()
+                                                .userId(u.getId()).userName(u.getFullName())
+                                                .totalTasks(0).completedTasks(0).inProgressTasks(0)
+                                                .totalStoryPoints(0).completedStoryPoints(0).completionRate(0)
+                                                .build());
+                                }
+                        }
+                } catch (Exception e) {
+                        log.warn("Failed to fetch project members: {}", e.getMessage());
+                }
+
+                for (WorkItem wi : workItems) {
+                        User effectiveAssignee = wi.getAssignee() != null ? wi.getAssignee() : wi.getOwner();
+                        Long uid = effectiveAssignee != null ? effectiveAssignee.getId() : 0L;
+                        String uname = effectiveAssignee != null ? effectiveAssignee.getFullName() : "Unassigned";
+
+                        userMap.computeIfAbsent(uid, k ->
+                                com.telusko.demo.sprint.dto.SprintDashboardResponse.UserPerformance.builder()
+                                        .userId(uid).userName(uname)
+                                        .totalTasks(0).completedTasks(0).inProgressTasks(0)
+                                        .totalStoryPoints(0).completedStoryPoints(0).completionRate(0)
+                                        .build());
+
+                        var up = userMap.get(uid);
+                        up.setTotalTasks(up.getTotalTasks() + 1);
+                        int sp = wi.getStoryPoints() != null ? wi.getStoryPoints() : 0;
+                        up.setTotalStoryPoints(up.getTotalStoryPoints() + sp);
+
+                        String sc = wi.getStatus() != null ? wi.getStatus().getCode() : "BACKLOG";
+                        if ("DONE".equals(sc)) {
+                                up.setCompletedTasks(up.getCompletedTasks() + 1);
+                                up.setCompletedStoryPoints(up.getCompletedStoryPoints() + sp);
+                        } else if ("IN_PROGRESS".equals(sc)) {
+                                up.setInProgressTasks(up.getInProgressTasks() + 1);
+                        }
+                }
+                for (var up : userMap.values()) {
+                        up.setCompletionRate(up.getTotalTasks() > 0 ?
+                                Math.round((up.getCompletedTasks() * 100.0) / up.getTotalTasks() * 10) / 10.0 : 0);
+                }
+
+                // --- Status distribution ---
+                java.util.Map<String, int[]> statusMap = new java.util.LinkedHashMap<>();
+                String[][] statusDefs = {{"BACKLOG", "Backlog", "#9CA3AF"}, {"OPEN", "Open", "#3B82F6"},
+                        {"IN_PROGRESS", "In Progress", "#D97706"}, {"DONE", "Done", "#059669"}};
+                for (String[] sd : statusDefs) statusMap.put(sd[0], new int[]{0});
+
+                for (WorkItem wi : workItems) {
+                        String sc = wi.getStatus() != null ? wi.getStatus().getCode() : "BACKLOG";
+                        statusMap.computeIfAbsent(sc, k -> new int[]{0})[0]++;
+                }
+
+                List<com.telusko.demo.sprint.dto.SprintDashboardResponse.StatusDistribution> statusDist = new java.util.ArrayList<>();
+                for (String[] sd : statusDefs) {
+                        int count = statusMap.getOrDefault(sd[0], new int[]{0})[0];
+                        if (count > 0 || true) { // always include all statuses
+                                statusDist.add(com.telusko.demo.sprint.dto.SprintDashboardResponse.StatusDistribution.builder()
+                                        .statusCode(sd[0]).statusName(sd[1]).count(count).color(sd[2]).build());
+                        }
+                }
+
+                // --- Work item summaries ---
+                List<com.telusko.demo.sprint.dto.SprintDashboardResponse.SprintWorkItemSummary> wiSummaries = workItems.stream()
+                        .map(wi -> com.telusko.demo.sprint.dto.SprintDashboardResponse.SprintWorkItemSummary.builder()
+                                .id(wi.getId())
+                                .title(wi.getTitle())
+                                .statusCode(wi.getStatus() != null ? wi.getStatus().getCode() : null)
+                                .statusName(wi.getStatus() != null ? wi.getStatus().getDisplayName() : null)
+                                .typeCode(wi.getType() != null ? wi.getType().getCode() : null)
+                                .typeName(wi.getType() != null ? wi.getType().getDisplayName() : null)
+                                .priorityCode(wi.getPriority() != null ? wi.getPriority().getCode() : null)
+                                .priorityName(wi.getPriority() != null ? wi.getPriority().getDisplayName() : null)
+                                .assigneeName(wi.getAssignee() != null ? wi.getAssignee().getFullName() : (wi.getOwner() != null ? wi.getOwner().getFullName() : null))
+                                .assigneeId(wi.getAssignee() != null ? wi.getAssignee().getId() : (wi.getOwner() != null ? wi.getOwner().getId() : null))
+                                .storyPoints(wi.getStoryPoints())
+                                .projectCode(wi.getProject() != null ? wi.getProject().getCode() : null)
+                                .build())
+                        .toList();
+
+                return com.telusko.demo.sprint.dto.SprintDashboardResponse.builder()
+                        .sprintId(sprint.getId())
+                        .sprintName(sprint.getName())
+                        .sprintGoal(sprint.getGoal())
+                        .statusCode(sprint.getStatus() != null ? sprint.getStatus().getCode() : null)
+                        .statusName(sprint.getStatus() != null ? sprint.getStatus().getDisplayName() : null)
+                        .startDate(sprint.getStartDate())
+                        .endDate(sprint.getEndDate())
+                        .projectName(sprint.getProject() != null ? sprint.getProject().getName() : null)
+                        .totalItems(totalItems)
+                        .completedItems(completedItems)
+                        .inProgressItems(inProgressItems)
+                        .openItems(openItems)
+                        .backlogItems(backlogItems)
+                        .totalStoryPoints(totalSP)
+                        .completedStoryPoints(completedSP)
+                        .completionPercentage(completionPct)
+                        .burndownData(burndownPoints)
+                        .userPerformance(new java.util.ArrayList<>(userMap.values()))
+                        .statusDistribution(statusDist)
+                        .workItems(wiSummaries)
+                        .build();
         }
 
         @Transactional(readOnly = true)

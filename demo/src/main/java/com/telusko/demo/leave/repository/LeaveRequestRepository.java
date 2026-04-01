@@ -19,4 +19,9 @@ public interface LeaveRequestRepository extends JpaRepository<LeaveRequest, Long
            "AND l.status.code = 'APPLIED' AND l.active = true " +
            "ORDER BY l.startDate ASC")
     Page<LeaveRequest> findPendingTeamLeaves(@Param("managerId") Long managerId, Pageable pageable);
+
+    @Query("SELECT l FROM LeaveRequest l " +
+           "WHERE l.status.code = 'APPLIED' AND l.active = true " +
+           "ORDER BY l.startDate ASC")
+    Page<LeaveRequest> findAllPendingLeaves(Pageable pageable);
 }

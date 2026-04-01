@@ -4,7 +4,8 @@ import Navbar from './Navbar';
 
 const Layout = ({ children, title = 'Dashboard' }) => {
     const [collapsed, setCollapsed] = useState(() => {
-        return localStorage.getItem('sidebar_collapsed') === 'true';
+        const stored = localStorage.getItem('sidebar_collapsed');
+        return stored === 'true';
     });
 
     const toggleCollapsed = () => {

@@ -23,7 +23,14 @@ public interface WorkItemRepository extends JpaRepository<WorkItem, Long> {
     Page<WorkItem> findByAssigneeIdAndActiveTrue(Long assigneeId, Pageable pageable);
 
     // RULE: "My items" = user is OWNER or ASSIGNEE
-    @Query("SELECT w FROM WorkItem w WHERE w.active = true AND (w.owner.id = :ownerId OR w.assignee.id = :assigneeId)")
+    @Query("SELECT w FROM WorkItem w " +
+           "LEFT JOIN FETCH w.assignee " +
+           "LEFT JOIN FETCH w.owner " +
+           "LEFT JOIN FETCH w.project " +
+           "LEFT JOIN FETCH w.status " +
+           "LEFT JOIN FETCH w.type " +
+           "LEFT JOIN FETCH w.priority " +
+           "WHERE w.active = true AND (w.owner.id = :ownerId OR w.assignee.id = :assigneeId)")
     Page<WorkItem> findByOwnerIdOrAssigneeIdAndActiveTrue(
             @Param("ownerId") Long ownerId,
             @Param("assigneeId") Long assigneeId,

@@ -20,4 +20,6 @@ public class UserResponse {
     private LocalDateTime createdAt;
     private LocalDateTime lastLoginAt;
     private String tempPassword;
+    private Long managerId;
+    private String managerName;
 }

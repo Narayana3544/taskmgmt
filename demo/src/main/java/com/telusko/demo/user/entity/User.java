@@ -51,6 +51,10 @@ public class User extends BaseEntity {
     @JoinColumn(name = "department_id")
     private MasterValue department;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "manager_id")
+    private User manager;
+
     @Column(name = "phone_number", length = 20)
     private String phoneNumber;
 

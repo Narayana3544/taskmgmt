@@ -70,9 +70,16 @@ public class UserService {
             role = roleRepository.findByOrganizationIdAndCode(org.getId(), "EMPLOYEE").orElse(null);
         }
 
+        User manager = null;
+        if (request.getManagerId() != null) {
+            manager = userRepository.findById(request.getManagerId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Manager User", "id", request.getManagerId()));
+        }
+
         User user = User.builder()
                 .organization(org)
                 .role(role)
+                .manager(manager)
                 .email(request.getEmail())
                 .fullName(request.getFullName())
                 .status("ACTIVE")
@@ -144,6 +151,14 @@ public class UserService {
             user.setRole(role);
         }
 
+        if (request.getManagerId() != null) {
+            User manager = userRepository.findById(request.getManagerId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Manager User", "id", request.getManagerId()));
+            user.setManager(manager);
+        } else {
+            user.setManager(null);
+        }
+
         user = userRepository.save(user);
 
         if (request.getPassword() != null && !request.getPassword().isEmpty()) {
@@ -171,6 +186,8 @@ public class UserService {
                 .active(user.getActive())
                 .createdAt(user.getCreatedAt())
                 .lastLoginAt(user.getLastLoginAt())
+                .managerId(user.getManager() != null ? user.getManager().getId() : null)
+                .managerName(user.getManager() != null ? user.getManager().getFullName() : null)
                 .build();
     }
 }

@@ -4,6 +4,88 @@ import { Plus, Play, Square, GripVertical, Search, ChevronLeft, ChevronRight, Ba
 import api from '../api';
 import Layout from '../components/Layout';
 
+const SearchableAssignee = ({ item, projectMembers, onAssign }) => {
+    const [search, setSearch] = useState('');
+    const [isOpen, setIsOpen] = useState(false);
+    const [saving, setSaving] = useState(false);
+    
+    const currentAssignee = projectMembers?.find(m => (m.userId || m.id) === item.assigneeId);
+    
+    useEffect(() => {
+        if (!isOpen) {
+            setSearch(currentAssignee ? (currentAssignee.fullName || currentAssignee.userName || `User #${currentAssignee.userId}`) : '');
+        }
+    }, [currentAssignee, isOpen]);
+
+    const handleSelect = async (memberId) => {
+        setIsOpen(false);
+        setSaving(true);
+        try {
+            await api.patch(`/api/work-items/${item.id}/assign`, { assigneeId: memberId });
+            onAssign(item.id, memberId);
+        } catch (err) {
+            alert('Failed to assign');
+            setSearch(currentAssignee ? (currentAssignee.fullName || currentAssignee.userName) : '');
+        } finally {
+            setSaving(false);
+        }
+    };
+    
+    const filteredMembers = (projectMembers || []).filter(m => {
+        const name = (m.fullName || m.userName || '').toLowerCase();
+        return name.includes(search.toLowerCase());
+    });
+
+    return (
+        <div style={{ position: 'relative', width: '100%', maxWidth: 220, marginTop: 8 }}>
+            <input 
+                type="text" 
+                className="form-input" 
+                placeholder={saving ? "Saving..." : "Assignee search..." }
+                value={search}
+                onChange={(e) => { setSearch(e.target.value); setIsOpen(true); }}
+                onFocus={() => { setIsOpen(true); setSearch(''); }}
+                onBlur={() => setTimeout(() => setIsOpen(false), 200)}
+                disabled={saving}
+                style={{ height: 28, fontSize: 12, padding: '4px 8px' }}
+            />
+            {isOpen && (
+                <div style={{ 
+                    position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 10, 
+                    background: 'var(--color-card)', border: '1px solid var(--color-border)', 
+                    maxHeight: 150, overflowY: 'auto', borderRadius: 4, marginTop: 2,
+                    boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                }}>
+                    <div 
+                        style={{ padding: '6px 10px', fontSize: 12, cursor: 'pointer', color: 'var(--color-text-muted)' }}
+                        onMouseDown={() => handleSelect(null)}
+                        onMouseEnter={(e) => e.currentTarget.style.background = 'var(--color-bg-alt)'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                    >
+                        Unassigned
+                    </div>
+                    {filteredMembers.map(m => (
+                        <div 
+                            key={m.userId || m.id} 
+                            style={{ padding: '6px 10px', fontSize: 12, cursor: 'pointer' }}
+                            onMouseDown={(e) => { e.preventDefault(); handleSelect(m.userId || m.id); }}
+                            onMouseEnter={(e) => e.currentTarget.style.background = 'var(--color-bg-alt)'}
+                            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                        >
+                            {m.fullName || m.userName || `User #${m.userId || m.id}`}
+                        </div>
+                    ))}
+                    {filteredMembers.length === 0 && (
+                        <div style={{ padding: '6px 10px', fontSize: 12, color: 'var(--color-text-muted)' }}>
+                            No users found
+                        </div>
+                    )}
+                </div>
+            )}
+        </div>
+    );
+};
+
 const Sprints = () => {
     const [searchParams] = useSearchParams();
     const projectId = searchParams.get('projectId');
@@ -22,6 +104,8 @@ const Sprints = () => {
     // Sprint planning state
     const [planSprint, setPlanSprint] = useState(null);
     const [backlogItems, setBacklogItems] = useState([]);
+    const [sprintItems, setSprintItems] = useState([]);
+    const [projectMembers, setProjectMembers] = useState([]);
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
@@ -125,32 +209,46 @@ const Sprints = () => {
     const openPlanning = async (sprint) => {
         setPlanSprint(sprint);
         try {
-            // Fetch sprint items (TBD: need endpoint that returns work item details for sprint)
-            const backlogRes = await api.get('/api/work-items/backlog', { params: { projectId: selectedProject } });
+            const [backlogRes, sprintItemsRes, membersRes] = await Promise.all([
+                api.get('/api/work-items/backlog', { params: { projectId: selectedProject } }),
+                api.get(`/api/sprints/${sprint.id}/items`).catch(() => ({ data: { data: [] } })),
+                api.get(`/api/projects/${selectedProject}/members`).catch(() => ({ data: { data: [] } }))
+            ]);
             setBacklogItems(backlogRes.data?.data || []);
+            setSprintItems(sprintItemsRes.data?.data || []);
+            setProjectMembers(membersRes.data?.data || []);
         } catch (err) { console.error(err); }
     };
 
     const addItemToSprint = async (workItemId) => {
         try {
             await api.post(`/api/sprints/${planSprint.id}/items/${workItemId}`);
-            // Remove from backlog
-            setBacklogItems(prev => prev.filter(i => i.id !== workItemId));
-            // Refetch sprints
+            const item = backlogItems.find(i => i.id === workItemId);
+            if (item) {
+                setBacklogItems(prev => prev.filter(i => i.id !== workItemId));
+                setSprintItems(prev => [...prev, item]);
+            }
             const res = await api.get('/api/sprints', { params: { projectId: selectedProject, page: 0, size: 50 } });
             setSprints(res.data?.data?.content || []);
         } catch (err) { alert(err.response?.data?.message || 'Failed to add item'); }
     };
 
-    // eslint-disable-next-line no-unused-vars
     const removeItemFromSprint = async (workItemId) => {
         try {
             await api.delete(`/api/sprints/${planSprint.id}/items/${workItemId}`);
+            const item = sprintItems.find(i => i.id === workItemId);
+            if (item) {
+                setSprintItems(prev => prev.filter(i => i.id !== workItemId));
+                setBacklogItems(prev => [...prev, item]);
+            }
             const res = await api.get('/api/sprints', { params: { projectId: selectedProject, page: 0, size: 50 } });
             setSprints(res.data?.data?.content || []);
-            const backlogRes = await api.get('/api/work-items/backlog', { params: { projectId: selectedProject } });
-            setBacklogItems(backlogRes.data?.data || []);
         } catch (err) { alert(err.response?.data?.message || 'Failed'); }
+    };
+
+    const updateItemAssignee = (itemId, assigneeId) => {
+        setSprintItems(prev => prev.map(item => item.id === itemId ? { ...item, assigneeId } : item));
+        setBacklogItems(prev => prev.map(item => item.id === itemId ? { ...item, assigneeId } : item));
     };
 
     const getStatusBadge = (code) => {
@@ -328,28 +426,64 @@ const Sprints = () => {
                             <h2>Sprint Planning — {planSprint.name}</h2>
                             <button className="navbar-icon-btn" onClick={() => setPlanSprint(null)}>✕</button>
                         </div>
-                        <div className="modal-body">
-                            <h4 style={{ marginBottom: 8 }}>Backlog Items</h4>
-                            {backlogItems.length === 0 ? (
-                                <p style={{ color: 'var(--color-text-muted)', fontSize: 13 }}>No backlog items available</p>
-                            ) : (
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 400, overflow: 'auto' }}>
-                                    {backlogItems.map(item => (
-                                        <div key={item.id} className="flex items-center justify-between"
-                                            style={{ padding: '8px 12px', background: 'var(--color-bg-alt)', borderRadius: 6, fontSize: 13 }}>
-                                            <div>
-                                                <span style={{ fontWeight: 500 }}>{item.title}</span>
-                                                <span style={{ marginLeft: 8, fontSize: 11, color: 'var(--color-text-muted)' }}>
-                                                    {item.typeName} · {item.priorityName}
-                                                </span>
+                        <div className="modal-body" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 20 }}>
+                            {/* Sprint Items */}
+                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                <h4 style={{ marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                    <span>Sprint Items ({sprintItems.length})</span>
+                                </h4>
+                                {sprintItems.length === 0 ? (
+                                    <p style={{ color: 'var(--color-text-muted)', fontSize: 13 }}>No items in sprint yet</p>
+                                ) : (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 400, overflow: 'auto', paddingRight: 4 }}>
+                                        {sprintItems.map(item => (
+                                            <div key={item.id} style={{ padding: '8px 12px', background: 'var(--color-bg-alt)', borderRadius: 6 }}>
+                                                <div className="flex items-center justify-between" style={{ marginBottom: 6 }}>
+                                                    <div style={{ flex: 1, minWidth: 0, marginRight: 8 }}>
+                                                        <div style={{ fontWeight: 500, fontSize: 13 }} className="truncate">{item.title}</div>
+                                                        <div style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 2 }}>
+                                                            {item.typeName} · {item.priorityName}
+                                                        </div>
+                                                    </div>
+                                                    <button className="btn btn-sm btn-danger" onClick={() => removeItemFromSprint(item.id)}
+                                                        style={{ padding: '2px 8px', fontSize: 11, height: 'auto', minHeight: 24, flexShrink: 0 }}>
+                                                        Remove
+                                                    </button>
+                                                </div>
+                                                <SearchableAssignee item={item} projectMembers={projectMembers} onAssign={updateItemAssignee} />
                                             </div>
-                                            <button className="btn btn-sm btn-primary" onClick={() => addItemToSprint(item.id)}>
-                                                <Plus size={14} /> Add
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Backlog */}
+                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                <h4 style={{ marginBottom: 8 }}>Backlog ({backlogItems.length})</h4>
+                                {backlogItems.length === 0 ? (
+                                    <p style={{ color: 'var(--color-text-muted)', fontSize: 13 }}>No backlog items available</p>
+                                ) : (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 400, overflow: 'auto', paddingRight: 4 }}>
+                                        {backlogItems.map(item => (
+                                            <div key={item.id} style={{ padding: '8px 12px', background: 'var(--color-bg-alt)', borderRadius: 6 }}>
+                                                <div className="flex items-center justify-between">
+                                                    <div style={{ flex: 1, minWidth: 0, marginRight: 8 }}>
+                                                        <div style={{ fontWeight: 500, fontSize: 13 }} className="truncate">{item.title}</div>
+                                                        <div style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 2 }}>
+                                                            {item.typeName} · {item.priorityName}
+                                                        </div>
+                                                    </div>
+                                                    <button className="btn btn-sm btn-primary" onClick={() => addItemToSprint(item.id)}
+                                                        style={{ padding: '2px 8px', fontSize: 11, height: 'auto', minHeight: 24, flexShrink: 0 }}>
+                                                        <Plus size={14} style={{ marginRight: 2 }} /> Add
+                                                    </button>
+                                                </div>
+                                                <SearchableAssignee item={item} projectMembers={projectMembers} onAssign={updateItemAssignee} />
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>

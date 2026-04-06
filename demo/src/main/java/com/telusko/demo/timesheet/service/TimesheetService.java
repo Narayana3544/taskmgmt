@@ -71,6 +71,13 @@ public class TimesheetService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
 
+        if (request.getWorkDate().isAfter(LocalDate.now())) {
+            throw new BadRequestException("Cannot create timesheets for future dates");
+        }
+        if (request.getWorkDate().isBefore(LocalDate.now().minusDays(2))) {
+            throw new BadRequestException("Timesheet is locked. You can only create or edit timesheets up to 2 days old.");
+        }
+
         MasterValue draftStatus = getMasterValue("TIMESHEET_STATUS", "DRAFT");
 
         Timesheet timesheet = timesheetRepository.findByUserIdAndWorkDateAndActiveTrue(userId, request.getWorkDate())
@@ -97,6 +104,14 @@ public class TimesheetService {
 
         if (!"DRAFT".equals(timesheet.getStatus().getCode()) && !"REJECTED".equals(timesheet.getStatus().getCode())) {
             throw new BadRequestException("Entries can only be added to DRAFT or REJECTED timesheets");
+        }
+
+        LocalDate workDate = timesheet.getWorkDate();
+        if (workDate.isAfter(LocalDate.now())) {
+            throw new BadRequestException("Cannot add entries for future dates");
+        }
+        if (workDate.isBefore(LocalDate.now().minusDays(2))) {
+            throw new BadRequestException("Timesheet is locked. You can only edit timesheets up to 2 days old.");
         }
 
         if (request.getEndTime().isBefore(request.getStartTime())) {
@@ -142,6 +157,10 @@ public class TimesheetService {
             throw new BadRequestException("You can only submit your own timesheet");
         }
 
+        if (timesheet.getWorkDate().isBefore(LocalDate.now().minusDays(2))) {
+            throw new BadRequestException("Timesheet is locked and can no longer be submitted.");
+        }
+
         timesheet.setStatus(getMasterValue("TIMESHEET_STATUS", "SUBMITTED"));
         timesheet.setSubmittedAt(LocalDateTime.now());
         
@@ -150,7 +169,13 @@ public class TimesheetService {
 
     @Transactional(readOnly = true)
     public PageResponse<TimesheetResponse> getPendingApprovals(Long managerId, Pageable pageable) {
-        Page<Timesheet> page = timesheetRepository.findPendingApprovalsByManager(managerId, pageable);
+        User manager = userRepository.findById(managerId).orElse(null);
+        boolean isAdmin = manager != null && manager.getRole() != null && "ADMIN".equals(manager.getRole().getCode());
+
+        Page<Timesheet> page = isAdmin
+                ? timesheetRepository.findAllPendingApprovals(pageable)
+                : timesheetRepository.findPendingApprovalsByManager(managerId, pageable);
+
         return PageResponse.<TimesheetResponse>builder()
                 .content(page.getContent().stream().map(this::mapToResponse).collect(Collectors.toList()))
                 .page(page.getNumber())

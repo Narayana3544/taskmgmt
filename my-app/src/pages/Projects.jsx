@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Edit2, Users, X } from 'lucide-react';
+import { Plus, Edit2, Users, X, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import api from '../api';
 import Layout from '../components/Layout';
 import { showToast } from '../utils/toast';
@@ -20,15 +20,33 @@ const Projects = () => {
     const [members, setMembers] = useState([]);
     const [addMemberId, setAddMemberId] = useState('');
 
+    // Pagination and Search
+    const [page, setPage] = useState(0);
+    const [totalPages, setTotalPages] = useState(1);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(searchTerm);
+            setPage(0); // Reset to first page on new search
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
+
     const fetchProjects = async () => {
+        setLoading(true);
         try {
-            const res = await api.get('/api/projects', { params: { orgId: user.organizationId, page: 0, size: 50 } });
+            const params = { orgId: user.organizationId, page, size: 12 };
+            if (debouncedSearch) params.search = debouncedSearch;
+            const res = await api.get('/api/projects', { params });
             setProjects(res.data?.data?.content || []);
+            setTotalPages(res.data?.data?.totalPages || 1);
         } catch (err) { console.error(err); } finally { setLoading(false); }
     };
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    useEffect(() => { fetchProjects(); }, []);
+    useEffect(() => { fetchProjects(); }, [page, debouncedSearch]);
 
     const openCreate = () => {
         setEditProject(null);
@@ -103,9 +121,17 @@ const Projects = () => {
             <div className="page-header">
                 <div>
                     <h1>Projects</h1>
-                    <p className="page-header-subtitle">{projects.length} project{projects.length !== 1 ? 's' : ''}</p>
+                    <p className="page-header-subtitle">Manage your organization's projects</p>
                 </div>
-                <button className="btn btn-primary" onClick={openCreate}><Plus size={16} /> New Project</button>
+                <div style={{ display: 'flex', gap: 12 }}>
+                    <div className="search-bar" style={{ position: 'relative', width: 250 }}>
+                        <Search size={16} style={{ position: 'absolute', left: 10, top: 10, color: 'var(--color-text-muted)' }} />
+                        <input type="text" className="form-input" placeholder="Search projects..." 
+                            style={{ paddingLeft: 34, height: 36 }}
+                            value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+                    </div>
+                    <button className="btn btn-primary" onClick={openCreate}><Plus size={16} /> New Project</button>
+                </div>
             </div>
 
             {loading ? (
@@ -148,6 +174,18 @@ const Projects = () => {
                             </div>
                         </div>
                     ))}
+                </div>
+            )}
+
+            {totalPages > 1 && (
+                <div className="flex justify-center items-center gap-4" style={{ marginTop: 24 }}>
+                    <button className="btn btn-secondary btn-sm" disabled={page === 0} onClick={() => setPage(p => p - 1)}>
+                        <ChevronLeft size={16} /> Prev
+                    </button>
+                    <span style={{ fontSize: 13, fontWeight: 500 }}>Page {page + 1} of {totalPages}</span>
+                    <button className="btn btn-secondary btn-sm" disabled={page >= totalPages - 1} onClick={() => setPage(p => p + 1)}>
+                        Next <ChevronRight size={16} />
+                    </button>
                 </div>
             )}
 

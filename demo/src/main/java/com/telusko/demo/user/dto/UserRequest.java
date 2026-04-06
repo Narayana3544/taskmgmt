@@ -20,8 +20,8 @@ public class UserRequest {
     private String password;
 
     private Long roleId;
-    
-    private Long managerId;
     private String status;
     private Long organizationId;
+    private String profileImageUrl;
+    private Long managerId;
 }

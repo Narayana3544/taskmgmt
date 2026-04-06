@@ -38,7 +38,12 @@ const Login = ({ onLogin }) => {
 
             // Notify app of login (guard against missing prop)
             if (onLogin) onLogin();
-            navigate('/dashboard');
+
+            if (userData.requiresPasswordChange) {
+                navigate('/change-password');
+            } else {
+                navigate('/dashboard');
+            }
         } catch (err) {
             console.error('Login error:', err);
             const msg = err.response?.data?.message || err.message || 'Login failed. Please try again.';

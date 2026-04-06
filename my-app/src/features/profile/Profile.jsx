@@ -7,6 +7,38 @@ import StatusBadge from '../../components/StatusBadge';
 const Profile = () => {
     const stored = JSON.parse(localStorage.getItem('user') || '{}');
     const [profile, setProfile] = useState(stored);
+    const [uploading, setUploading] = useState(false);
+
+    const handleAvatarUpload = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        if (file.size > 2 * 1024 * 1024) {
+            alert('File size must be less than 2MB');
+            return;
+        }
+
+        setUploading(true);
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('folder', 'profiles');
+
+        try {
+            const uploadRes = await api.post('/api/files/upload', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            const fileUrl = uploadRes.data.data.url;
+
+            const updateRes = await api.patch('/api/users/me/avatar', { profileImageUrl: fileUrl });
+            const updatedProfile = updateRes.data.data;
+            setProfile(updatedProfile);
+            localStorage.setItem('user', JSON.stringify({ ...stored, ...updatedProfile }));
+        } catch (err) {
+            console.error('Upload error', err);
+            alert(err.response?.data?.message || 'Upload failed');
+        } finally {
+            setUploading(false);
+        }
+    };
 
     useEffect(() => {
         const fetch = async () => {
@@ -29,8 +61,18 @@ const Profile = () => {
                 <div className="card">
                     <div className="card-body">
                         <div className="flex items-center gap-4" style={{ marginBottom: 24 }}>
-                            <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'var(--color-secondary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 26, flexShrink: 0 }}>
-                                {(profile.fullName || profile.name || 'U')[0]}
+                            <div style={{ position: 'relative', width: 64, height: 64, flexShrink: 0 }}>
+                                {profile.profileImageUrl ? (
+                                    <img src={profile.profileImageUrl} alt="Avatar" style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover' }} />
+                                ) : (
+                                    <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'var(--color-secondary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 26 }}>
+                                        {(profile.fullName || profile.name || 'U')[0]}
+                                    </div>
+                                )}
+                                <label style={{ position: 'absolute', bottom: -4, right: -4, background: 'var(--color-primary)', color: 'white', borderRadius: '50%', width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }} title="Change Picture">
+                                    <User size={12} />
+                                    <input type="file" hidden accept="image/jpeg,image/png" onChange={handleAvatarUpload} disabled={uploading} />
+                                </label>
                             </div>
                             <div>
                                 <h2 style={{ margin: 0, fontSize: 20 }}>{profile.fullName || profile.name || '—'}</h2>

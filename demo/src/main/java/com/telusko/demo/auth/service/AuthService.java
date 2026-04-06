@@ -93,8 +93,11 @@ public class AuthService {
                 .roleCode(roleCode)
                 .roleName(roleName)
                 .organizationId(user.getOrganization() != null ? user.getOrganization().getId() : null)
+                .organizationName(user.getOrganization() != null ? user.getOrganization().getName() : null)
+                .organizationLogo(user.getOrganization() != null ? user.getOrganization().getLogoUrl() : null)
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
+                .requiresPasswordChange(user.getRequiresPasswordChange())
                 .build();
     }
 
@@ -115,9 +118,12 @@ public class AuthService {
             org = organizationRepository.findById(request.getOrganizationId())
                     .orElseThrow(() -> new BadRequestException("Organization not found"));
         } else {
-            // Auto-create a default organization for new users
+            // Auto-create a custom organization for new users
+            String orgName = request.getOrganizationName() != null && !request.getOrganizationName().trim().isEmpty() 
+                    ? request.getOrganizationName() 
+                    : "Default Organization";
             org = organizationRepository.save(Organization.builder()
-                    .name("Default Organization")
+                    .name(orgName)
                     .code("ORG-" + System.currentTimeMillis())
                     .timezone("UTC")
                     .workingDays("MON-FRI")
@@ -179,8 +185,36 @@ public class AuthService {
                 .roleCode(roleCode)
                 .roleName(roleName)
                 .organizationId(org.getId())
+                .organizationName(org.getName())
+                .organizationLogo(org.getLogoUrl())
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .build();
+    }
+
+    /**
+     * Change a user's password.
+     */
+    @Transactional
+    public void changePassword(Long userId, String oldPassword, String newPassword) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UnauthorizedException("User not found"));
+
+        UserAuth auth = userAuthRepository.findByUserId(userId)
+                .orElseThrow(() -> new UnauthorizedException("User credentials not found"));
+
+        if (!passwordEncoder.matches(oldPassword, auth.getPasswordHash())) {
+            throw new BadRequestException("Current password is incorrect");
+        }
+
+        // Update password hash and reset flag
+        auth.setPasswordHash(passwordEncoder.encode(newPassword));
+        auth.setPasswordUpdatedAt(LocalDateTime.now());
+        userAuthRepository.save(auth);
+
+        user.setRequiresPasswordChange(false);
+        userRepository.save(user);
+
+        log.info("Password changed successfully for user: {}", user.getEmail());
     }
 }

@@ -27,7 +27,21 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.success(userService.getUsersByOrganization(orgId, pageable)));
     }
 
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<UserResponse>> getMe(org.springframework.security.core.Authentication auth) {
+        Long userId = Long.valueOf(auth.getName());
+        return ResponseEntity.ok(ApiResponse.success(userService.getUserById(userId)));
+    }
+
+    @PatchMapping("/me/avatar")
+    public ResponseEntity<ApiResponse<UserResponse>> updateAvatar(
+            @RequestBody java.util.Map<String, String> body, org.springframework.security.core.Authentication auth) {
+        Long userId = Long.valueOf(auth.getName());
+        return ResponseEntity.ok(ApiResponse.success("Avatar updated", userService.updateAvatar(userId, body.get("profileImageUrl"))));
+    }
+
     @PostMapping
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('ADMIN', 'HR')")
     public ResponseEntity<ApiResponse<UserResponse>> createUser(@Valid @RequestBody UserRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("User created", userService.createUser(request)));

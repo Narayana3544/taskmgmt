@@ -13,7 +13,7 @@ public class ProjectMemberRequest {
     private Long projectId;
 
     private Long projectRoleId; // MasterValue for project-level role
-    private Long reportingManagerId; // Project-specific reporting manager
+    private Long managerId; // Project-specific reporting manager
     private LocalDate startDate;
     private LocalDate endDate;
 }

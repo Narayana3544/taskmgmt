@@ -42,4 +42,17 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("Registration successful", response));
     }
+
+    @PostMapping("/change-password")
+    @org.springframework.security.access.prepost.PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<Void>> changePassword(
+            @Valid @RequestBody com.telusko.demo.auth.dto.ChangePasswordRequest request,
+            org.springframework.security.core.Authentication auth) {
+        
+        Long userId = Long.valueOf(auth.getName());
+        log.info("POST /api/auth/change-password - user id: {}", userId);
+        
+        authService.changePassword(userId, request.getOldPassword(), request.getNewPassword());
+        return ResponseEntity.ok(ApiResponse.success("Password changed successfully", null));
+    }
 }

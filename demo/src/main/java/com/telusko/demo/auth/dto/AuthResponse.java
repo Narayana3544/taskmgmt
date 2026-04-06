@@ -17,6 +17,9 @@ public class AuthResponse {
     private String roleCode;
     private String roleName;
     private Long organizationId;
+    private String organizationName;
+    private String organizationLogo;
     private String accessToken;
     private String refreshToken;
+    private Boolean requiresPasswordChange;
 }

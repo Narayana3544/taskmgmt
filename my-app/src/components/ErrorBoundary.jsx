@@ -1,5 +1,7 @@
 import React from "react";
 
+const appBasePath = process.env.PUBLIC_URL || "";
+
 /**
  * ErrorBoundary — catches JavaScript errors in its child tree
  * and renders a fallback UI instead of crashing the whole app.
@@ -32,7 +34,7 @@ class ErrorBoundary extends React.Component {
 
   handleGoHome = () => {
     this.setState({ hasError: false, error: null, errorInfo: null });
-    window.location.href = "/";
+    window.location.replace(`${appBasePath}/`);
   };
 
   render() {

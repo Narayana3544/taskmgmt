@@ -18,16 +18,26 @@ import Header from './Header';
  *   <AppLayout> <KanbanBoard /> </AppLayout>
  */
 const AppLayout = ({ children }) => {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    return localStorage.getItem('sidebar_collapsed') === 'true';
+  });
+
+  const toggleSidebar = () => {
+    setSidebarCollapsed(prev => {
+      const next = !prev;
+      localStorage.setItem('sidebar_collapsed', String(next));
+      return next;
+    });
+  };
 
   return (
     <div className="app-layout">
       <Sidebar
         collapsed={sidebarCollapsed}
-        onToggle={() => setSidebarCollapsed(prev => !prev)}
+        onToggle={toggleSidebar}
       />
       <div className={`app-main ${sidebarCollapsed ? 'app-main-expanded' : ''}`}>
-        <Header onToggleSidebar={() => setSidebarCollapsed(prev => !prev)} />
+        <Header onToggleSidebar={toggleSidebar} />
         <main className="app-page-content">
           {children}
         </main>

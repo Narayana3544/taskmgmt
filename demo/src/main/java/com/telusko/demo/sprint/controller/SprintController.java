@@ -24,13 +24,25 @@ public class SprintController {
 
     @GetMapping
     public ResponseEntity<ApiResponse<Page<SprintResponse>>> getByProject(
-            @RequestParam Long projectId, Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.success(sprintService.getSprintsByProject(projectId, pageable)));
+            @RequestParam Long projectId,
+            @RequestParam(required = false) String search,
+            @org.springframework.data.web.PageableDefault(sort = "createdAt", direction = org.springframework.data.domain.Sort.Direction.DESC) Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.success(sprintService.getSprintsByProject(projectId, search, pageable)));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<SprintResponse>> getById(@PathVariable Long id) {
         return ResponseEntity.ok(ApiResponse.success(sprintService.getSprintById(id)));
+    }
+
+    @GetMapping("/{id}/overview")
+    public ResponseEntity<ApiResponse<com.telusko.demo.sprint.dto.SprintOverviewResponse>> getOverview(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.success(sprintService.getSprintOverview(id)));
+    }
+
+    @GetMapping("/{id}/dashboard")
+    public ResponseEntity<ApiResponse<com.telusko.demo.sprint.dto.SprintDashboardResponse>> getDashboard(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.success(sprintService.getSprintDashboard(id)));
     }
 
     @PostMapping

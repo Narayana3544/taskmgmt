@@ -15,6 +15,9 @@ import java.util.Optional;
 public interface SprintRepository extends JpaRepository<Sprint, Long> {
     Page<Sprint> findByProjectIdAndActiveTrue(Long projectId, Pageable pageable);
 
+    @Query("SELECT s FROM Sprint s WHERE s.project.id = :projectId AND s.active = true AND LOWER(s.name) LIKE LOWER(CONCAT('%', :search, '%'))")
+    Page<Sprint> findByProjectIdAndActiveTrueAndSearch(@Param("projectId") Long projectId, @Param("search") String search, Pageable pageable);
+
     List<Sprint> findByProjectIdAndActiveTrue(Long projectId);
 
     @Query("SELECT s FROM Sprint s WHERE s.project.id = :projectId AND s.status.code = 'ACTIVE' AND s.active = true")

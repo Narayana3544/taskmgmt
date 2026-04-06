@@ -138,8 +138,13 @@ public class ProjectService {
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<ProjectResponse> getProjects(Long orgId, Pageable pageable) {
-        Page<Project> page = projectRepository.findByOrganizationIdAndActiveTrue(orgId, pageable);
+    public PageResponse<ProjectResponse> getProjects(Long orgId, String search, Pageable pageable) {
+        Page<Project> page;
+        if (search != null && !search.trim().isEmpty()) {
+            page = projectRepository.findByOrganizationIdAndActiveTrueAndSearch(orgId, search.trim(), pageable);
+        } else {
+            page = projectRepository.findByOrganizationIdAndActiveTrue(orgId, pageable);
+        }
         return PageResponse.<ProjectResponse>builder()
                 .content(page.getContent().stream().map(this::mapToResponse).toList())
                 .page(page.getNumber())
@@ -185,8 +190,8 @@ public class ProjectService {
         if (request.getProjectRoleId() != null) {
             member.setProjectRole(masterValueRepository.findById(request.getProjectRoleId()).orElse(null));
         }
-        if (request.getReportingManagerId() != null) {
-            member.setReportingManager(userRepository.findById(request.getReportingManagerId()).orElse(null));
+        if (request.getManagerId() != null) {
+            member.setManager(userRepository.findById(request.getManagerId()).orElse(null));
         }
 
         member = memberRepository.save(member);
@@ -206,8 +211,8 @@ public class ProjectService {
         if (request.getProjectRoleId() != null) {
             member.setProjectRole(masterValueRepository.findById(request.getProjectRoleId()).orElse(null));
         }
-        if (request.getReportingManagerId() != null) {
-            member.setReportingManager(userRepository.findById(request.getReportingManagerId()).orElse(null));
+        if (request.getManagerId() != null) {
+            member.setManager(userRepository.findById(request.getManagerId()).orElse(null));
         }
         if (request.getEndDate() != null) {
             member.setEndDate(request.getEndDate());
@@ -266,8 +271,8 @@ public class ProjectService {
                 .userEmail(m.getUser().getEmail())
                 .projectRoleId(m.getProjectRole() != null ? m.getProjectRole().getId() : null)
                 .projectRoleName(m.getProjectRole() != null ? m.getProjectRole().getDisplayName() : null)
-                .reportingManagerId(m.getReportingManager() != null ? m.getReportingManager().getId() : null)
-                .reportingManagerName(m.getReportingManager() != null ? m.getReportingManager().getFullName() : null)
+                .managerId(m.getManager() != null ? m.getManager().getId() : null)
+                .managerName(m.getManager() != null ? m.getManager().getFullName() : null)
                 .startDate(m.getStartDate())
                 .endDate(m.getEndDate())
                 .active(m.getEndDate() == null)

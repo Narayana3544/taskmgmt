@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import ErrorBoundary from './components/ErrorBoundary';
 
 // Auth pages
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
+import ChangePassword from './pages/auth/ChangePassword';
 
 // Existing pages (kept in /pages — they use the old Layout wrapper)
 import KanbanBoard from './pages/KanbanBoard';
@@ -17,6 +18,8 @@ import Sprints from './pages/Sprints';
 // Features — Enhanced detail pages
 import WorkItemDetails from './features/workitems/WorkItemDetails';
 import SprintDetails from './features/sprints/SprintDetails';
+import SprintDashboard from './features/sprints/SprintDashboard';
+import SprintPlanning from './features/sprints/SprintPlanning';
 import ProjectDashboard from './features/projects/ProjectDashboard';
 
 // Features — Holidays
@@ -33,8 +36,9 @@ import MyTimesheets from './features/timesheets/MyTimesheets';
 import TimesheetApproval from './features/timesheets/TimesheetApproval';
 import TimesheetDetails from './features/timesheets/TimesheetDetails';
 
-// Features — Master Data
+// Features — Master Data & Organization
 import MasterData from './features/masterdata/MasterData';
+import OrganizationSettings from './features/organization/OrganizationSettings';
 
 // Features — Users
 import UserManagement from './features/users/UserManagement';
@@ -52,10 +56,28 @@ import ActivityFeed from './features/activity/ActivityFeed';
 import Profile from './features/profile/Profile';
 import RolePermissions from './features/roles/RolePermissions';
 
+const routerBasename = process.env.PUBLIC_URL || '';
+
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('token');
-  const user = localStorage.getItem('user');
-  return (token || user) ? children : <Navigate to="/login" replace />;
+  const userStr = localStorage.getItem('user');
+  const location = useLocation();
+  
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Prevent users who need password change from accessing anything else
+  if (userStr) {
+    try {
+      const user = JSON.parse(userStr);
+      if (user.requiresPasswordChange && location.pathname !== '/change-password') {
+        return <Navigate to="/change-password" replace />;
+      }
+    } catch(e) {}
+  }
+
+  return children;
 };
 
 function App() {
@@ -71,11 +93,12 @@ function App() {
   return (
     <ErrorBoundary>
       <Toaster position="top-right" toastOptions={{ style: { fontFamily: "'Inter', sans-serif" } }} />
-      <BrowserRouter>
+      <BrowserRouter basename={routerBasename}>
         <Routes>
           {/* Auth */}
           <Route path="/login" element={<Login onLogin={handleLogin} />} />
           <Route path="/register" element={<Register onLogin={handleLogin} />} />
+          <Route path="/change-password" element={<ProtectedRoute><ChangePassword /></ProtectedRoute>} />
 
           {/* Main */}
           <Route path="/" element={<ProtectedRoute><KanbanBoard /></ProtectedRoute>} />
@@ -86,6 +109,8 @@ function App() {
           <Route path="/work-items/:id" element={<ProtectedRoute><WorkItemDetails /></ProtectedRoute>} />
           <Route path="/sprints" element={<ProtectedRoute><Sprints /></ProtectedRoute>} />
           <Route path="/sprints/:id" element={<ProtectedRoute><SprintDetails /></ProtectedRoute>} />
+          <Route path="/sprints/:id/dashboard" element={<ProtectedRoute><SprintDashboard /></ProtectedRoute>} />
+          <Route path="/sprints/:id/planning" element={<ProtectedRoute><SprintPlanning /></ProtectedRoute>} />
 
           {/* HR */}
           <Route path="/leaves" element={<ProtectedRoute><LeaveManagement /></ProtectedRoute>} />
@@ -99,6 +124,7 @@ function App() {
 
           {/* Admin */}
           <Route path="/master-data" element={<ProtectedRoute><MasterData /></ProtectedRoute>} />
+          <Route path="/organization" element={<ProtectedRoute><OrganizationSettings /></ProtectedRoute>} />
           <Route path="/users" element={<ProtectedRoute><UserManagement /></ProtectedRoute>} />
           <Route path="/users/:id" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
           <Route path="/users/:id/activity" element={<ProtectedRoute><UserActivity /></ProtectedRoute>} />

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Plus, Edit2 } from 'lucide-react';
+import { Plus, Edit2, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import api from '../api';
 import Layout from '../components/Layout';
 import { showToast } from '../utils/toast';
@@ -21,15 +21,35 @@ const WorkItems = () => {
     const [masterData, setMasterData] = useState({ types: [], statuses: [], priorities: [] });
     const [projectMembers, setProjectMembers] = useState([]);
 
+    // Pagination and Search
+    const [page, setPage] = useState(0);
+    const [totalPages, setTotalPages] = useState(1);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(searchTerm);
+            setPage(0); // Reset to first page on new search
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
+
     const fetchItems = async () => {
+        setLoading(true);
         try {
+            const params = { page, size: 20 };
+            if (debouncedSearch) params.search = debouncedSearch;
+
             let res;
             if (projectId) {
-                res = await api.get('/api/work-items', { params: { projectId, page: 0, size: 50 } });
+                params.projectId = projectId;
+                res = await api.get('/api/work-items', { params });
             } else {
-                res = await api.get('/api/work-items/my', { params: { page: 0, size: 50 } });
+                res = await api.get('/api/work-items/my', { params });
             }
             setItems(res.data?.data?.content || []);
+            setTotalPages(res.data?.data?.totalPages || 1);
         } catch (err) { console.error(err); } finally { setLoading(false); }
     };
 
@@ -51,7 +71,10 @@ const WorkItems = () => {
     };
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    useEffect(() => { fetchItems(); fetchMasterData(); }, [projectId]);
+    useEffect(() => { fetchMasterData(); }, []);
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    useEffect(() => { fetchItems(); }, [projectId, page, debouncedSearch]);
 
     const openCreate = () => {
         setEditItem(null);
@@ -128,7 +151,15 @@ const WorkItems = () => {
                     <h1>Work Items</h1>
                     <p className="page-header-subtitle">{projectId ? 'Project items' : 'My items (owner or assignee)'}</p>
                 </div>
-                <button className="btn btn-primary" onClick={openCreate}><Plus size={16} /> New Work Item</button>
+                <div style={{ display: 'flex', gap: 12 }}>
+                    <div className="search-bar" style={{ position: 'relative', width: 250 }}>
+                        <Search size={16} style={{ position: 'absolute', left: 10, top: 10, color: 'var(--color-text-muted)' }} />
+                        <input type="text" className="form-input" placeholder="Search titles..." 
+                            style={{ paddingLeft: 34, height: 36 }}
+                            value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+                    </div>
+                    <button className="btn btn-primary" onClick={openCreate}><Plus size={16} /> New Work Item</button>
+                </div>
             </div>
 
             <div className="card">
@@ -174,6 +205,18 @@ const WorkItems = () => {
                     )}
                 </div>
             </div>
+
+            {totalPages > 1 && (
+                <div className="flex justify-center items-center gap-4" style={{ marginTop: 24, marginBottom: 24 }}>
+                    <button className="btn btn-secondary btn-sm" disabled={page === 0} onClick={() => setPage(p => p - 1)}>
+                        <ChevronLeft size={16} /> Prev
+                    </button>
+                    <span style={{ fontSize: 13, fontWeight: 500 }}>Page {page + 1} of {totalPages}</span>
+                    <button className="btn btn-secondary btn-sm" disabled={page >= totalPages - 1} onClick={() => setPage(p => p + 1)}>
+                        Next <ChevronRight size={16} />
+                    </button>
+                </div>
+            )}
 
             {/* Create/Edit Work Item Modal */}
             {showModal && (

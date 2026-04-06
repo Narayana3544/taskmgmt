@@ -55,7 +55,13 @@ public class LeaveService {
 
     @Transactional(readOnly = true)
     public PageResponse<LeaveResponse> getTeamLeaves(Long managerId, Pageable pageable) {
-        Page<LeaveRequest> page = leaveRequestRepository.findPendingTeamLeaves(managerId, pageable);
+        User manager = userRepository.findById(managerId).orElse(null);
+        boolean isAdmin = manager != null && manager.getRole() != null && "ADMIN".equals(manager.getRole().getCode());
+
+        Page<LeaveRequest> page = isAdmin
+                ? leaveRequestRepository.findAllPendingLeaves(pageable)
+                : leaveRequestRepository.findPendingTeamLeaves(managerId, pageable);
+
         return buildPageResponse(page);
     }
 

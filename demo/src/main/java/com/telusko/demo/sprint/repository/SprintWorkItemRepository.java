@@ -13,8 +13,31 @@ import java.util.Optional;
 public interface SprintWorkItemRepository extends JpaRepository<SprintWorkItem, Long> {
     List<SprintWorkItem> findBySprintIdAndRemovedAtIsNull(Long sprintId);
 
+    @Query("SELECT swi FROM SprintWorkItem swi " +
+           "JOIN FETCH swi.workItem w " +
+           "LEFT JOIN FETCH w.assignee " +
+           "LEFT JOIN FETCH w.owner " +
+           "LEFT JOIN FETCH w.status " +
+           "LEFT JOIN FETCH w.type " +
+           "LEFT JOIN FETCH w.priority " +
+           "LEFT JOIN FETCH w.project " +
+           "WHERE swi.sprint.id = :sprintId AND swi.removedAt IS NULL")
+    List<SprintWorkItem> findBySprintIdWithWorkItemDetails(@Param("sprintId") Long sprintId);
+
     Optional<SprintWorkItem> findBySprintIdAndWorkItemIdAndRemovedAtIsNull(Long sprintId, Long workItemId);
 
     @Query("SELECT swi FROM SprintWorkItem swi WHERE swi.workItem.id = :workItemId AND swi.removedAt IS NULL")
     List<SprintWorkItem> findActiveByWorkItemId(@Param("workItemId") Long workItemId);
+
+    @Query("SELECT new com.telusko.demo.sprint.dto.SprintOverviewResponse(" +
+           "  COALESCE(SUM(CASE WHEN swi.removedAt IS NULL THEN 1L ELSE 0L END), 0L), " + // totalItems
+           "  COALESCE(SUM(CASE WHEN w.status.code = 'DONE' AND swi.removedAt IS NULL THEN 1L ELSE 0L END), 0L), " + // completedItems
+           "  COALESCE(SUM(CASE WHEN w.status.code NOT IN ('DONE', 'BLOCKED') AND swi.removedAt IS NULL THEN 1L ELSE 0L END), 0L), " + // pendingItems
+           "  COALESCE(SUM(CASE WHEN w.status.code = 'BLOCKED' AND swi.removedAt IS NULL THEN 1L ELSE 0L END), 0L), " + // blockedItems
+           "  COALESCE(SUM(CASE WHEN swi.removedAt IS NOT NULL THEN 1L ELSE 0L END), 0L) " + // spilloverItems
+           ") " +
+           "FROM SprintWorkItem swi " +
+           "JOIN swi.workItem w " +
+           "WHERE swi.sprint.id = :sprintId")
+    com.telusko.demo.sprint.dto.SprintOverviewResponse getSprintOverview(@Param("sprintId") Long sprintId);
 }

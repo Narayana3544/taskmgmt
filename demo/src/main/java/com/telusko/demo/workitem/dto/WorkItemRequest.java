@@ -23,4 +23,5 @@ public class WorkItemRequest {
     private Long assigneeId;
     private Integer storyPoints;
     private LocalDate dueDate;
+    private java.util.List<String> attachments;
 }

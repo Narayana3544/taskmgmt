@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Menu, ChevronLeft } from 'lucide-react';
+import { Bell, Menu, PanelLeftClose } from 'lucide-react';
 import api from '../api';
 
 const Navbar = ({ collapsed, onToggle, title }) => {
@@ -25,8 +25,8 @@ const Navbar = ({ collapsed, onToggle, title }) => {
     return (
         <header className={`navbar${collapsed ? ' collapsed' : ''}`}>
             <div className="navbar-left">
-                <button className="navbar-toggle" onClick={onToggle} title="Toggle sidebar">
-                    {collapsed ? <Menu size={20} /> : <ChevronLeft size={20} />}
+                <button className="navbar-toggle" onClick={onToggle} title={collapsed ? "Expand sidebar" : "Collapse sidebar"}>
+                    {collapsed ? <Menu size={20} /> : <PanelLeftClose size={20} />}
                 </button>
                 <h1 className="navbar-title">{title}</h1>
             </div>

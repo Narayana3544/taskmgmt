@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { Plus, Play, Square, GripVertical } from 'lucide-react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { Plus, Play, Square, GripVertical, Search, ChevronLeft, ChevronRight, BarChart3 } from 'lucide-react';
 import api from '../api';
 import Layout from '../components/Layout';
+
 
 const Sprints = () => {
     const [searchParams] = useSearchParams();
     const projectId = searchParams.get('projectId');
     const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const navigate = useNavigate();
 
     const [projects, setProjects] = useState([]);
     const [selectedProject, setSelectedProject] = useState(projectId || '');
@@ -18,9 +20,7 @@ const Sprints = () => {
     const [form, setForm] = useState({ name: '', goal: '', startDate: '', endDate: '' });
     const [saving, setSaving] = useState(false);
 
-    // Sprint planning state
-    const [planSprint, setPlanSprint] = useState(null);
-    const [backlogItems, setBacklogItems] = useState([]);
+    // Sprint Planning has been moved to a dedicated page
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
@@ -33,18 +33,35 @@ const Sprints = () => {
         fetchProjects();
     }, []);
 
+    // Pagination and Search
+    const [page, setPage] = useState(0);
+    const [totalPages, setTotalPages] = useState(1);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(searchTerm);
+            setPage(0); // Reset to first page on new search
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
+
     // Fetch sprints for selected project
     useEffect(() => {
         if (!selectedProject) return;
         const fetchSprints = async () => {
             setLoading(true);
             try {
-                const res = await api.get('/api/sprints', { params: { projectId: selectedProject, page: 0, size: 50 } });
+                const params = { projectId: selectedProject, page, size: 10 };
+                if (debouncedSearch) params.search = debouncedSearch;
+                const res = await api.get('/api/sprints', { params });
                 setSprints(res.data?.data?.content || []);
+                setTotalPages(res.data?.data?.totalPages || 1);
             } catch (err) { console.error(err); } finally { setLoading(false); }
         };
         fetchSprints();
-    }, [selectedProject]);
+    }, [selectedProject, page, debouncedSearch]);
 
     const openCreate = () => {
         setEditSprint(null);
@@ -103,37 +120,7 @@ const Sprints = () => {
         } catch (err) { alert(err.response?.data?.message || 'Failed to close sprint'); }
     };
 
-    // === Sprint Planning ===
-    const openPlanning = async (sprint) => {
-        setPlanSprint(sprint);
-        try {
-            // Fetch sprint items (TBD: need endpoint that returns work item details for sprint)
-            const backlogRes = await api.get('/api/work-items/backlog', { params: { projectId: selectedProject } });
-            setBacklogItems(backlogRes.data?.data || []);
-        } catch (err) { console.error(err); }
-    };
 
-    const addItemToSprint = async (workItemId) => {
-        try {
-            await api.post(`/api/sprints/${planSprint.id}/items/${workItemId}`);
-            // Remove from backlog
-            setBacklogItems(prev => prev.filter(i => i.id !== workItemId));
-            // Refetch sprints
-            const res = await api.get('/api/sprints', { params: { projectId: selectedProject, page: 0, size: 50 } });
-            setSprints(res.data?.data?.content || []);
-        } catch (err) { alert(err.response?.data?.message || 'Failed to add item'); }
-    };
-
-    // eslint-disable-next-line no-unused-vars
-    const removeItemFromSprint = async (workItemId) => {
-        try {
-            await api.delete(`/api/sprints/${planSprint.id}/items/${workItemId}`);
-            const res = await api.get('/api/sprints', { params: { projectId: selectedProject, page: 0, size: 50 } });
-            setSprints(res.data?.data?.content || []);
-            const backlogRes = await api.get('/api/work-items/backlog', { params: { projectId: selectedProject } });
-            setBacklogItems(backlogRes.data?.data || []);
-        } catch (err) { alert(err.response?.data?.message || 'Failed'); }
-    };
 
     const getStatusBadge = (code) => {
         switch (code) {
@@ -150,13 +137,19 @@ const Sprints = () => {
                     <h1>Sprints</h1>
                     <p className="page-header-subtitle">Sprint planning and management</p>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex gap-3 items-center">
+                    <div className="search-bar" style={{ position: 'relative', width: 220 }}>
+                        <Search size={16} style={{ position: 'absolute', left: 10, top: 10, color: 'var(--color-text-muted)' }} />
+                        <input type="text" className="form-input" placeholder="Search sprints..." 
+                            style={{ paddingLeft: 34, height: 36 }}
+                            value={searchTerm} onChange={e => setSearchTerm(e.target.value)} disabled={!selectedProject} />
+                    </div>
                     <select className="form-select" style={{ width: 200 }} value={selectedProject}
                         onChange={(e) => setSelectedProject(e.target.value)}>
                         <option value="">Select project</option>
                         {projects.map(p => <option key={p.id} value={p.id}>{p.name} ({p.code})</option>)}
                     </select>
-                    <button className="btn btn-primary" onClick={openCreate}><Plus size={16} /> New Sprint</button>
+                    <button className="btn btn-primary" onClick={openCreate} disabled={!selectedProject}><Plus size={16} /> New Sprint</button>
                 </div>
             </div>
 
@@ -182,9 +175,12 @@ const Sprints = () => {
                                         <span className={`badge ${getStatusBadge(sprint.statusCode)}`}>{sprint.statusName}</span>
                                     </div>
                                     <div className="flex gap-2">
+                                        <button className="btn btn-sm btn-secondary" onClick={() => navigate(`/sprints/${sprint.id}/dashboard`)}>
+                                            <BarChart3 size={14} /> Dashboard
+                                        </button>
                                         {sprint.statusCode === 'PLANNED' && (
                                             <>
-                                                <button className="btn btn-sm btn-secondary" onClick={() => openPlanning(sprint)}>
+                                                <button className="btn btn-sm btn-secondary" onClick={() => navigate(`/sprints/${sprint.id}/planning`)}>
                                                     <GripVertical size={14} /> Plan
                                                 </button>
                                                 <button className="btn btn-sm btn-primary" onClick={() => startSprint(sprint.id)}>
@@ -195,7 +191,7 @@ const Sprints = () => {
                                         )}
                                         {sprint.statusCode === 'ACTIVE' && (
                                             <>
-                                                <button className="btn btn-sm btn-secondary" onClick={() => openPlanning(sprint)}>
+                                                <button className="btn btn-sm btn-secondary" onClick={() => navigate(`/sprints/${sprint.id}/planning`)}>
                                                     <GripVertical size={14} /> Plan
                                                 </button>
                                                 <button className="btn btn-sm btn-danger" onClick={() => closeSprint(sprint.id)}>
@@ -224,6 +220,18 @@ const Sprints = () => {
                             </div>
                         </div>
                     ))}
+                </div>
+            )}
+
+            {totalPages > 1 && (
+                <div className="flex justify-center items-center gap-4" style={{ marginTop: 24 }}>
+                    <button className="btn btn-secondary btn-sm" disabled={page === 0} onClick={() => setPage(p => p - 1)}>
+                        <ChevronLeft size={16} /> Prev
+                    </button>
+                    <span style={{ fontSize: 13, fontWeight: 500 }}>Page {page + 1} of {totalPages}</span>
+                    <button className="btn btn-secondary btn-sm" disabled={page >= totalPages - 1} onClick={() => setPage(p => p + 1)}>
+                        Next <ChevronRight size={16} />
+                    </button>
                 </div>
             )}
 
@@ -281,40 +289,7 @@ const Sprints = () => {
                 </div>
             )}
 
-            {/* Sprint Planning Modal */}
-            {planSprint && (
-                <div className="modal-overlay" onClick={() => setPlanSprint(null)}>
-                    <div className="modal" style={{ maxWidth: 700 }} onClick={(e) => e.stopPropagation()}>
-                        <div className="modal-header">
-                            <h2>Sprint Planning — {planSprint.name}</h2>
-                            <button className="navbar-icon-btn" onClick={() => setPlanSprint(null)}>✕</button>
-                        </div>
-                        <div className="modal-body">
-                            <h4 style={{ marginBottom: 8 }}>Backlog Items</h4>
-                            {backlogItems.length === 0 ? (
-                                <p style={{ color: 'var(--color-text-muted)', fontSize: 13 }}>No backlog items available</p>
-                            ) : (
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 400, overflow: 'auto' }}>
-                                    {backlogItems.map(item => (
-                                        <div key={item.id} className="flex items-center justify-between"
-                                            style={{ padding: '8px 12px', background: 'var(--color-bg-alt)', borderRadius: 6, fontSize: 13 }}>
-                                            <div>
-                                                <span style={{ fontWeight: 500 }}>{item.title}</span>
-                                                <span style={{ marginLeft: 8, fontSize: 11, color: 'var(--color-text-muted)' }}>
-                                                    {item.typeName} · {item.priorityName}
-                                                </span>
-                                            </div>
-                                            <button className="btn btn-sm btn-primary" onClick={() => addItemToSprint(item.id)}>
-                                                <Plus size={14} /> Add
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            )}
+
         </Layout>
     );
 };

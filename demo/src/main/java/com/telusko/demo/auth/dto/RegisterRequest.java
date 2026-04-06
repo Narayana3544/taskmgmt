@@ -21,4 +21,8 @@ public class RegisterRequest {
 
     private String phoneNumber;
     private Long organizationId;
+    
+    @NotBlank(message = "Organization name is required if not joining an existing organization")
+    @Size(max = 150, message = "Organization name must not exceed 150 characters")
+    private String organizationName;
 }

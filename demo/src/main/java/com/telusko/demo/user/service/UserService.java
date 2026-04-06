@@ -40,6 +40,7 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
+    @Transactional(readOnly = true)
     public PageResponse<UserResponse> getUsersByOrganization(Long orgId, Pageable pageable) {
         Page<User> users = userRepository.findByOrganizationId(orgId, pageable);
         Page<UserResponse> mapped = users.map(this::mapToResponse);
@@ -182,6 +183,8 @@ public class UserService {
                 .status(user.getStatus())
                 .phoneNumber(user.getPhoneNumber())
                 .organizationId(user.getOrganization() != null ? user.getOrganization().getId() : null)
+                .organizationName(user.getOrganization() != null ? user.getOrganization().getName() : null)
+                .organizationLogo(user.getOrganization() != null ? user.getOrganization().getLogoUrl() : null)
                 .profileImageUrl(user.getProfileImageUrl())
                 .active(user.getActive())
                 .createdAt(user.getCreatedAt())

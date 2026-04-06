@@ -93,6 +93,8 @@ public class AuthService {
                 .roleCode(roleCode)
                 .roleName(roleName)
                 .organizationId(user.getOrganization() != null ? user.getOrganization().getId() : null)
+                .organizationName(user.getOrganization() != null ? user.getOrganization().getName() : null)
+                .organizationLogo(user.getOrganization() != null ? user.getOrganization().getLogoUrl() : null)
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .requiresPasswordChange(user.getRequiresPasswordChange())
@@ -116,9 +118,12 @@ public class AuthService {
             org = organizationRepository.findById(request.getOrganizationId())
                     .orElseThrow(() -> new BadRequestException("Organization not found"));
         } else {
-            // Auto-create a default organization for new users
+            // Auto-create a custom organization for new users
+            String orgName = request.getOrganizationName() != null && !request.getOrganizationName().trim().isEmpty() 
+                    ? request.getOrganizationName() 
+                    : "Default Organization";
             org = organizationRepository.save(Organization.builder()
-                    .name("Default Organization")
+                    .name(orgName)
                     .code("ORG-" + System.currentTimeMillis())
                     .timezone("UTC")
                     .workingDays("MON-FRI")
@@ -180,6 +185,8 @@ public class AuthService {
                 .roleCode(roleCode)
                 .roleName(roleName)
                 .organizationId(org.getId())
+                .organizationName(org.getName())
+                .organizationLogo(org.getLogoUrl())
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .build();

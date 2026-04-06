@@ -19,6 +19,7 @@ import Sprints from './pages/Sprints';
 import WorkItemDetails from './features/workitems/WorkItemDetails';
 import SprintDetails from './features/sprints/SprintDetails';
 import SprintDashboard from './features/sprints/SprintDashboard';
+import SprintPlanning from './features/sprints/SprintPlanning';
 import ProjectDashboard from './features/projects/ProjectDashboard';
 
 // Features — Holidays
@@ -35,8 +36,9 @@ import MyTimesheets from './features/timesheets/MyTimesheets';
 import TimesheetApproval from './features/timesheets/TimesheetApproval';
 import TimesheetDetails from './features/timesheets/TimesheetDetails';
 
-// Features — Master Data
+// Features — Master Data & Organization
 import MasterData from './features/masterdata/MasterData';
+import OrganizationSettings from './features/organization/OrganizationSettings';
 
 // Features — Users
 import UserManagement from './features/users/UserManagement';
@@ -108,6 +110,7 @@ function App() {
           <Route path="/sprints" element={<ProtectedRoute><Sprints /></ProtectedRoute>} />
           <Route path="/sprints/:id" element={<ProtectedRoute><SprintDetails /></ProtectedRoute>} />
           <Route path="/sprints/:id/dashboard" element={<ProtectedRoute><SprintDashboard /></ProtectedRoute>} />
+          <Route path="/sprints/:id/planning" element={<ProtectedRoute><SprintPlanning /></ProtectedRoute>} />
 
           {/* HR */}
           <Route path="/leaves" element={<ProtectedRoute><LeaveManagement /></ProtectedRoute>} />
@@ -121,6 +124,7 @@ function App() {
 
           {/* Admin */}
           <Route path="/master-data" element={<ProtectedRoute><MasterData /></ProtectedRoute>} />
+          <Route path="/organization" element={<ProtectedRoute><OrganizationSettings /></ProtectedRoute>} />
           <Route path="/users" element={<ProtectedRoute><UserManagement /></ProtectedRoute>} />
           <Route path="/users/:id" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
           <Route path="/users/:id/activity" element={<ProtectedRoute><UserActivity /></ProtectedRoute>} />

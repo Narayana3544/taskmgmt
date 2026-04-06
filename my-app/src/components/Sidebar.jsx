@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import {
     LayoutDashboard, FolderKanban, ListTodo, Zap,
     LogOut, Calendar, ClipboardList, Clock, Database,
-    Users, Shield, Bell, FileSearch, Activity, User
+    Users, Shield, Bell, FileSearch, Activity, User, Building
 } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 
@@ -27,6 +27,7 @@ const NAV_ITEMS = [
     {
         section: 'Admin', items: [
             { label: 'Master Data', path: '/master-data', icon: Database },
+            { label: 'Organization', path: '/organization', icon: Building },
             { label: 'Users', path: '/users', icon: Users },
             { label: 'Roles', path: '/roles', icon: Shield },
             { label: 'Audit Log', path: '/audit-log', icon: FileSearch },
@@ -67,8 +68,14 @@ const Sidebar = ({ collapsed, onToggle }) => {
             {/* Logo */}
             <div className="sidebar-header">
                 <div className="sidebar-logo">
-                    <div className="sidebar-logo-icon">W</div>
-                    {!collapsed && <span className="sidebar-logo-text">WorkHub</span>}
+                    {user.organizationLogo ? (
+                        <div className="sidebar-logo-icon" style={{ padding: 0, overflow: 'hidden', background: 'transparent' }}>
+                            <img src={user.organizationLogo} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                        </div>
+                    ) : (
+                        <div className="sidebar-logo-icon">W</div>
+                    )}
+                    {!collapsed && <span className="sidebar-logo-text" style={{ fontSize: '15px' }}>{user.organizationName || 'WorkHub'}</span>}
                 </div>
             </div>
 

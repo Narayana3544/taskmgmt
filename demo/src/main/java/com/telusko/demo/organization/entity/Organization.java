@@ -33,6 +33,9 @@ public class Organization extends BaseEntity {
     @Column(name = "working_days", length = 20)
     private String workingDays;
 
+    @Column(name = "logo_url", length = 255)
+    private String logoUrl;
+
     @Column(nullable = false)
     @Builder.Default
     private Boolean active = true;

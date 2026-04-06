@@ -15,6 +15,8 @@ public class UserResponse {
     private String status;
     private String phoneNumber;
     private Long organizationId;
+    private String organizationName;
+    private String organizationLogo;
     private String profileImageUrl;
     private Boolean active;
     private LocalDateTime createdAt;

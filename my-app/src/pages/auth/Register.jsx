@@ -4,7 +4,7 @@ import api from '../../api';
 
 const Register = ({ onLogin }) => {
     const navigate = useNavigate();
-    const [form, setForm] = useState({ fullName: '', email: '', password: '', phoneNumber: '' });
+    const [form, setForm] = useState({ fullName: '', email: '', password: '', phoneNumber: '', organizationName: '' });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
@@ -94,6 +94,11 @@ const Register = ({ onLogin }) => {
                         <label className="form-label">Phone (optional)</label>
                         <input type="text" name="phoneNumber" className="form-input" placeholder="+1 234 567 8900"
                             value={form.phoneNumber} onChange={handleChange} />
+                    </div>
+                    <div className="form-group">
+                        <label className="form-label">Organization Name</label>
+                        <input type="text" name="organizationName" className="form-input" placeholder="My Company"
+                            value={form.organizationName} onChange={handleChange} required />
                     </div>
                     <button type="submit" className="btn btn-primary btn-lg" disabled={loading} style={{ width: '100%' }}>
                         {loading ? 'Creating account...' : 'Create Account'}

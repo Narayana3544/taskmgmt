@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Edit2, UserCheck, UserX } from 'lucide-react';
+import { Plus, Edit2, UserCheck, UserX, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import api from '../../api';
 import Layout from '../../components/Layout';
 import StatusBadge from '../../components/StatusBadge';
@@ -9,20 +9,41 @@ const UserManagement = () => {
     const navigate = useNavigate();
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     const [users, setUsers] = useState([]);
+    const [allUsers, setAllUsers] = useState([]); // For manager dropdown
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [editUser, setEditUser] = useState(null);
     const [form, setForm] = useState({ fullName: '', email: '', password: '', roleId: '', managerId: '', status: 'ACTIVE' });
     const [saving, setSaving] = useState(false);
     const [roles, setRoles] = useState([]);
+    const [searchTerm, setSearchTerm] = useState('');
+
+    // Pagination
+    const [page, setPage] = useState(0);
+    const [totalPages, setTotalPages] = useState(1);
 
     const fetchUsers = async () => {
         setLoading(true);
         try {
-            const res = await api.get('/api/users', { params: { orgId: user.organizationId, page: 0, size: 100 } });
-            setUsers(res.data?.data?.content || res.data?.data || []);
+            const res = await api.get('/api/users', { params: { orgId: user.organizationId, page, size: 15 } });
+            const data = res.data?.data;
+            if (data?.content) {
+                setUsers(data.content);
+                setTotalPages(data.totalPages || 1);
+            } else {
+                setUsers(data || []);
+                setTotalPages(1);
+            }
         } catch (err) { console.error(err); setUsers([]); }
         finally { setLoading(false); }
+    };
+
+    const fetchAllUsers = async () => {
+        try {
+            const res = await api.get('/api/users', { params: { orgId: user.organizationId, page: 0, size: 200 } });
+            const data = res.data?.data;
+            setAllUsers(data?.content || data || []);
+        } catch (err) { console.error(err); }
     };
 
     const fetchRoles = async () => {
@@ -33,7 +54,20 @@ const UserManagement = () => {
     };
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    useEffect(() => { fetchUsers(); fetchRoles(); }, []);
+    useEffect(() => { fetchAllUsers(); fetchRoles(); }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    useEffect(() => { fetchUsers(); }, [page]);
+
+    // Client-side search filtering
+    const filteredUsers = useMemo(() => {
+        if (!searchTerm.trim()) return users;
+        const term = searchTerm.toLowerCase();
+        return users.filter(u =>
+            (u.fullName || '').toLowerCase().includes(term) ||
+            (u.email || '').toLowerCase().includes(term) ||
+            (u.roleName || '').toLowerCase().includes(term)
+        );
+    }, [users, searchTerm]);
 
     const openCreate = () => {
         setEditUser(null);
@@ -57,7 +91,7 @@ const UserManagement = () => {
             } else {
                 await api.post('/api/users', { ...form, organizationId: user.organizationId });
             }
-            setShowModal(false); fetchUsers();
+            setShowModal(false); fetchUsers(); fetchAllUsers();
         } catch (err) { alert(err.response?.data?.message || 'Failed'); }
         finally { setSaving(false); }
     };
@@ -76,19 +110,29 @@ const UserManagement = () => {
             <div className="page-header">
                 <div>
                     <h1>User Management</h1>
-                    <p className="page-header-subtitle">{users.length} user{users.length !== 1 ? 's' : ''}</p>
+                    <p className="page-header-subtitle">{filteredUsers.length} user{filteredUsers.length !== 1 ? 's' : ''}{searchTerm ? ` matching "${searchTerm}"` : ''}</p>
                 </div>
-                <button className="btn btn-primary" onClick={openCreate}><Plus size={16} /> Add User</button>
+                <div style={{ display: 'flex', gap: 12 }}>
+                    <div className="search-bar" style={{ position: 'relative', width: 250 }}>
+                        <Search size={16} style={{ position: 'absolute', left: 10, top: 10, color: 'var(--color-text-muted)' }} />
+                        <input type="text" className="form-input" placeholder="Search users..."
+                            style={{ paddingLeft: 34, height: 36 }}
+                            value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+                    </div>
+                    <button className="btn btn-primary" onClick={openCreate}><Plus size={16} /> Add User</button>
+                </div>
             </div>
 
             <div className="card">
                 <div className="card-body" style={{ padding: 0 }}>
                     {loading ? (
                         <div className="empty-state" style={{ padding: 40 }}><p>Loading...</p></div>
-                    ) : users.length === 0 ? (
+                    ) : filteredUsers.length === 0 ? (
                         <div className="empty-state" style={{ padding: 40 }}>
-                            <h3>No users found</h3>
-                            <button className="btn btn-primary" style={{ marginTop: 16 }} onClick={openCreate}><Plus size={16} /> Add User</button>
+                            <h3>{searchTerm ? 'No users match your search' : 'No users found'}</h3>
+                            {!searchTerm && (
+                                <button className="btn btn-primary" style={{ marginTop: 16 }} onClick={openCreate}><Plus size={16} /> Add User</button>
+                            )}
                         </div>
                     ) : (
                         <div className="table-container">
@@ -97,7 +141,7 @@ const UserManagement = () => {
                                     <tr><th>Name</th><th>Email</th><th>Role</th><th>Manager</th><th>Status</th><th></th></tr>
                                 </thead>
                                 <tbody>
-                                    {users.map(u => (
+                                    {filteredUsers.map(u => (
                                         <tr key={u.id}>
                                             <td>
                                                 <div className="flex items-center gap-3">
@@ -132,6 +176,19 @@ const UserManagement = () => {
                     )}
                 </div>
             </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+                <div className="flex justify-center items-center gap-4" style={{ marginTop: 24, marginBottom: 24 }}>
+                    <button className="btn btn-secondary btn-sm" disabled={page === 0} onClick={() => setPage(p => p - 1)}>
+                        <ChevronLeft size={16} /> Prev
+                    </button>
+                    <span style={{ fontSize: 13, fontWeight: 500 }}>Page {page + 1} of {totalPages}</span>
+                    <button className="btn btn-secondary btn-sm" disabled={page >= totalPages - 1} onClick={() => setPage(p => p + 1)}>
+                        Next <ChevronRight size={16} />
+                    </button>
+                </div>
+            )}
 
             {/* Add/Edit User Modal */}
             {showModal && (
@@ -172,7 +229,7 @@ const UserManagement = () => {
                                         <select className="form-select" value={form.managerId}
                                             onChange={(e) => setForm({ ...form, managerId: e.target.value })}>
                                             <option value="">Select manager</option>
-                                            {users.filter(u => u.id !== editUser?.id).map(u => (
+                                            {allUsers.filter(u => u.id !== editUser?.id).map(u => (
                                                 <option key={u.id} value={u.id}>{u.fullName}</option>
                                             ))}
                                         </select>

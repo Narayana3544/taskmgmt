@@ -183,16 +183,18 @@ const RolePermissions = () => {
                                 }}>
                                     {r.displayName || r.code}
                                 </span>
-                                <div style={{ display: 'flex', gap: 4 }}>
-                                    <button className="btn btn-sm" onClick={(e) => { e.stopPropagation(); openEditRole(r); }}
-                                        style={{ padding: 4, background: 'transparent', border: 'none' }}>
-                                        <Edit2 size={12} />
-                                    </button>
-                                    <button className="btn btn-sm" onClick={(e) => { e.stopPropagation(); deleteRole(r); }}
-                                        style={{ padding: 4, background: 'transparent', border: 'none', color: 'var(--color-danger)' }}>
-                                        <Trash2 size={12} />
-                                    </button>
-                                </div>
+                                {!r.systemDefined && (
+                                    <div style={{ display: 'flex', gap: 4 }}>
+                                        <button className="btn btn-sm" onClick={(e) => { e.stopPropagation(); openEditRole(r); }}
+                                            style={{ padding: 4, background: 'transparent', border: 'none' }}>
+                                            <Edit2 size={12} />
+                                        </button>
+                                        <button className="btn btn-sm" onClick={(e) => { e.stopPropagation(); deleteRole(r); }}
+                                            style={{ padding: 4, background: 'transparent', border: 'none', color: 'var(--color-danger)' }}>
+                                            <Trash2 size={12} />
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         ))}
                     </div>

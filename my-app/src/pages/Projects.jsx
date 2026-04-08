@@ -4,6 +4,7 @@ import { Plus, Edit2, Users, X, Search, ChevronLeft, ChevronRight } from 'lucide
 import api from '../api';
 import Layout from '../components/Layout';
 import { showToast } from '../utils/toast';
+import { usePermissions } from '../hooks/usePermissions';
 
 const Projects = () => {
     const navigate = useNavigate();
@@ -25,6 +26,9 @@ const Projects = () => {
     const [totalPages, setTotalPages] = useState(1);
     const [searchTerm, setSearchTerm] = useState('');
     const [debouncedSearch, setDebouncedSearch] = useState('');
+
+    // Check if the user has permission to create a project
+    const { hasPermission: canCreateProject } = usePermissions('PROJECT', 'CREATE');
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -130,7 +134,9 @@ const Projects = () => {
                             style={{ paddingLeft: 34, height: 36 }}
                             value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
                     </div>
-                    <button className="btn btn-primary" onClick={openCreate}><Plus size={16} /> New Project</button>
+                    {canCreateProject && (
+                        <button className="btn btn-primary" onClick={openCreate}><Plus size={16} /> New Project</button>
+                    )}
                 </div>
             </div>
 

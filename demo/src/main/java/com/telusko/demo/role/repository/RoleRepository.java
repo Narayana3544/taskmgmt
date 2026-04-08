@@ -13,5 +13,7 @@ public interface RoleRepository extends JpaRepository<Role, Long> {
 
     Optional<Role> findByOrganizationIdAndCode(Long organizationId, String code);
 
+    Optional<Role> findFirstByCode(String code);
+
     boolean existsByOrganizationIdAndCode(Long organizationId, String code);
 }

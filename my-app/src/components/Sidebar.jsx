@@ -38,7 +38,6 @@ const NAV_ITEMS = [
     {
         section: 'Personal', items: [
             { label: 'My Profile', path: '/profile', icon: User },
-            { label: 'Activity', path: '/activity', icon: Activity },
         ]
     },
 ];
@@ -51,6 +50,7 @@ const Sidebar = ({ collapsed, onToggle }) => {
     const handleLogout = () => {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
+        localStorage.removeItem('userPermissions');
         navigate('/login');
     };
 

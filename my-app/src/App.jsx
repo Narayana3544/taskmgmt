@@ -55,6 +55,8 @@ import ActivityFeed from './features/activity/ActivityFeed';
 // Features — Profile & Roles
 import Profile from './features/profile/Profile';
 import RolePermissions from './features/roles/RolePermissions';
+import MyPerformance from './features/performance/MyPerformance';
+import ManagerReview from './features/performance/ManagerReview';
 
 const routerBasename = process.env.PUBLIC_URL || '';
 
@@ -62,7 +64,7 @@ const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('token');
   const userStr = localStorage.getItem('user');
   const location = useLocation();
-  
+
   if (!token) {
     return <Navigate to="/login" replace />;
   }
@@ -74,7 +76,7 @@ const ProtectedRoute = ({ children }) => {
       if (user.requiresPasswordChange && location.pathname !== '/change-password') {
         return <Navigate to="/change-password" replace />;
       }
-    } catch(e) {}
+    } catch (e) { }
   }
 
   return children;
@@ -135,6 +137,8 @@ function App() {
           {/* Personal */}
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="/activity" element={<ProtectedRoute><ActivityFeed /></ProtectedRoute>} />
+          <Route path="/performance" element={<ProtectedRoute><MyPerformance /></ProtectedRoute>} />
+          <Route path="/performance/review" element={<ProtectedRoute><ManagerReview /></ProtectedRoute>} />
 
           {/* Catch-all */}
           <Route path="*" element={<Navigate to="/" replace />} />

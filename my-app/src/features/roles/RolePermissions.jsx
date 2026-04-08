@@ -57,34 +57,21 @@ const RolePermissions = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => { if (selectedRole) fetchPermissions(selectedRole); }, [selectedRole]);
 
-    const togglePermission = async (feature, action) => {
+    const splitKey = (key) => {
+        const lastUnderscore = key.lastIndexOf('_');
+        return [key.substring(0, lastUnderscore), key.substring(lastUnderscore + 1)];
+    };
+
+    const togglePermission = (feature, action) => {
         const key = `${feature}_${action}`;
-        const newAllowed = !permissions[key];
-        
-        // Optimistic UI update
-        const updatedPermissions = { ...permissions, [key]: newAllowed };
-        setPermissions(updatedPermissions);
-        
-        // Auto-save to backend
-        try {
-            const perms = Object.entries(updatedPermissions).map(([k, allowed]) => {
-                const [f, a] = k.split('_');
-                return { roleCode: selectedRole, feature: f, action: a, allowed };
-            });
-            await api.put('/api/permissions', { roleCode: selectedRole, permissions: perms });
-            showToast.success(`Permission updated`);
-        } catch(err) {
-            // Revert on failure
-            setPermissions(permissions);
-            showToast.error('Failed to update permission');
-        }
+        setPermissions(prev => ({ ...prev, [key]: !prev[key] }));
     };
 
     const savePermissions = async () => {
         setSaving(true);
         try {
             const perms = Object.entries(permissions).map(([key, allowed]) => {
-                const [feature, action] = key.split('_');
+                const [feature, action] = splitKey(key);
                 return { roleCode: selectedRole, feature, action, allowed };
             });
             await api.put('/api/permissions', { roleCode: selectedRole, permissions: perms });

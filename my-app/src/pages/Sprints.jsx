@@ -12,7 +12,9 @@ const Sprints = () => {
     const navigate = useNavigate();
 
     const [projects, setProjects] = useState([]);
-    const [selectedProject, setSelectedProject] = useState(projectId || '');
+    const [selectedProject, setSelectedProject] = useState(() => {
+        return projectId || sessionStorage.getItem('sprints_selected_project') || '';
+    });
     const [sprints, setSprints] = useState([]);
     const [loading, setLoading] = useState(false);
     const [showCreate, setShowCreate] = useState(false);
@@ -32,6 +34,13 @@ const Sprints = () => {
         };
         fetchProjects();
     }, []);
+
+    // Persist selected project to sessionStorage
+    useEffect(() => {
+        if (selectedProject) {
+            sessionStorage.setItem('sprints_selected_project', selectedProject);
+        }
+    }, [selectedProject]);
 
     // Pagination and Search
     const [page, setPage] = useState(0);
@@ -140,7 +149,7 @@ const Sprints = () => {
                 <div className="flex gap-3 items-center">
                     <div className="search-bar" style={{ position: 'relative', width: 220 }}>
                         <Search size={16} style={{ position: 'absolute', left: 10, top: 10, color: 'var(--color-text-muted)' }} />
-                        <input type="text" className="form-input" placeholder="Search sprints..." 
+                        <input type="text" className="form-input" placeholder="Search sprints..."
                             style={{ paddingLeft: 34, height: 36 }}
                             value={searchTerm} onChange={e => setSearchTerm(e.target.value)} disabled={!selectedProject} />
                     </div>

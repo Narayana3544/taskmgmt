@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Send, User, Paperclip, MessageSquare, History, FileText, Upload } from 'lucide-react';
+import { ArrowLeft, Send, User, Paperclip, MessageSquare, History, FileText, Upload, X, Eye, Trash2 } from 'lucide-react';
 import api from '../../api';
 import Layout from '../../components/Layout';
 import StatusBadge from '../../components/StatusBadge';
@@ -22,6 +22,11 @@ const WorkItemDetails = () => {
     const [handoffComment, setHandoffComment] = useState('');
     const [showHandoff, setShowHandoff] = useState(false);
 
+    // Attachment preview state
+    const [pendingFile, setPendingFile] = useState(null);
+    const [pendingPreview, setPendingPreview] = useState(null);
+    const [uploading, setUploading] = useState(false);
+
     const fetchAll = async () => {
         try {
             const [itemRes, commRes, histRes, attRes] = await Promise.all([
@@ -30,13 +35,13 @@ const WorkItemDetails = () => {
                 api.get(`/api/work-items/${id}/history`),
                 api.get(`/api/work-items/${id}/attachments`).catch(() => ({ data: { data: [] } }))
             ]);
-            
+
             const wi = itemRes.data?.data;
             setItem(wi);
             setComments(commRes.data?.data || []);
             setHistory(histRes.data?.data || []);
-            setAttachments(wi?.attachments || []); // List of strings from backend
-            
+            setAttachments(wi?.attachments || []);
+
             if (wi?.projectId) {
                 const memRes = await api.get(`/api/projects/${wi.projectId}/members`).catch(() => ({ data: { data: [] } }));
                 setProjectMembers(memRes.data?.data || []);
@@ -47,6 +52,13 @@ const WorkItemDetails = () => {
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => { fetchAll(); }, [id]);
+
+    // Cleanup preview URL on unmount
+    useEffect(() => {
+        return () => {
+            if (pendingPreview) URL.revokeObjectURL(pendingPreview);
+        };
+    }, [pendingPreview]);
 
     const postComment = async () => {
         if (!commentText.trim()) return;
@@ -75,6 +87,64 @@ const WorkItemDetails = () => {
             setHandoffComment('');
             fetchAll();
         } catch (err) { alert(err.response?.data?.message || 'Failed'); }
+    };
+
+    // Handle file selection — show preview instead of uploading immediately
+    const handleFileSelect = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        if (file.size > 2 * 1024 * 1024) {
+            alert('File size must be less than 2MB');
+            e.target.value = '';
+            return;
+        }
+        setPendingFile(file);
+        // Create preview URL for images
+        if (file.type.startsWith('image/')) {
+            setPendingPreview(URL.createObjectURL(file));
+        } else {
+            setPendingPreview(null);
+        }
+        e.target.value = ''; // Reset input so same file can be re-selected
+    };
+
+    const cancelPendingUpload = () => {
+        if (pendingPreview) URL.revokeObjectURL(pendingPreview);
+        setPendingFile(null);
+        setPendingPreview(null);
+    };
+
+    const confirmUpload = async () => {
+        if (!pendingFile) return;
+        setUploading(true);
+        try {
+            const formData = new FormData();
+            formData.append('file', pendingFile);
+            formData.append('folder', `workitems/${id}`);
+
+            const uploadRes = await api.post('/api/files/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+            const fileUrl = uploadRes.data.data.url;
+
+            const newAttachments = [...attachments, fileUrl];
+            await api.put(`/api/work-items/${id}`, { ...item, attachments: newAttachments });
+
+            cancelPendingUpload();
+            fetchAll();
+        } catch (err) { alert(err.response?.data?.message || 'Upload failed'); }
+        finally { setUploading(false); }
+    };
+
+    const removeAttachment = async (index) => {
+        if (!window.confirm('Remove this attachment?')) return;
+        try {
+            const newAttachments = attachments.filter((_, i) => i !== index);
+            await api.put(`/api/work-items/${id}`, { ...item, attachments: newAttachments });
+            fetchAll();
+        } catch (err) { alert(err.response?.data?.message || 'Failed to remove'); }
+    };
+
+    const isImageUrl = (url) => {
+        return /\.(jpg|jpeg|png|gif|webp|svg|bmp)(\?|$)/i.test(url);
     };
 
     if (loading) return <Layout title="Loading..."><div className="empty-state"><p>Loading...</p></div></Layout>;
@@ -133,10 +203,10 @@ const WorkItemDetails = () => {
                             <div>
                                 <div style={{ fontSize: 11, color: 'var(--color-text-muted)', marginBottom: 2 }}>Assignee</div>
                                 {isAssigning ? (
-                                    <select 
-                                        className="form-select form-select-sm" 
+                                    <select
+                                        className="form-select form-select-sm"
                                         style={{ padding: '2px 24px 2px 8px', fontSize: 13, height: 28, width: '100%', maxWidth: 150 }}
-                                        value={item.assigneeId || ''} 
+                                        value={item.assigneeId || ''}
                                         onChange={(e) => handleAssign(e.target.value ? parseInt(e.target.value) : null)}
                                         onBlur={() => setIsAssigning(false)}
                                         autoFocus
@@ -147,10 +217,10 @@ const WorkItemDetails = () => {
                                         ))}
                                     </select>
                                 ) : (
-                                    <div className="flex items-center gap-2" 
-                                         style={{ cursor: 'pointer', padding: '2px 4px', margin: '-2px -4px', borderRadius: 4 }}
-                                         onClick={() => setIsAssigning(true)}
-                                         title="Click to assign">
+                                    <div className="flex items-center gap-2"
+                                        style={{ cursor: 'pointer', padding: '2px 4px', margin: '-2px -4px', borderRadius: 4 }}
+                                        onClick={() => setIsAssigning(true)}
+                                        title="Click to assign">
                                         <User size={12} color="var(--color-text-muted)" />
                                         <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--color-secondary)' }}>
                                             {item.assigneeName || 'Unassigned'}
@@ -337,33 +407,103 @@ const WorkItemDetails = () => {
                         <div className="card-header">
                             <h3>Attachments ({attachments.length})</h3>
                             <label className="btn btn-sm btn-secondary" style={{ cursor: 'pointer' }}>
-                                <Upload size={14} /> Upload
-                                <input type="file" style={{ display: 'none' }} accept="image/jpeg,image/png,application/pdf" onChange={async (e) => {
-                                    const file = e.target.files?.[0];
-                                    if (!file) return;
-                                    if (file.size > 2 * 1024 * 1024) {
-                                        alert('File size must be less than 2MB');
-                                        return;
-                                    }
-                                    const formData = new FormData();
-                                    formData.append('file', file);
-                                    formData.append('folder', `workitems/${id}`);
-                                    try {
-                                        // 1. Upload file
-                                        const uploadRes = await api.post('/api/files/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
-                                        const fileUrl = uploadRes.data.data.url;
-                                        
-                                        // 2. Update work item
-                                        const newAttachments = [...attachments, fileUrl];
-                                        await api.put(`/api/work-items/${id}`, { ...item, attachments: newAttachments });
-                                        
-                                        fetchAll(); // Refresh page data
-                                    } catch (err) { alert(err.response?.data?.message || 'Upload failed'); }
-                                }} />
+                                <Upload size={14} /> Select File
+                                <input type="file" style={{ display: 'none' }} accept="image/jpeg,image/png,application/pdf" onChange={handleFileSelect} />
                             </label>
                         </div>
                         <div className="card-body">
-                            {attachments.length === 0 ? (
+                            {/* Pending Upload Preview */}
+                            {pendingFile && (
+                                <div style={{
+                                    marginBottom: 16,
+                                    padding: 16,
+                                    border: '2px dashed var(--color-secondary)',
+                                    borderRadius: 12,
+                                    background: 'var(--color-info-light)',
+                                }}>
+                                    <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-secondary)', marginBottom: 8 }}>
+                                        Preview — Ready to upload
+                                    </div>
+                                    <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+                                        {/* Preview area */}
+                                        <div style={{ flex: 1 }}>
+                                            {pendingPreview ? (
+                                                <img
+                                                    src={pendingPreview}
+                                                    alt="Preview"
+                                                    style={{
+                                                        maxWidth: '100%',
+                                                        maxHeight: 200,
+                                                        borderRadius: 8,
+                                                        objectFit: 'contain',
+                                                        background: 'var(--color-card)',
+                                                        border: '1px solid var(--color-border)',
+                                                    }}
+                                                />
+                                            ) : (
+                                                <div style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: 8,
+                                                    padding: '12px 16px',
+                                                    background: 'var(--color-card)',
+                                                    borderRadius: 8,
+                                                    border: '1px solid var(--color-border)',
+                                                }}>
+                                                    <FileText size={24} color="var(--color-text-muted)" />
+                                                    <div>
+                                                        <div style={{ fontWeight: 500, fontSize: 14 }}>{pendingFile.name}</div>
+                                                        <div style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
+                                                            {(pendingFile.size / 1024).toFixed(1)} KB · {pendingFile.type || 'Unknown type'}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
+                                            {pendingPreview && (
+                                                <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 6 }}>
+                                                    {pendingFile.name} · {(pendingFile.size / 1024).toFixed(1)} KB
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Action buttons */}
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0 }}>
+                                            <button
+                                                className="btn btn-sm btn-primary"
+                                                onClick={confirmUpload}
+                                                disabled={uploading}
+                                                style={{ minWidth: 90 }}
+                                            >
+                                                {uploading ? (
+                                                    <>Uploading...</>
+                                                ) : (
+                                                    <><Upload size={14} /> Upload</>
+                                                )}
+                                            </button>
+                                            <button
+                                                className="btn btn-sm btn-secondary"
+                                                onClick={cancelPendingUpload}
+                                                disabled={uploading}
+                                            >
+                                                <X size={14} /> Cancel
+                                            </button>
+                                            <label className="btn btn-sm btn-secondary" style={{ cursor: uploading ? 'not-allowed' : 'pointer' }}>
+                                                <Eye size={14} /> Replace
+                                                <input
+                                                    type="file"
+                                                    style={{ display: 'none' }}
+                                                    accept="image/jpeg,image/png,application/pdf"
+                                                    onChange={handleFileSelect}
+                                                    disabled={uploading}
+                                                />
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Existing attachments */}
+                            {attachments.length === 0 && !pendingFile ? (
                                 <div className="empty-state" style={{ padding: 30 }}>
                                     <Paperclip size={32} />
                                     <h3>No attachments</h3>
@@ -373,13 +513,36 @@ const WorkItemDetails = () => {
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                                     {attachments.map((url, i) => {
                                         const fileName = url.split('/').pop() || `Attachment ${i + 1}`;
+                                        const isImage = isImageUrl(url);
                                         return (
-                                            <div key={i} className="flex items-center gap-3" style={{ padding: '8px 12px', background: 'var(--color-bg-alt)', borderRadius: 6 }}>
-                                                <Paperclip size={14} color="var(--color-text-muted)" />
-                                                <div style={{ flex: 1 }}>
-                                                    <div style={{ fontWeight: 500, fontSize: 13, wordBreak: 'break-all' }}>{fileName}</div>
+                                            <div key={i} style={{
+                                                padding: '10px 12px',
+                                                background: 'var(--color-bg-alt)',
+                                                borderRadius: 8,
+                                                border: '1px solid var(--color-border-light)',
+                                            }}>
+                                                <div className="flex items-center gap-3">
+                                                    {isImage ? (
+                                                        <img src={url} alt={fileName}
+                                                            style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 6, flexShrink: 0, border: '1px solid var(--color-border)' }} />
+                                                    ) : (
+                                                        <div style={{ width: 48, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--color-card)', borderRadius: 6, flexShrink: 0, border: '1px solid var(--color-border)' }}>
+                                                            <FileText size={20} color="var(--color-text-muted)" />
+                                                        </div>
+                                                    )}
+                                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                                        <div style={{ fontWeight: 500, fontSize: 13, wordBreak: 'break-all' }}>{fileName}</div>
+                                                    </div>
+                                                    <div className="flex gap-2">
+                                                        <a href={url} target="_blank" rel="noreferrer" className="btn btn-sm btn-secondary">
+                                                            <Eye size={14} /> Open
+                                                        </a>
+                                                        <button className="btn btn-sm btn-secondary" onClick={() => removeAttachment(i)}
+                                                            style={{ color: 'var(--color-danger)' }} title="Remove">
+                                                            <Trash2 size={14} />
+                                                        </button>
+                                                    </div>
                                                 </div>
-                                                <a href={url} target="_blank" rel="noreferrer" className="btn btn-sm btn-secondary">Open</a>
                                             </div>
                                         );
                                     })}

@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Bell, Menu, PanelLeftClose } from 'lucide-react';
 import api from '../api';
 
 const Navbar = ({ collapsed, onToggle, title }) => {
+    const navigate = useNavigate();
     const [unreadCount, setUnreadCount] = useState(0);
 
     useEffect(() => {
@@ -31,7 +33,7 @@ const Navbar = ({ collapsed, onToggle, title }) => {
                 <h1 className="navbar-title">{title}</h1>
             </div>
             <div className="navbar-right">
-                <button className="navbar-icon-btn" title="Notifications">
+                <button className="navbar-icon-btn" title="Notifications" onClick={() => navigate('/notifications')}>
                     <Bell size={20} />
                     {unreadCount > 0 && (
                         <span className="notification-badge">

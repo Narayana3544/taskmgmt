@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import {
     LayoutDashboard, FolderKanban, ListTodo, Zap,
     LogOut, Calendar, ClipboardList, Clock, Database,
-    Users, Shield, Bell, FileSearch, Activity, User, Building
+    Users, Shield, Bell, FileSearch, Activity, User, Building, Award
 } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 
@@ -22,6 +22,7 @@ const NAV_ITEMS = [
             { label: 'Leave Management', path: '/leaves', icon: ClipboardList },
             { label: 'Timesheets', path: '/timesheets', icon: Clock },
             { label: 'Holidays', path: '/holidays', icon: Calendar },
+            { label: 'My Performance', path: '/performance', icon: Award },
         ]
     },
     {
@@ -64,7 +65,7 @@ const Sidebar = ({ collapsed, onToggle }) => {
     });
 
     return (
-        <aside className={`sidebar ${collapsed ? 'sidebar-collapsed' : ''}`}>
+        <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
             {/* Logo */}
             <div className="sidebar-header">
                 <div className="sidebar-logo">

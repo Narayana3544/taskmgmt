@@ -17,6 +17,8 @@ const LeaveManagement = () => {
     const navigate = useNavigate();
     // eslint-disable-next-line no-unused-vars
     const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const userRole = (user.roleCode || user.role || '').toUpperCase();
+    const isAdminOrManager = userRole === 'ADMIN' || userRole === 'MANAGER';
     const [activeTab, setActiveTab] = useState('my');
     const [leaves, setLeaves] = useState([]);
     const [teamLeaves, setTeamLeaves] = useState([]);
@@ -119,7 +121,13 @@ const LeaveManagement = () => {
 
             {/* Tabs */}
             <div className="flex gap-2" style={{ marginBottom: 20 }}>
-                {TABS.map(tab => {
+                {TABS
+                    .filter(tab => {
+                        // Hide Team Approvals tab for non-ADMIN/MANAGER
+                        if (tab.key === 'team' && !isAdminOrManager) return false;
+                        return true;
+                    })
+                    .map(tab => {
                     const Icon = tab.icon;
                     return (
                         <button key={tab.key}

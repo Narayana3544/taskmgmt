@@ -26,12 +26,15 @@ const NAV_ITEMS = [
         ]
     },
     {
-        section: 'Admin', items: [
-            { label: 'Master Data', path: '/master-data', icon: Database },
-            { label: 'Organization', path: '/organization', icon: Building },
-            { label: 'Users', path: '/users', icon: Users },
-            { label: 'Roles', path: '/roles', icon: Shield },
-            { label: 'Audit Log', path: '/audit-log', icon: FileSearch },
+        section: 'Admin',
+        // Section-level roles: only these roles see the section at all
+        roles: ['ADMIN', 'MANAGER'],
+        items: [
+            { label: 'Master Data', path: '/master-data', icon: Database, roles: ['ADMIN'] },
+            { label: 'Organization', path: '/organization', icon: Building, roles: ['ADMIN'] },
+            { label: 'Users', path: '/users', icon: Users, roles: ['ADMIN', 'MANAGER'] },
+            { label: 'Roles', path: '/roles', icon: Shield, roles: ['ADMIN'] },
+            { label: 'Audit Log', path: '/audit-log', icon: FileSearch, roles: ['ADMIN', 'MANAGER'] },
             { label: 'Notifications', path: '/notifications', icon: Bell },
         ]
     },
@@ -46,6 +49,7 @@ const Sidebar = ({ collapsed, onToggle }) => {
     const navigate = useNavigate();
     const location = useLocation();
     const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const userRole = (user.roleCode || user.role || '').toUpperCase();
 
     const handleLogout = () => {
         localStorage.removeItem('token');
@@ -59,10 +63,21 @@ const Sidebar = ({ collapsed, onToggle }) => {
         return location.pathname.startsWith(path);
     };
 
-    const filteredNavItems = NAV_ITEMS.filter(section => {
-        if (section.section === 'Admin' && user.roleCode !== 'ADMIN') return false;
-        return true;
-    });
+    const filteredNavItems = NAV_ITEMS
+        .filter(section => {
+            // If the section has role restrictions, check them
+            if (section.roles && !section.roles.includes(userRole)) return false;
+            return true;
+        })
+        .map(section => ({
+            ...section,
+            // Filter individual items by role if specified
+            items: section.items.filter(item => {
+                if (item.roles && !item.roles.includes(userRole)) return false;
+                return true;
+            })
+        }))
+        .filter(section => section.items.length > 0);
 
     return (
         <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>

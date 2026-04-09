@@ -20,6 +20,8 @@ const WorkItems = () => {
     const [searchParams] = useSearchParams();
     const projectId = searchParams.get('projectId');
     const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const userRole = (user.roleCode || user.role || '').toUpperCase();
+    const isAdminOrManager = userRole === 'ADMIN' || userRole === 'MANAGER';;
 
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -289,7 +291,9 @@ const WorkItems = () => {
                             )}
                         </button>
                     )}
-                    <button className="btn btn-primary" onClick={openCreate}><Plus size={16} /> New Work Item</button>
+                    {isAdminOrManager && (
+                        <button className="btn btn-primary" onClick={openCreate}><Plus size={16} /> New Work Item</button>
+                    )}
                 </div>
             </div>
 
@@ -374,9 +378,11 @@ const WorkItems = () => {
                                             <td style={{ textAlign: 'center' }}>{item.storyPoints || '—'}</td>
                                             <td style={{ color: 'var(--color-text-secondary)', whiteSpace: 'nowrap', fontSize: 13 }}>{item.dueDate || '—'}</td>
                                             <td>
-                                                <button className="btn btn-sm btn-secondary" onClick={() => openEdit(item)}>
-                                                    <Edit2 size={14} />
-                                                </button>
+                                                {isAdminOrManager && (
+                                                    <button className="btn btn-sm btn-secondary" onClick={() => openEdit(item)}>
+                                                        <Edit2 size={14} />
+                                                    </button>
+                                                )}
                                             </td>
                                         </tr>
                                     ))}

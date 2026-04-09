@@ -258,7 +258,7 @@ public class MasterDataService {
 
         // --- Features ---
         String[] features = { "WORK_ITEM", "PROJECT", "SPRINT", "TIMESHEET", "LEAVE", "USER", "MASTER_DATA", "AUDIT",
-                "NOTIFICATION" };
+                "NOTIFICATION", "HOLIDAY", "PERFORMANCE" };
         for (String fc : features) {
             featureRepository.findByCode(fc)
                     .orElseGet(() -> featureRepository.save(PermissionFeature.builder()

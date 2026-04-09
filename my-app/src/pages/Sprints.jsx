@@ -10,6 +10,8 @@ const Sprints = () => {
     const projectId = searchParams.get('projectId');
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     const navigate = useNavigate();
+    const userRole = (user.roleCode || user.role || '').toUpperCase();
+    const isAdminOrManager = userRole === 'ADMIN' || userRole === 'MANAGER';
 
     const [projects, setProjects] = useState([]);
     const [selectedProject, setSelectedProject] = useState(() => {
@@ -158,7 +160,9 @@ const Sprints = () => {
                         <option value="">Select project</option>
                         {projects.map(p => <option key={p.id} value={p.id}>{p.name} ({p.code})</option>)}
                     </select>
-                    <button className="btn btn-primary" onClick={openCreate} disabled={!selectedProject}><Plus size={16} /> New Sprint</button>
+                    {isAdminOrManager && (
+                        <button className="btn btn-primary" onClick={openCreate} disabled={!selectedProject}><Plus size={16} /> New Sprint</button>
+                    )}
                 </div>
             </div>
 
@@ -171,7 +175,9 @@ const Sprints = () => {
             ) : sprints.length === 0 ? (
                 <div className="card"><div className="empty-state">
                     <h3>No sprints yet</h3>
-                    <button className="btn btn-primary" style={{ marginTop: 16 }} onClick={openCreate}><Plus size={16} /> Create Sprint</button>
+                    {isAdminOrManager && (
+                        <button className="btn btn-primary" style={{ marginTop: 16 }} onClick={openCreate}><Plus size={16} /> Create Sprint</button>
+                    )}
                 </div></div>
             ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -187,7 +193,7 @@ const Sprints = () => {
                                         <button className="btn btn-sm btn-secondary" onClick={() => navigate(`/sprints/${sprint.id}/dashboard`)}>
                                             <BarChart3 size={14} /> Dashboard
                                         </button>
-                                        {sprint.statusCode === 'PLANNED' && (
+                                        {sprint.statusCode === 'PLANNED' && isAdminOrManager && (
                                             <>
                                                 <button className="btn btn-sm btn-secondary" onClick={() => navigate(`/sprints/${sprint.id}/planning`)}>
                                                     <GripVertical size={14} /> Plan
@@ -198,7 +204,7 @@ const Sprints = () => {
                                                 <button className="btn btn-sm btn-secondary" onClick={() => openEdit(sprint)}>Edit</button>
                                             </>
                                         )}
-                                        {sprint.statusCode === 'ACTIVE' && (
+                                        {sprint.statusCode === 'ACTIVE' && isAdminOrManager && (
                                             <>
                                                 <button className="btn btn-sm btn-secondary" onClick={() => navigate(`/sprints/${sprint.id}/planning`)}>
                                                     <GripVertical size={14} /> Plan

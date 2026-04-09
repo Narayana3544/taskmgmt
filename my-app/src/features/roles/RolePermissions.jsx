@@ -6,10 +6,10 @@ import { showToast } from '../../utils/toast';
 
 const FEATURES = [
     'WORK_ITEM', 'PROJECT', 'SPRINT', 'LEAVE', 'TIMESHEET',
-    'HOLIDAY', 'MASTER_DATA', 'USER', 'NOTIFICATION', 'AUDIT_LOG'
+    'HOLIDAY', 'MASTER_DATA', 'USER', 'NOTIFICATION', 'AUDIT', 'PERFORMANCE'
 ];
 
-const ACTIONS = ['CREATE', 'VIEW', 'EDIT', 'DELETE'];
+const ACTIONS = ['CREATE', 'VIEW', 'UPDATE', 'DELETE'];
 
 const RolePermissions = () => {
     const [roles, setRoles] = useState([]);

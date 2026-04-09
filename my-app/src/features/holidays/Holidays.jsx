@@ -8,6 +8,8 @@ import StatusBadge from '../../components/StatusBadge';
 const Holidays = () => {
     const navigate = useNavigate();
     const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const userRole = (user.roleCode || user.role || '').toUpperCase();
+    const isAdminOrManager = userRole === 'ADMIN' || userRole === 'MANAGER';;
     const [holidays, setHolidays] = useState([]);
     const [loading, setLoading] = useState(true);
     const [yearFilter, setYearFilter] = useState(new Date().getFullYear());
@@ -87,9 +89,11 @@ const Holidays = () => {
                     <button className="btn btn-secondary" onClick={() => navigate('/holidays/calendar')}>
                         <Calendar size={16} /> Calendar
                     </button>
-                    <button className="btn btn-primary" onClick={openCreate}>
-                        <Plus size={16} /> Add Holiday
-                    </button>
+                    {isAdminOrManager && (
+                        <button className="btn btn-primary" onClick={openCreate}>
+                            <Plus size={16} /> Add Holiday
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -102,9 +106,11 @@ const Holidays = () => {
                             <Calendar size={40} />
                             <h3>No holidays found</h3>
                             <p>Add holidays for your organization.</p>
-                            <button className="btn btn-primary" style={{ marginTop: 16 }} onClick={openCreate}>
-                                <Plus size={16} /> Add Holiday
-                            </button>
+                            {isAdminOrManager && (
+                                <button className="btn btn-primary" style={{ marginTop: 16 }} onClick={openCreate}>
+                                    <Plus size={16} /> Add Holiday
+                                </button>
+                            )}
                         </div>
                     ) : (
                         <div className="table-container">
@@ -139,15 +145,17 @@ const Holidays = () => {
                                                 <div className="truncate">{h.description || '—'}</div>
                                             </td>
                                             <td>
-                                                <div className="flex gap-2">
-                                                    <button className="btn btn-sm btn-secondary" onClick={() => openEdit(h)} title="Edit">
-                                                        <Edit2 size={14} />
-                                                    </button>
-                                                    <button className="btn btn-sm btn-secondary" onClick={() => toggleActive(h)}
-                                                        title={h.active !== false ? 'Disable' : 'Enable'}>
-                                                        {h.active !== false ? <ToggleRight size={14} /> : <ToggleLeft size={14} />}
-                                                    </button>
-                                                </div>
+                                                {isAdminOrManager && (
+                                                    <div className="flex gap-2">
+                                                        <button className="btn btn-sm btn-secondary" onClick={() => openEdit(h)} title="Edit">
+                                                            <Edit2 size={14} />
+                                                        </button>
+                                                        <button className="btn btn-sm btn-secondary" onClick={() => toggleActive(h)}
+                                                            title={h.active !== false ? 'Disable' : 'Enable'}>
+                                                            {h.active !== false ? <ToggleRight size={14} /> : <ToggleLeft size={14} />}
+                                                        </button>
+                                                    </div>
+                                                )}
                                             </td>
                                         </tr>
                                     ))}

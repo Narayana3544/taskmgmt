@@ -9,6 +9,8 @@ import { usePermissions } from '../hooks/usePermissions';
 const Projects = () => {
     const navigate = useNavigate();
     const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const userRole = (user.roleCode || user.role || '').toUpperCase();
+    const isAdminOrManager = userRole === 'ADMIN' || userRole === 'MANAGER';;
     const [projects, setProjects] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
@@ -169,12 +171,16 @@ const Projects = () => {
                                 <div className="flex items-center justify-between" style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
                                     <span>{p.memberCount || 0} members</span>
                                     <div className="flex gap-2">
-                                        <button className="btn btn-sm btn-secondary" onClick={() => openMembers(p)} title="Manage members">
-                                            <Users size={14} />
-                                        </button>
-                                        <button className="btn btn-sm btn-secondary" onClick={() => openEdit(p)} title="Edit project">
-                                            <Edit2 size={14} />
-                                        </button>
+                                        {isAdminOrManager && (
+                                            <>
+                                                <button className="btn btn-sm btn-secondary" onClick={() => openMembers(p)} title="Manage members">
+                                                    <Users size={14} />
+                                                </button>
+                                                <button className="btn btn-sm btn-secondary" onClick={() => openEdit(p)} title="Edit project">
+                                                    <Edit2 size={14} />
+                                                </button>
+                                            </>
+                                        )}
                                     </div>
                                 </div>
                             </div>

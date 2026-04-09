@@ -18,10 +18,14 @@ const setStorageData = (data) => {
 const MyPerformance = () => {
     const navigate = useNavigate();
     const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const userRole = (user.roleCode || user.role || '').toUpperCase();
+    const isManager = userRole === 'ADMIN' || userRole === 'MANAGER';
     const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
 
-    const [selectedMonth, setSelectedMonth] = useState(now.getMonth());
-    const [selectedYear, setSelectedYear] = useState(now.getFullYear());
+    const [selectedMonth, setSelectedMonth] = useState(currentMonth);
+    const [selectedYear, setSelectedYear] = useState(currentYear);
 
     const periodKey = `${user.userId || user.id}_${selectedYear}_${selectedMonth}`;
 
@@ -48,12 +52,18 @@ const MyPerformance = () => {
         }
     }, [periodKey]);
 
+    // Check if the selected month is the current month
+    const isCurrentMonth = selectedMonth === currentMonth && selectedYear === currentYear;
+    // Check if selected month is in the future
+    const isFutureMonth = selectedYear > currentYear || (selectedYear === currentYear && selectedMonth > currentMonth);
+
     const canSubmit = useMemo(() => {
         const today = new Date();
-        return today.getDate() >= 25 && today.getMonth() === selectedMonth && today.getFullYear() === selectedYear;
-    }, [selectedMonth, selectedYear]);
+        return isCurrentMonth && today.getDate() >= 25;
+    }, [isCurrentMonth]);
 
-    const isLocked = status !== 'DRAFT';
+    // Lock editing if: not DRAFT, or not the current month, or it's a future month
+    const isLocked = status !== 'DRAFT' || !isCurrentMonth;
 
     const addTask = () => {
         setTasks([...tasks, { id: Date.now(), description: '', category: 'Development', hours: '' }]);
@@ -116,13 +126,22 @@ const MyPerformance = () => {
     };
 
     const prevMonth = () => {
+        // Allow going to previous months for read-only viewing
         if (selectedMonth === 0) { setSelectedMonth(11); setSelectedYear(y => y - 1); }
         else setSelectedMonth(m => m - 1);
     };
     const nextMonth = () => {
-        if (selectedMonth === 11) { setSelectedMonth(0); setSelectedYear(y => y + 1); }
-        else setSelectedMonth(m => m + 1);
+        // Block navigating to future months beyond current
+        const nextM = selectedMonth === 11 ? 0 : selectedMonth + 1;
+        const nextY = selectedMonth === 11 ? selectedYear + 1 : selectedYear;
+        if (nextY > currentYear || (nextY === currentYear && nextM > currentMonth)) return;
+        setSelectedMonth(nextM);
+        setSelectedYear(nextY);
     };
+
+    // Can we go to the next month? Only if it's not beyond current month
+    const canGoNext = !(selectedYear === currentYear && selectedMonth === currentMonth) &&
+        !(selectedYear > currentYear);
 
     const CATEGORIES = ['Development', 'Testing', 'Design', 'Documentation', 'Meetings', 'Research', 'Support', 'Other'];
 
@@ -134,7 +153,7 @@ const MyPerformance = () => {
                     <p className="page-header-subtitle">Track and submit your monthly tasks</p>
                 </div>
                 <div className="flex gap-2">
-                    {user.managerId && (
+                    {isManager && (
                         <button className="btn btn-secondary" onClick={() => navigate('/performance/review')}>
                             <Award size={16} /> Manager Review
                         </button>
@@ -150,13 +169,29 @@ const MyPerformance = () => {
                         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                             <Calendar size={18} color="var(--color-secondary)" />
                             <span style={{ fontSize: 18, fontWeight: 700 }}>{MONTHS[selectedMonth]} {selectedYear}</span>
-                            <span className={`badge ${status === 'DRAFT' ? 'badge-warning' : status === 'SUBMITTED' ? 'badge-info' : 'badge-success'}`}
-                                style={{ fontSize: 11 }}>
-                                {status}
-                            </span>
+                            {isCurrentMonth ? (
+                                <span className={`badge ${status === 'DRAFT' ? 'badge-warning' : status === 'SUBMITTED' ? 'badge-info' : 'badge-success'}`}
+                                    style={{ fontSize: 11 }}>
+                                    {status}
+                                </span>
+                            ) : (
+                                <span className="badge badge-default" style={{ fontSize: 11 }}>
+                                    {isFutureMonth ? 'NOT AVAILABLE' : 'READ ONLY'}
+                                </span>
+                            )}
                         </div>
-                        <button className="btn btn-sm btn-secondary" onClick={nextMonth}><ChevronRight size={16} /></button>
+                        <button className="btn btn-sm btn-secondary" onClick={nextMonth} disabled={!canGoNext}><ChevronRight size={16} /></button>
                     </div>
+                    {!isCurrentMonth && !isFutureMonth && (
+                        <div style={{ textAlign: 'center', marginTop: 8, fontSize: 12, color: 'var(--color-text-muted)' }}>
+                            📋 Viewing historical data. Only the current month ({MONTHS[currentMonth]} {currentYear}) can be edited.
+                        </div>
+                    )}
+                    {isFutureMonth && (
+                        <div style={{ textAlign: 'center', marginTop: 8, fontSize: 12, color: 'var(--color-danger)' }}>
+                            ⚠️ Performance data cannot be entered for future months.
+                        </div>
+                    )}
                 </div>
             </div>
 

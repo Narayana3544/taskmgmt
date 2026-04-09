@@ -5,7 +5,7 @@
 export const ACTIONS = {
   CREATE: "CREATE",
   VIEW: "VIEW",
-  EDIT: "EDIT",
+  EDIT: "UPDATE",
   DELETE: "DELETE",
 };
 

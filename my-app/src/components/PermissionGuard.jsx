@@ -10,8 +10,7 @@ import React from "react";
  *   </PermissionGuard>
  *
  * The guard reads the user's permissions from localStorage.
- * If the backend hasn't provided permissions yet, it defaults to SHOWING the UI
- * (backend always enforces — frontend hides as a UX convenience only).
+ * Backend always enforces — frontend hides as a UX convenience only.
  *
  * Props:
  *   feature  — FEATURES constant (e.g. "WORK_ITEM")
@@ -23,15 +22,23 @@ const PermissionGuard = ({ feature, action, fallback = null, children }) => {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
 
   // Admin always has full access
-  const role = (user.roleName || user.role || "").toUpperCase();
+  const role = (user.roleCode || user.role || "").toUpperCase();
   if (role === "ADMIN" || role === "SUPER_ADMIN") return <>{children}</>;
 
-  // Check stored permissions
-  const permissions = user.permissions || [];
+  // Check stored permissions from the correct localStorage key
+  let permissions = [];
+  try {
+    const storedPerms = localStorage.getItem("userPermissions");
+    if (storedPerms) {
+      permissions = JSON.parse(storedPerms);
+    }
+  } catch (e) {
+    // ignore parse errors
+  }
 
-  // If no permissions data is loaded yet, default to showing the UI
-  // (the backend always enforces, this is just a UX courtesy)
-  if (permissions.length === 0) return <>{children}</>;
+  // If no permissions data is loaded yet, default to HIDING
+  // (the backend always enforces, and we don't want to show restricted UI)
+  if (permissions.length === 0) return <>{fallback}</>;
 
   const allowed = permissions.some(
     (p) =>

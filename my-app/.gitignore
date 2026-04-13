@@ -7,3 +7,5 @@ build/
 *.logs
 taskmgmt/demo/logs
 demo/logs/taskmgmt.log
+uploads/
+logs/

@@ -274,6 +274,14 @@ public class WorkItemService {
             
             workItem.setAssignee(newAssignee);
             workItem.setUpdatedBy(userId);
+
+            // RULE: If owner is not set, auto-promote assignee to owner
+            if (workItem.getOwner() == null && newAssignee != null) {
+                workItem.setOwner(newAssignee);
+                recordHistory(workItem, "OWNER_SET", null, newAssignee, null, null, userId);
+                auditService.logAction("WORK_ITEM", workItemId, "OWNER_SET", null, newAssignee.getFullName(), userId);
+                log.info("Auto-promoted assignee {} to owner for work item {}", newAssignee.getFullName(), workItemId);
+            }
             
             recordHistory(workItem, "ASSIGNED", oldAssignee, newAssignee, null, null, userId);
             
@@ -329,7 +337,35 @@ public class WorkItemService {
             recordHistory(workItem, "STATUS_CHANGED", null, null, oldStatus, newStatus, userId);
             auditService.logAction("WORK_ITEM", workItemId, "STATUS_CHANGED", oldName, newStatus.getCode(), userId);
             
-            // If moved to DONE, maybe trigger notification? (Optional)
+            // Notify owner and/or assignee about status change
+            if ("DONE".equals(newStatus.getCode()) && workItem.getAssignee() != null 
+                    && !workItem.getAssignee().getId().equals(userId)) {
+                notificationService.createNotification(
+                        workItem.getAssignee().getId(),
+                        "WORK_ITEM", workItemId,
+                        "Task Completed",
+                        "Work item '" + workItem.getTitle() + "' has been marked as DONE",
+                        userId);
+            }
+            // Notify the owner about status change (if not the one who changed it)
+            if (workItem.getOwner() != null && !workItem.getOwner().getId().equals(userId)) {
+                notificationService.createNotification(
+                        workItem.getOwner().getId(),
+                        "WORK_ITEM", workItemId,
+                        "Status Updated",
+                        "Work item '" + workItem.getTitle() + "' status changed from " + oldName + " to " + newStatus.getCode(),
+                        userId);
+            }
+            // Notify assignee about status change (if not the one who changed it and not the owner)
+            if (workItem.getAssignee() != null && !workItem.getAssignee().getId().equals(userId)
+                    && (workItem.getOwner() == null || !workItem.getAssignee().getId().equals(workItem.getOwner().getId()))) {
+                notificationService.createNotification(
+                        workItem.getAssignee().getId(),
+                        "WORK_ITEM", workItemId,
+                        "Status Updated",
+                        "Work item '" + workItem.getTitle() + "' status changed from " + oldName + " to " + newStatus.getCode(),
+                        userId);
+            }
             
             workItemRepository.save(workItem);
         }
@@ -402,6 +438,26 @@ public class WorkItemService {
                 .active(true)
                 .build();
         commentRepository.save(comment);
+
+        // Notify owner about new comment (if not the commenter)
+        if (workItem.getOwner() != null && !workItem.getOwner().getId().equals(userId)) {
+            notificationService.createNotification(
+                    workItem.getOwner().getId(),
+                    "WORK_ITEM", workItemId,
+                    "New Comment",
+                    user.getFullName() + " commented on '" + workItem.getTitle() + "'",
+                    userId);
+        }
+        // Notify assignee about new comment (if not the commenter and not already notified as owner)
+        if (workItem.getAssignee() != null && !workItem.getAssignee().getId().equals(userId)
+                && (workItem.getOwner() == null || !workItem.getAssignee().getId().equals(workItem.getOwner().getId()))) {
+            notificationService.createNotification(
+                    workItem.getAssignee().getId(),
+                    "WORK_ITEM", workItemId,
+                    "New Comment",
+                    user.getFullName() + " commented on '" + workItem.getTitle() + "'",
+                    userId);
+        }
     }
 
     @Transactional(readOnly = true)

@@ -186,6 +186,68 @@ public class TimesheetService {
                 .build();
     }
 
+    @Transactional(readOnly = true)
+    public PageResponse<com.telusko.demo.timesheet.dto.UserTimesheetOverviewDto> getTimesheetOverview(LocalDate startDate, LocalDate endDate, Pageable pageable) {
+        Page<com.telusko.demo.timesheet.dto.UserTimesheetOverviewDto> page = timesheetRepository.findUserTimesheetOverview(startDate, endDate, pageable);
+        return PageResponse.<com.telusko.demo.timesheet.dto.UserTimesheetOverviewDto>builder()
+                .content(page.getContent())
+                .page(page.getNumber())
+                .size(page.getSize())
+                .totalElements(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .last(page.isLast())
+                .build();
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<TimesheetResponse> getUserTimesheetsReport(Long userId, LocalDate startDate, LocalDate endDate, Pageable pageable) {
+        Page<Timesheet> page = timesheetRepository.findApprovedTimesheetsByUserAndDateRange(userId, startDate, endDate, pageable);
+        return PageResponse.<TimesheetResponse>builder()
+                .content(page.getContent().stream().map(this::mapToResponse).collect(Collectors.toList()))
+                .page(page.getNumber())
+                .size(page.getSize())
+                .totalElements(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .last(page.isLast())
+                .build();
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<com.telusko.demo.timesheet.dto.TimesheetEntryReportResponse> getTimesheetEntriesReport(
+            LocalDate startDate, LocalDate endDate, Long projectId, Long targetUserId, String userName, Pageable pageable) {
+        
+        String safeUserName = userName == null ? "" : userName;
+
+        Page<TimesheetEntry> page = timesheetEntryRepository.findTimesheetEntriesReport(
+                startDate, endDate, projectId, targetUserId, safeUserName, pageable);
+
+        return PageResponse.<com.telusko.demo.timesheet.dto.TimesheetEntryReportResponse>builder()
+                .content(page.getContent().stream().map(e -> com.telusko.demo.timesheet.dto.TimesheetEntryReportResponse.builder()
+                        .entryId(e.getId())
+                        .userId(e.getTimesheet().getUser().getId())
+                        .userName(e.getTimesheet().getUser().getFullName())
+                        .userEmail(e.getTimesheet().getUser().getEmail())
+                        .workDate(e.getTimesheet().getWorkDate())
+                        .entryType(e.getEntryType())
+                        .workItemId(e.getWorkItem() != null ? e.getWorkItem().getId() : null)
+                        .workItemTitle(e.getWorkItem() != null ? e.getWorkItem().getTitle() : null)
+                        .projectId(e.getWorkItem() != null && e.getWorkItem().getProject() != null ? e.getWorkItem().getProject().getId() : null)
+                        .projectName(e.getWorkItem() != null && e.getWorkItem().getProject() != null ? e.getWorkItem().getProject().getName() : null)
+                        .startTime(e.getStartTime().format(TIME_FORMATTER))
+                        .endTime(e.getEndTime() != null ? e.getEndTime().format(TIME_FORMATTER) : null)
+                        .durationMinutes(e.getDurationMinutes())
+                        .approvalStatusCode(e.getApprovalStatus() != null ? e.getApprovalStatus().getCode() : null)
+                        .approvalStatusName(e.getApprovalStatus() != null ? e.getApprovalStatus().getDisplayName() : null)
+                        .description(e.getDescription())
+                        .build()).collect(Collectors.toList()))
+                .page(page.getNumber())
+                .size(page.getSize())
+                .totalElements(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .last(page.isLast())
+                .build();
+    }
+
     @Transactional
     public TimesheetResponse processApproval(Long timesheetId, boolean approve, String comment, Long managerId) {
         Timesheet timesheet = timesheetRepository.findById(timesheetId)

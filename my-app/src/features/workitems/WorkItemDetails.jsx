@@ -204,8 +204,8 @@ const WorkItemDetails = () => {
                                 <div style={{ fontSize: 11, color: 'var(--color-text-muted)', marginBottom: 2 }}>Assignee</div>
                                 {isAssigning ? (
                                     <select
-                                        className="form-select form-select-sm"
-                                        style={{ padding: '2px 24px 2px 8px', fontSize: 13, height: 28, width: '100%', maxWidth: 150 }}
+                                        className="form-select"
+                                        style={{ padding: '4px 28px 4px 8px', fontSize: 13, height: 32, width: '100%', maxWidth: 200 }}
                                         value={item.assigneeId || ''}
                                         onChange={(e) => handleAssign(e.target.value ? parseInt(e.target.value) : null)}
                                         onBlur={() => setIsAssigning(false)}
@@ -213,7 +213,7 @@ const WorkItemDetails = () => {
                                     >
                                         <option value="">Unassigned</option>
                                         {projectMembers.map(m => (
-                                            <option key={m.userId || m.id} value={m.userId || m.id}>{m.fullName || m.name}</option>
+                                            <option key={m.userId || m.id} value={m.userId || m.id}>{m.fullName || m.userName || m.name || `User #${m.userId || m.id}`}</option>
                                         ))}
                                     </select>
                                 ) : (

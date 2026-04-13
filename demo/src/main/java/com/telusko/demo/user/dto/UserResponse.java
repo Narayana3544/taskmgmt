@@ -18,6 +18,10 @@ public class UserResponse {
     private String organizationName;
     private String organizationLogo;
     private String profileImageUrl;
+    private Long designationId;
+    private String designationName;
+    private Long departmentId;
+    private String departmentName;
     private Boolean active;
     private LocalDateTime createdAt;
     private LocalDateTime lastLoginAt;

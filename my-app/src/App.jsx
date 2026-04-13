@@ -35,6 +35,9 @@ import LeaveDetails from './features/leaves/LeaveDetails';
 import MyTimesheets from './features/timesheets/MyTimesheets';
 import TimesheetApproval from './features/timesheets/TimesheetApproval';
 import TimesheetDetails from './features/timesheets/TimesheetDetails';
+import TimesheetOverview from './features/reports/TimesheetOverview';
+import UserTimesheetDetails from './features/reports/UserTimesheetDetails';
+import DailyTimesheetLogs from './features/reports/DailyTimesheetLogs';
 
 // Features — Master Data & Organization
 import MasterData from './features/masterdata/MasterData';
@@ -119,6 +122,9 @@ function App() {
           <Route path="/leaves/:id" element={<ProtectedRoute><LeaveDetails /></ProtectedRoute>} />
           <Route path="/timesheets" element={<ProtectedRoute><MyTimesheets /></ProtectedRoute>} />
           <Route path="/timesheets/approvals" element={<ProtectedRoute><TimesheetApproval /></ProtectedRoute>} />
+          <Route path="/timesheets/report" element={<ProtectedRoute><TimesheetOverview /></ProtectedRoute>} />
+          <Route path="/timesheets/report/user/:userId" element={<ProtectedRoute><UserTimesheetDetails /></ProtectedRoute>} />
+          <Route path="/timesheets/report/details/:timesheetId" element={<ProtectedRoute><DailyTimesheetLogs /></ProtectedRoute>} />
           <Route path="/timesheets/:id" element={<ProtectedRoute><TimesheetDetails /></ProtectedRoute>} />
           <Route path="/holidays" element={<ProtectedRoute><Holidays /></ProtectedRoute>} />
           <Route path="/holidays/calendar" element={<ProtectedRoute><HolidayCalendar /></ProtectedRoute>} />

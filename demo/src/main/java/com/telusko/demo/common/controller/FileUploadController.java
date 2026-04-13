@@ -37,6 +37,12 @@ public class FileUploadController {
         return ResponseEntity.ok(ApiResponse.success("File uploaded", Map.of("url", fileUrl)));
     }
 
+    @GetMapping("/{folder}/{subfolder}/{filename:.+}")
+    @ResponseBody
+    public ResponseEntity<Resource> serveFileInSubfolder(@PathVariable String folder, @PathVariable String subfolder, @PathVariable String filename) {
+        return serveResource(Paths.get(folder).resolve(subfolder).resolve(filename));
+    }
+
     @GetMapping("/{folder}/{filename:.+}")
     @ResponseBody
     public ResponseEntity<Resource> serveFileInFolder(@PathVariable String folder, @PathVariable String filename) {
@@ -56,8 +62,12 @@ public class FileUploadController {
 
             if (resource.exists() || resource.isReadable()) {
                 String contentType = "application/octet-stream";
-                if (file.toString().endsWith(".png")) contentType = "image/png";
-                if (file.toString().endsWith(".jpg") || file.toString().endsWith(".jpeg")) contentType = "image/jpeg";
+                String fileName = file.toString().toLowerCase();
+                if (fileName.endsWith(".png")) contentType = "image/png";
+                else if (fileName.endsWith(".jpg") || fileName.endsWith(".jpeg")) contentType = "image/jpeg";
+                else if (fileName.endsWith(".gif")) contentType = "image/gif";
+                else if (fileName.endsWith(".webp")) contentType = "image/webp";
+                else if (fileName.endsWith(".pdf")) contentType = "application/pdf";
                 
                 return ResponseEntity.ok()
                         .header(HttpHeaders.CONTENT_TYPE, contentType)

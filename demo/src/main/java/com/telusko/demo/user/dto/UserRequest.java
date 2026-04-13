@@ -24,4 +24,5 @@ public class UserRequest {
     private Long organizationId;
     private String profileImageUrl;
     private Long managerId;
+    private Long designationId;
 }

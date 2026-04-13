@@ -77,6 +77,43 @@ public class TimesheetController {
         return ResponseEntity.ok(ApiResponse.success(timesheetService.getPendingApprovals(managerId, pageable)));
     }
 
+
+
+    @GetMapping("/report/overview")
+    public ResponseEntity<ApiResponse<PageResponse<com.telusko.demo.timesheet.dto.UserTimesheetOverviewDto>>> getTimesheetOverview(
+            @RequestParam LocalDate startDate,
+            @RequestParam LocalDate endDate,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "100") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return ResponseEntity.ok(ApiResponse.success(timesheetService.getTimesheetOverview(startDate, endDate, pageable)));
+    }
+
+    @GetMapping("/report/user/{userId}")
+    public ResponseEntity<ApiResponse<PageResponse<TimesheetResponse>>> getUserTimesheetsReport(
+            @PathVariable Long userId,
+            @RequestParam LocalDate startDate,
+            @RequestParam LocalDate endDate,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "100") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return ResponseEntity.ok(ApiResponse.success(timesheetService.getUserTimesheetsReport(userId, startDate, endDate, pageable)));
+    }
+
+
+    @GetMapping("/entries/report")
+    public ResponseEntity<ApiResponse<PageResponse<com.telusko.demo.timesheet.dto.TimesheetEntryReportResponse>>> getTimesheetEntriesReport(
+            @RequestParam LocalDate startDate,
+            @RequestParam LocalDate endDate,
+            @RequestParam(required = false) Long projectId,
+            @RequestParam(required = false) Long targetUserId,
+            @RequestParam(required = false) String userName,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "100") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return ResponseEntity.ok(ApiResponse.success(timesheetService.getTimesheetEntriesReport(startDate, endDate, projectId, targetUserId, userName, pageable)));
+    }
+
     @PostMapping("/{id}/{action}")
     public ResponseEntity<ApiResponse<TimesheetResponse>> processApproval(
             @PathVariable Long id,

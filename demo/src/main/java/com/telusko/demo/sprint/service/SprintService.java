@@ -259,6 +259,20 @@ public class SprintService {
                                 .build();
                 sprintWorkItemRepository.save(swi);
 
+                // RULE: If owner is not set and assignee exists, auto-promote assignee to owner
+                if (workItem.getOwner() == null && workItem.getAssignee() != null) {
+                        workItem.setOwner(workItem.getAssignee());
+                        historyRepository.save(WorkItemHistory.builder()
+                                        .workItem(workItem)
+                                        .eventType("OWNER_SET")
+                                        .toUser(workItem.getAssignee())
+                                        .performedBy(addedBy)
+                                        .performedAt(LocalDateTime.now())
+                                        .build());
+                        auditService.logAction("WORK_ITEM", workItemId, "OWNER_SET", null, workItem.getAssignee().getFullName(), userId);
+                        log.info("Auto-promoted assignee {} to owner for work item {} during sprint add", workItem.getAssignee().getFullName(), workItemId);
+                }
+
                 // Change status from BACKLOG to OPEN
                 if (workItem.getStatus() != null && "BACKLOG".equals(workItem.getStatus().getCode())) {
                         MasterValue oldStatus = workItem.getStatus();

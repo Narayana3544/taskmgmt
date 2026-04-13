@@ -21,6 +21,7 @@ const NAV_ITEMS = [
         section: 'HR', items: [
             { label: 'Leave Management', path: '/leaves', icon: ClipboardList },
             { label: 'Timesheets', path: '/timesheets', icon: Clock },
+            { label: 'Daily Reports', path: '/timesheets/report', icon: FileSearch, roles: ['ADMIN', 'MANAGER'] },
             { label: 'Holidays', path: '/holidays', icon: Calendar },
             { label: 'My Performance', path: '/performance', icon: Award },
         ]
@@ -121,12 +122,16 @@ const Sidebar = ({ collapsed, onToggle }) => {
             <div className="sidebar-footer">
                 {!collapsed && (
                     <div className="sidebar-user-info">
-                        <div className="sidebar-user-avatar">
-                            {user.fullName ? user.fullName[0].toUpperCase() : 'U'}
-                        </div>
+                        {user.profileImageUrl ? (
+                            <img src={user.profileImageUrl} alt="Avatar" style={{ width: 34, height: 34, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }} />
+                        ) : (
+                            <div className="sidebar-user-avatar">
+                                {user.fullName ? user.fullName[0].toUpperCase() : 'U'}
+                            </div>
+                        )}
                         <div>
                             <div className="sidebar-user-name">{user.fullName || 'User'}</div>
-                            <div className="sidebar-user-role">{user.roleName || 'Employee'}</div>
+                            <div className="sidebar-user-role">{user.designationName || user.roleName || 'Employee'}</div>
                         </div>
                     </div>
                 )}

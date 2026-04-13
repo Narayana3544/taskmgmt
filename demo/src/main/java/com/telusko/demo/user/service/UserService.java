@@ -18,8 +18,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDateTime;
+import com.telusko.demo.masterdata.repository.MasterValueRepository;
+import com.telusko.demo.masterdata.entity.MasterValue;
 
 @Service
 public class UserService {
@@ -28,15 +29,17 @@ public class UserService {
     private final UserAuthRepository userAuthRepository;
     private final RoleRepository roleRepository;
     private final OrganizationRepository organizationRepository;
+    private final MasterValueRepository masterValueRepository;
     private final PasswordEncoder passwordEncoder;
 
     public UserService(UserRepository userRepository, UserAuthRepository userAuthRepository,
                        RoleRepository roleRepository, OrganizationRepository organizationRepository,
-                       PasswordEncoder passwordEncoder) {
+                       MasterValueRepository masterValueRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.userAuthRepository = userAuthRepository;
         this.roleRepository = roleRepository;
         this.organizationRepository = organizationRepository;
+        this.masterValueRepository = masterValueRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -77,10 +80,17 @@ public class UserService {
                     .orElseThrow(() -> new ResourceNotFoundException("Manager User", "id", request.getManagerId()));
         }
 
+        MasterValue designation = null;
+        if (request.getDesignationId() != null) {
+            designation = masterValueRepository.findById(request.getDesignationId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Designation", "id", request.getDesignationId()));
+        }
+
         User user = User.builder()
                 .organization(org)
                 .role(role)
                 .manager(manager)
+                .designation(designation)
                 .email(request.getEmail())
                 .fullName(request.getFullName())
                 .status("ACTIVE")
@@ -160,6 +170,14 @@ public class UserService {
             user.setManager(null);
         }
 
+        if (request.getDesignationId() != null) {
+            MasterValue designation = masterValueRepository.findById(request.getDesignationId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Designation", "id", request.getDesignationId()));
+            user.setDesignation(designation);
+        } else {
+            user.setDesignation(null);
+        }
+
         user = userRepository.save(user);
 
         if (request.getPassword() != null && !request.getPassword().isEmpty()) {
@@ -186,6 +204,10 @@ public class UserService {
                 .organizationName(user.getOrganization() != null ? user.getOrganization().getName() : null)
                 .organizationLogo(user.getOrganization() != null ? user.getOrganization().getLogoUrl() : null)
                 .profileImageUrl(user.getProfileImageUrl())
+                .designationId(user.getDesignation() != null ? user.getDesignation().getId() : null)
+                .designationName(user.getDesignation() != null ? user.getDesignation().getDisplayName() : null)
+                .departmentId(user.getDepartment() != null ? user.getDepartment().getId() : null)
+                .departmentName(user.getDepartment() != null ? user.getDepartment().getDisplayName() : null)
                 .active(user.getActive())
                 .createdAt(user.getCreatedAt())
                 .lastLoginAt(user.getLastLoginAt())

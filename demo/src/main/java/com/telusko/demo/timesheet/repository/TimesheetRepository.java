@@ -26,4 +26,24 @@ public interface TimesheetRepository extends JpaRepository<Timesheet, Long> {
            "WHERE t.status.code = 'SUBMITTED' AND t.active = true " +
            "ORDER BY t.workDate ASC")
     Page<Timesheet> findAllPendingApprovals(Pageable pageable);
+
+    @Query("SELECT t FROM Timesheet t " +
+           "WHERE t.status.code = 'APPROVED' AND t.active = true " +
+           "AND t.workDate >= :startDate AND t.workDate <= :endDate " +
+           "ORDER BY t.workDate ASC")
+    Page<Timesheet> findApprovedTimesheetsByDateRange(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate, Pageable pageable);
+
+    @Query("SELECT new com.telusko.demo.timesheet.dto.UserTimesheetOverviewDto(u.id, u.fullName, COUNT(t.id)) " +
+           "FROM Timesheet t JOIN t.user u " +
+           "WHERE t.workDate >= :startDate AND t.workDate <= :endDate " +
+           "AND t.status.code = 'APPROVED' AND t.active = true " +
+           "GROUP BY u.id, u.fullName " +
+           "ORDER BY u.fullName ASC")
+    Page<com.telusko.demo.timesheet.dto.UserTimesheetOverviewDto> findUserTimesheetOverview(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate, Pageable pageable);
+
+    @Query("SELECT t FROM Timesheet t " +
+           "WHERE t.user.id = :userId AND t.status.code = 'APPROVED' AND t.active = true " +
+           "AND t.workDate >= :startDate AND t.workDate <= :endDate " +
+           "ORDER BY t.workDate DESC")
+    Page<Timesheet> findApprovedTimesheetsByUserAndDateRange(@Param("userId") Long userId, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate, Pageable pageable);
 }

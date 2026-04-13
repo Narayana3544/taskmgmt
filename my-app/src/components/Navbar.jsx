@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Bell, Menu, PanelLeftClose } from 'lucide-react';
 import api from '../api';
 
 const Navbar = ({ collapsed, onToggle, title }) => {
     const navigate = useNavigate();
+    const location = useLocation();
     const [unreadCount, setUnreadCount] = useState(0);
+
+    const showBackButton = location.pathname !== '/';
 
     useEffect(() => {
         const fetchUnread = async () => {
@@ -30,6 +33,16 @@ const Navbar = ({ collapsed, onToggle, title }) => {
                 <button className="navbar-toggle" onClick={onToggle} title={collapsed ? "Expand sidebar" : "Collapse sidebar"}>
                     {collapsed ? <Menu size={20} /> : <PanelLeftClose size={20} />}
                 </button>
+                {showBackButton && (
+                    <button 
+                        onClick={() => navigate(-1)} 
+                        className="btn btn-secondary mr-3 flex items-center justify-center p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-800 border-none bg-transparent"
+                        title="Go Back"
+                        style={{ padding: '6px 12px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}
+                    >
+                        <span>← Back</span>
+                    </button>
+                )}
                 <h1 className="navbar-title">{title}</h1>
             </div>
             <div className="navbar-right">

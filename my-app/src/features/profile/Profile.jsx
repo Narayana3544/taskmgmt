@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Mail, Shield, Building } from 'lucide-react';
+import { User, Mail, Shield, Building, Award, Users } from 'lucide-react';
 import api from '../../api';
 import Layout from '../../components/Layout';
 import StatusBadge from '../../components/StatusBadge';
@@ -101,10 +101,31 @@ const Profile = () => {
                                 </div>
                             </div>
                             <div className="flex items-center gap-3">
+                                <Award size={16} color="var(--color-text-muted)" />
+                                <div>
+                                    <div style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>Designation</div>
+                                    <div style={{ fontSize: 14, fontWeight: 500 }}>{profile.designationName || '—'}</div>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <Building size={16} color="var(--color-text-muted)" />
+                                <div>
+                                    <div style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>Department</div>
+                                    <div style={{ fontSize: 14, fontWeight: 500 }}>{profile.departmentName || '—'}</div>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-3">
                                 <Building size={16} color="var(--color-text-muted)" />
                                 <div>
                                     <div style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>Organization</div>
                                     <div style={{ fontSize: 14, fontWeight: 500 }}>{profile.organizationName || '—'}</div>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <Users size={16} color="var(--color-text-muted)" />
+                                <div>
+                                    <div style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>Reporting Manager</div>
+                                    <div style={{ fontSize: 14, fontWeight: 500 }}>{profile.managerName || '—'}</div>
                                 </div>
                             </div>
                             <div className="flex items-center gap-3">

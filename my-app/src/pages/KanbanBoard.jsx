@@ -83,9 +83,30 @@ const KanbanBoard = () => {
         }
     };
 
+    const totalItems = items.length;
+    const doneItems = items.filter(item => (item.statusCode || 'BACKLOG') === 'DONE').length;
+    const progressPercent = totalItems === 0 ? 0 : Math.round((doneItems / totalItems) * 100);
+
     return (
         <Layout title="Kanban Board">
-            <div style={{ display: 'flex', gap: '16px', height: 'calc(100vh - 120px)', overflow: 'auto' }}>
+            {totalItems > 0 && (
+                <div style={{ marginBottom: '20px', background: 'var(--color-card)', padding: '16px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-sm)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px', fontWeight: 600 }}>
+                        <span style={{ color: 'var(--color-text)' }}>Active Items Progress ({doneItems}/{totalItems})</span>
+                        <span style={{ color: progressPercent === 100 ? 'var(--color-success)' : 'var(--color-primary)' }}>{progressPercent}% Completed</span>
+                    </div>
+                    <div style={{ width: '100%', height: '8px', background: 'var(--color-bg-alt)', borderRadius: '4px', overflow: 'hidden' }}>
+                        <div style={{ 
+                            width: `${progressPercent}%`, 
+                            height: '100%', 
+                            background: progressPercent === 100 ? 'var(--color-success)' : 'var(--color-primary)', 
+                            transition: 'width 0.5s ease-in-out',
+                            borderRadius: '4px'
+                        }} />
+                    </div>
+                </div>
+            )}
+            <div style={{ display: 'flex', gap: '16px', height: 'calc(100vh - 180px)', overflow: 'auto' }}>
                 {KANBAN_COLUMNS.map((col) => {
                     const colItems = getItemsByStatus(col.code);
                     return (

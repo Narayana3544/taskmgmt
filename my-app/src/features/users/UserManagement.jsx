@@ -16,6 +16,7 @@ const UserManagement = () => {
     const [form, setForm] = useState({ fullName: '', email: '', password: '', roleId: '', managerId: '', status: 'ACTIVE' });
     const [saving, setSaving] = useState(false);
     const [roles, setRoles] = useState([]);
+    const [designations, setDesignations] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
 
     // Pagination
@@ -53,8 +54,15 @@ const UserManagement = () => {
         } catch (err) { console.error(err); }
     };
 
+    const fetchDesignations = async () => {
+        try {
+            const res = await api.get('/api/master-data/values/by-code', { params: { typeCode: 'DESIGNATION' } });
+            setDesignations(res.data?.data || []);
+        } catch (err) { console.error(err); }
+    };
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    useEffect(() => { fetchAllUsers(); fetchRoles(); }, []);
+    useEffect(() => { fetchAllUsers(); fetchRoles(); fetchDesignations(); }, []);
     // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => { fetchUsers(); }, [page]);
 
@@ -71,13 +79,13 @@ const UserManagement = () => {
 
     const openCreate = () => {
         setEditUser(null);
-        setForm({ fullName: '', email: '', password: '', roleId: '', managerId: '', status: 'ACTIVE' });
+        setForm({ fullName: '', email: '', password: '', roleId: '', managerId: '', designationId: '', status: 'ACTIVE' });
         setShowModal(true);
     };
 
     const openEdit = (u) => {
         setEditUser(u);
-        setForm({ fullName: u.fullName, email: u.email, password: '', roleId: u.roleId || '', managerId: u.managerId || '', status: u.status || 'ACTIVE' });
+        setForm({ fullName: u.fullName, email: u.email, password: '', roleId: u.roleId || '', managerId: u.managerId || '', designationId: u.designationId || '', status: u.status || 'ACTIVE' });
         setShowModal(true);
     };
 
@@ -232,6 +240,14 @@ const UserManagement = () => {
                                             {allUsers.filter(u => u.id !== editUser?.id).map(u => (
                                                 <option key={u.id} value={u.id}>{u.fullName}</option>
                                             ))}
+                                        </select>
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Designation</label>
+                                        <select className="form-select" value={form.designationId}
+                                            onChange={(e) => setForm({ ...form, designationId: e.target.value })}>
+                                            <option value="">Select designation</option>
+                                            {designations.map(d => <option key={d.id} value={d.id}>{d.displayName}</option>)}
                                         </select>
                                     </div>
                                     {editUser && (

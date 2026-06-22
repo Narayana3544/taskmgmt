@@ -3,6 +3,8 @@ package com.telusko.demo.sprint.service;
 import com.telusko.demo.audit.service.AuditService;
 import com.telusko.demo.common.exception.BadRequestException;
 import com.telusko.demo.common.exception.ResourceNotFoundException;
+import com.telusko.demo.feature.entity.Feature;
+import com.telusko.demo.feature.repository.FeatureRepository;
 import com.telusko.demo.masterdata.entity.MasterValue;
 import com.telusko.demo.masterdata.repository.MasterValueRepository;
 import com.telusko.demo.notification.service.NotificationService;
@@ -59,6 +61,7 @@ public class SprintService {
         private final AuditService auditService;
         private final NotificationService notificationService;
         private final ProjectMemberRepository memberRepository;
+        private final FeatureRepository featureRepository;
 
         public SprintService(SprintRepository sprintRepository,
                         SprintWorkItemRepository sprintWorkItemRepository,
@@ -70,7 +73,8 @@ public class SprintService {
                         PermissionService permissionService,
                         AuditService auditService,
                         NotificationService notificationService,
-                        ProjectMemberRepository memberRepository) {
+                        ProjectMemberRepository memberRepository,
+                        FeatureRepository featureRepository) {
                 this.sprintRepository = sprintRepository;
                 this.sprintWorkItemRepository = sprintWorkItemRepository;
                 this.projectRepository = projectRepository;
@@ -82,6 +86,7 @@ public class SprintService {
                 this.auditService = auditService;
                 this.notificationService = notificationService;
                 this.memberRepository = memberRepository;
+                this.featureRepository = featureRepository;
         }
 
         @Transactional
@@ -97,12 +102,27 @@ public class SprintService {
                         throw new BadRequestException("Cannot create sprints in a CLOSED project");
                 }
 
+                // RULE: Feature is required and must belong to the project
+                Feature feature = featureRepository.findById(request.getFeatureId())
+                                .orElseThrow(() -> new ResourceNotFoundException("Feature", "id",
+                                                request.getFeatureId()));
+
+                if (!feature.getProject().getId().equals(project.getId())) {
+                        throw new BadRequestException("Feature does not belong to the selected project");
+                }
+
+                // RULE: Feature must not be CLOSED/INACTIVE
+                if (feature.getStatus() != null && "CLOSED".equals(feature.getStatus().getCode())) {
+                        throw new BadRequestException("Cannot create sprints under a CLOSED feature");
+                }
+
                 MasterValue plannedStatus = masterValueRepository
                                 .findByMasterTypeCodeAndCode("SPRINT_STATUS", "PLANNED")
                                 .orElseThrow(() -> new BadRequestException("PLANNED status not configured"));
 
                 Sprint sprint = Sprint.builder()
                                 .project(project)
+                                .feature(feature)
                                 .name(request.getName())
                                 .goal(request.getGoal())
                                 .status(plannedStatus)
@@ -115,7 +135,7 @@ public class SprintService {
                 sprint = sprintRepository.save(sprint);
                 auditService.logAction("SPRINT", sprint.getId(), "CREATED", null, sprint.getName(), userId);
 
-                log.info("Sprint created: id={}, project={}", sprint.getId(), project.getCode());
+                log.info("Sprint created: id={}, project={}, feature={}", sprint.getId(), project.getCode(), feature.getName());
                 return mapToResponse(sprint);
         }
 
@@ -318,7 +338,18 @@ public class SprintService {
 
         // ==================== READ ====================
         @Transactional(readOnly = true)
-        public Page<SprintResponse> getSprintsByProject(Long projectId, String search, Pageable pageable) {
+        public Page<SprintResponse> getSprintsByProject(Long projectId, Long featureId, String search, Pageable pageable) {
+                // If featureId is provided, filter by feature
+                if (featureId != null) {
+                        if (search != null && !search.trim().isEmpty()) {
+                                return sprintRepository.findByFeatureIdAndActiveTrueAndSearch(featureId, search.trim(), pageable)
+                                                .map(this::mapToResponse);
+                        } else {
+                                return sprintRepository.findByFeatureIdAndActiveTrue(featureId, pageable)
+                                                .map(this::mapToResponse);
+                        }
+                }
+                // Otherwise filter by project only
                 if (search != null && !search.trim().isEmpty()) {
                         return sprintRepository.findByProjectIdAndActiveTrueAndSearch(projectId, search.trim(), pageable)
                                         .map(this::mapToResponse);
@@ -560,6 +591,9 @@ public class SprintService {
                                 .id(s.getId())
                                 .projectId(s.getProject().getId())
                                 .projectName(s.getProject().getName())
+                                .featureId(s.getFeature() != null ? s.getFeature().getId() : null)
+                                .featureName(s.getFeature() != null ? s.getFeature().getName() : null)
+                                .featureStatusCode(s.getFeature() != null && s.getFeature().getStatus() != null ? s.getFeature().getStatus().getCode() : null)
                                 .name(s.getName())
                                 .goal(s.getGoal())
                                 .statusId(s.getStatus() != null ? s.getStatus().getId() : null)

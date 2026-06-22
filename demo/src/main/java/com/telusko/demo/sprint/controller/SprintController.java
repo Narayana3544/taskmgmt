@@ -25,9 +25,10 @@ public class SprintController {
     @GetMapping
     public ResponseEntity<ApiResponse<Page<SprintResponse>>> getByProject(
             @RequestParam Long projectId,
+            @RequestParam(required = false) Long featureId,
             @RequestParam(required = false) String search,
             @org.springframework.data.web.PageableDefault(sort = "createdAt", direction = org.springframework.data.domain.Sort.Direction.DESC) Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.success(sprintService.getSprintsByProject(projectId, search, pageable)));
+        return ResponseEntity.ok(ApiResponse.success(sprintService.getSprintsByProject(projectId, featureId, search, pageable)));
     }
 
     @GetMapping("/{id}")

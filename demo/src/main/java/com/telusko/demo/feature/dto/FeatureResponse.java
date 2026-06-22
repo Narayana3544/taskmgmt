@@ -1,31 +1,27 @@
-package com.telusko.demo.sprint.dto;
+package com.telusko.demo.feature.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import java.time.LocalDate;
+
 import java.time.LocalDateTime;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class SprintResponse {
+public class FeatureResponse {
     private Long id;
+    private String name;
+    private String description;
     private Long projectId;
     private String projectName;
-    private Long featureId;
-    private String featureName;
-    private String featureStatusCode;
-    private String name;
-    private String goal;
     private Long statusId;
     private String statusName;
     private String statusCode;
-    private LocalDate startDate;
-    private LocalDate endDate;
-    private Integer totalItems;
-    private Integer doneItems;
+    private Integer sprintCount;
+    private Boolean active;
     private LocalDateTime createdAt;
+    private Long createdBy;
 }

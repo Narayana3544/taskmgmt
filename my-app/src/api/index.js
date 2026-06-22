@@ -18,6 +18,7 @@ export { default as authApi } from './authApi';
 export { default as usersApi } from './usersApi';
 export { default as workItemsApi } from './workItemsApi';
 export { default as projectsApi } from './projectsApi';
+export { default as featuresApi } from './featuresApi';
 export { default as sprintsApi } from './sprintsApi';
 export { default as leavesApi } from './leavesApi';
 export { default as timesheetsApi } from './timesheetsApi';

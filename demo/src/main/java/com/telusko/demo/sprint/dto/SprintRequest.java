@@ -16,6 +16,9 @@ public class SprintRequest {
     @NotNull(message = "Project ID is required")
     private Long projectId;
 
+    @NotNull(message = "Feature ID is required")
+    private Long featureId;
+
     private LocalDate startDate;
     private LocalDate endDate;
 }

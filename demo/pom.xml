@@ -15,7 +15,8 @@
     <groupId>com.taskmgmt</groupId>
     <artifactId>taskmgmt</artifactId>
     <version>1.0.0</version>
-    <packaging>jar</packaging>
+<!--    <packaging>jar</packaging>//for jar and we need war to deploy in tomcat-->
+    <packaging>war</packaging>
 
     <name>TaskMgmt</name>
     <description>Enterprise Task Management Platform</description>
@@ -25,8 +26,9 @@
         <jjwt.version>0.12.3</jjwt.version>
     </properties>
 
+
     <dependencies>
-        <!-- Spring Boot Starters -->
+        <!-- Spring Boot Starters this web is for running locally and the tomcat dependency is run via external tomcat -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
@@ -35,6 +37,11 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.springframework.boot</groupId>-->
+<!--            <artifactId>spring-boot-starter-tomcat</artifactId>-->
+<!--            <scope>provided</scope>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
@@ -96,7 +103,7 @@
     </dependencies>
 
     <build>
-        <finalName>task-mgmt</finalName>
+        <finalName>task-management</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

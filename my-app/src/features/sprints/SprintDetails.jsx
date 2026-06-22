@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, ChevronRight, BarChart3 } from 'lucide-react';
+import { ArrowLeft, ChevronRight, BarChart3, Layers } from 'lucide-react';
 import api from '../../api';
 import Layout from '../../components/Layout';
 import StatusBadge from '../../components/StatusBadge';
@@ -59,6 +59,20 @@ const SprintDetails = () => {
                                     {sprint.startDate || '—'} → {sprint.endDate || '—'}
                                 </span>
                             </div>
+                        </div>
+
+                        {/* Feature & Project breadcrumb */}
+                        <div className="flex items-center gap-2" style={{ fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 12 }}>
+                            <span>Project: <strong>{sprint.projectName}</strong></span>
+                            {sprint.featureName && (
+                                <>
+                                    <span>•</span>
+                                    <span className="flex items-center gap-1" style={{ cursor: 'pointer', color: 'var(--color-primary)' }}
+                                        onClick={() => navigate(`/features/${sprint.featureId}`)}>
+                                        <Layers size={13} /> {sprint.featureName}
+                                    </span>
+                                </>
+                            )}
                         </div>
 
                         {sprint.goal && (

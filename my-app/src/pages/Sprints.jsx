@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Plus, Play, Square, GripVertical, Search, ChevronLeft, ChevronRight, BarChart3 } from 'lucide-react';
+import { Plus, Play, Square, GripVertical, Search, ChevronLeft, ChevronRight, BarChart3, Layers } from 'lucide-react';
 import api from '../api';
 import Layout from '../components/Layout';
+import toast from 'react-hot-toast';
 
 
 const Sprints = () => {
@@ -21,8 +22,13 @@ const Sprints = () => {
     const [loading, setLoading] = useState(false);
     const [showCreate, setShowCreate] = useState(false);
     const [editSprint, setEditSprint] = useState(null);
-    const [form, setForm] = useState({ name: '', goal: '', startDate: '', endDate: '' });
+    const [form, setForm] = useState({ name: '', goal: '', startDate: '', endDate: '', projectId: '', featureId: '' });
     const [saving, setSaving] = useState(false);
+
+    // Feature filter and dropdown state
+    const [featureFilter, setFeatureFilter] = useState('');
+    const [activeFeatures, setActiveFeatures] = useState([]);
+    const [modalFeatures, setModalFeatures] = useState([]);
 
     // Sprint Planning has been moved to a dedicated page
 
@@ -44,6 +50,24 @@ const Sprints = () => {
         }
     }, [selectedProject]);
 
+    // Fetch active features when project changes (for filter dropdown)
+    useEffect(() => {
+        if (!selectedProject) {
+            setActiveFeatures([]);
+            setFeatureFilter('');
+            return;
+        }
+        const fetchFeatures = async () => {
+            try {
+                const res = await api.get('/api/features', {
+                    params: { projectId: selectedProject, page: 0, size: 100 }
+                });
+                setActiveFeatures(res.data?.data?.content || []);
+            } catch (err) { console.error(err); }
+        };
+        fetchFeatures();
+    }, [selectedProject]);
+
     // Pagination and Search
     const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(1);
@@ -58,7 +82,7 @@ const Sprints = () => {
         return () => clearTimeout(timer);
     }, [searchTerm]);
 
-    // Fetch sprints for selected project
+    // Fetch sprints for selected project (with optional feature filter)
     useEffect(() => {
         if (!selectedProject) return;
         const fetchSprints = async () => {
@@ -66,24 +90,55 @@ const Sprints = () => {
             try {
                 const params = { projectId: selectedProject, page, size: 10 };
                 if (debouncedSearch) params.search = debouncedSearch;
+                if (featureFilter) params.featureId = featureFilter;
                 const res = await api.get('/api/sprints', { params });
                 setSprints(res.data?.data?.content || []);
                 setTotalPages(res.data?.data?.totalPages || 1);
             } catch (err) { console.error(err); } finally { setLoading(false); }
         };
         fetchSprints();
-    }, [selectedProject, page, debouncedSearch]);
+    }, [selectedProject, page, debouncedSearch, featureFilter]);
+
+    // Fetch active features for modal when project changes in the modal form
+    const fetchModalFeatures = async (projId) => {
+        if (!projId) {
+            setModalFeatures([]);
+            return;
+        }
+        try {
+            const res = await api.get('/api/features/active', { params: { projectId: projId } });
+            setModalFeatures(res.data?.data || []);
+        } catch (err) {
+            console.error(err);
+            setModalFeatures([]);
+        }
+    };
 
     const openCreate = () => {
         setEditSprint(null);
-        setForm({ name: '', goal: '', startDate: '', endDate: '', projectId: selectedProject || '' });
+        const projId = selectedProject || '';
+        setForm({ name: '', goal: '', startDate: '', endDate: '', projectId: projId, featureId: '' });
+        if (projId) fetchModalFeatures(projId);
         setShowCreate(true);
     };
 
     const openEdit = (sprint) => {
         setEditSprint(sprint);
-        setForm({ name: sprint.name, goal: sprint.goal, startDate: sprint.startDate || '', endDate: sprint.endDate || '', projectId: sprint.projectId || selectedProject });
+        setForm({
+            name: sprint.name,
+            goal: sprint.goal,
+            startDate: sprint.startDate || '',
+            endDate: sprint.endDate || '',
+            projectId: sprint.projectId || selectedProject,
+            featureId: sprint.featureId || ''
+        });
+        if (sprint.projectId || selectedProject) fetchModalFeatures(sprint.projectId || selectedProject);
         setShowCreate(true);
+    };
+
+    const handleProjectChangeInModal = (projId) => {
+        setForm({ ...form, projectId: projId, featureId: '' });
+        fetchModalFeatures(projId);
     };
 
     const handleSave = async (e) => {
@@ -92,15 +147,29 @@ const Sprints = () => {
         try {
             const projId = form.projectId || selectedProject;
             if (!projId) {
-                alert('Please select a project');
+                toast.error('Please select a project');
                 setSaving(false);
                 return;
             }
-            const payload = { ...form, projectId: parseInt(projId) };
+            if (!form.featureId) {
+                toast.error('Please select a feature');
+                setSaving(false);
+                return;
+            }
+            const payload = {
+                name: form.name,
+                goal: form.goal,
+                startDate: form.startDate || null,
+                endDate: form.endDate || null,
+                projectId: parseInt(projId),
+                featureId: parseInt(form.featureId)
+            };
             if (editSprint) {
                 await api.put(`/api/sprints/${editSprint.id}`, payload);
+                toast.success('Sprint updated successfully');
             } else {
                 await api.post('/api/sprints', payload);
+                toast.success('Sprint created successfully');
             }
             setShowCreate(false);
             // Update selected project to match the newly created sprint's project
@@ -109,7 +178,7 @@ const Sprints = () => {
             const res = await api.get('/api/sprints', { params: { projectId: projId, page: 0, size: 50 } });
             setSprints(res.data?.data?.content || []);
         } catch (err) {
-            alert(err.response?.data?.message || 'Operation failed');
+            toast.error(err.response?.data?.message || 'Operation failed');
         } finally { setSaving(false); }
     };
 
@@ -117,18 +186,20 @@ const Sprints = () => {
         if (!window.confirm('Start this sprint? Only one sprint can be active per project.')) return;
         try {
             await api.post(`/api/sprints/${id}/start`);
+            toast.success('Sprint started');
             const res = await api.get('/api/sprints', { params: { projectId: selectedProject, page: 0, size: 50 } });
             setSprints(res.data?.data?.content || []);
-        } catch (err) { alert(err.response?.data?.message || 'Failed to start sprint'); }
+        } catch (err) { toast.error(err.response?.data?.message || 'Failed to start sprint'); }
     };
 
     const closeSprint = async (id) => {
         if (!window.confirm('Close this sprint? Non-done items will spill over to backlog.')) return;
         try {
             await api.post(`/api/sprints/${id}/close`);
+            toast.success('Sprint closed');
             const res = await api.get('/api/sprints', { params: { projectId: selectedProject, page: 0, size: 50 } });
             setSprints(res.data?.data?.content || []);
-        } catch (err) { alert(err.response?.data?.message || 'Failed to close sprint'); }
+        } catch (err) { toast.error(err.response?.data?.message || 'Failed to close sprint'); }
     };
 
 
@@ -155,8 +226,13 @@ const Sprints = () => {
                             style={{ paddingLeft: 34, height: 36 }}
                             value={searchTerm} onChange={e => setSearchTerm(e.target.value)} disabled={!selectedProject} />
                     </div>
+                    <select className="form-select" style={{ width: 160 }} value={featureFilter}
+                        onChange={(e) => { setFeatureFilter(e.target.value); setPage(0); }} disabled={!selectedProject}>
+                        <option value="">All Features</option>
+                        {activeFeatures.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+                    </select>
                     <select className="form-select" style={{ width: 200 }} value={selectedProject}
-                        onChange={(e) => setSelectedProject(e.target.value)}>
+                        onChange={(e) => { setSelectedProject(e.target.value); setFeatureFilter(''); setPage(0); }}>
                         <option value="">Select project</option>
                         {projects.map(p => <option key={p.id} value={p.id}>{p.name} ({p.code})</option>)}
                     </select>
@@ -188,6 +264,12 @@ const Sprints = () => {
                                     <div className="flex items-center gap-3">
                                         <h3 style={{ margin: 0 }}>{sprint.name}</h3>
                                         <span className={`badge ${getStatusBadge(sprint.statusCode)}`}>{sprint.statusName}</span>
+                                        {sprint.featureName && (
+                                            <span className="badge badge-info" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+                                                onClick={() => navigate(`/features/${sprint.featureId}`)}>
+                                                <Layers size={12} /> {sprint.featureName}
+                                            </span>
+                                        )}
                                     </div>
                                     <div className="flex gap-2">
                                         <button className="btn btn-sm btn-secondary" onClick={() => navigate(`/sprints/${sprint.id}/dashboard`)}>
@@ -250,7 +332,7 @@ const Sprints = () => {
                 </div>
             )}
 
-            {/* Create/Edit Sprint Modal */}
+            {/* Create/Edit Sprint Modal — 2-step: Project → Feature selection */}
             {showCreate && (
                 <div className="modal-overlay" onClick={() => setShowCreate(false)}>
                     <div className="modal" onClick={(e) => e.stopPropagation()}>
@@ -261,14 +343,35 @@ const Sprints = () => {
                         <form onSubmit={handleSave}>
                             <div className="modal-body">
                                 {!editSprint && (
-                                    <div className="form-group">
-                                        <label className="form-label">Project *</label>
-                                        <select className="form-select" value={form.projectId}
-                                            onChange={(e) => setForm({ ...form, projectId: e.target.value })} required>
-                                            <option value="">-- Select Project --</option>
-                                            {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                                        </select>
-                                    </div>
+                                    <>
+                                        {/* Step 1: Select Project */}
+                                        <div className="form-group">
+                                            <label className="form-label">Step 1 — Project *</label>
+                                            <select className="form-select" value={form.projectId}
+                                                onChange={(e) => handleProjectChangeInModal(e.target.value)} required>
+                                                <option value="">-- Select Project --</option>
+                                                {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                                            </select>
+                                        </div>
+                                        {/* Step 2: Select Feature */}
+                                        <div className="form-group">
+                                            <label className="form-label">Step 2 — Feature *</label>
+                                            <select className="form-select" value={form.featureId}
+                                                onChange={(e) => setForm({ ...form, featureId: e.target.value })}
+                                                disabled={!form.projectId} required>
+                                                <option value="">
+                                                    {form.projectId ? '-- Select Feature --' : 'Select a project first'}
+                                                </option>
+                                                {modalFeatures.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+                                            </select>
+                                            {form.projectId && modalFeatures.length === 0 && (
+                                                <p style={{ fontSize: 12, color: 'var(--color-warning)', marginTop: 4 }}>
+                                                    No active features found. <span style={{ cursor: 'pointer', textDecoration: 'underline', color: 'var(--color-primary)' }}
+                                                        onClick={() => navigate(`/features?projectId=${form.projectId}`)}>Create a feature first</span>.
+                                                </p>
+                                            )}
+                                        </div>
+                                    </>
                                 )}
                                 <div className="form-group">
                                     <label className="form-label">Sprint Name *</label>

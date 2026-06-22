@@ -9,3 +9,4 @@ taskmgmt/demo/logs
 demo/logs/taskmgmt.log
 uploads/
 logs/
+api.js

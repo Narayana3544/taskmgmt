@@ -25,4 +25,15 @@ public interface SprintRepository extends JpaRepository<Sprint, Long> {
 
     @Query("SELECT COUNT(s) > 0 FROM Sprint s WHERE s.project.id = :projectId AND s.status.code = 'ACTIVE' AND s.active = true")
     boolean existsActiveSprintInProject(@Param("projectId") Long projectId);
+
+    // ===== Feature-based queries =====
+    Page<Sprint> findByFeatureIdAndActiveTrue(Long featureId, Pageable pageable);
+
+    @Query("SELECT s FROM Sprint s WHERE s.feature.id = :featureId AND s.active = true AND LOWER(s.name) LIKE LOWER(CONCAT('%', :search, '%'))")
+    Page<Sprint> findByFeatureIdAndActiveTrueAndSearch(@Param("featureId") Long featureId, @Param("search") String search, Pageable pageable);
+
+    long countByFeatureIdAndActiveTrue(Long featureId);
+
+    @Query("SELECT s FROM Sprint s WHERE s.project.id = :projectId AND s.feature.id = :featureId AND s.active = true")
+    Page<Sprint> findByProjectIdAndFeatureIdAndActiveTrue(@Param("projectId") Long projectId, @Param("featureId") Long featureId, Pageable pageable);
 }

@@ -4,6 +4,7 @@ import { ArrowLeft, Users, Zap, ListTodo } from 'lucide-react';
 import api from '../../api';
 import Layout from '../../components/Layout';
 import StatusBadge from '../../components/StatusBadge';
+import { usePermissions } from '../../hooks/usePermissions';
 
 const ProjectDashboard = () => {
     const { id } = useParams();
@@ -13,6 +14,7 @@ const ProjectDashboard = () => {
     const [sprints, setSprints] = useState([]);
     const [itemStats, setItemStats] = useState({ total: 0, done: 0, inProgress: 0, backlog: 0 });
     const [loading, setLoading] = useState(true);
+     const { hasPermission: canCreateProject } = usePermissions('PROJECT', 'CREATE');
 
     useEffect(() => {
         const fetch = async () => {

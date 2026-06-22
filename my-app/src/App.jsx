@@ -12,6 +12,7 @@ import ChangePassword from './pages/auth/ChangePassword';
 import KanbanBoard from './pages/KanbanBoard';
 import Dashboard from './pages/Dashboard';
 import Projects from './pages/Projects';
+import Features from './pages/Features';
 import WorkItems from './pages/WorkItems';
 import Sprints from './pages/Sprints';
 
@@ -21,6 +22,7 @@ import SprintDetails from './features/sprints/SprintDetails';
 import SprintDashboard from './features/sprints/SprintDashboard';
 import SprintPlanning from './features/sprints/SprintPlanning';
 import ProjectDashboard from './features/projects/ProjectDashboard';
+import FeatureDetails from './features/features/FeatureDetails';
 
 // Features — Holidays
 import Holidays from './features/holidays/Holidays';
@@ -116,6 +118,8 @@ function App() {
           <Route path="/sprints/:id" element={<ProtectedRoute><SprintDetails /></ProtectedRoute>} />
           <Route path="/sprints/:id/dashboard" element={<ProtectedRoute><SprintDashboard /></ProtectedRoute>} />
           <Route path="/sprints/:id/planning" element={<ProtectedRoute><SprintPlanning /></ProtectedRoute>} />
+          <Route path="/features" element={<ProtectedRoute><Features /></ProtectedRoute>} />
+          <Route path="/features/:id" element={<ProtectedRoute><FeatureDetails /></ProtectedRoute>} />
 
           {/* HR */}
           <Route path="/leaves" element={<ProtectedRoute><LeaveManagement /></ProtectedRoute>} />

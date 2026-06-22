@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
-    LayoutDashboard, FolderKanban, ListTodo, Zap,
+    LayoutDashboard, FolderKanban, ListTodo, Zap, Layers,
     LogOut, Calendar, ClipboardList, Clock, Database,
     Users, Shield, Bell, FileSearch, Activity, User, Building, Award
 } from 'lucide-react';
@@ -13,6 +13,7 @@ const NAV_ITEMS = [
             { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
             { label: 'Kanban Board', path: '/', icon: FolderKanban },
             { label: 'Projects', path: '/projects', icon: FolderKanban },
+            { label: 'Features', path: '/features', icon: Layers },
             { label: 'Work Items', path: '/work-items', icon: ListTodo },
             { label: 'Sprints', path: '/sprints', icon: Zap },
         ]

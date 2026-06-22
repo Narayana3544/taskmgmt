@@ -1,0 +1,129 @@
+# Task Management System - Functional Document
+
+This document provides a comprehensive functional overview of the Task Management System (WorkHub). It is designed to help new developers understand the core architecture, module interactions, table structures, and the detailed lifecycle of data operations (inserts/updates).
+
+## 1. System Overview & Architecture
+
+The project is built on a modern full-stack architecture:
+*   **Backend:** Java Spring Boot with Spring Data JPA.
+*   **Frontend:** React.js with Tailwind CSS.
+*   **Database:** Relational Database (accessed via Hibernate/JPA).
+
+The backend follows a strict **Controller -> Service -> Repository** pattern.
+*   **Controllers** handle HTTP requests and responses (DTOs).
+*   **Services** encapsulate business logic, rule enforcement, permissions, and cross-module interactions (auditing, notifications).
+*   **Repositories** provide data access.
+
+---
+
+## 2. Global Database Patterns & Structure
+
+To ensure consistency, the database schema relies on several global patterns:
+
+### `BaseEntity` Inheritance
+Almost all tables inherit from `BaseEntity`. This means every record automatically includes:
+*   `createdAt` & `updatedAt`: Timestamps for tracking when the record was made or modified.
+*   `createdBy` & `updatedBy`: User IDs of who performed the action.
+
+### Master Data Driven (Data Dictionary)
+Instead of hardcoding ENUMs or strings for statuses, types, and priorities, the system uses a **Master Data** module. 
+*   Tables like `master_type` and `master_value` hold configurable values.
+*   Entities hold references to `MasterValue` (e.g., `status_id`, `type_id`, `priority_id`).
+
+### Soft Deletes & Active Flags
+Records are rarely hard-deleted from the database. Instead, an `active` boolean flag or an `end_date` is utilized (e.g., Project Memberships use `endDate` to mark a user's exit rather than deleting the mapping).
+
+---
+
+## 3. Core Modules Overview
+
+The system is broken down into 15 distinct functional modules. Here is how they are handled:
+
+### 3.1 `project` & `organization`
+*   **Purpose:** Manages the logical groupings of work. An `Organization` contains many `Projects`.
+*   **Key Tables:** `organization`, `project`, `project_member`.
+*   **Rules:** A project is never deleted. If marked "CLOSED", it becomes read-only. A user can only have one active `project_member` record per project at a time.
+
+### 3.2 `workitem` (Tasks, Bugs, Stories)
+*   **Purpose:** The core of task management. Unifies old models (tasks/features/bugs) into a single `work_item` entity.
+*   **Key Tables:** `work_item`, `work_item_history`, `work_item_comment`.
+*   **Rules:** 
+    *   Initial status is always forced to `BACKLOG`.
+    *   The `owner` is immutable once set.
+    *   Only the `owner` can move a work item to `DONE`.
+    *   Cannot be created in a `CLOSED` project.
+
+### 3.3 `sprint`
+*   **Purpose:** Agile sprint management.
+*   **Key Tables:** `sprint`, `sprint_work_item`.
+*   **Rules:** Sprints group work items together for a specific timeframe. Work items are mapped to sprints via the `sprint_work_item` junction table.
+
+### 3.4 `user`, `role`, `rbac`, & `auth`
+*   **Purpose:** Authentication, user management, and Role-Based Access Control (RBAC).
+*   **Key Tables:** `users`, `user_auth`, `role`, `permission_feature`, `permission_action`, `role_permission`.
+*   **Rules:** Access is verified dynamically by the `PermissionService` based on the user's role and requested feature/action.
+
+### 3.5 `timesheet`, `leave`, & `holiday`
+*   **Purpose:** HR and time tracking features.
+*   **Key Tables:** `timesheet`, `timesheet_entry`, `leave_request`, `leave_balance`, `holiday`.
+*   **Rules:** Leave requests have an approval workflow tracked via `leave_approval_history`.
+
+### 3.6 Cross-Cutting Concerns: `audit` & `notification`
+*   **Purpose:** Auditing changes and alerting users.
+*   **Key Tables:** `audit_log`, `notification`, `notification_preference`.
+
+---
+
+## 4. Lifecycle of a Record: Insert & Update Flow
+
+What happens when a developer calls an endpoint to **Insert (Create)** or **Update** a record? The backend executes a strict, multi-step pipeline.
+
+> [!NOTE]
+> The following sequence applies to almost all core entities (e.g., `WorkItem`, `Project`, `LeaveRequest`). We will use `WorkItem` as our example.
+
+### Step-by-Step Flow:
+
+#### 1. Security & RBAC Check
+Before any logic executes, the Service layer invokes `PermissionService.requirePermission(userId, "FEATURE", "ACTION")`.
+*   *Example:* `permissionService.requirePermission(userId, "WORK_ITEM", "CREATE")`. If the user lacks the role, it throws a 403/Forbidden exception.
+
+#### 2. Validation & Business Rule Enforcement
+The system validates the input and enforces specific business rules.
+*   *Example (Insert):* It checks if the parent Project is "CLOSED". If it is, creation is blocked. It forces the initial status to `BACKLOG`.
+*   *Example (Update):* It checks if the `owner` is being changed (which is blocked because owners are immutable). It verifies if the user moving the status to `DONE` is actually the `owner`.
+
+#### 3. Data Mapping & Resolution
+Foreign keys (like Status IDs, Type IDs, User IDs) are resolved from the database to ensure they exist.
+*   *Example:* `masterValueRepository.findById(request.getStatusId())` is called.
+
+#### 4. Entity Persistence (Database Save)
+The entity is built or updated using JPA and saved.
+*   Because of `@EntityListeners(AuditingEntityListener.class)` / `BaseEntity`, the `createdAt`, `updatedAt`, `createdBy`, and `updatedBy` fields are automatically populated by the system.
+*   *Query executed:* `INSERT INTO work_item (...)` or `UPDATE work_item SET ...`
+
+#### 5. Domain-Specific History Tracking
+For critical entities, a specific history table is updated to track the exact state change.
+*   *Example:* If a WorkItem status changes, a record is inserted into `work_item_history` linking the `oldStatus` and `newStatus`, allowing the UI to show a timeline of the ticket.
+
+#### 6. Global Audit Logging (Async)
+The `AuditService.logAction()` is called.
+*   This is an **append-only, asynchronous** operation (`@Async`). It does not block the main transaction.
+*   It records *WHO* did *WHAT* on *WHICH* entity.
+*   *Query executed:* `INSERT INTO audit_log (entity_type, entity_id, action, old_value, new_value, performed_by, performed_at, source)`
+
+#### 7. Event Notifications
+If the action affects another user, `NotificationService.createNotification()` is triggered.
+*   *Example:* If a WorkItem is assigned to a new user, or if a comment is added, an in-app notification is generated for the Assignee or Owner.
+*   *Query executed:* `INSERT INTO notification (...)`
+
+### Summary of an Update Reaction:
+If a user updates a `WorkItem` status from "In Progress" to "Done":
+1.  **RBAC:** Verified.
+2.  **Rule Check:** Is this user the Owner? Yes -> Proceed.
+3.  **Update `work_item`:** `status_id` changes, `updated_at` updates.
+4.  **Insert `work_item_history`:** Event: `STATUS_CHANGED`, Old: `In Progress`, New: `Done`.
+5.  **Insert `audit_log` (Async):** Entity: `WORK_ITEM`, Action: `STATUS_CHANGED`.
+6.  **Insert `notification`:** Notifies the Assignee that the Owner marked the task as Done.
+
+---
+This consistent pipeline ensures that the system remains secure, fully auditable, and traceable without adding spaghetti code to the controllers.

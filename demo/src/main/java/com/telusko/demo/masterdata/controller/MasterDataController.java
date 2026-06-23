@@ -89,6 +89,28 @@ public class MasterDataController {
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success("Value created", value));
     }
 
+    @PutMapping("/types/{id}")
+    public ResponseEntity<ApiResponse<MasterType>> updateType(
+            @PathVariable Long id, @RequestBody Map<String, String> body) {
+        log.info("PUT /api/master-data/types/{} - name: {}", id, body.get("name"));
+        MasterType updated = masterDataService.updateType(id, body.get("name"), body.get("description"));
+        return ResponseEntity.ok(ApiResponse.success("Type updated", updated));
+    }
+
+    @PutMapping("/values/{id}")
+    public ResponseEntity<ApiResponse<MasterValue>> updateValue(
+            @PathVariable Long id, @RequestBody Map<String, Object> body) {
+        log.info("PUT /api/master-data/values/{} - displayName: {}", id, body.get("displayName"));
+        MasterValue updated = masterDataService.updateValue(
+                id,
+                (String) body.get("displayName"),
+                (String) body.get("description"),
+                body.get("sortOrder") != null ? Integer.valueOf(body.get("sortOrder").toString()) : null,
+                body.get("isDefault") != null ? Boolean.valueOf(body.get("isDefault").toString()) : null,
+                body.get("active") != null ? Boolean.valueOf(body.get("active").toString()) : null);
+        return ResponseEntity.ok(ApiResponse.success("Value updated", updated));
+    }
+
     @PostMapping("/seed/{orgId}")
     public ResponseEntity<ApiResponse<Void>> seedDefaults(@PathVariable Long orgId) {
         log.info("POST /api/master-data/seed/{}", orgId);

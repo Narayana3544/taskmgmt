@@ -75,20 +75,24 @@ const TimesheetOverview = () => {
                         <thead>
                             <tr>
                                 <th style={{ textAlign: 'center' }}>User</th>
-                                <th style={{ textAlign: 'center' }}>Days Filled</th>
+                                <th style={{ textAlign: 'center' }}>Email</th>
+                                <th style={{ textAlign: 'center' }}>Total Days Filled</th>
+                                <th style={{ textAlign: 'center' }}>Approved</th>
+                                <th style={{ textAlign: 'center' }}>Pending</th>
+                                <th style={{ textAlign: 'center' }}>Total Hours</th>
                                 <th style={{ textAlign: 'center' }}>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {loading ? (
                                 <tr>
-                                    <td colSpan="3" style={{ padding: '40px 0' }}>
+                                    <td colSpan="7" style={{ padding: '40px 0' }}>
                                         <div className="spinner" style={{ margin: '0 auto' }}></div>
                                     </td>
                                 </tr>
                             ) : entries.length === 0 ? (
                                 <tr>
-                                    <td colSpan="3" style={{ padding: '40px 0', color: 'var(--color-text-muted)' }}>
+                                    <td colSpan="7" style={{ padding: '40px 0', color: 'var(--color-text-muted)' }}>
                                         No timesheets found.
                                     </td>
                                 </tr>
@@ -96,7 +100,11 @@ const TimesheetOverview = () => {
                                 entries.map((row) => (
                                     <tr key={row.userId}>
                                         <td style={{ fontWeight: 500 }}>{row.userName}</td>
+                                        <td style={{ color: 'var(--color-text-muted)', fontSize: '13px' }}>{row.email || 'N/A'}</td>
                                         <td>{row.daysFilled}</td>
+                                        <td style={{ color: 'var(--color-success)' }}>{row.approvedDays}</td>
+                                        <td style={{ color: 'var(--color-warning)' }}>{row.pendingDays}</td>
+                                        <td style={{ fontWeight: 600 }}>{row.totalHours ? row.totalHours.toFixed(1) : '0.0'}h</td>
                                         <td>
                                             <button 
                                                 className="btn btn-icon" 

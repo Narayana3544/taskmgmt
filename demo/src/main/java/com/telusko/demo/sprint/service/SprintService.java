@@ -171,14 +171,27 @@ public class SprintService {
         }
 
         /**
-         * Close sprint with spillover logic.
-         * Non-DONE items: removed from sprint, status → BACKLOG, history event
-         * SPILLOVER.
+         * Close sprint with differentiated spillover logic.
+         * OPEN items → BACKLOG (removed from sprint)
+         * IN_PROGRESS items → next PLANNED sprint in the same feature (or BACKLOG if none)
+         * DONE items → left as-is
          */
         @Transactional
         public SprintResponse closeSprint(Long sprintId, Long userId) {
                 permissionService.requirePermission(userId, "SPRINT", "CLOSE");
+                return doCloseSprint(sprintId, userId);
+        }
 
+        /**
+         * System-triggered close — no permission check.
+         * Called by the scheduler when sprint end date passes.
+         */
+        @Transactional
+        public SprintResponse autoCloseSprint(Long sprintId) {
+                return doCloseSprint(sprintId, 0L);
+        }
+
+        private SprintResponse doCloseSprint(Long sprintId, Long userId) {
                 Sprint sprint = sprintRepository.findById(sprintId)
                                 .orElseThrow(() -> new ResourceNotFoundException("Sprint", "id", sprintId));
 
@@ -194,57 +207,149 @@ public class SprintService {
                                 .findByMasterTypeCodeAndCode("WORK_ITEM_STATUS", "BACKLOG")
                                 .orElseThrow(() -> new BadRequestException("BACKLOG status not configured"));
 
-                // SPILLOVER: move non-DONE items back to BACKLOG
-                List<WorkItem> nonDoneItems = workItemRepository.findNonDoneItemsInSprint(sprintId);
-                User performer = userRepository.findById(userId)
-                                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+                // Find the next PLANNED sprint in the same feature (for IN_PROGRESS items)
+                Sprint nextSprint = null;
+                if (sprint.getFeature() != null) {
+                        List<Sprint> planned = sprintRepository.findNextPlannedSprintsByFeature(sprint.getFeature().getId());
+                        if (!planned.isEmpty()) {
+                                nextSprint = planned.get(0);
+                        }
+                }
 
-                for (WorkItem item : nonDoneItems) {
+                User performer = null;
+                if (userId != null && userId > 0) {
+                        performer = userRepository.findById(userId)
+                                        .orElse(null);
+                }
+                // For system-triggered close, use a system user reference
+                if (performer == null) {
+                        performer = userRepository.findById(1L).orElse(null);
+                }
+                final User systemPerformer = performer;
+                final Long performerId = performer != null ? performer.getId() : 0L;
+
+                // === OPEN items → BACKLOG ===
+                List<WorkItem> openItems = workItemRepository.findOpenItemsInSprint(sprintId);
+                for (WorkItem item : openItems) {
                         MasterValue oldStatus = item.getStatus();
                         item.setStatus(backlogStatus);
-                        item.setUpdatedBy(userId);
+                        item.setUpdatedBy(performerId);
                         workItemRepository.save(item);
 
-                        // Record SPILLOVER history
                         historyRepository.save(WorkItemHistory.builder()
                                         .workItem(item)
                                         .eventType("SPILLOVER")
                                         .oldStatus(oldStatus)
                                         .newStatus(backlogStatus)
-                                        .comment("Spilled over from sprint: " + sprint.getName())
-                                        .performedBy(performer)
+                                        .comment("Spilled over to backlog from sprint: " + sprint.getName())
+                                        .performedBy(systemPerformer)
                                         .performedAt(LocalDateTime.now())
                                         .build());
 
-                        // Mark sprint-work mapping as removed
                         sprintWorkItemRepository.findBySprintIdAndWorkItemIdAndRemovedAtIsNull(sprintId, item.getId())
                                         .ifPresent(swi -> {
                                                 swi.setRemovedAt(LocalDateTime.now());
-                                                swi.setRemovedBy(performer);
+                                                swi.setRemovedBy(systemPerformer);
+                                                swi.setRemovalReason("SPILLOVER_BACKLOG");
                                                 sprintWorkItemRepository.save(swi);
                                         });
 
-                        // Notify assignee about spillover
                         if (item.getAssignee() != null) {
                                 notificationService.createNotification(
                                                 item.getAssignee().getId(),
                                                 "WORK_ITEM", item.getId(),
                                                 "Sprint Spillover",
-                                                "'" + item.getTitle() + "' was spilled over from sprint '"
+                                                "'" + item.getTitle() + "' was moved to backlog from sprint '"
                                                                 + sprint.getName() + "'",
-                                                userId);
+                                                performerId);
                         }
 
                         auditService.logAction("WORK_ITEM", item.getId(), "SPILLOVER",
-                                        oldStatus.getCode(), "BACKLOG", userId);
+                                        oldStatus.getCode(), "BACKLOG", performerId);
+                }
+
+                // === IN_PROGRESS items → next PLANNED sprint (or BACKLOG) ===
+                List<WorkItem> inProgressItems = workItemRepository.findInProgressItemsInSprint(sprintId);
+                for (WorkItem item : inProgressItems) {
+                        // Remove from current sprint
+                        sprintWorkItemRepository.findBySprintIdAndWorkItemIdAndRemovedAtIsNull(sprintId, item.getId())
+                                        .ifPresent(swi -> {
+                                                swi.setRemovedAt(LocalDateTime.now());
+                                                swi.setRemovedBy(systemPerformer);
+                                                swi.setRemovalReason("SPILLOVER_NEXT_SPRINT");
+                                                sprintWorkItemRepository.save(swi);
+                                        });
+
+                        if (nextSprint != null) {
+                                // Add to next planned sprint
+                                SprintWorkItem newSwi = SprintWorkItem.builder()
+                                                .sprint(nextSprint)
+                                                .workItem(item)
+                                                .addedBy(systemPerformer)
+                                                .addedAt(LocalDateTime.now())
+                                                .build();
+                                sprintWorkItemRepository.save(newSwi);
+
+                                historyRepository.save(WorkItemHistory.builder()
+                                                .workItem(item)
+                                                .eventType("SPILLOVER")
+                                                .oldStatus(item.getStatus())
+                                                .newStatus(item.getStatus()) // status stays IN_PROGRESS
+                                                .comment("Moved to next sprint '" + nextSprint.getName() + "' from '" + sprint.getName() + "'")
+                                                .performedBy(systemPerformer)
+                                                .performedAt(LocalDateTime.now())
+                                                .build());
+
+                                if (item.getAssignee() != null) {
+                                        notificationService.createNotification(
+                                                        item.getAssignee().getId(),
+                                                        "WORK_ITEM", item.getId(),
+                                                        "Sprint Spillover",
+                                                        "'" + item.getTitle() + "' was moved to next sprint '"
+                                                                        + nextSprint.getName() + "' from '" + sprint.getName() + "'",
+                                                        performerId);
+                                }
+
+                                auditService.logAction("WORK_ITEM", item.getId(), "SPILLOVER",
+                                                sprint.getName(), nextSprint.getName(), performerId);
+                        } else {
+                                // No next sprint — move to BACKLOG
+                                MasterValue oldStatus = item.getStatus();
+                                item.setStatus(backlogStatus);
+                                item.setUpdatedBy(performerId);
+                                workItemRepository.save(item);
+
+                                historyRepository.save(WorkItemHistory.builder()
+                                                .workItem(item)
+                                                .eventType("SPILLOVER")
+                                                .oldStatus(oldStatus)
+                                                .newStatus(backlogStatus)
+                                                .comment("No next sprint available. Moved to backlog from: " + sprint.getName())
+                                                .performedBy(systemPerformer)
+                                                .performedAt(LocalDateTime.now())
+                                                .build());
+
+                                if (item.getAssignee() != null) {
+                                        notificationService.createNotification(
+                                                        item.getAssignee().getId(),
+                                                        "WORK_ITEM", item.getId(),
+                                                        "Sprint Spillover",
+                                                        "'" + item.getTitle() + "' was moved to backlog (no next sprint) from '"
+                                                                        + sprint.getName() + "'",
+                                                        performerId);
+                                }
+
+                                auditService.logAction("WORK_ITEM", item.getId(), "SPILLOVER",
+                                                oldStatus.getCode(), "BACKLOG", performerId);
+                        }
                 }
 
                 sprint.setStatus(closedStatus);
-                sprint.setUpdatedBy(userId);
+                sprint.setUpdatedBy(performerId);
                 sprint = sprintRepository.save(sprint);
 
-                auditService.logAction("SPRINT", sprintId, "CLOSED", "ACTIVE", "CLOSED", userId);
-                log.info("Sprint closed: id={}, spillover count={}", sprintId, nonDoneItems.size());
+                auditService.logAction("SPRINT", sprintId, "CLOSED", "ACTIVE", "CLOSED", performerId);
+                log.info("Sprint closed: id={}, open→backlog={}, inProgress→nextSprint={}", sprintId, openItems.size(), inProgressItems.size());
 
                 return mapToResponse(sprint);
         }

@@ -33,14 +33,27 @@ public interface TimesheetRepository extends JpaRepository<Timesheet, Long> {
            "ORDER BY t.workDate ASC")
     Page<Timesheet> findApprovedTimesheetsByDateRange(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate, Pageable pageable);
 
-    @Query("SELECT new com.telusko.demo.timesheet.dto.UserTimesheetOverviewDto(u.id, u.fullName, COUNT(t.id)) " +
-           "FROM Timesheet t JOIN t.user u " +
-           "WHERE t.workDate >= :startDate AND t.workDate <= :endDate " +
-           "AND t.status.code = 'APPROVED' AND t.active = true " +
-           "GROUP BY u.id, u.fullName " +
+    // Overview: ALL users with their timesheet counts (all statuses)
+    @Query("SELECT new com.telusko.demo.timesheet.dto.UserTimesheetOverviewDto(" +
+           "u.id, u.fullName, u.email, COUNT(DISTINCT t.id), " +
+           "CAST(COUNT(DISTINCT CASE WHEN t.status.code = 'APPROVED' THEN t.id END) AS long), " +
+           "CAST(COUNT(DISTINCT CASE WHEN t.status.code = 'SUBMITTED' THEN t.id END) AS long), " +
+           "COALESCE(SUM(te.durationMinutes) / 60.0, 0.0)) " +
+           "FROM User u LEFT JOIN Timesheet t ON t.user = u AND t.workDate >= :startDate AND t.workDate <= :endDate AND t.active = true " +
+           "LEFT JOIN TimesheetEntry te ON te.timesheet = t " +
+           "WHERE u.active = true " +
+           "GROUP BY u.id, u.fullName, u.email " +
            "ORDER BY u.fullName ASC")
     Page<com.telusko.demo.timesheet.dto.UserTimesheetOverviewDto> findUserTimesheetOverview(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate, Pageable pageable);
 
+    // User detail: ALL timesheets for a user in date range (all statuses)
+    @Query("SELECT t FROM Timesheet t " +
+           "WHERE t.user.id = :userId AND t.active = true " +
+           "AND t.workDate >= :startDate AND t.workDate <= :endDate " +
+           "ORDER BY t.workDate DESC")
+    Page<Timesheet> findTimesheetsByUserAndDateRange(@Param("userId") Long userId, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate, Pageable pageable);
+
+    // Legacy: keep the approved-only query for backward compatibility
     @Query("SELECT t FROM Timesheet t " +
            "WHERE t.user.id = :userId AND t.status.code = 'APPROVED' AND t.active = true " +
            "AND t.workDate >= :startDate AND t.workDate <= :endDate " +

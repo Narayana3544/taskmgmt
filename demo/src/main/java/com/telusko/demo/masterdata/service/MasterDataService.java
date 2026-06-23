@@ -112,6 +112,54 @@ public class MasterDataService {
     }
 
     /**
+     * Update a master type's mutable fields (name, description).
+     * Code is immutable once created.
+     */
+    @Transactional
+    public MasterType updateType(Long typeId, String name, String description) {
+        MasterType type = typeRepository.findById(typeId)
+                .orElseThrow(() -> new ResourceNotFoundException("MasterType", "id", typeId));
+
+        if (name != null && !name.isBlank()) {
+            type.setName(name);
+        }
+        if (description != null) {
+            type.setDescription(description);
+        }
+        log.info("Updated master type: id={}, name='{}'", typeId, type.getName());
+        return typeRepository.save(type);
+    }
+
+    /**
+     * Update a master value's mutable fields (displayName, description, sortOrder, isDefault, active).
+     * Code is immutable once created.
+     */
+    @Transactional
+    public MasterValue updateValue(Long valueId, String displayName, String description,
+                                    Integer sortOrder, Boolean isDefault, Boolean active) {
+        MasterValue value = valueRepository.findById(valueId)
+                .orElseThrow(() -> new ResourceNotFoundException("MasterValue", "id", valueId));
+
+        if (displayName != null && !displayName.isBlank()) {
+            value.setDisplayName(displayName);
+        }
+        if (description != null) {
+            value.setDescription(description);
+        }
+        if (sortOrder != null) {
+            value.setSortOrder(sortOrder);
+        }
+        if (isDefault != null) {
+            value.setIsDefault(isDefault);
+        }
+        if (active != null) {
+            value.setActive(active);
+        }
+        log.info("Updated master value: id={}, displayName='{}'", valueId, value.getDisplayName());
+        return valueRepository.save(value);
+    }
+
+    /**
      * Seeds default master data for a new organization.
      * Called after organization creation or on first setup.
      */

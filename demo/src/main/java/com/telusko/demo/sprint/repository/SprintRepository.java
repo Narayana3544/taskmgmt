@@ -36,4 +36,15 @@ public interface SprintRepository extends JpaRepository<Sprint, Long> {
 
     @Query("SELECT s FROM Sprint s WHERE s.project.id = :projectId AND s.feature.id = :featureId AND s.active = true")
     Page<Sprint> findByProjectIdAndFeatureIdAndActiveTrue(@Param("projectId") Long projectId, @Param("featureId") Long featureId, Pageable pageable);
+
+    // === Auto-close scheduler queries ===
+
+    @Query("SELECT s FROM Sprint s WHERE s.status.code = 'ACTIVE' AND s.active = true AND s.endDate <= :date")
+    List<Sprint> findActiveSprintsEndingOnOrBefore(@Param("date") java.time.LocalDate date);
+
+    @Query("SELECT s FROM Sprint s WHERE s.status.code = 'ACTIVE' AND s.active = true AND s.endDate = :date")
+    List<Sprint> findActiveSprintsEndingOn(@Param("date") java.time.LocalDate date);
+
+    @Query("SELECT s FROM Sprint s WHERE s.feature.id = :featureId AND s.status.code = 'PLANNED' AND s.active = true ORDER BY s.startDate ASC, s.createdAt ASC")
+    List<Sprint> findNextPlannedSprintsByFeature(@Param("featureId") Long featureId);
 }

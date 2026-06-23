@@ -201,7 +201,7 @@ public class TimesheetService {
 
     @Transactional(readOnly = true)
     public PageResponse<TimesheetResponse> getUserTimesheetsReport(Long userId, LocalDate startDate, LocalDate endDate, Pageable pageable) {
-        Page<Timesheet> page = timesheetRepository.findApprovedTimesheetsByUserAndDateRange(userId, startDate, endDate, pageable);
+        Page<Timesheet> page = timesheetRepository.findTimesheetsByUserAndDateRange(userId, startDate, endDate, pageable);
         return PageResponse.<TimesheetResponse>builder()
                 .content(page.getContent().stream().map(this::mapToResponse).collect(Collectors.toList()))
                 .page(page.getNumber())

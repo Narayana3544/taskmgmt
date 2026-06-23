@@ -54,4 +54,16 @@ public interface WorkItemRepository extends JpaRepository<WorkItem, Long> {
             +
             "AND w.active = true AND w.status.code != 'DONE'")
     List<WorkItem> findNonDoneItemsInSprint(@Param("sprintId") Long sprintId);
+
+    // Find OPEN items in a sprint (for spillover → BACKLOG)
+    @Query("SELECT w FROM WorkItem w " +
+            "WHERE w.id IN (SELECT sw.workItem.id FROM SprintWorkItem sw WHERE sw.sprint.id = :sprintId AND sw.removedAt IS NULL) " +
+            "AND w.active = true AND w.status.code = 'OPEN'")
+    List<WorkItem> findOpenItemsInSprint(@Param("sprintId") Long sprintId);
+
+    // Find IN_PROGRESS items in a sprint (for spillover → next sprint)
+    @Query("SELECT w FROM WorkItem w " +
+            "WHERE w.id IN (SELECT sw.workItem.id FROM SprintWorkItem sw WHERE sw.sprint.id = :sprintId AND sw.removedAt IS NULL) " +
+            "AND w.active = true AND w.status.code = 'IN_PROGRESS'")
+    List<WorkItem> findInProgressItemsInSprint(@Param("sprintId") Long sprintId);
 }

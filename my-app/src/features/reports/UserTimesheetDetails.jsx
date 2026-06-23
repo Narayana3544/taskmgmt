@@ -66,19 +66,20 @@ const UserTimesheetDetails = () => {
                             <tr>
                                 <th style={{ textAlign: 'center' }}>Date</th>
                                 <th style={{ textAlign: 'center' }}>Total Hours</th>
+                                <th style={{ textAlign: 'center' }}>Status</th>
                                 <th style={{ textAlign: 'center' }}>Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             {loading ? (
                                 <tr>
-                                    <td colSpan="3" style={{ padding: '40px 0' }}>
+                                    <td colSpan="4" style={{ padding: '40px 0' }}>
                                         <div className="spinner" style={{ margin: '0 auto' }}></div>
                                     </td>
                                 </tr>
                             ) : entries.length === 0 ? (
                                 <tr>
-                                    <td colSpan="3" style={{ padding: '40px 0', color: 'var(--color-text-muted)' }}>
+                                    <td colSpan="4" style={{ padding: '40px 0', color: 'var(--color-text-muted)' }}>
                                         No entries found for this user in the specified date range.
                                     </td>
                                 </tr>
@@ -87,6 +88,11 @@ const UserTimesheetDetails = () => {
                                     <tr key={row.id}>
                                         <td style={{ fontWeight: 500 }}>{row.workDate}</td>
                                         <td>{row.totalHours || '0h 00m'}</td>
+                                        <td>
+                                            <span className={`badge badge-${row.statusCode === 'APPROVED' ? 'success' : row.statusCode === 'REJECTED' ? 'danger' : row.statusCode === 'SUBMITTED' ? 'warning' : 'default'}`}>
+                                                {row.statusName || 'Draft'}
+                                            </span>
+                                        </td>
                                         <td>
                                             <button 
                                                 className="btn btn-secondary flex items-center gap-2" 

@@ -88,14 +88,6 @@ const ProtectedRoute = ({ children }) => {
 };
 
 function App() {
-  // eslint-disable-next-line no-unused-vars
-  const [isAuthenticated, setIsAuthenticated] = useState(
-    () => !!(localStorage.getItem('token') || localStorage.getItem('user'))
-  );
-
-  const handleLogin = () => {
-    setIsAuthenticated(true);
-  };
 
   return (
     <ErrorBoundary>
@@ -103,8 +95,8 @@ function App() {
       <BrowserRouter basename={routerBasename}>
         <Routes>
           {/* Auth */}
-          <Route path="/login" element={<Login onLogin={handleLogin} />} />
-          <Route path="/register" element={<Register onLogin={handleLogin} />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
           <Route path="/change-password" element={<ProtectedRoute><ChangePassword /></ProtectedRoute>} />
 
           {/* Main */}

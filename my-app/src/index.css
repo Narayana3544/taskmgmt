@@ -348,11 +348,20 @@ a:hover {
   flex-shrink: 0;
 }
 
+.sidebar-user-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
 .sidebar-user-name {
   font-size: 13px;
   font-weight: 600;
   color: #FFFFFF;
   line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .sidebar-user-role {
@@ -369,20 +378,7 @@ a:hover {
   color: var(--sidebar-text-active) !important;
 }
 
-.sidebar-user-info {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-}
 
-.sidebar-user-name {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--color-text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
 
 .sidebar-user-email {
   font-size: 11px;
@@ -597,7 +593,7 @@ a:hover {
 .form-select:focus,
 .form-textarea:focus {
   border-color: var(--color-secondary);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
 }
 
 .form-input::placeholder {
@@ -943,154 +939,7 @@ a:hover {
   white-space: nowrap;
 }
 
-/* ====================== BADGES ====================== */
-.badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  line-height: 1.6;
-  white-space: nowrap;
-}
 
-.badge-success {
-  background: var(--color-success-light);
-  color: var(--color-success);
-}
-
-.badge-warning {
-  background: var(--color-warning-light);
-  color: var(--color-warning);
-}
-
-.badge-danger {
-  background: var(--color-danger-light);
-  color: var(--color-danger);
-}
-
-.badge-info {
-  background: var(--color-info-light);
-  color: var(--color-info);
-}
-
-.badge-default {
-  background: var(--color-bg-alt);
-  color: var(--color-text-secondary);
-}
-
-/* ====================== STAT CARDS ====================== */
-.stat-grid {
-  display: grid;
-  gap: 16px;
-  margin-bottom: 16px;
-}
-
-.stat-card {
-  background: var(--color-card);
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  padding: 16px;
-}
-
-.stat-card-value {
-  font-size: 28px;
-  font-weight: 700;
-  line-height: 1.2;
-  color: var(--color-text);
-}
-
-.stat-card-label {
-  font-size: 12px;
-  color: var(--color-text-muted);
-  margin-top: 4px;
-}
-
-/* ====================== PAGE HEADER EXTRAS ====================== */
-.page-header-subtitle {
-  font-size: 13px;
-  color: var(--color-text-secondary);
-  margin-top: 2px;
-}
-
-/* ====================== FORM EXTRAS ====================== */
-.form-error {
-  font-size: 12px;
-  color: var(--color-danger);
-  margin-top: 4px;
-}
-
-.form-textarea {
-  width: 100%;
-  min-height: 80px;
-  padding: 8px 12px;
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  font-family: inherit;
-  font-size: 14px;
-  resize: vertical;
-  background: var(--color-card);
-  color: var(--color-text);
-  transition: border-color 0.15s ease;
-}
-
-.form-textarea:focus {
-  outline: none;
-  border-color: var(--color-secondary);
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
-}
-
-/* ====================== FLEX UTILITIES ====================== */
-.items-center {
-  align-items: center;
-}
-
-.justify-between {
-  justify-content: space-between;
-}
-
-.gap-2 {
-  gap: 8px;
-}
-
-.gap-3 {
-  gap: 12px;
-}
-
-.gap-4 {
-  gap: 16px;
-}
-
-/* ====================== BUTTON EXTRAS ====================== */
-.btn-danger {
-  background-color: var(--color-danger);
-  color: white;
-}
-
-.btn-danger:hover {
-  background-color: #B91C1C;
-}
-
-.btn-sm {
-  padding: 4px 10px;
-  font-size: 12px;
-}
-
-/* ====================== APP LAYOUT ====================== */
-.app-layout {
-  display: flex;
-  min-height: 100vh;
-}
-
-.app-main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-  transition: margin-left 0.2s ease;
-}
 
 .app-page-content {
   flex: 1;
@@ -1347,4 +1196,38 @@ a:hover {
 /* Body transition for smooth theme switching */
 body {
   transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* ====================== RESPONSIVE STYLES ====================== */
+@media (max-width: 768px) {
+  .app-main, .app-main.collapsed {
+    margin-left: 0;
+  }
+  
+  .navbar, .navbar.collapsed {
+    left: 0;
+    width: 100%;
+  }
+  
+  .sidebar {
+    transform: translateX(0);
+    width: var(--sidebar-width) !important;
+  }
+  
+  .sidebar.collapsed {
+    transform: translateX(-100%);
+  }
+  
+  .stat-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .modal {
+    max-width: 95%;
+    margin: 16px;
+  }
+  
+  .app-header-search {
+    display: none;
+  }
 }

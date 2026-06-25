@@ -7,7 +7,7 @@ const PageHeader = ({ title, subtitle, children }) => {
                 <h1>{title}</h1>
                 {subtitle && <p className="page-header-subtitle">{subtitle}</p>}
             </div>
-            {children && <div className="flex gap-3">{children}</div>}
+            {children && <div style={{ display: 'flex', gap: '12px' }}>{children}</div>}
         </div>
     );
 };

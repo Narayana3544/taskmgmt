@@ -27,6 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -84,6 +85,7 @@ public class ProjectService {
                 .status(activeStatus)
                 .startDate(request.getStartDate())
                 .endDate(request.getEndDate())
+                .kanbanColumns(request.getKanbanColumns() != null ? String.join(",", request.getKanbanColumns()) : null)
                 .active(true)
                 .build();
         project.setCreatedBy(userId);
@@ -123,6 +125,9 @@ public class ProjectService {
         project.setDescription(request.getDescription());
         project.setStartDate(request.getStartDate());
         project.setEndDate(request.getEndDate());
+        if (request.getKanbanColumns() != null) {
+            project.setKanbanColumns(String.join(",", request.getKanbanColumns()));
+        }
         project.setUpdatedBy(userId);
 
         if (request.getStatusId() != null) {
@@ -260,6 +265,9 @@ public class ProjectService {
                 .endDate(p.getEndDate())
                 .memberCount((int) memberCount)
                 .createdAt(p.getCreatedAt())
+                .kanbanColumns(p.getKanbanColumns() != null && !p.getKanbanColumns().isEmpty() 
+                        ? Arrays.asList(p.getKanbanColumns().split(",")) 
+                        : Arrays.asList("BACKLOG", "OPEN", "IN_PROGRESS", "IN_REVIEW", "DONE"))
                 .build();
     }
 

@@ -4,24 +4,25 @@ import { Plus, Edit2, Users, X, Search, ChevronLeft, ChevronRight } from 'lucide
 import api from '../api';
 import Layout from '../components/Layout';
 import { showToast } from '../utils/toast';
+import { getUser, isAdminOrManager as checkAdminOrManager } from '../utils/user';
 import { usePermissions } from '../hooks/usePermissions';
 
 const Projects = () => {
     const navigate = useNavigate();
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    const userRole = (user.roleCode || user.role || '').toUpperCase();
-    const isAdminOrManager = userRole === 'ADMIN' || userRole === 'MANAGER';;
+    const user = getUser();
+    const isAdminOrManager = checkAdminOrManager();
     const [projects, setProjects] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [editProject, setEditProject] = useState(null);
-    const [form, setForm] = useState({ code: '', name: '', description: '', startDate: '', endDate: '' });
+    const [form, setForm] = useState({ name: '', code: '', description: '', startDate: '', endDate: '', kanbanColumns: ['BACKLOG', 'OPEN', 'IN_PROGRESS', 'IN_REVIEW', 'DONE'] });
     const [saving, setSaving] = useState(false);
 
-    // Members modal state
+    // Members
     const [showMembers, setShowMembers] = useState(null);
     const [members, setMembers] = useState([]);
     const [addMemberId, setAddMemberId] = useState('');
+    const [allUsers, setAllUsers] = useState([]);
 
     // Pagination and Search
     const [page, setPage] = useState(0);
@@ -51,12 +52,19 @@ const Projects = () => {
         } catch (err) { console.error(err); } finally { setLoading(false); }
     };
 
+    const fetchAllUsers = async () => {
+        try {
+            const res = await api.get('/api/users', { params: { orgId: user.organizationId, page: 0, size: 200 } });
+            setAllUsers(res.data?.data?.content || res.data?.data || []);
+        } catch (err) { console.error(err); }
+    };
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    useEffect(() => { fetchProjects(); }, [page, debouncedSearch]);
+    useEffect(() => { fetchProjects(); fetchAllUsers(); }, [page, debouncedSearch]);
 
     const openCreate = () => {
         setEditProject(null);
-        setForm({ code: '', name: '', description: '', startDate: '', endDate: '' });
+        setForm({ code: '', name: '', description: '', startDate: '', endDate: '', kanbanColumns: ['BACKLOG', 'OPEN', 'IN_PROGRESS', 'IN_REVIEW', 'DONE'] });
         setShowModal(true);
     };
 
@@ -64,7 +72,8 @@ const Projects = () => {
         setEditProject(project);
         setForm({
             code: project.code, name: project.name, description: project.description || '',
-            startDate: project.startDate || '', endDate: project.endDate || '', statusId: project.statusId
+            startDate: project.startDate || '', endDate: project.endDate || '', statusId: project.statusId,
+            kanbanColumns: project.kanbanColumns || ['BACKLOG', 'OPEN', 'IN_PROGRESS', 'IN_REVIEW', 'DONE']
         });
         setShowModal(true);
     };
@@ -108,7 +117,7 @@ const Projects = () => {
             const res = await api.get(`/api/projects/${showMembers.id}/members`);
             setMembers(res.data?.data || []);
             fetchProjects();
-        } catch (err) { alert(err.response?.data?.message || 'Failed'); }
+        } catch (err) { showToast.error(err.response?.data?.message || 'Failed'); }
     };
 
     const addMember = async () => {
@@ -119,7 +128,7 @@ const Projects = () => {
             const res = await api.get(`/api/projects/${showMembers.id}/members`);
             setMembers(res.data?.data || []);
             fetchProjects();
-        } catch (err) { alert(err.response?.data?.message || 'Failed'); }
+        } catch (err) { showToast.error(err.response?.data?.message || 'Failed'); }
     };
 
     return (
@@ -240,6 +249,32 @@ const Projects = () => {
                                             onChange={(e) => setForm({ ...form, endDate: e.target.value })} />
                                     </div>
                                 </div>
+                                <div className="form-group" style={{ marginTop: 16 }}>
+                                    <label className="form-label">Kanban Columns</label>
+                                    <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                                        {[
+                                            { code: 'BACKLOG', label: 'Backlog' },
+                                            { code: 'OPEN', label: 'Open' },
+                                            { code: 'IN_PROGRESS', label: 'In Progress' },
+                                            { code: 'IN_REVIEW', label: 'In Review' },
+                                            { code: 'DONE', label: 'Done' }
+                                        ].map(col => (
+                                            <label key={col.code} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, cursor: 'pointer' }}>
+                                                <input type="checkbox" 
+                                                    checked={form.kanbanColumns?.includes(col.code) || false}
+                                                    onChange={(e) => {
+                                                        const newCols = e.target.checked 
+                                                            ? [...(form.kanbanColumns || []), col.code]
+                                                            : (form.kanbanColumns || []).filter(c => c !== col.code);
+                                                        setForm({ ...form, kanbanColumns: newCols });
+                                                    }}
+                                                />
+                                                {col.label}
+                                            </label>
+                                        ))}
+                                    </div>
+                                    <p style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 4 }}>Select the columns that will appear on the Kanban board for this project.</p>
+                                </div>
                             </div>
                             <div className="modal-footer">
                                 <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
@@ -263,9 +298,13 @@ const Projects = () => {
                         <div className="modal-body">
                             {/* Add member */}
                             <div className="flex gap-2" style={{ marginBottom: 16 }}>
-                                <input type="number" className="form-input" placeholder="User ID" style={{ width: 120 }}
-                                    value={addMemberId} onChange={(e) => setAddMemberId(e.target.value)} />
-                                <button className="btn btn-primary btn-sm" onClick={addMember}><Plus size={14} /> Add</button>
+                                <select className="form-select" style={{ width: 250 }} value={addMemberId} onChange={(e) => setAddMemberId(e.target.value)}>
+                                    <option value="">Select a user...</option>
+                                    {allUsers.filter(u => !members.find(m => m.id === u.id || m.userId === u.id)).map(u => (
+                                        <option key={u.id} value={u.id}>{u.fullName} ({u.email})</option>
+                                    ))}
+                                </select>
+                                <button className="btn btn-primary btn-sm" onClick={addMember} disabled={!addMemberId}><Plus size={14} /> Add</button>
                             </div>
 
                             {members.length === 0 ? (

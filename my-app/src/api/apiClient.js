@@ -81,6 +81,7 @@ apiClient.interceptors.response.use(
     if (status === 401 && !isAuthEndpoint) {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
+      localStorage.removeItem("userPermissions");
       window.location.replace(toAppPath("/login"));
       return Promise.reject(error);
     }

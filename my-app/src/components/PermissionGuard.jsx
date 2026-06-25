@@ -1,4 +1,5 @@
 import React from "react";
+import { getUser } from "../utils/user";
 
 /**
  * PermissionGuard — conditionally renders children if the current user
@@ -9,7 +10,7 @@ import React from "react";
  *     <button>Create Task</button>
  *   </PermissionGuard>
  *
- * The guard reads the user's permissions from localStorage.
+ * The guard reads the user's permissions from sessionStorage.
  * Backend always enforces — frontend hides as a UX convenience only.
  *
  * Props:
@@ -19,16 +20,16 @@ import React from "react";
  *   children — the protected UI
  */
 const PermissionGuard = ({ feature, action, fallback = null, children }) => {
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const user = getUser();
 
   // Admin always has full access
   const role = (user.roleCode || user.role || "").toUpperCase();
   if (role === "ADMIN" || role === "SUPER_ADMIN") return <>{children}</>;
 
-  // Check stored permissions from the correct localStorage key
+  // Check stored permissions from the correct sessionStorage key
   let permissions = [];
   try {
-    const storedPerms = localStorage.getItem("userPermissions");
+    const storedPerms = sessionStorage.getItem("userPermissions");
     if (storedPerms) {
       permissions = JSON.parse(storedPerms);
     }
@@ -36,9 +37,9 @@ const PermissionGuard = ({ feature, action, fallback = null, children }) => {
     // ignore parse errors
   }
 
-  // If no permissions data is loaded yet, default to HIDING
-  // (the backend always enforces, and we don't want to show restricted UI)
-  if (permissions.length === 0) return <>{fallback}</>;
+  // If no permissions data is loaded yet, default to SHOWING to avoid hiding on loading
+  // (the backend always enforces)
+  if (permissions.length === 0) return <>{children}</>;
 
   const allowed = permissions.some(
     (p) =>

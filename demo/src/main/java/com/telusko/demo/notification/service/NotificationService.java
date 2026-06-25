@@ -64,14 +64,17 @@ public class NotificationService {
     public PageResponse<Map<String, Object>> getNotifications(Long userId, Pageable pageable) {
         Page<Notification> page = notificationRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable);
 
-        var content = page.getContent().stream().map(n -> Map.<String, Object>of(
-                "id", n.getId(),
-                "entityType", n.getEntityType(),
-                "entityId", n.getEntityId(),
-                "title", n.getTitle(),
-                "message", n.getMessage(),
-                "isRead", n.getIsRead(),
-                "createdAt", n.getCreatedAt().toString())).toList();
+        var content = page.getContent().stream().map(n -> {
+            Map<String, Object> map = new java.util.HashMap<>();
+            map.put("id", n.getId());
+            map.put("entityType", n.getEntityType());
+            map.put("entityId", n.getEntityId());
+            map.put("title", n.getTitle());
+            map.put("message", n.getMessage());
+            map.put("isRead", n.getIsRead());
+            map.put("createdAt", n.getCreatedAt() != null ? n.getCreatedAt().toString() : null);
+            return map;
+        }).toList();
 
         return PageResponse.<Map<String, Object>>builder()
                 .content(content)

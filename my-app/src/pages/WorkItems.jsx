@@ -4,6 +4,7 @@ import { Plus, Edit2, Search, ChevronLeft, ChevronRight, Filter, X, Upload, File
 import api from '../api';
 import Layout from '../components/Layout';
 import { showToast } from '../utils/toast';
+import { getUser, isAdminOrManager as checkAdminOrManager } from '../utils/user';
 
 const FILTER_STORAGE_KEY = 'workitems_filters';
 
@@ -19,9 +20,8 @@ const WorkItems = () => {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const projectId = searchParams.get('projectId');
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    const userRole = (user.roleCode || user.role || '').toUpperCase();
-    const isAdminOrManager = userRole === 'ADMIN' || userRole === 'MANAGER';;
+    const user = getUser();
+    const isAdminOrManager = checkAdminOrManager();
 
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -32,6 +32,7 @@ const WorkItems = () => {
     const [projects, setProjects] = useState([]);
     const [masterData, setMasterData] = useState({ types: [], statuses: [], priorities: [] });
     const [projectMembers, setProjectMembers] = useState([]);
+    const [formSprints, setFormSprints] = useState([]);
 
     // Attachment for new work item
     const [createFile, setCreateFile] = useState(null);
@@ -109,35 +110,12 @@ const WorkItems = () => {
 
             let data = res.data?.data?.content || [];
 
-            // Client-side filtering fallback for search
-            if (debouncedSearch && data.length > 0) {
-                const term = debouncedSearch.toLowerCase();
-                data = data.filter(item =>
-                    (item.title || '').toLowerCase().includes(term) ||
-                    (item.description || '').toLowerCase().includes(term)
-                );
-            }
-
-            // Client-side filtering fallback for status/priority/sprint if backend doesn't filter
-            if (statusFilter) {
-                data = data.filter(item => String(item.statusId) === String(statusFilter));
-            }
-            if (priorityFilter) {
-                data = data.filter(item => String(item.priorityId) === String(priorityFilter));
-            }
-            if (sprintFilter) {
-                data = data.filter(item => String(item.sprintId) === String(sprintFilter));
-            }
-            if (typeFilter) {
-                data = data.filter(item => String(item.typeId) === String(typeFilter));
-            }
-
             setItems(data);
             setTotalPages(res.data?.data?.totalPages || 1);
         } catch (err) { console.error(err); } finally { setLoading(false); }
     }, [page, debouncedSearch, projectId, projectFilter, statusFilter, priorityFilter, sprintFilter, typeFilter]);
 
-    const fetchMasterData = async () => {
+    const fetchMasterData = useCallback(async () => {
         try {
             const [typesRes, statusRes, prioRes, projRes] = await Promise.all([
                 api.get('/api/master-data/values/by-code', { params: { typeCode: 'WORK_ITEM_TYPE' } }),
@@ -152,10 +130,9 @@ const WorkItems = () => {
             });
             setProjects(projRes.data?.data?.content || []);
         } catch (err) { console.error(err); }
-    };
+    }, [user.organizationId]);
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    useEffect(() => { fetchMasterData(); }, []);
+    useEffect(() => { fetchMasterData(); }, [fetchMasterData]);
 
     useEffect(() => { fetchItems(); }, [fetchItems]);
 
@@ -172,7 +149,7 @@ const WorkItems = () => {
 
     const openCreate = () => {
         setEditItem(null);
-        setForm({ title: '', description: '', projectId: projectId || '', typeId: '', priorityId: '', ownerId: '', assigneeId: '', storyPoints: '', dueDate: '' });
+        setForm({ title: '', description: '', projectId: projectId || '', sprintId: '', typeId: '', priorityId: '', ownerId: '', assigneeId: '', storyPoints: '', dueDate: '' });
         setCreateFile(null);
         if (createFilePreview) URL.revokeObjectURL(createFilePreview);
         setCreateFilePreview(null);
@@ -184,7 +161,7 @@ const WorkItems = () => {
         setEditItem(item);
         setForm({
             title: item.title, description: item.description || '',
-            projectId: item.projectId, typeId: item.typeId || '', priorityId: item.priorityId || '',
+            projectId: item.projectId, sprintId: item.sprintId || '', typeId: item.typeId || '', priorityId: item.priorityId || '',
             ownerId: item.ownerId || '', assigneeId: item.assigneeId || '',
             storyPoints: item.storyPoints || '', dueDate: item.dueDate || '',
             statusId: item.statusId || ''
@@ -203,6 +180,7 @@ const WorkItems = () => {
                 typeId: form.typeId ? parseInt(form.typeId) : null,
                 priorityId: form.priorityId ? parseInt(form.priorityId) : null,
                 statusId: form.statusId ? parseInt(form.statusId) : null,
+                sprintId: form.sprintId ? parseInt(form.sprintId) : null,
                 ownerId: form.ownerId ? parseInt(form.ownerId) : null,
                 assigneeId: form.assigneeId ? parseInt(form.assigneeId) : null,
                 storyPoints: form.storyPoints ? parseInt(form.storyPoints) : null
@@ -243,11 +221,15 @@ const WorkItems = () => {
     };
 
     const fetchProjectMembers = async (projId) => {
-        if (!projId) { setProjectMembers([]); return; }
+        if (!projId) { setProjectMembers([]); setFormSprints([]); return; }
         try {
-            const res = await api.get(`/api/projects/${projId}/members`);
-            setProjectMembers(res.data?.data || []);
-        } catch (err) { console.error('Failed to fetch members', err); setProjectMembers([]); }
+            const [membersRes, sprintsRes] = await Promise.all([
+                api.get(`/api/projects/${projId}/members`),
+                api.get('/api/sprints', { params: { projectId: projId, page: 0, size: 100 } })
+            ]);
+            setProjectMembers(membersRes.data?.data || []);
+            setFormSprints(sprintsRes.data?.data?.content || []);
+        } catch (err) { console.error('Failed to fetch project details', err); setProjectMembers([]); setFormSprints([]); }
     };
 
     const getBadgeClass = (name) => {
@@ -419,9 +401,19 @@ const WorkItems = () => {
                                     <div className="form-group">
                                         <label className="form-label">Project *</label>
                                         <select className="form-select" value={form.projectId}
-                                            onChange={(e) => { setForm({ ...form, projectId: e.target.value }); fetchProjectMembers(e.target.value); }} required>
+                                            onChange={(e) => { setForm({ ...form, projectId: e.target.value, sprintId: '' }); fetchProjectMembers(e.target.value); }} required>
                                             <option value="">Select project</option>
                                             {projects.map(p => <option key={p.id} value={p.id}>{p.name} ({p.code})</option>)}
+                                        </select>
+                                    </div>
+                                )}
+                                {form.projectId && (
+                                    <div className="form-group">
+                                        <label className="form-label">Sprint</label>
+                                        <select className="form-select" value={form.sprintId}
+                                            onChange={(e) => setForm({ ...form, sprintId: e.target.value })}>
+                                            <option value="">No Sprint</option>
+                                            {formSprints.map(s => <option key={s.id} value={s.id}>{s.name} ({s.statusCode})</option>)}
                                         </select>
                                     </div>
                                 )}

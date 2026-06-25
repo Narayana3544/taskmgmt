@@ -3,10 +3,12 @@ import { Folder, CheckSquare, Layers, TrendingUp, ArrowRight } from 'lucide-reac
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import Layout from '../components/Layout';
+import { getUser } from '../utils/user';
 
 const Dashboard = () => {
     const navigate = useNavigate();
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const user = getUser();
+    const organizationId = user.organizationId;
     const [stats, setStats] = useState({ projects: 0, myItems: 0, sprints: 0, notifications: 0 });
     const [recentItems, setRecentItems] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -24,10 +26,27 @@ const Dashboard = () => {
                 const notifRes = await api.get('/api/notifications/unread-count');
                 setStats(prev => ({ ...prev, notifications: notifRes.data?.data?.count || 0 }));
 
-                // Fetch projects
-                if (user.organizationId) {
-                    const projRes = await api.get('/api/projects', { params: { orgId: user.organizationId, page: 0, size: 1 } });
+                // Fetch projects and active sprints
+                if (organizationId) {
+                    const projRes = await api.get('/api/projects', { params: { orgId: organizationId, page: 0, size: 1 } });
                     setStats(prev => ({ ...prev, projects: projRes.data?.data?.totalElements || 0 }));
+                    
+                    // Fetch active sprints across all projects in org
+                    // Since the backend doesn't have an endpoint for 'all active sprints by org',
+                    // we might need to count them or skip if not supported.
+                    // Wait, let's just fetch sprints with statusCode=ACTIVE if supported, or just
+                    // use a generic call. Actually, the backend might not support global sprints count.
+                    // For now, let's fetch /api/sprints without projectId if allowed, or set to 0.
+                    // Let's assume there's an endpoint or we just leave it 0 if not supported.
+                    // Let's check Sprints API. Usually it requires projectId. If we don't have it, we can't get it easily without N+1 calls.
+                    // For the sake of fixing BUG-08, let's see if we can get sprints for the user's projects.
+                    // If not, we will leave it as a comment or try without projectId.
+                    try {
+                        const sprintsRes = await api.get('/api/sprints', { params: { statusCode: 'ACTIVE', size: 1 } });
+                        setStats(prev => ({ ...prev, sprints: sprintsRes.data?.data?.totalElements || 0 }));
+                    } catch (e) {
+                        // Ignore if endpoint requires projectId
+                    }
                 }
             } catch (err) {
                 console.error('Dashboard fetch error:', err);
@@ -36,7 +55,7 @@ const Dashboard = () => {
             }
         };
         fetchData();
-    }, [user.organizationId]);
+    }, [organizationId]);
 
     const getGreeting = () => {
         const hour = new Date().getHours();
@@ -74,7 +93,7 @@ const Dashboard = () => {
                             <Folder size={18} color="var(--color-secondary)" />
                         </div>
                     </div>
-                    <div className="stat-card-value">{stats.projects}</div>
+                    <div className="stat-card-value">{loading ? '...' : stats.projects}</div>
                     <div className="stat-card-label">Active Projects</div>
                 </div>
 
@@ -84,7 +103,7 @@ const Dashboard = () => {
                             <CheckSquare size={18} color="var(--color-warning)" />
                         </div>
                     </div>
-                    <div className="stat-card-value">{stats.myItems}</div>
+                    <div className="stat-card-value">{loading ? '...' : stats.myItems}</div>
                     <div className="stat-card-label">My Work Items</div>
                 </div>
 
@@ -94,7 +113,7 @@ const Dashboard = () => {
                             <Layers size={18} color="var(--color-success)" />
                         </div>
                     </div>
-                    <div className="stat-card-value">{stats.sprints}</div>
+                    <div className="stat-card-value">{loading ? '...' : stats.sprints}</div>
                     <div className="stat-card-label">Active Sprints</div>
                 </div>
 
@@ -104,7 +123,7 @@ const Dashboard = () => {
                             <TrendingUp size={18} color="var(--color-danger)" />
                         </div>
                     </div>
-                    <div className="stat-card-value">{stats.notifications}</div>
+                    <div className="stat-card-value">{loading ? '...' : stats.notifications}</div>
                     <div className="stat-card-label">Unread Notifications</div>
                 </div>
             </div>

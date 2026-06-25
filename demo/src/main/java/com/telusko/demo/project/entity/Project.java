@@ -48,6 +48,9 @@ public class Project extends BaseEntity {
     @Column(name = "end_date")
     private LocalDate endDate;
 
+    @Column(name = "kanban_columns", columnDefinition = "TEXT")
+    private String kanbanColumns;
+
     @Column(nullable = false)
     @Builder.Default
     private Boolean active = true;

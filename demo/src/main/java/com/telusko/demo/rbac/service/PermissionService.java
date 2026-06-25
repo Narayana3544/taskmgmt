@@ -65,6 +65,11 @@ public class PermissionService {
             return false;
         }
 
+        String roleCode = user.getRole().getCode().toUpperCase();
+        if ("ADMIN".equals(roleCode) || "SUPER_ADMIN".equals(roleCode)) {
+            return true;
+        }
+
         boolean allowed = !rolePermissionRepository
                 .findAllowedPermission(user.getRole().getId(), featureCode, actionCode)
                 .isEmpty();

@@ -19,7 +19,7 @@ const Register = ({ onLogin }) => {
 
         try {
             const res = await api.post('/api/auth/register', form);
-            console.log('Register response:', res.data);
+
 
             // Handle different response structures from backend
             const userData = res.data?.data || res.data;
@@ -105,7 +105,7 @@ const Register = ({ onLogin }) => {
                     </button>
                 </form>
                 <div className="auth-footer">
-                    Already have an account? <Link to="/">Sign in</Link>
+                    Already have an account? <Link to="/login">Sign in</Link>
                 </div>
             </div>
         </div>

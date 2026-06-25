@@ -3,10 +3,13 @@ import { useNavigate } from 'react-router-dom';
 
 import api from '../api';
 import Layout from '../components/Layout';
+import { showToast } from '../utils/toast';
 
 const KANBAN_COLUMNS = [
+    { code: 'BACKLOG', label: 'Backlog', color: '#9CA3AF' },
     { code: 'OPEN', label: 'Open', color: '#3B82F6' },
     { code: 'IN_PROGRESS', label: 'In Progress', color: '#D97706' },
+    { code: 'IN_REVIEW', label: 'In Review', color: '#8B5CF6' },
     { code: 'DONE', label: 'Done', color: '#059669' },
 ];
 
@@ -20,6 +23,7 @@ const KanbanBoard = () => {
     const [selectedProjectId, setSelectedProjectId] = useState(null);
     const [activeSprint, setActiveSprint] = useState(null);
     const [sprintLoading, setSprintLoading] = useState(false);
+    const [projectDetails, setProjectDetails] = useState(null);
 
     const fetchItems = useCallback(async () => {
         try {
@@ -46,7 +50,7 @@ const KanbanBoard = () => {
         } finally {
             setLoading(false);
         }
-    }, [selectedProjectId]);
+    }, []);
 
     useEffect(() => { fetchItems(); }, [fetchItems]);
 
@@ -66,8 +70,25 @@ const KanbanBoard = () => {
                 setSprintLoading(false);
             }
         };
+
+        const fetchProjectDetails = async () => {
+            if (!selectedProjectId) return;
+            try {
+                const res = await api.get(`/api/projects/${selectedProjectId}`);
+                setProjectDetails(res.data?.data || null);
+            } catch (err) {
+                console.error('Failed to fetch project details:', err);
+                setProjectDetails(null);
+            }
+        };
+
         fetchActiveSprint();
+        fetchProjectDetails();
     }, [selectedProjectId]);
+
+    const activeKanbanColumns = projectDetails?.kanbanColumns?.length > 0 
+        ? KANBAN_COLUMNS.filter(c => projectDetails.kanbanColumns.includes(c.code))
+        : KANBAN_COLUMNS;
 
     // Filter items: must belong to selected project AND the active sprint
     const filteredItems = allItems.filter(item => 
@@ -102,7 +123,7 @@ const KanbanBoard = () => {
             await api.patch(`/api/work-items/${draggedItem.id}/status`, { statusCode: targetStatusCode });
             fetchItems(); // Reload from server to get accurate state
         } catch (err) {
-            alert(err.response?.data?.message || 'Cannot update status');
+            showToast.error(err.response?.data?.message || 'Cannot update status');
             fetchItems(); // Revert on failure
         }
 
@@ -195,7 +216,7 @@ const KanbanBoard = () => {
                 </div>
             ) : (
                 <div style={{ display: 'flex', gap: '16px', height: 'calc(100vh - 280px)', overflow: 'auto' }}>
-                    {KANBAN_COLUMNS.map((col) => {
+                    {activeKanbanColumns.map((col) => {
                         const colItems = getItemsByStatus(col.code);
                         return (
                             <div
@@ -246,15 +267,16 @@ const KanbanBoard = () => {
                                         colItems.map((item) => (
                                             <div
                                                 key={item.id}
-                                                draggable={col.code !== 'DONE'}
+                                                draggable={true}
                                                 onDragStart={(e) => handleDragStart(e, item)}
                                                 onClick={() => navigate(`/work-items/${item.id}`)}
                                                 style={{
                                                     background: 'var(--color-card)', border: '1px solid var(--color-border)',
-                                                    borderRadius: 'var(--radius-md)', padding: '12px', cursor: 'pointer',
+                                                    borderRadius: 'var(--radius-md)', padding: '12px',
+                                                    cursor: 'grab',
                                                     boxShadow: 'var(--shadow-sm)',
                                                     borderLeft: `3px solid ${getPriorityColor(item.priorityCode)}`,
-                                                    opacity: draggedItem?.id === item.id ? 0.5 : 1,
+                                                    opacity: draggedItem?.id === item.id ? 0.5 : col.code === 'DONE' ? 0.85 : 1,
                                                     transition: 'box-shadow 0.15s ease'
                                                 }}
                                                 onMouseEnter={(e) => e.currentTarget.style.boxShadow = 'var(--shadow-md)'}

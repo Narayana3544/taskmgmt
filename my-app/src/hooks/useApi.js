@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 /**
  * useApi — reusable hook for API calls with loading, error, and data states.
@@ -25,11 +25,16 @@ const useApi = (apiFn, deps = [], immediate = true) => {
   const [loading, setLoading] = useState(immediate);
   const [error, setError] = useState(null);
 
+  const apiFnRef = useRef(apiFn);
+  useEffect(() => {
+    apiFnRef.current = apiFn;
+  });
+
   const execute = useCallback(async (...args) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await apiFn(...args);
+      const response = await apiFnRef.current(...args);
       const result = response?.data?.data ?? response?.data ?? response;
       setData(result);
       return result;
@@ -44,15 +49,14 @@ const useApi = (apiFn, deps = [], immediate = true) => {
     } finally {
       setLoading(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, deps);
+  }, []); // execute reference is stable
 
   useEffect(() => {
     if (immediate) {
       execute();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [execute]);
+  }, deps);
 
   return { data, loading, error, setData, refetch: execute, execute };
 };

@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 public class ProjectRequest {
@@ -19,4 +20,5 @@ public class ProjectRequest {
     private Long statusId;
     private LocalDate startDate;
     private LocalDate endDate;
+    private List<String> kanbanColumns;
 }

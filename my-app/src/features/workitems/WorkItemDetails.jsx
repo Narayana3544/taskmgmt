@@ -4,18 +4,22 @@ import { ArrowLeft, Send, User, Paperclip, MessageSquare, History, FileText, Upl
 import api from '../../api';
 import Layout from '../../components/Layout';
 import StatusBadge from '../../components/StatusBadge';
+import { showToast } from '../../utils/toast';
+import { getUser } from '../../utils/user';
 
 const WorkItemDetails = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+    const currentUser = getUser();
 
     const [item, setItem] = useState(null);
     const [comments, setComments] = useState([]);
     const [history, setHistory] = useState([]);
     const [attachments, setAttachments] = useState([]);
     const [projectMembers, setProjectMembers] = useState([]);
+    const [projectSprints, setProjectSprints] = useState([]);
     const [isAssigning, setIsAssigning] = useState(false);
+    const [isChangingSprint, setIsChangingSprint] = useState(false);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('details');
     const [commentText, setCommentText] = useState('');
@@ -27,7 +31,7 @@ const WorkItemDetails = () => {
     const [pendingPreview, setPendingPreview] = useState(null);
     const [uploading, setUploading] = useState(false);
 
-    const fetchAll = async () => {
+    const fetchAll = React.useCallback(async () => {
         try {
             const [itemRes, commRes, histRes, attRes] = await Promise.all([
                 api.get(`/api/work-items/${id}`),
@@ -43,15 +47,18 @@ const WorkItemDetails = () => {
             setAttachments(wi?.attachments || []);
 
             if (wi?.projectId) {
-                const memRes = await api.get(`/api/projects/${wi.projectId}/members`).catch(() => ({ data: { data: [] } }));
+                const [memRes, sprintRes] = await Promise.all([
+                    api.get(`/api/projects/${wi.projectId}/members`).catch(() => ({ data: { data: [] } })),
+                    api.get('/api/sprints', { params: { projectId: wi.projectId, page: 0, size: 100 } }).catch(() => ({ data: { data: { content: [] } } }))
+                ]);
                 setProjectMembers(memRes.data?.data || []);
+                setProjectSprints(sprintRes.data?.data?.content || []);
             }
         } catch (err) { console.error(err); }
         finally { setLoading(false); }
-    };
+    }, [id]);
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    useEffect(() => { fetchAll(); }, [id]);
+    useEffect(() => { fetchAll(); }, [fetchAll]);
 
     // Cleanup preview URL on unmount
     useEffect(() => {
@@ -67,7 +74,7 @@ const WorkItemDetails = () => {
             setCommentText('');
             const commRes = await api.get(`/api/work-items/${id}/comments`);
             setComments(commRes.data?.data || []);
-        } catch (err) { alert(err.response?.data?.message || 'Failed'); }
+        } catch (err) { showToast.error(err.response?.data?.message || 'Failed'); }
     };
 
     const handleAssign = async (userId) => {
@@ -76,7 +83,17 @@ const WorkItemDetails = () => {
             setIsAssigning(false);
             fetchAll();
         } catch (err) {
-            alert(err.response?.data?.message || 'Failed to assign');
+            showToast.error(err.response?.data?.message || 'Failed to assign');
+        }
+    };
+
+    const handleSprintChange = async (sprintId) => {
+        try {
+            await api.put(`/api/work-items/${id}`, { ...item, sprintId: sprintId || null });
+            setIsChangingSprint(false);
+            fetchAll();
+        } catch (err) {
+            showToast.error(err.response?.data?.message || 'Failed to change sprint');
         }
     };
 
@@ -86,7 +103,7 @@ const WorkItemDetails = () => {
             setShowHandoff(false);
             setHandoffComment('');
             fetchAll();
-        } catch (err) { alert(err.response?.data?.message || 'Failed'); }
+        } catch (err) { showToast.error(err.response?.data?.message || 'Failed'); }
     };
 
     // Handle file selection — show preview instead of uploading immediately
@@ -94,7 +111,7 @@ const WorkItemDetails = () => {
         const file = e.target.files?.[0];
         if (!file) return;
         if (file.size > 2 * 1024 * 1024) {
-            alert('File size must be less than 2MB');
+            showToast.error('File size must be less than 2MB');
             e.target.value = '';
             return;
         }
@@ -130,7 +147,7 @@ const WorkItemDetails = () => {
 
             cancelPendingUpload();
             fetchAll();
-        } catch (err) { alert(err.response?.data?.message || 'Upload failed'); }
+        } catch (err) { showToast.error(err.response?.data?.message || 'Upload failed'); }
         finally { setUploading(false); }
     };
 
@@ -230,10 +247,30 @@ const WorkItemDetails = () => {
                             </div>
                             <div>
                                 <div style={{ fontSize: 11, color: 'var(--color-text-muted)', marginBottom: 2 }}>Sprint</div>
-                                <span style={{ fontSize: 14, fontWeight: 500, cursor: item.sprintId ? 'pointer' : 'default', color: item.sprintId ? 'var(--color-secondary)' : 'inherit' }}
-                                    onClick={() => item.sprintId && navigate(`/sprints/${item.sprintId}`)}>
-                                    {item.sprintName || '—'}
-                                </span>
+                                {isChangingSprint ? (
+                                    <select
+                                        className="form-select"
+                                        style={{ padding: '4px 28px 4px 8px', fontSize: 13, height: 32, width: '100%', maxWidth: 200 }}
+                                        value={item.sprintId || ''}
+                                        onChange={(e) => handleSprintChange(e.target.value ? parseInt(e.target.value) : null)}
+                                        onBlur={() => setIsChangingSprint(false)}
+                                        autoFocus
+                                    >
+                                        <option value="">No Sprint</option>
+                                        {projectSprints.map(s => (
+                                            <option key={s.id} value={s.id}>{s.name} ({s.statusCode})</option>
+                                        ))}
+                                    </select>
+                                ) : (
+                                    <div className="flex items-center gap-2"
+                                        style={{ cursor: 'pointer', padding: '2px 4px', margin: '-2px -4px', borderRadius: 4 }}
+                                        onClick={() => setIsChangingSprint(true)}
+                                        title="Click to change sprint">
+                                        <span style={{ fontSize: 14, fontWeight: 500, color: item.sprintId ? 'var(--color-secondary)' : 'var(--color-text)' }}>
+                                            {item.sprintName || 'No Sprint'}
+                                        </span>
+                                    </div>
+                                )}
                             </div>
                             <div>
                                 <div style={{ fontSize: 11, color: 'var(--color-text-muted)', marginBottom: 2 }}>Story Points</div>

@@ -3,15 +3,15 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Plus, Search, ChevronLeft, ChevronRight, Edit2, Layers } from 'lucide-react';
 import api from '../api';
 import Layout from '../components/Layout';
-import toast from 'react-hot-toast';
+import { showToast } from '../utils/toast';
+import { getUser, isAdminOrManager as checkAdminOrManager } from '../utils/user';
 
 const Features = () => {
     const [searchParams] = useSearchParams();
     const projectIdParam = searchParams.get('projectId');
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const user = getUser();
     const navigate = useNavigate();
-    const userRole = (user.roleCode || user.role || '').toUpperCase();
-    const isAdminOrManager = userRole === 'ADMIN' || userRole === 'MANAGER';
+    const isAdminOrManager = checkAdminOrManager();
 
     const [projects, setProjects] = useState([]);
     const [selectedProject, setSelectedProject] = useState(() => {
@@ -111,7 +111,7 @@ const Features = () => {
         try {
             const projId = form.projectId || selectedProject;
             if (!projId) {
-                toast.error('Please select a project');
+                showToast.error('Please select a project');
                 setSaving(false);
                 return;
             }
@@ -123,10 +123,10 @@ const Features = () => {
             };
             if (editFeature) {
                 await api.put(`/api/features/${editFeature.id}`, payload);
-                toast.success('Feature updated successfully');
+                showToast.success('Feature updated successfully');
             } else {
                 await api.post('/api/features', payload);
-                toast.success('Feature created successfully');
+                showToast.success('Feature created successfully');
             }
             setShowModal(false);
             setSelectedProject(projId);
@@ -135,7 +135,7 @@ const Features = () => {
             setFeatures(res.data?.data?.content || []);
             setTotalPages(res.data?.data?.totalPages || 1);
         } catch (err) {
-            toast.error(err.response?.data?.message || 'Operation failed');
+            showToast.error(err.response?.data?.message || 'Operation failed');
         } finally { setSaving(false); }
     };
 

@@ -16,8 +16,8 @@ const workItemsApi = {
   updateWorkItem: (id, data) =>
     apiClient.put(`/api/work-items/${id}`, data),
 
-  updateStatus: (id, statusId) =>
-    apiClient.patch(`/api/work-items/${id}/status`, { statusId }),
+  updateStatus: (id, statusCode) =>
+    apiClient.patch(`/api/work-items/${id}/status`, { statusCode }),
 
   getComments: (id) =>
     apiClient.get(`/api/work-items/${id}/comments`),

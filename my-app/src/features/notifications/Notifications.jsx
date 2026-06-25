@@ -28,7 +28,7 @@ const Notifications = () => {
     const markAsRead = async (id) => {
         try {
             await api.patch(`/api/notifications/${id}/read`);
-            setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+            setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
         } catch (err) { console.error(err); }
     };
 
@@ -44,14 +44,14 @@ const Notifications = () => {
         return '🔔';
     };
 
-    const filtered = activeTab === 'unread' ? notifications.filter(n => !n.read) : notifications;
+    const filtered = activeTab === 'unread' ? notifications.filter(n => !n.isRead) : notifications;
 
     return (
         <Layout title="Notifications">
             <div className="page-header">
                 <div>
                     <h1>Notifications</h1>
-                    <p className="page-header-subtitle">{notifications.filter(n => !n.read).length} unread</p>
+                    <p className="page-header-subtitle">{notifications.filter(n => !n.isRead).length} unread</p>
                 </div>
             </div>
 
@@ -114,20 +114,20 @@ const Notifications = () => {
                                         onClick={() => setSelectedNotif(selectedNotif?.id === n.id ? null : n)}
                                         style={{
                                             padding: '12px 16px', borderBottom: '1px solid var(--color-border-light)',
-                                            background: n.read ? 'transparent' : 'var(--color-info-light)',
+                                            background: n.isRead ? 'transparent' : 'var(--color-info-light)',
                                             cursor: 'pointer', transition: 'background 0.15s'
                                         }}>
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-3">
-                                                <span style={{ fontSize: 18 }}>{getNotifIcon(n.eventType || n.type)}</span>
+                                                <span style={{ fontSize: 18 }}>{getNotifIcon(n.entityType)}</span>
                                                 <div>
-                                                    <div style={{ fontWeight: n.read ? 400 : 600, fontSize: 14 }}>{n.message || n.title || 'Notification'}</div>
+                                                    <div style={{ fontWeight: n.isRead ? 400 : 600, fontSize: 14 }}>{n.message || n.title || 'Notification'}</div>
                                                     <div style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 2 }}>
                                                         {n.createdAt ? new Date(n.createdAt).toLocaleString() : ''}
                                                     </div>
                                                 </div>
                                             </div>
-                                            {!n.read && (
+                                            {!n.isRead && (
                                                 <button className="btn btn-sm btn-secondary" onClick={(e) => { e.stopPropagation(); markAsRead(n.id); }}
                                                     title="Mark as read">
                                                     <Check size={14} />

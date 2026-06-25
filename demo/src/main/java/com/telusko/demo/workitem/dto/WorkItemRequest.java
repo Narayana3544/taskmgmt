@@ -24,4 +24,5 @@ public class WorkItemRequest {
     private Integer storyPoints;
     private LocalDate dueDate;
     private java.util.List<String> attachments;
+    private Long sprintId;
 }

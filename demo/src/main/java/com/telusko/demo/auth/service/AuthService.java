@@ -56,20 +56,27 @@ public class AuthService {
      */
     @Transactional
     public AuthResponse login(LoginRequest request) {
-        log.info("Login attempt for email: {}", request.getEmail());
+        log.info("Login attempt received");
 
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new UnauthorizedException("Invalid email or password"));
+        User user = userRepository.findByEmail(request.getEmail()).orElse(null);
+        UserAuth auth = user != null ? userAuthRepository.findByUserId(user.getId()).orElse(null) : null;
 
-        UserAuth auth = userAuthRepository.findByUserId(user.getId())
-                .orElseThrow(() -> new UnauthorizedException("Invalid email or password"));
+        // Mitigate timing-based user enumeration by always performing the password hash check
+        boolean passwordMatches = false;
+        if (auth != null && auth.getPasswordHash() != null) {
+            passwordMatches = passwordEncoder.matches(request.getPassword(), auth.getPasswordHash());
+        } else {
+            // Fake password check with a valid dummy BCrypt hash (takes roughly the same time)
+            passwordEncoder.matches(request.getPassword(), "$2a$10$XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+        }
 
-        if (!passwordEncoder.matches(request.getPassword(), auth.getPasswordHash())) {
-            log.error("Authentication failed for email: {}", request.getEmail());
+        if (user == null || auth == null || !passwordMatches) {
+            log.warn("Authentication failed");
             throw new UnauthorizedException("Invalid email or password");
         }
 
         if (!Boolean.TRUE.equals(user.getActive())) {
+            log.warn("Authentication failed: account deactivated");
             throw new UnauthorizedException("Account is deactivated. Please contact your administrator.");
         }
 
@@ -110,7 +117,7 @@ public class AuthService {
      */
     @Transactional
     public AuthResponse register(RegisterRequest request) {
-        log.info("Registration attempt for email: {}", request.getEmail());
+        log.info("Registration attempt received");
 
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new BadRequestException("Email is already registered");
@@ -128,7 +135,7 @@ public class AuthService {
                     : "Default Organization";
             org = organizationRepository.save(Organization.builder()
                     .name(orgName)
-                    .code("ORG-" + System.currentTimeMillis())
+                    .code("ORG-" + java.util.UUID.randomUUID().toString().substring(0, 8).toUpperCase())
                     .timezone("UTC")
                     .workingDays("MON-FRI")
                     .active(true)

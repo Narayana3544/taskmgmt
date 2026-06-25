@@ -3,16 +3,16 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Plus, Play, Square, GripVertical, Search, ChevronLeft, ChevronRight, BarChart3, Layers } from 'lucide-react';
 import api from '../api';
 import Layout from '../components/Layout';
-import toast from 'react-hot-toast';
+import { showToast } from '../utils/toast';
+import { getUser, isAdminOrManager as checkAdminOrManager } from '../utils/user';
 
 
 const Sprints = () => {
     const [searchParams] = useSearchParams();
     const projectId = searchParams.get('projectId');
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const user = getUser();
     const navigate = useNavigate();
-    const userRole = (user.roleCode || user.role || '').toUpperCase();
-    const isAdminOrManager = userRole === 'ADMIN' || userRole === 'MANAGER';
+    const isAdminOrManager = checkAdminOrManager();
 
     const [projects, setProjects] = useState([]);
     const [selectedProject, setSelectedProject] = useState(() => {
@@ -147,12 +147,12 @@ const Sprints = () => {
         try {
             const projId = form.projectId || selectedProject;
             if (!projId) {
-                toast.error('Please select a project');
+                showToast.error('Please select a project');
                 setSaving(false);
                 return;
             }
             if (!form.featureId) {
-                toast.error('Please select a feature');
+                showToast.error('Please select a feature');
                 setSaving(false);
                 return;
             }
@@ -166,19 +166,19 @@ const Sprints = () => {
             };
             if (editSprint) {
                 await api.put(`/api/sprints/${editSprint.id}`, payload);
-                toast.success('Sprint updated successfully');
+                showToast.success('Sprint updated successfully');
             } else {
                 await api.post('/api/sprints', payload);
-                toast.success('Sprint created successfully');
+                showToast.success('Sprint created successfully');
             }
             setShowCreate(false);
             // Update selected project to match the newly created sprint's project
             setSelectedProject(projId);
             // Refetch
-            const res = await api.get('/api/sprints', { params: { projectId: projId, page: 0, size: 50 } });
+            const res = await api.get('/api/sprints', { params: { projectId: projId, page: 0, size: 10 } });
             setSprints(res.data?.data?.content || []);
         } catch (err) {
-            toast.error(err.response?.data?.message || 'Operation failed');
+            showToast.error(err.response?.data?.message || 'Operation failed');
         } finally { setSaving(false); }
     };
 
@@ -186,20 +186,20 @@ const Sprints = () => {
         if (!window.confirm('Start this sprint? Only one sprint can be active per project.')) return;
         try {
             await api.post(`/api/sprints/${id}/start`);
-            toast.success('Sprint started');
-            const res = await api.get('/api/sprints', { params: { projectId: selectedProject, page: 0, size: 50 } });
+            showToast.success('Sprint started');
+            const res = await api.get('/api/sprints', { params: { projectId: selectedProject, page: 0, size: 10 } });
             setSprints(res.data?.data?.content || []);
-        } catch (err) { toast.error(err.response?.data?.message || 'Failed to start sprint'); }
+        } catch (err) { showToast.error(err.response?.data?.message || 'Failed to start sprint'); }
     };
 
     const closeSprint = async (id) => {
         if (!window.confirm('Close this sprint? Non-done items will spill over to backlog.')) return;
         try {
             await api.post(`/api/sprints/${id}/close`);
-            toast.success('Sprint closed');
-            const res = await api.get('/api/sprints', { params: { projectId: selectedProject, page: 0, size: 50 } });
+            showToast.success('Sprint closed');
+            const res = await api.get('/api/sprints', { params: { projectId: selectedProject, page: 0, size: 10 } });
             setSprints(res.data?.data?.content || []);
-        } catch (err) { toast.error(err.response?.data?.message || 'Failed to close sprint'); }
+        } catch (err) { showToast.error(err.response?.data?.message || 'Failed to close sprint'); }
     };
 
 

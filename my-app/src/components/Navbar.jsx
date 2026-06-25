@@ -30,15 +30,16 @@ const Navbar = ({ collapsed, onToggle, title }) => {
     return (
         <header className={`navbar${collapsed ? ' collapsed' : ''}`}>
             <div className="navbar-left">
-                <button className="navbar-toggle" onClick={onToggle} title={collapsed ? "Expand sidebar" : "Collapse sidebar"}>
+                <button className="navbar-toggle" onClick={onToggle} title={collapsed ? "Expand sidebar" : "Collapse sidebar"} aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}>
                     {collapsed ? <Menu size={20} /> : <PanelLeftClose size={20} />}
                 </button>
                 {showBackButton && (
                     <button 
                         onClick={() => navigate(-1)} 
-                        className="btn btn-secondary mr-3 flex items-center justify-center p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-800 border-none bg-transparent"
+                        className="btn btn-secondary"
                         title="Go Back"
-                        style={{ padding: '6px 12px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}
+                        aria-label="Go Back"
+                        style={{ marginRight: '12px', padding: '6px 12px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px', border: 'none', background: 'transparent' }}
                     >
                         <span>← Back</span>
                     </button>
@@ -46,7 +47,7 @@ const Navbar = ({ collapsed, onToggle, title }) => {
                 <h1 className="navbar-title">{title}</h1>
             </div>
             <div className="navbar-right">
-                <button className="navbar-icon-btn" title="Notifications" onClick={() => navigate('/notifications')}>
+                <button className="navbar-icon-btn" title="Notifications" aria-label="Notifications" onClick={() => navigate('/notifications')}>
                     <Bell size={20} />
                     {unreadCount > 0 && (
                         <span className="notification-badge">

@@ -6,6 +6,7 @@ import {
     Users, Shield, Bell, FileSearch, Activity, User, Building, Award
 } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
+import { getUser } from '../utils/user';
 
 const NAV_ITEMS = [
     {
@@ -50,7 +51,7 @@ const NAV_ITEMS = [
 const Sidebar = ({ collapsed, onToggle }) => {
     const navigate = useNavigate();
     const location = useLocation();
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const user = getUser();
     const userRole = (user.roleCode || user.role || '').toUpperCase();
 
     const handleLogout = () => {
@@ -130,14 +131,14 @@ const Sidebar = ({ collapsed, onToggle }) => {
                                 {user.fullName ? user.fullName[0].toUpperCase() : 'U'}
                             </div>
                         )}
-                        <div>
+                        <div className="sidebar-user-text">
                             <div className="sidebar-user-name">{user.fullName || 'User'}</div>
                             <div className="sidebar-user-role">{user.designationName || user.roleName || 'Employee'}</div>
                         </div>
                     </div>
                 )}
                 <ThemeToggle collapsed={collapsed} />
-                <button className="sidebar-nav-item" onClick={handleLogout} title="Logout">
+                <button className="sidebar-nav-item" onClick={handleLogout} title="Logout" aria-label="Logout">
                     <LogOut size={18} />
                     {!collapsed && <span>Logout</span>}
                 </button>

@@ -12,13 +12,7 @@ const ThemeToggle = ({ collapsed }) => {
         localStorage.setItem('theme', theme);
     }, [isDark]);
 
-    // Initialize on mount
-    React.useEffect(() => {
-        const saved = localStorage.getItem('theme');
-        if (saved === 'dark') {
-            document.documentElement.setAttribute('data-theme', 'dark');
-        }
-    }, []);
+
 
     return (
         <button

@@ -20,6 +20,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import jakarta.annotation.PostConstruct;
+
 import java.util.List;
 
 /**
@@ -174,7 +176,8 @@ public class MasterDataService {
         createValueIfNotExists(wiStatus, "BACKLOG", "Backlog", 1, true);
         createValueIfNotExists(wiStatus, "OPEN", "Open", 2, false);
         createValueIfNotExists(wiStatus, "IN_PROGRESS", "In Progress", 3, false);
-        createValueIfNotExists(wiStatus, "DONE", "Done", 4, false);
+        createValueIfNotExists(wiStatus, "IN_REVIEW", "In Review", 4, false);
+        createValueIfNotExists(wiStatus, "DONE", "Done", 5, false);
 
         // === Work item types (TASK, BUG, TEST_CASE) ===
         MasterType wiType = createTypeIfNotExists(org, "WORK_ITEM_TYPE", "Work Item Type");
@@ -360,6 +363,31 @@ public class MasterDataService {
             rolePermissionRepository.save(RolePermission.builder()
                     .role(role).feature(feature.get()).action(action.get())
                     .allowed(allowed).createdBy(0L).build());
+        }
+    }
+
+    @PostConstruct
+    public void ensureInReviewStatusExists() {
+        log.info("Ensuring IN_REVIEW status exists for all organizations...");
+        try {
+            List<MasterType> types = typeRepository.findAll();
+            for (MasterType type : types) {
+                if ("WORK_ITEM_STATUS".equals(type.getCode())) {
+                    if (valueRepository.findByMasterTypeIdAndCode(type.getId(), "IN_REVIEW").isEmpty()) {
+                        valueRepository.save(MasterValue.builder()
+                                .masterType(type)
+                                .code("IN_REVIEW")
+                                .displayName("In Review")
+                                .sortOrder(4)
+                                .isDefault(false)
+                                .active(true)
+                                .build());
+                        log.info("Added IN_REVIEW status for organization {}", type.getOrganization().getId());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.error("Failed to ensure IN_REVIEW status: {}", e.getMessage());
         }
     }
 }

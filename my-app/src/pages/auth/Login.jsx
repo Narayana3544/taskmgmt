@@ -16,7 +16,7 @@ const Login = ({ onLogin }) => {
 
         try {
             const res = await api.post('/api/auth/login', { email, password });
-            console.log('Login response:', res.data);
+
 
             // Handle different response structures from backend
             const userData = res.data?.data || res.data;

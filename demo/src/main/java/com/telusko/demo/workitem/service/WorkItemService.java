@@ -21,7 +21,9 @@ import com.telusko.demo.workitem.repository.WorkItemCommentRepository;
 import com.telusko.demo.workitem.repository.WorkItemHistoryRepository;
 import com.telusko.demo.workitem.repository.WorkItemRepository;
 import com.telusko.demo.sprint.repository.SprintWorkItemRepository;
+import com.telusko.demo.sprint.repository.SprintRepository;
 import com.telusko.demo.sprint.entity.SprintWorkItem;
+import com.telusko.demo.sprint.entity.Sprint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -59,6 +61,7 @@ public class WorkItemService {
     private final AuditService auditService;
     private final NotificationService notificationService;
     private final SprintWorkItemRepository sprintWorkItemRepository;
+    private final SprintRepository sprintRepository;
 
     public WorkItemService(WorkItemRepository workItemRepository,
             WorkItemCommentRepository commentRepository,
@@ -69,7 +72,8 @@ public class WorkItemService {
             PermissionService permissionService,
             AuditService auditService,
             NotificationService notificationService,
-            SprintWorkItemRepository sprintWorkItemRepository) {
+            SprintWorkItemRepository sprintWorkItemRepository,
+            SprintRepository sprintRepository) {
         this.workItemRepository = workItemRepository;
         this.commentRepository = commentRepository;
         this.historyRepository = historyRepository;
@@ -80,6 +84,7 @@ public class WorkItemService {
         this.auditService = auditService;
         this.notificationService = notificationService;
         this.sprintWorkItemRepository = sprintWorkItemRepository;
+        this.sprintRepository = sprintRepository;
     }
 
     // ==================== CREATE ====================
@@ -128,6 +133,24 @@ public class WorkItemService {
         workItem = workItemRepository.save(workItem);
 
         recordHistory(workItem, "CREATED", null, null, null, backlogStatus, userId);
+        // Handle sprint assignment
+        if (request.getSprintId() != null) {
+            Sprint sprint = sprintRepository.findById(request.getSprintId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Sprint", "id", request.getSprintId()));
+            
+            if ("CLOSED".equals(sprint.getStatus().getCode())) {
+                throw new BadRequestException("Cannot add work items to a CLOSED sprint");
+            }
+            
+            SprintWorkItem swi = SprintWorkItem.builder()
+                    .sprint(sprint)
+                    .workItem(workItem)
+                    .addedBy(userRepository.findById(userId).orElse(null))
+                    .addedAt(LocalDateTime.now())
+                    .build();
+            sprintWorkItemRepository.save(swi);
+        }
+
         auditService.logAction("WORK_ITEM", workItem.getId(), "CREATED", null, workItem.getTitle(), userId);
 
         // Notify assignee
@@ -253,6 +276,9 @@ public class WorkItemService {
                         userId);
             }
         }
+
+        // Handle sprint changes
+        handleSprintChange(workItem, request.getSprintId(), userId);
 
         workItem = workItemRepository.save(workItem);
         return mapToResponse(workItem);
@@ -609,5 +635,44 @@ public class WorkItemService {
                 .updatedById(w.getUpdatedBy())
                 .updatedByName(updatedByName)
                 .build();
+    }
+
+    private void handleSprintChange(WorkItem workItem, Long newSprintId, Long userId) {
+        List<SprintWorkItem> swiList = sprintWorkItemRepository.findActiveByWorkItemId(workItem.getId());
+        SprintWorkItem currentSwi = swiList.isEmpty() ? null : swiList.get(0);
+        Long currentSprintId = currentSwi != null ? currentSwi.getSprint().getId() : null;
+
+        // If no change, do nothing
+        if (newSprintId == null && currentSprintId == null) return;
+        if (newSprintId != null && newSprintId.equals(currentSprintId)) return;
+
+        User performer = userRepository.findById(userId).orElse(null);
+
+        // Remove from old sprint
+        if (currentSwi != null) {
+            currentSwi.setRemovedAt(LocalDateTime.now());
+            currentSwi.setRemovedBy(performer);
+            sprintWorkItemRepository.save(currentSwi);
+            auditService.logAction("SPRINT", currentSwi.getSprint().getId(), "ITEM_REMOVED", workItem.getTitle(), null, userId);
+        }
+
+        // Add to new sprint
+        if (newSprintId != null) {
+            Sprint newSprint = sprintRepository.findById(newSprintId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Sprint", "id", newSprintId));
+
+            if ("CLOSED".equals(newSprint.getStatus().getCode())) {
+                throw new BadRequestException("Cannot add work items to a CLOSED sprint");
+            }
+
+            SprintWorkItem newSwi = SprintWorkItem.builder()
+                    .sprint(newSprint)
+                    .workItem(workItem)
+                    .addedBy(performer)
+                    .addedAt(LocalDateTime.now())
+                    .build();
+            sprintWorkItemRepository.save(newSwi);
+            auditService.logAction("SPRINT", newSprintId, "ITEM_ADDED", null, workItem.getTitle(), userId);
+        }
     }
 }

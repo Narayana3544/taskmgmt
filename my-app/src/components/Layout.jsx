@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import Sidebar from './Sidebar';
 import Navbar from './Navbar';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 const Layout = ({ children, title = 'Dashboard' }) => {
+    useDocumentTitle(title);
     const [collapsed, setCollapsed] = useState(() => {
         const stored = localStorage.getItem('sidebar_collapsed');
         return stored === 'true';

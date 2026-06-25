@@ -25,7 +25,7 @@ export const usePermissions = (feature, action) => {
                 
                 // Admins typically have all permissions, but backend enforces it.
                 // We fetch the permissions for the user's role.
-                const storedPermsStr = localStorage.getItem('userPermissions');
+                const storedPermsStr = sessionStorage.getItem('userPermissions');
                 let perms = [];
                 
                 if (storedPermsStr) {
@@ -33,7 +33,7 @@ export const usePermissions = (feature, action) => {
                 } else {
                     const res = await api.get('/api/permissions', { params: { roleCode: user.roleCode || user.roleId }});
                     perms = res.data?.data || [];
-                    localStorage.setItem('userPermissions', JSON.stringify(perms));
+                    sessionStorage.setItem('userPermissions', JSON.stringify(perms));
                 }
                 
                 const permission = perms.find(p => p.feature === feature && p.action === action);

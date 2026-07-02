@@ -45,8 +45,40 @@ export default function EditProject() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Check if user is trying to close the project
+    const selectedStatusObj = statuses.find(s => s.id === parseInt(project.status));
+    const isClosing = selectedStatusObj && 
+      (selectedStatusObj.decription.toLowerCase() === 'closed' || selectedStatusObj.decription.toLowerCase() === 'completed');
+
+    if (isClosing) {
+      try {
+        const featuresRes = await api.get(`/features/project/${id}`, { withCredentials: true });
+        const sprintsRes = await api.get(`/project/sprints/${id}`, { withCredentials: true });
+        
+        const hasOpenFeatures = featuresRes.data.some(f => {
+          const stat = f.status?.decription?.toLowerCase() || '';
+          return stat !== 'closed' && stat !== 'completed';
+        });
+
+        const hasOpenSprints = sprintsRes.data.some(s => {
+          const stat = s.status?.toLowerCase() || '';
+          return stat !== 'closed' && stat !== 'completed';
+        });
+
+        if (hasOpenFeatures || hasOpenSprints) {
+          alert("Please close tasks, features, sprints first.");
+          return; // Stop submission
+        }
+      } catch (err) {
+        console.error("Error validating project closure:", err);
+        alert("Failed to validate project closure requirements.");
+        return;
+      }
+    }
+
     const payload = {
       name: project.name,
       description: project.description,
@@ -118,18 +150,10 @@ export default function EditProject() {
               ))}
             </select>
 
-            <div className="edit-buttons">
-              <button type="submit">Save</button>
-              <button type="button" onClick={handleDelete}>
-                Delete
-              </button>
-              <button
-                type="button"
-                className="cancel-btn"
-                onClick={() => navigate("/manage-projects")}
-              >
-                Back
-              </button>
+            <div className="btn-container full-width">
+              <button type="button" className="btn-global btn-secondary" onClick={() => navigate(-1)}>Back</button>
+              <button type="button" className="btn-global btn-danger" onClick={handleDelete}>Delete</button>
+              <button type="submit" className="btn-global btn-primary">Save</button>
             </div>
           </form>
         </div>

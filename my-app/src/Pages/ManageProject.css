@@ -16,53 +16,25 @@
 
 .manage-title {
   margin: 0;
-  font-size: 22px;
+  font-size: 24px;
   font-weight: bold;
 }
 
-.create-btn {
-  background-color: #1976d2;
-  color: white;
-  border: none;
-  padding: 10px 14px;
-  border-radius: 6px;
-  font-size: 14px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  transition: background 0.2s ease;
-}
-
-.create-btn:hover {
-  background-color: #125aa0;
-}
-
+/* Buttons will use .btn-global and .btn-primary from index.css */
 .search-bar {
   display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
 }
 
 .search-input {
   flex: 1;
   padding: 8px;
   font-size: 14px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-}
-
-.search-btn {
-  padding: 8px 12px;
-  background-color: #1976d2;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.search-btn:hover {
-  background-color: #125aa0;
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
 }
 
 .projects-table {
@@ -82,52 +54,27 @@
   color: white;
 }
 
-.projects-table button {
-  margin: 0 5px;
-  padding: 5px 10px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
 .status-tag {
   padding: 4px 10px;
-  border-radius: 5px;
+  border-radius: var(--border-radius-sm);
   font-size: 12px;
   font-weight: 500;
   text-transform: capitalize;
 }
 
 .status-tag.in-progress {
-  background-color: #ffe082;
-  color: #8d6e63;
+  background-color: var(--color-warning);
+  color: #fff;
 }
 
 .status-tag.completed {
-  background-color: #a5d6a7;
-  color: #2e7d32;
+  background-color: var(--color-success);
+  color: #fff;
 }
 
 .status-tag.pending {
-  background-color: #ffab91;
-  color: #bf360c;
-}
-
-.edit-btn {
-  background-color: #ffca28;
-  color: #333;
-  border: none;
-  padding: 6px 10px;
-  border-radius: 4px;
-  font-size: 13px;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.edit-btn:hover {
-  background-color: #f4b400;
+  background-color: var(--color-secondary);
+  color: #fff;
 }
 .action-buttons {
   display: flex;

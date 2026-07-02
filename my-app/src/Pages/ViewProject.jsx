@@ -178,6 +178,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from '../api';
+import { sortAlphabetically } from "../utils/sortUtils";
 import "./ViewProject.css";
 
 const ViewProject = () => {
@@ -207,7 +208,7 @@ const [userToUnassign, setUserToUnassign] = useState(null);
   const fetchAssignedUsers = () => {
     api
       .get(`/project/users/${id}`, { withCredentials: true })
-      .then((res) => setAssignedUsers(res.data))
+      .then((res) => setAssignedUsers(sortAlphabetically(res.data)))
       .catch((err) => console.error("Error fetching assigned users:", err));
   };
 
@@ -215,7 +216,7 @@ const [userToUnassign, setUserToUnassign] = useState(null);
   const fetchAllUsers = () => {
     api
       .get("/users", { withCredentials: true })
-      .then((res) => setAllUsers(res.data))
+      .then((res) => setAllUsers(sortAlphabetically(res.data)))
       .catch((err) => console.error("Error fetching all users:", err));
   };
 
@@ -275,11 +276,13 @@ const [userToUnassign, setUserToUnassign] = useState(null);
 
   if (!project) return <p>Loading project details...</p>;
 
+  // ✅ Filter out users that are already assigned
+  const availableUsers = allUsers.filter(
+    (user) => !assignedUsers.some((assigned) => assigned.id === user.id)
+  );
+
   return (
     <div className="view-project-page">
-
-
-    <button className="back-btn" onClick={() => navigate(-1)}>⬅ Back</button>
 
       <h2>Project Details</h2>
 
@@ -325,37 +328,37 @@ const [userToUnassign, setUserToUnassign] = useState(null);
         <p>No users assigned yet.</p>
       )}
 
-      <div className="btn-container">
-        <button
-          className="assign-btn"
-          onClick={() => setShowAssignForm((prev) => !prev)}
-        >
-          {showAssignForm ? "Cancel" : "Assign Users"}
-        </button>
-      </div>
 
       {showAssignForm && (
         <div className="assign-users-form">
           <h4>Select Users to Assign</h4>
           <div className="users-checkboxes">
-            {allUsers.map((user) => (
-              <label
-                key={user.id}
-                className={selectedUsers.includes(user.id) ? "selected" : ""}
-              >
-                <input
-                  type="checkbox"
-                  value={user.id}
-                  checked={selectedUsers.includes(user.id)}
-                  onChange={handleUserSelect}
-                />
-                {user.preffered_name}
-              </label>
-            ))}
+            {availableUsers.length > 0 ? (
+              availableUsers.map((user) => (
+                <label
+                  key={user.id}
+                  className={selectedUsers.includes(user.id) ? "selected" : ""}
+                >
+                  <input
+                    type="checkbox"
+                    value={user.id}
+                    checked={selectedUsers.includes(user.id)}
+                    onChange={handleUserSelect}
+                  />
+                  {user.preffered_name}
+                </label>
+              ))
+            ) : (
+              <p style={{ padding: "10px", fontStyle: "italic", color: "#666" }}>
+                All available users have already been assigned to this project.
+              </p>
+            )}
           </div>
           <button
             className="submit-btn"
             onClick={() => setShowConfirmPopup(true)} // 👈 trigger popup instead of direct assign
+            disabled={availableUsers.length === 0}
+            style={availableUsers.length === 0 ? { opacity: 0.5, cursor: "not-allowed" } : {}}
           >
             Assign Selected Users
           </button>
@@ -365,7 +368,7 @@ const [userToUnassign, setUserToUnassign] = useState(null);
       {/* ✅ Confirmation Popup */}
       {showConfirmPopup && (
         <div className="popup-overlay">
-          <div className="popup">
+          <div className="confirm-modal-box">
             <p>Are you sure you want to assign selected users?</p>
             <div className="popup-actions">
               <button className="confirm-btn" onClick={() => {
@@ -384,7 +387,7 @@ const [userToUnassign, setUserToUnassign] = useState(null);
       )}
       {showUnassignPopup && (
   <div className="popup-overlay">
-    <div className="popup">
+    <div className="confirm-modal-box">
       <p>Are you sure you want to unassign this user?</p>
       <div className="popup-actions">
         <button
@@ -408,7 +411,16 @@ const [userToUnassign, setUserToUnassign] = useState(null);
   </div>
 )}
 
-
+      <div className="btn-container full-width" style={{ marginTop: '20px' }}>
+        <button type="button" className="btn-global btn-secondary" onClick={() => navigate(-1)}>Back</button>
+        <button
+          type="button"
+          className="btn-global btn-primary"
+          onClick={() => setShowAssignForm((prev) => !prev)}
+        >
+          {showAssignForm ? "Cancel" : "Assign Users"}
+        </button>
+      </div>
     </div>
   );
 };

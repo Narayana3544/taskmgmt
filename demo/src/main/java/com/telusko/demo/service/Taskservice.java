@@ -59,7 +59,7 @@ public class Taskservice {
         return repo.save(Task);
     }
 
-    public task updateTask(int id, task newTaskData, MultipartFile attachment, String attachmentFlag) throws Exception {
+    public task updateTask(int id, task newTaskData, List<MultipartFile> attachments, String attachmentFlag) throws Exception {
         Optional<task> existingTaskOpt = repo.findById(id);
         if (existingTaskOpt.isEmpty()) throw new RuntimeException("Task not found");
 
@@ -70,6 +70,7 @@ public class Taskservice {
         existingTask.setDescription(newTaskData.getDescription());
         existingTask.setAcceptance_criteria(newTaskData.getAcceptance_criteria());
         existingTask.setStorypoints(newTaskData.getStorypoints());
+        existingTask.setComplexity(newTaskData.getComplexity());
         existingTask.setSprint(newTaskData.getSprint());
         existingTask.setFeature(newTaskData.getFeature());
         existingTask.setUser(newTaskData.getUser());
@@ -78,31 +79,40 @@ public class Taskservice {
         existingTask.setReportedTo(newTaskData.getReportedTo());
         existingTask.setStart_date(newTaskData.getStart_date());
         existingTask.setEnd_date(newTaskData.getEnd_date());
+        
+        String flag = newTaskData.getAttachment_flag();
+        existingTask.setAttachment_flag(flag);
 
-        // Handle attachment replacement
-        if (attachment != null && !attachment.isEmpty()) {
-            // Delete old file if exists
+        if ("No".equalsIgnoreCase(flag)) {
             if (existingTask.getAttachmentPath() != null) {
                 File oldFile = new File(existingTask.getAttachmentPath());
                 if (oldFile.exists()) oldFile.delete();
             }
+            existingTask.setAttachmentPath(null);
+            existingTask.setAttachmentName(null);
+            existingTask.setAttachmentType(null);
+        }
 
-            // Save new file
+        // Handle new attachments
+        if (attachments != null && !attachments.isEmpty() && "Yes".equalsIgnoreCase(flag)) {
             String uploadDir = System.getProperty("user.dir") + "/uploads/";
             File dir = new File(uploadDir);
             if (!dir.exists()) dir.mkdirs();
 
-            String fileName = UUID.randomUUID() + "_" + attachment.getOriginalFilename();
-            String filePath = uploadDir + fileName;
+            for (MultipartFile attachment : attachments) {
+                if (attachment.isEmpty()) continue;
+                String fileName = UUID.randomUUID() + "_" + attachment.getOriginalFilename();
+                String filePath = uploadDir + fileName;
 
-            attachment.transferTo(new File(filePath));
+                attachment.transferTo(new File(filePath));
 
-            existingTask.setAttachmentPath(filePath);
-            existingTask.setAttachmentName(attachment.getOriginalFilename());
-            existingTask.setAttachmentType(attachment.getContentType());
-
-            // Set flag to Yes if not already
-//            existingTask.setAttachmentFlag("Yes");
+                TaskAttachment ta = new TaskAttachment();
+                ta.setAttachmentPath(filePath);
+                ta.setAttachmentName(attachment.getOriginalFilename());
+                ta.setAttachmentType(attachment.getContentType());
+                ta.setTask(existingTask);
+                existingTask.getAttachments().add(ta);
+            }
         }
 
         return repo.save(existingTask);
@@ -135,8 +145,9 @@ public class Taskservice {
             String description,
             String acceptanceCriteria,
             Integer storypoints,
+            Integer complexity,
             String attachmentFlag,
-            MultipartFile attachment,
+            List<MultipartFile> attachments,
             Long featureId,
             Long sprintId,
             Long userId,
@@ -152,6 +163,7 @@ public class Taskservice {
         newTask.setDescription(description);
         newTask.setAcceptance_criteria(acceptanceCriteria);
         newTask.setStorypoints(storypoints);
+        newTask.setComplexity(complexity);
         newTask.setAttachment_flag(attachmentFlag);
         newTask.setStart_date(startDate);
         newTask.setEnd_date(endDate);
@@ -196,22 +208,25 @@ public class Taskservice {
             newTask.setTaskStatus(status);
         }
 
-        // Attachment (optional)
-        if ("Yes".equalsIgnoreCase(attachmentFlag) && attachment != null && !attachment.isEmpty()) {
-            // create uploads directory if not exists
+        // Attachments (optional)
+        if ("Yes".equalsIgnoreCase(attachmentFlag) && attachments != null && !attachments.isEmpty()) {
             String uploadDir = System.getProperty("user.dir") + "/uploads/";
             File dir = new File(uploadDir);
             if (!dir.exists()) dir.mkdirs();
 
-            // create unique file name
-            String fileName = UUID.randomUUID() + "_" + attachment.getOriginalFilename();
-            String filePath = uploadDir + fileName;
+            for (MultipartFile attachment : attachments) {
+                if (attachment.isEmpty()) continue;
+                String fileName = UUID.randomUUID() + "_" + attachment.getOriginalFilename();
+                String filePath = uploadDir + fileName;
+                attachment.transferTo(new File(filePath));
 
-            // save file to disk
-            attachment.transferTo(new File(filePath));
-
-            newTask.setAttachmentPath(filePath);
-            newTask.setAttachmentName(attachment.getOriginalFilename());
+                TaskAttachment ta = new TaskAttachment();
+                ta.setAttachmentPath(filePath);
+                ta.setAttachmentName(attachment.getOriginalFilename());
+                ta.setAttachmentType(attachment.getContentType());
+                ta.setTask(newTask);
+                newTask.getAttachments().add(ta);
+            }
         }
 
         return repo.save(newTask);
@@ -249,7 +264,7 @@ public List<task> findUnassignedTasks(int featureId) {
             List<task> alltasks=new ArrayList<>();
            alltasks.addAll(repo.findByFeature_id(f.getId()));
            for(task t:alltasks){
-               if(t.getTaskStatus().getDecription().equalsIgnoreCase("Backlog") || t.getTaskStatus().getDecription().equalsIgnoreCase("In Progress")){
+               if(t.getSprint() == null && (t.getTaskStatus().getDecription().equalsIgnoreCase("Backlog") || t.getTaskStatus().getDecription().equalsIgnoreCase("In Progress"))){
                    backlogTasks.add(t);
                }
            }
@@ -342,35 +357,16 @@ public List<task> findUnassignedTasks(int featureId) {
     }
 
     public List<task> viewActiveSprintTasksByUserId(int userId) {
-        // List<Project> projects=new ArrayList<>();
-        List<Team> new_team = teamRepository.findProjectsByUser_id(userId);
-        List<Feature> features = new ArrayList<>();
-        List<createsprint> sprints = new ArrayList<>();
-
-        List<task> tasks = new ArrayList<>();
-
-        for (Team f : new_team) {
-            features.addAll(featureRepo.findByProjectId(f.getProject().getId()));
-        }
-        for (Feature f : features) {
-            sprints.addAll(sprintRepo.findByFeatureId(f.getId()));
-        }
-        System.out.println("Teams: " + new_team.size());
-        System.out.println("Features: " + features.size());
-        System.out.println("Sprints: " + sprints.size());
-        for (createsprint s : sprints) {
-            System.out.println("Sprint " + s.getId() + " status = " + s.getStatus());
-            if (s.getStatus().equals("Active") || s.getStatus().equals("ACTIVE")) {
-                List<task> usertasks = new ArrayList<>();
-                usertasks.addAll(repo.findBySprint_id(s.getId()));
-                for (task t : usertasks) {
-                    if (t.getUser() != null && t.getUser().getId() == userId) {
-                        tasks.add(t);
-                    }
-                }
+        List<task> userTasks = repo.findByUser_Id(userId);
+        List<task> dashboardTasks = new ArrayList<>();
+        
+        for (task t : userTasks) {
+            // Include tasks that are in an Active sprint, or tasks that have no sprint (backlog)
+            if (t.getSprint() == null || t.getSprint().getStatus().equalsIgnoreCase("Active")) {
+                dashboardTasks.add(t);
             }
         }
-        return tasks;
+        return dashboardTasks;
     }
 
 
@@ -460,6 +456,20 @@ public List<task> findUnassignedTasks(int featureId) {
         clonedTask.setStart_date(LocalDateTime.now());
         clonedTask.setEnd_date(null); // fresh task, not completed yet
 
-        return repo.save(clonedTask);
+        task savedClone = repo.save(clonedTask);
+        
+        if (originalTask.getAttachments() != null && !originalTask.getAttachments().isEmpty()) {
+            for (TaskAttachment ta : originalTask.getAttachments()) {
+                TaskAttachment newTa = new TaskAttachment();
+                newTa.setAttachmentPath(ta.getAttachmentPath());
+                newTa.setAttachmentName(ta.getAttachmentName());
+                newTa.setAttachmentType(ta.getAttachmentType());
+                newTa.setTask(savedClone);
+                savedClone.getAttachments().add(newTa);
+            }
+            repo.save(savedClone);
+        }
+
+        return savedClone;
     }
 }

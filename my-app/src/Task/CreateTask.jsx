@@ -193,6 +193,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
+import { sortAlphabetically, sortLatestFirst } from "../utils/sortUtils";
 import "./TaskForm.css";
 
 export default function CreateTask() {
@@ -219,15 +220,16 @@ export default function CreateTask() {
   const [description, setDescription] = useState("");
   const [acceptanceCriteria, setAcceptanceCriteria] = useState("");
   const [storypoints, setStorypoints] = useState("");
+  const [complexity, setComplexity] = useState("");
   const [attachmentFlag, setAttachmentFlag] = useState("No");
-  const [attachmentFile, setAttachmentFile] = useState(null);
+  const [attachmentFiles, setAttachmentFiles] = useState([]);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
   // Fetch dropdown data
   useEffect(() => {
-    api.get("/projects", { withCredentials: true }).then(res => setProjects(res.data));
-    api.get("/users", { withCredentials: true }).then(res => setManagers(res.data));
+    api.get("/projects", { withCredentials: true }).then(res => setProjects(sortLatestFirst(res.data)));
+    api.get("/users", { withCredentials: true }).then(res => setManagers(sortAlphabetically(res.data)));
     api.get("/gettype", { withCredentials: true }).then(res => setTaskTypes(res.data));
     api.get("/getstatusForTask", { withCredentials: true }).then(res => setTaskStatuses(res.data));
   }, []);
@@ -237,12 +239,20 @@ export default function CreateTask() {
   if (selectedProject) {
     // Fetch features for selected project
     api.get(`/features/project/${selectedProject}`, { withCredentials: true })
-      .then(res => setFeatures(res.data))
+      .then(res => {
+        // Exclude features that are "Completed" or "DONE"
+        const activeFeatures = res.data.filter(f => 
+          f.status?.decription !== "Completed" && 
+          f.status?.decription !== "DONE" &&
+          f.status?.decription !== "Completed "
+        );
+        setFeatures(sortLatestFirst(activeFeatures));
+      })
       .catch(err => console.error(err));
 
     // Fetch users for selected project
     api.get(`/project/users/${selectedProject}`, { withCredentials: true })
-      .then(res => setUsers(res.data))
+      .then(res => setUsers(sortAlphabetically(res.data)))
       .catch(err => console.error(err));
   } else {
     setFeatures([]);
@@ -255,7 +265,7 @@ export default function CreateTask() {
   useEffect(() => {
     if (selectedProject) {
       api.get(`/project/activeSprints/${selectedProject}`, { withCredentials: true })
-        .then(res => setSprints(res.data))
+        .then(res => setSprints(sortLatestFirst(res.data)))
         .catch(err => console.error(err));
     } else {
       setSprints([]);
@@ -271,10 +281,17 @@ export default function CreateTask() {
     formData.append("description", description);
     formData.append("acceptance_criteria", acceptanceCriteria);
     formData.append("storypoints", storypoints ? Number(storypoints) : "");
+    formData.append("complexity", complexity ? Number(complexity) : "");
     formData.append("feature_id", selectedFeature ? Number(selectedFeature) : "");
     if (selectedSprint) formData.append("sprint_id", selectedSprint);
     formData.append("attachment_flag", attachmentFlag || "No");
-    if (attachmentFlag === "Yes" && attachmentFile) formData.append("attachment", attachmentFile);
+    
+    if (attachmentFlag === "Yes" && attachmentFiles.length > 0) {
+      attachmentFiles.forEach(file => {
+        formData.append("attachment", file);
+      });
+    }
+
     if (selectedUser) formData.append("user_id", selectedUser);
     if (reportedTo) formData.append("reportedTo", reportedTo);
     if (selectedTaskType) formData.append("taskType_id", selectedTaskType);
@@ -297,12 +314,10 @@ export default function CreateTask() {
 
   return (
     <form onSubmit={handleSubmit} className="task-form">
-      <button onClick={() => navigate(-1)} type="button" className="back-btn">Back</button>
-      <h2>Create Task</h2>
 
       {/* Project */}
       <div className="form-group">
-        <label>Project</label>
+        <label>Project<sup style={{color: "red"}}>*</sup></label>
         <select value={selectedProject} onChange={e => setSelectedProject(e.target.value)} required>
           <option value="">-- Select Project --</option>
           {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
@@ -311,7 +326,7 @@ export default function CreateTask() {
 
       {/* Feature */}
       <div className="form-group">
-        <label>Feature</label>
+        <label>Feature<sup style={{color: "red"}}>*</sup></label>
         <select value={selectedFeature} onChange={e => setSelectedFeature(e.target.value)} disabled={!selectedProject} required>
           <option value="">-- Select Feature --</option>
           {features.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
@@ -320,7 +335,7 @@ export default function CreateTask() {
 
       {/* Task Type */}
       <div className="form-group">
-        <label>Task Type</label>
+        <label>Task Type<sup style={{color: "red"}}>*</sup></label>
         <select value={selectedTaskType} onChange={e => setSelectedTaskType(e.target.value)} required>
           <option value="">-- Select Task Type --</option>
           {taskTypes.map(tt => <option key={tt.id} value={tt.id}>{tt.description}</option>)}
@@ -329,7 +344,7 @@ export default function CreateTask() {
 
       {/* Task Status */}
       <div className="form-group">
-        <label>Task Status</label>
+        <label>Task Status<sup style={{color: "red"}}>*</sup></label>
         <select value={selectedTaskStatus} onChange={e => setSelectedTaskStatus(e.target.value)} required>
           <option value="">-- Select Task Status --</option>
           {taskStatuses.map(ts => <option key={ts.id} value={ts.id}>{ts.decription}</option>)}
@@ -338,46 +353,20 @@ export default function CreateTask() {
 
       {/* User Story */}
       <div className="form-group full-width">
-        <label>User Story</label>
-        <input type="text" value={userstory} onChange={e => setUserstory(e.target.value)} required />
+        <label>User Story<sup style={{color: "red"}}>*</sup></label>
+        <textarea value={userstory} onChange={e => setUserstory(e.target.value)} rows={1} maxLength={255} onDoubleClick={(e) => e.target.rows = e.target.rows === 1 ? 4 : 1} required />
       </div>
 
       {/* Description */}
-      <div className="form-group full-width">
+      <div className="form-group half-width">
         <label>Description</label>
-        <textarea value={description} onChange={e => setDescription(e.target.value)} rows={3} />
+        <textarea value={description} onChange={e => setDescription(e.target.value)} rows={1} maxLength={255} onDoubleClick={(e) => e.target.rows = e.target.rows === 1 ? 4 : 1} />
       </div>
 
       {/* Acceptance Criteria */}
-      <div className="form-group full-width">
+      <div className="form-group half-width">
         <label>Acceptance Criteria</label>
-        <textarea value={acceptanceCriteria} onChange={e => setAcceptanceCriteria(e.target.value)} rows={3} />
-      </div>
-
-      {/* Story Points */}
-      <div className="form-group">
-        <label>Story Points</label>
-        <input type="number" min="0" value={storypoints} onChange={e => setStorypoints(e.target.value)} />
-      </div>
-
-      {/* Sprint */}
-      <div className="form-group">
-        <label>Sprint (Optional)</label>
-        <select value={selectedSprint} onChange={e => setSelectedSprint(e.target.value)} disabled={!selectedFeature}>
-          <option value="">-- Select Sprint --</option>
-          {sprints.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-        </select>
-      </div>
-
-      {/* Start/End Dates */}
-      <div className="form-group">
-        <label>Start Date</label>
-        <input type="datetime-local" value={startDate} onChange={e => setStartDate(e.target.value)} />
-      </div>
-
-      <div className="form-group">
-        <label>End Date</label>
-        <input type="datetime-local" value={endDate} onChange={e => setEndDate(e.target.value)} />
+        <textarea value={acceptanceCriteria} onChange={e => setAcceptanceCriteria(e.target.value)} rows={1} maxLength={255} onDoubleClick={(e) => e.target.rows = e.target.rows === 1 ? 4 : 1} />
       </div>
 
       {/* User */}
@@ -398,6 +387,57 @@ export default function CreateTask() {
         </select>
       </div>
 
+      {/* Complexity */}
+      <div className="form-group">
+        <label>Complexity<sup style={{color: "red"}}>*</sup></label>
+        <input
+          type="number"
+          min="1"
+          max="5"
+          placeholder="(1 to 5)"
+          value={complexity}
+          onChange={(e) => {
+            let val = e.target.value;
+            if (val === "") {
+              setComplexity("");
+              return;
+            }
+            let intVal = parseInt(val, 10);
+            if (!isNaN(intVal)) {
+              if (intVal < 1) intVal = 1;
+              if (intVal > 5) intVal = 5;
+              setComplexity(intVal);
+            }
+          }}
+          required
+        />
+      </div>
+
+      {/* Story Points */}
+      <div className="form-group">
+        <label>Story Points<sup style={{color: "red"}}>*</sup></label>
+        <input type="number" min="1" value={storypoints} onChange={e => setStorypoints(e.target.value)}required />
+      </div>
+
+            {/* Start/End Dates */}
+      <div className="form-group">
+        <label>Start Date</label>
+        <input type="datetime-local" value={startDate} onChange={e => setStartDate(e.target.value)} />
+      </div>
+
+      <div className="form-group">
+        <label>End Date</label>
+        <input type="datetime-local" value={endDate} onChange={e => setEndDate(e.target.value)} />
+      </div>
+      {/* Sprint */}
+      <div className="form-group">
+        <label>Sprint (Optional)</label>
+        <select value={selectedSprint} onChange={e => setSelectedSprint(e.target.value)} disabled={!selectedFeature}>
+          <option value="">-- Select Sprint --</option>
+          {sprints.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+        </select>
+      </div>
+      
       {/* Attachment */}
       <div className="form-group">
         <label>Attachment Flag</label>
@@ -409,19 +449,30 @@ export default function CreateTask() {
 
       {attachmentFlag === "Yes" && (
         <div className="form-group full-width attachment-container">
-          <label>Attachment</label>
-          <input type="file" onChange={e => setAttachmentFile(e.target.files[0])} />
-          {attachmentFile && (
-            <div className="attachment-file">
-              <span>{attachmentFile.name}</span>
-              <button type="button" className="remove-btn" onClick={() => setAttachmentFile(null)}>✖</button>
+          <label>Attachments</label>
+          <input type="file" multiple onChange={e => {
+            const files = Array.from(e.target.files);
+            setAttachmentFiles(prev => [...prev, ...files]);
+            e.target.value = null; // reset input
+          }} />
+          {attachmentFiles.length > 0 && (
+            <div className="attachment-files-list">
+              {attachmentFiles.map((file, index) => (
+                <div key={index} className="attachment-file" style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '5px' }}>
+                  <span>📎 {file.name}</span>
+                  <button type="button" className="remove-btn" onClick={() => {
+                    setAttachmentFiles(prev => prev.filter((_, i) => i !== index));
+                  }}>✖</button>
+                </div>
+              ))}
             </div>
           )}
         </div>
       )}
 
       <div className="btn-container full-width">
-        <button type="submit">Create Task</button>
+        <button onClick={() => navigate(-1)} type="button" className="btn-global btn-secondary">Back</button>
+        <button type="submit" className="btn-global btn-primary">Create Task</button>
       </div>
     </form>
   );

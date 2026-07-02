@@ -48,13 +48,6 @@
   background-color: #f9fafb;
 }
 
-/* Buttons container */
-.btn-container {
-  margin-top: 20px;
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-}
 
 /* Buttons */
 .assign-btn,
@@ -226,11 +219,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 999;
+  z-index: 10000;
 }
 
 /* Popup Box */
-.popup {
+.confirm-modal-box {
+  position: relative;
   background: #fff;
   padding: 20px 25px;
   border-radius: 12px;
@@ -239,7 +233,7 @@
   box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
 }
 
-.popup p {
+.confirm-modal-box p {
   font-size: 15px;
   margin-bottom: 20px;
   color: #333;

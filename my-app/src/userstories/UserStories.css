@@ -4,17 +4,19 @@
   max-width: 800px;
   /* margin: 0 auto; */
   margin-left: 140px;
-  padding: 2rem;
-  background-color: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  padding: var(--spacing-lg);
+  background-color: var(--bg-secondary);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--box-shadow-md);
+  color: var(--text-primary);
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  border: 1px solid var(--border-color);
 }
 
 .user-stories-container h2 {
   text-align: center;
   margin-bottom: 1.5rem;
-  color: #7de45e;
+  color: var(--color-primary);
 }
 
 .user-stories-form {
@@ -31,25 +33,25 @@
 .user-stories-form label {
   font-weight: 600;
   margin-bottom: 0.4rem;
-  color: #444;
+  color: var(--text-secondary);
 }
 
 .user-stories-form input,
 .user-stories-form textarea,
 .user-stories-form select {
   padding: 0.6rem 1rem;
-  border: 1px solid #ccc;
-  border-radius: 6px;
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
   font-size: 1rem;
   outline: none;
-  background-color: #f9f9f9;
 }
 
 .user-stories-form input:focus,
 .user-stories-form textarea:focus,
 .user-stories-form select:focus {
-  border-color: #4a90e2;
-  background-color: #fff;
+  border-color: var(--color-primary);
 }
 
 .user-stories-form .user-search {
@@ -58,18 +60,4 @@
   gap: 0.5rem;
 }
 
-.submit-btn {
-  background-color: #4a90e2;
-  color: #fff;
-  padding: 0.8rem 1.2rem;
-  border: none;
-  border-radius: 8px;
-  font-size: 1rem;
-  cursor: pointer;
-  align-self: flex-start;
-  transition: background-color 0.3s;
-}
-
-.submit-btn:hover {
-  background-color: #357ABD;
-}
+/* submit-btn removed as it will inherit btn-global */

@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -24,6 +25,9 @@ public class BugService {
     public TaskRepository taskRepository;
 
     @Autowired
+    public createsprintrepo sprintRepo;
+
+    @Autowired
     public Priorityrepo priorityRepository;
 
     @Autowired
@@ -35,7 +39,6 @@ public class BugService {
     @Autowired
     public profilerepo userdetails;
 
-    //    public Bug createBug(int taskId, String title, String description, int priorityId, Integer statusId, int assignedToId, List<MultipartFile> attachments, String name) {
     public Bug createBug(
             int taskId,
             String title,
@@ -43,6 +46,10 @@ public class BugService {
             int priorityId,
             Integer statusId,
             int assignedToId,
+            Integer sprintId,
+            Integer storypoints,
+            Integer complexity,
+            LocalDate targetDate,
             List<MultipartFile> attachments,
             int reporter
     ) {
@@ -71,6 +78,13 @@ public class BugService {
         User reportedUser = userdetails.findById(reporter)
                 .orElseThrow(() -> new RuntimeException("Reporter not found"));
 
+        // Get Sprint (optional)
+        createsprint sprintEntity = null;
+        if (sprintId != null) {
+            sprintEntity = sprintRepo.findById(sprintId)
+                    .orElseThrow(() -> new RuntimeException("Sprint not found"));
+        }
+
         // Create bug
         Bug bug = new Bug();
         bug.setTask(taskEntity);
@@ -80,6 +94,10 @@ public class BugService {
         bug.setStatus(status);
         bug.setReportedUser(reportedUser);
         bug.setAssignedUser(assignedUser);
+        bug.setSprint(sprintEntity);
+        bug.setStorypoints(storypoints);
+        bug.setComplexity(complexity);
+        bug.setTargetDate(targetDate);
 
         Bug savedBug = repo.save(bug);
 
@@ -104,6 +122,17 @@ public class BugService {
 
     public List<Bug> viewbugsByUserId(int userId) {
         return repo.findByAssignedUser_Id(userId);
+    }
+
+    public Bug updateBugStatus(int bugId, int statusId) {
+        Bug bug = repo.findById(bugId).orElseThrow(() -> new RuntimeException("Bug not found"));
+        Task_status status = taskStatusRepository.findById(statusId).orElseThrow(() -> new RuntimeException("Status not found"));
+        bug.setStatus(status);
+        return repo.save(bug);
+    }
+
+    public List<Bug> getBugsBySprint(int sprintId) {
+        return repo.findBySprintId(sprintId);
     }
 
     @Transactional(readOnly = true)

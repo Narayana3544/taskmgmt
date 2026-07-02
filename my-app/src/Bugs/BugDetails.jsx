@@ -29,7 +29,6 @@ export default function BugDetails() {
 
 return (
   <div className="bug-details">
-     <button className="back-btn" onClick={() => navigate(-1)}>⬅ Back</button>
     <div className="bug-card">
       <div className="bug-header">
         <h2>Bug #{bug.id} - {bug.title}</h2>
@@ -73,6 +72,10 @@ return (
         ) : (
           <p>No attachments</p>
         )}
+      </div>
+
+      <div className="btn-container full-width" style={{ marginTop: '20px' }}>
+        <button type="button" className="btn-global btn-secondary" onClick={() => navigate(-1)}>Back</button>
       </div>
     </div>
   </div>

@@ -1,10 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import api from "../api";
+import { FaEdit } from 'react-icons/fa';
 import "./DailyTimeSheet.css";
 
 export default function EditAnyTimesheet() {
   const { userId, date: dateParam } = useParams();
+  const [searchParams] = useSearchParams();
+  const userName = searchParams.get("name") || `User #${userId}`;
+  const navigate = useNavigate();
 
   const [entries, setEntries] = useState([]);
   const [tasks, setTasks] = useState([]);
@@ -178,9 +182,11 @@ const handleEdit = (entry) => {
 
   return (
     <div className="timesheet-container">
-      <h2>
-        Edit Timesheet for User #{userId} ({normalizedDate})
-      </h2>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+        <h2 style={{ margin: 0 }}>
+          Edit Timesheet for {userName} ({normalizedDate})
+        </h2>
+      </div>
 
       <div className="timesheet-form">
         <input type="time" name="startTime" value={form.startTime} onChange={handleChange} />
@@ -221,14 +227,17 @@ const handleEdit = (entry) => {
           onChange={handleChange}
         />
 
-        {editingId ? (
-          <>
-            <button onClick={handleUpdate}>Update</button>
-            <button onClick={resetForm}>Cancel</button>
-          </>
-        ) : (
-          <button onClick={handleAdd}>+ Add</button>
-        )}
+        <div className="btn-container full-width" style={{ marginTop: '10px' }}>
+          <button className="btn-global btn-secondary" onClick={() => navigate(-1)}>Back</button>
+          {editingId ? (
+            <>
+              <button className="btn-global btn-secondary" onClick={resetForm}>Cancel</button>
+              <button className="btn-global btn-primary" onClick={handleUpdate}>Update</button>
+            </>
+          ) : (
+            <button className="btn-global btn-primary" onClick={handleAdd}>+ Add</button>
+          )}
+        </div>
       </div>
 
       <table className="timesheet-table">
@@ -244,7 +253,9 @@ const handleEdit = (entry) => {
             <tr key={e.id}>
               <td>{e.start_time || "-"}</td>
               <td>{e.end_time || "-"}</td>
-              <td>{e.task?.userstory || "-"}</td>
+              <td style={{ maxWidth: '300px', whiteSpace: 'normal', wordWrap: 'break-word', overflowWrap: 'anywhere' }}>
+                {e.task?.userstory || "-"}
+              </td>
               <td>{e.workType?.description || "-"}</td>
               <td>{e.description}</td>
               <td>
@@ -253,7 +264,15 @@ const handleEdit = (entry) => {
                   : "-"}
               </td>
               <td>
-                <button onClick={() => handleEdit(e)}>Edit</button>
+                <div className="action-buttons">
+                  <div className="tooltip">
+                    <FaEdit
+                      className="icon-btn edit-icon"
+                      onClick={() => handleEdit(e)}
+                    />
+                    <span className="tooltip-text">Edit</span>
+                  </div>
+                </div>
               </td>
             </tr>
           ))}

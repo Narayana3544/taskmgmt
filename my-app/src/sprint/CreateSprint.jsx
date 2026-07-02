@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import api from "../api";
 import "./CreateSprint.css";
 import { useNavigate } from "react-router-dom";
+import { sortLatestFirst } from "../utils/sortUtils";
 
 const CreateSprint = () => {
   const navigate = useNavigate();
@@ -23,7 +24,7 @@ const CreateSprint = () => {
   useEffect(() => {
     api
       .get("/projects", { withCredentials: true })
-       .then((res) => setProjects(res.data))
+       .then((res) => setProjects(sortLatestFirst(res.data)))
       .catch((err) => console.error("❌ Error fetching projects:", err));
   }, []);
 
@@ -40,7 +41,7 @@ const CreateSprint = () => {
 
     api
       .get(`/features/project/${projectId}`, { withCredentials: true })
-      .then((res) => setFeatures(res.data))
+      .then((res) => setFeatures(sortLatestFirst(res.data)))
       .catch((err) => {
         console.error("❌ Error fetching features:", err);
         setFeatures([]);
@@ -91,9 +92,6 @@ const CreateSprint = () => {
 
   return (
     <div className="create-sprint-container">
-      <button className="back-btn" onClick={() => navigate(-1)}>
-        ⬅ Back
-      </button>
 
       <h2>Create Sprint</h2>
 
@@ -188,9 +186,10 @@ const CreateSprint = () => {
           </select>
         </div>
 
-        <button type="submit" className="submit-btn">
-          Create Sprint
-        </button>
+        <div className="btn-container full-width" style={{ marginTop: '20px' }}>
+          <button type="button" className="btn-global btn-secondary" onClick={() => navigate(-1)}>Back</button>
+          <button type="submit" className="btn-global btn-primary">Create Sprint</button>
+        </div>
       </form>
     </div>
   );

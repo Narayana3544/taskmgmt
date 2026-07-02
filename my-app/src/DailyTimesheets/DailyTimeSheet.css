@@ -1,11 +1,11 @@
 .timesheet-container {
-    color: black;
+  color: var(--text-primary);
   max-width: 500px;
   margin: 20px auto;
-  padding: 20px;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  background-color: #f9fafb;
+  padding: var(--spacing-md);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  background-color: var(--bg-secondary);
 }
 
 .timesheet-form {
@@ -19,23 +19,14 @@
 .timesheet-form select,
 .timesheet-form textarea {
   padding: 8px;
-  border: 1px solid #cbd5e1;
-  border-radius: 4px;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border-radius: var(--border-radius-sm);
   flex: 1 1 150px;
 }
 
-.timesheet-form button {
-  background-color: #3b82f6;
-  color: white;
-  padding: 8px 16px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.timesheet-form button:hover {
-  background-color: #2563eb;
-}
+/* Redundant submit button stylings are removed to use global classes */
 
 .timesheet-table {
   width: 100%;
@@ -44,16 +35,17 @@
 
 .timesheet-table th,
 .timesheet-table td {
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--border-color);
   padding: 8px;
   text-align: left;
 }
 
 .timesheet-table th {
-  background-color: #e2e8f0;
+  background-color: var(--bg-tertiary);
+  color: var(--text-secondary);
 }
 
 .auto-leave {
-  background-color: #fee2e2;
-  color: #9f1239;
+  background-color: var(--color-danger);
+  color: #fff;
 }

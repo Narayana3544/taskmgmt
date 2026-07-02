@@ -13,5 +13,8 @@ public interface BugRepo extends JpaRepository<Bug,Integer> {
     @Query("SELECT b FROM Bug b WHERE b.Task.id = :taskId")
     List<Bug> findByTaskId(@Param("taskId") int taskId);
 
+    @Query("SELECT b FROM Bug b WHERE b.sprint.id = :sprintId OR (b.sprint IS NULL AND b.Task.sprint.id = :sprintId)")
+    List<Bug> findBySprintId(@Param("sprintId") int sprintId);
+
     List<Bug> findByAssignedUser_Id(int userId);
 }

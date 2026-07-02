@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import api from '../api';
 import Select from 'react-select';
 import './ManageSprints.css';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { sortLatestFirst } from "../utils/sortUtils";
 import { FaTasks, FaPlus, FaEye } from 'react-icons/fa';
 import { FaEdit } from "react-icons/fa";
 
@@ -15,43 +16,42 @@ const ManageSprints = () => {
   const [selectedFeature, setSelectedFeature] = useState(null);
   const [userName, setUserName] = useState('');
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  // ✅ Fetch all required data
+  // ✅ Fetch all required data and initialize from URL params
   useEffect(() => {
     fetchProjects();
     fetchSprints();
     fetchUser();
 
-    const storedProject = sessionStorage.getItem('selectedProject');
-    const storedFeature = sessionStorage.getItem('selectedFeature');
+    const urlProject = searchParams.get('project');
+    const urlFeature = searchParams.get('feature');
 
-    if (storedProject) {
-      const projObj = JSON.parse(storedProject);
-      setSelectedProject(projObj);
-      fetchFeatures(projObj.value);
-    }
-    if (storedFeature) {
-      setSelectedFeature(JSON.parse(storedFeature));
+    if (urlProject) {
+      // We only store IDs in URL, but react-select needs an object.
+      // We will set selectedProject when projects are loaded.
+      // So this is handled in another useEffect below.
     }
   }, []);
 
   const fetchProjects = () => {
     api.get('/projects', { withCredentials: true })
-      .then(res => setProjects(res.data))
+      .then(res => setProjects(sortLatestFirst(res.data)))
       .catch(err => console.error('Error fetching projects:', err));
   };
 
   const fetchFeatures = (projectId) => {
     api.get(`/features/project/${projectId}`, { withCredentials: true })
-      .then(res => setFeatures(res.data))
+      .then(res => setFeatures(sortLatestFirst(res.data)))
       .catch(err => console.error('Error fetching features:', err));
   };
 
   const fetchSprints = () => {
     api.get(`/sprints`, { withCredentials: true })
       .then(res => {
-        setSprints(res.data);
-        setFilteredSprints(res.data);
+        const sorted = sortLatestFirst(res.data);
+        setSprints(sorted);
+        setFilteredSprints(sorted);
       })
       .catch(err => console.error('Error fetching sprints:', err));
   };
@@ -65,6 +65,29 @@ const ManageSprints = () => {
   const projectOptions = projects.map(p => ({ value: p.id, label: p.name }));
   const featureOptions = features.map(f => ({ value: f.id, label: f.name }));
 
+  // ✅ Sync URL params with select state once projects/features are loaded
+  useEffect(() => {
+    const urlProject = searchParams.get('project');
+    if (urlProject && projects.length > 0) {
+      const pId = parseInt(urlProject);
+      const proj = projects.find(p => p.id === pId);
+      if (proj && (!selectedProject || selectedProject.value !== pId)) {
+        setSelectedProject({ value: proj.id, label: proj.name });
+      }
+    }
+  }, [projects, searchParams]);
+
+  useEffect(() => {
+    const urlFeature = searchParams.get('feature');
+    if (urlFeature && features.length > 0) {
+      const fId = parseInt(urlFeature);
+      const feat = features.find(f => f.id === fId);
+      if (feat && (!selectedFeature || selectedFeature.value !== fId)) {
+        setSelectedFeature({ value: feat.id, label: feat.name });
+      }
+    }
+  }, [features, searchParams]);
+
   useEffect(() => {
     if (selectedProject) {
       fetchFeatures(selectedProject.value);
@@ -74,31 +97,43 @@ const ManageSprints = () => {
     }
   }, [selectedProject]);
 
-  const handleSearch = () => {
+  // ✅ Auto-filter sprints whenever sprints, selectedProject, or selectedFeature change
+  useEffect(() => {
     if (!selectedProject) {
       setFilteredSprints([]);
       return;
     }
 
-    sessionStorage.setItem('selectedProject', JSON.stringify(selectedProject));
-    sessionStorage.setItem('selectedFeature', JSON.stringify(selectedFeature));
-
-    let tempSprints = sprints.filter(s => s.feature.project?.id === selectedProject.value);
+    let tempSprints = sprints.filter(s => s.feature?.project?.id === selectedProject.value);
 
     if (selectedFeature) {
       tempSprints = tempSprints.filter(s => s.feature?.id === selectedFeature.value);
     }
 
     setFilteredSprints(tempSprints);
+  }, [sprints, selectedProject, selectedFeature]);
+
+  const handleProjectChange = (option) => {
+    setSelectedProject(option);
+    setSelectedFeature(null); // Reset feature when project changes
+    if (option) {
+      searchParams.set('project', option.value);
+      searchParams.delete('feature');
+    } else {
+      searchParams.delete('project');
+      searchParams.delete('feature');
+    }
+    setSearchParams(searchParams);
   };
 
-  const handleReset = () => {
-    setSelectedProject(null);
-    setSelectedFeature(null);
-    setFeatures([]);
-    setFilteredSprints([]);
-    sessionStorage.removeItem('selectedProject');
-    sessionStorage.removeItem('selectedFeature');
+  const handleFeatureChange = (option) => {
+    setSelectedFeature(option);
+    if (option) {
+      searchParams.set('feature', option.value);
+    } else {
+      searchParams.delete('feature');
+    }
+    setSearchParams(searchParams);
   };
 
   // ✅ Check if sprint is completed or end date has passed
@@ -128,20 +163,18 @@ const ManageSprints = () => {
         <Select
           options={projectOptions}
           value={selectedProject}
-          onChange={option => setSelectedProject(option)}
+          onChange={handleProjectChange}
           isClearable
           placeholder="-- Select Project --"
         />
         <Select
           options={featureOptions}
           value={selectedFeature}
-          onChange={option => setSelectedFeature(option)}
+          onChange={handleFeatureChange}
           isClearable
           placeholder="-- Select Feature --"
           isDisabled={!features.length}
         />
-        <button className="search-btn" onClick={handleSearch}>Search</button>
-        {/* <button className="reset-btn" onClick={handleReset}>Reset</button> */}
       </div>
 
       {/* Table Section */}
@@ -192,33 +225,29 @@ const ManageSprints = () => {
                   <div className="action-buttons">
 
                     {/* View */}
-                    <button
-                      className="icon-small-btn"
-                      title="View Sprint"
-                      onClick={() => navigate(`/sprints/overview/${sprint.id}`)}
-                    >
-                      <FaEye />
-                    </button>
-
-                    {/* Edit */}
-                    <button
-                      className="icon-small-btn"
-                      title="Edit Sprint"
-                      onClick={() => navigate(`/edit-sprint/${sprint.id}`)}
-                    >
-                      <FaEdit />
-                    </button>
-                      {/* Assign Stories */}
-                    {!completed && (
+                    <div className="tooltip-container">
                       <button
                         className="icon-small-btn"
-                        title="Assign Tasks"
-                        onClick={() =>
-                          navigate(`/sprints/${sprint.id}/assign-stories/${sprint.feature?.id}`)
-                        }
+                        onClick={() => navigate(`/sprints/overview/${sprint.id}`)}
                       >
-                        <FaTasks />
+                        <FaEye />
                       </button>
+                      <span className="tooltip-text">View Sprint</span>
+                    </div>
+
+                    {/* Assign Stories */}
+                    {!completed && (
+                      <div className="tooltip-container">
+                        <button
+                          className="icon-small-btn"
+                          onClick={() =>
+                            navigate(`/sprints/${sprint.id}/assign-stories/${sprint.feature?.id}`)
+                          }
+                        >
+                          <FaTasks />
+                        </button>
+                        <span className="tooltip-text">Assign Tasks</span>
+                      </div>
                     )}
 
                   </div>

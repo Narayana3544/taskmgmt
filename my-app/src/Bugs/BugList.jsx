@@ -3,11 +3,11 @@ import { useParams, useNavigate } from "react-router-dom";
 import { FaEye } from "react-icons/fa";
 import api from "../api";
 import { ToastContainer, toast } from "react-toastify";
+import { sortLatestFirst } from "../utils/sortUtils";
 import "react-toastify/dist/ReactToastify.css";
 import "./BugList.css";
 
 export default function BugList() {
-  const { id } = useParams(); // taskId
   const navigate = useNavigate();
   const [bugs, setBugs] = useState([]);
   const [statuses, setStatuses] = useState([]);
@@ -15,8 +15,8 @@ export default function BugList() {
   useEffect(() => {
     const fetchBugs = async () => {
       try {
-        const res = await api.get(`/bugs/byTask/${id}`, { withCredentials: true });
-        setBugs(res.data);
+        const res = await api.get(`/view-bugs`, { withCredentials: true });
+        setBugs(sortLatestFirst(res.data));
       } catch (err) {
         console.error("Error fetching bugs:", err);
       }
@@ -33,12 +33,12 @@ export default function BugList() {
 
     fetchBugs();
     fetchStatuses();
-  }, [id]);
+  }, []);
 
   // Handle status change
   const handleStatusChange = async (bugId, newStatusId) => {
     try {
-      await api.put(`/bugs/${bugId}/status?statusId=${newStatusId}`, null, { withCredentials: true });
+      await api.put(`/bugs/${bugId}/status/${newStatusId}`, null, { withCredentials: true });
 
       // Update local state
       setBugs((prevBugs) =>
@@ -58,10 +58,11 @@ export default function BugList() {
   return (
     <div className="features-list-page">
       <ToastContainer position="top-right" autoClose={3000} hideProgressBar />
-      <button className="back-btn" onClick={() => navigate(-1)}>⬅ Back</button>
       <div className="task-table-container">
         <div className="table-wrapper">
-          <h2>Bugs for Task #{id}</h2>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h2>All Bugs</h2>
+          </div>
           <table className="bug-table">
             <thead>
               <tr>
@@ -85,10 +86,11 @@ export default function BugList() {
                     <select
                       value={bug.status?.id || ""}
                       onChange={(e) => handleStatusChange(bug.id, e.target.value)}
+                      style={{ padding: "4px 8px", borderRadius: "4px", border: "1px solid #ccc" }}
                     >
                       {statuses.map((s) => (
                         <option key={s.id} value={s.id}>
-                          {s.description || s.name}
+                          {s.decription || s.description || s.name}
                         </option>
                       ))}
                     </select>
@@ -97,12 +99,22 @@ export default function BugList() {
                   <td>{bug.reportedUser?.first_name || bug.reportedUser?.name}</td>
                   <td>{new Date(bug.createdAt).toLocaleString()}</td>
                   <td>
-                    <button onClick={() => navigate(`/bug/${bug.id}`)}> <FaEye /> </button>
+                    <div className="action-buttons">
+                      <div className="tooltip">
+                        <button className="icon-btn" onClick={() => navigate(`/bug/${bug.id}`)}>
+                          <FaEye />
+                        </button>
+                        <span className="tooltip-text">View Bug</span>
+                      </div>
+                    </div>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+        </div>
+        <div className="btn-container full-width" style={{ marginTop: '20px', display: 'flex', justifyContent: 'flex-end' }}>
+          <button className="btn-global btn-primary" onClick={() => navigate('/create-bug')}>➕ Create Bug</button>
         </div>
       </div>
     </div>

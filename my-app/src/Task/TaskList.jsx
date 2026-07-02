@@ -6,6 +6,7 @@ import "./TaskList.css";
 import { FaEdit, FaPlus, FaEye, FaDownload } from "react-icons/fa";
 import { useDebounce } from "use-debounce";
 import * as XLSX from "xlsx";
+import { sortLatestFirst, sortAlphabetically } from "../utils/sortUtils";
 
 export default function TaskList() {
 
@@ -76,7 +77,7 @@ export default function TaskList() {
   const fetchProjects = async () => {
     try {
       const res = await api.get("/projects", { withCredentials: true });
-      setProjects(res.data);
+      setProjects(sortLatestFirst(res.data));
     } catch (err) {
       console.error(err);
     }
@@ -94,7 +95,7 @@ export default function TaskList() {
   const fetchFeatures = async (projectId) => {
     try {
       const res = await api.get(`/features/project/${projectId}`, { withCredentials: true });
-      setFeatures(res.data);
+      setFeatures(sortLatestFirst(res.data));
     } catch {
       setFeatures([]);
     }
@@ -103,7 +104,7 @@ export default function TaskList() {
   const fetchSprints = async (projectId) => {
     try {
       const res = await api.get(`/project/sprints/${projectId}`, { withCredentials: true });
-      setSprints(res.data);
+      setSprints(sortLatestFirst(res.data));
     } catch {
       setSprints([]);
     }
@@ -112,7 +113,7 @@ export default function TaskList() {
   const fetchUsers = async (projectId) => {
     try {
       const res = await api.get(`/project/users/${projectId}`, { withCredentials: true });
-      setUsers(res.data);
+      setUsers(sortAlphabetically(res.data));
     } catch {
       setUsers([]);
     }
@@ -122,7 +123,7 @@ export default function TaskList() {
     setLoading(true);
     try {
       const res = await api.get(`/viewTaskByProjectId/${projectId}`, { withCredentials: true });
-      setTasks(res.data);
+      setTasks(sortLatestFirst(res.data));
       setCurrentPage(0);
     } catch {
       setError("Failed to load tasks.");
@@ -385,25 +386,33 @@ export default function TaskList() {
               currentTasks.map((task) => (
                 <tr key={task.id}>
 
-                  <td>{task.userstory || "-"}</td>
+                  <td style={{ maxWidth: '250px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={task.userstory}>
+                    {task.userstory || "-"}
+                  </td>
                   <td>{task.storypoints ?? "-"}</td>
                   <td>{task.sprint?.name || "-"}</td>
                   <td>{task.feature?.name || "-"}</td>
                   <td>{task.user?.first_name || "-"}</td>
                   <td>{task.taskType?.description || "-"}</td>
-                  <td>{task.taskStatus?.description || "-"}</td>
+                  <td>{task.taskStatus?.decription || "-"}</td>
                   <td>{task.start_date ? new Date(task.start_date).toLocaleDateString() : "-"}</td>
 
                   <td>
                     <div className="action-buttons">
 
-                      <button className="icon-btn" onClick={() => navigate(`/task/${task.id}`)}>
-                        <FaEye />
-                      </button>
+                      <div className="tooltip">
+                        <button className="icon-btn" onClick={() => navigate(`/task/${task.id}`)}>
+                          <FaEye />
+                        </button>
+                        <span className="tooltip-text">View Task</span>
+                      </div>
 
-                      <button className="icon-btn" onClick={() => navigate(`/edit-task/${task.id}`)}>
-                        <FaEdit />
-                      </button>
+                      <div className="tooltip">
+                        <button className="icon-btn" onClick={() => navigate(`/edit-task/${task.id}`)}>
+                          <FaEdit />
+                        </button>
+                        <span className="tooltip-text">Edit Task</span>
+                      </div>
 
                     </div>
                   </td>

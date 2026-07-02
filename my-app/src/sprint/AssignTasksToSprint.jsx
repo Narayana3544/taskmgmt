@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams,useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import api from '../api';
+import { sortLatestFirst } from "../utils/sortUtils";
 import "./AssignTasksToSprint.css";
 
 export default function AssignTaskToSprint() {
@@ -23,7 +24,8 @@ export default function AssignTaskToSprint() {
         `/tasks/unassigned-toSprint/${featureId}`,
         { withCredentials: true }
       );
-      setTasks(res.data);
+      const unassignedOnly = res.data.filter(task => !task.sprint);
+      setTasks(sortLatestFirst(unassignedOnly));
     } catch (err) {
       console.error("Error fetching tasks:", err);
       setError("Failed to load unassigned tasks.");
@@ -52,8 +54,12 @@ export default function AssignTaskToSprint() {
 
    api.put(`/sprints/${sprintId}/assign-tasks`, selectedTasks,{withCredentials:true})
   .then(() => {
-    window.alert("Tasks assigned successfully!");
-    fetchUnassignedTasks(); // refresh
+    toast.success("Tasks assigned successfully!");
+    setTasks(prev => prev.filter(t => !selectedTasks.includes(t.id)));
+    setSelectedTasks([]);
+    setTimeout(() => {
+      navigate(-1); // Navigate back to the previous sprint page
+    }, 1000);
   })
   .catch(err => {
     console.error("Error assigning tasks:", err);
@@ -66,12 +72,13 @@ export default function AssignTaskToSprint() {
   if (error) return <p>{error}</p>;
 
   return (
-    <div className="assign-task-container">
-      <button className="back-btn" onClick={() => navigate(-1)}>⬅ Back</button>
-      <h2>Assign Tasks to Sprint</h2>
+    <div className="features-list-page">
+      <div className="task-table-container">
+        <div className="table-wrapper">
+          <h2>Assign Tasks to Sprint</h2>
 
-      <table className="task-table">
-        <thead>
+          <table className="features-table">
+            <thead>
           <tr>
             <th>Select</th>
             <th>ID</th>
@@ -93,7 +100,9 @@ export default function AssignTaskToSprint() {
                   />
                 </td>
                 <td>{task.id}</td>
-                <td>{task.userstory || "-"}</td>
+                <td style={{ maxWidth: '250px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={task.userstory}>
+                  {task.userstory || "-"}
+                </td>
                 <td>{task.storypoints ?? "-"}</td>
                 <td>{task.user?.first_name || "-"}</td>
                 <td>{task.reportedTo?.first_name || "-"}</td>
@@ -109,13 +118,18 @@ export default function AssignTaskToSprint() {
         </tbody>
       </table>
 
-      <button
-        className="assign-btn"
-        onClick={assignTasks}
-        disabled={selectedTasks.length === 0}
-      >
-        Assign Selected Tasks
-      </button>
+      <div className="btn-container full-width" style={{ marginTop: '20px' }}>
+        <button type="button" className="btn-global btn-secondary" onClick={() => navigate(-1)}>Back</button>
+        <button
+          className="btn-global btn-primary"
+          onClick={assignTasks}
+          disabled={selectedTasks.length === 0}
+        >
+          Assign Selected Tasks
+        </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

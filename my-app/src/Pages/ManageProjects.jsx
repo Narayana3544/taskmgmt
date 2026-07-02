@@ -3,6 +3,7 @@ import api from '../api';
 import './ManageProject.css';
 import { FaEdit, FaPlus, FaUsers, FaListUl } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import { sortLatestFirst } from "../utils/sortUtils";
 
 export default function ManageProjects() {
   const [projects, setProjects] = useState([]);
@@ -12,14 +13,12 @@ export default function ManageProjects() {
   useEffect(() => {
     fetchProjects();
   }, []);
-
   const fetchProjects = () => {
     api
       .get('/projects', { withCredentials: true })
-      .then((res) => setProjects(res.data))
+      .then((res) => setProjects(sortLatestFirst(res.data)))
       .catch((err) => console.error('Error fetching projects:', err));
   };
-
   const filteredProjects = Array.isArray(projects)
     ? projects.filter((project) => {
         const search = searchTerm.toLowerCase();
@@ -30,31 +29,26 @@ export default function ManageProjects() {
         );
       })
     : [];
-
   return (
     <div className="manage-projects-page">
-      <div className="manage-container">
-        <div className="manage-header">
-          <h1 className="manage-title">Projects</h1>
+      <div className="manage-header">
+        <h2 className="manage-title">Projects</h2>
           <button
-            className="create-btn"
+            className="btn-global btn-primary"
             onClick={() => navigate('/create-project')}
           >
             <FaPlus /> Create Project
-          </button>
-        </div>
-
-        {/* 🔍 Search */}
+        </button>
+      </div>
         <div className="search-bar">
           <input
             type="text"
             placeholder="Search by name or ID"
-            className="search-input"
+            className="form-control-global"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-
         <table className="projects-table">
           <thead>
             <tr>
@@ -126,7 +120,6 @@ export default function ManageProjects() {
             )}
           </tbody>
         </table>
-      </div>
     </div>
   );
 }

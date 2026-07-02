@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { FaEye } from "react-icons/fa";
 import api from '../api';
 import "./UserSprints.css";
 
@@ -177,11 +178,11 @@ export default function UserSprints() {
                 <thead>
                   {activeTab[sprint.id] === "all" ? (
                     <tr>
-                      <th>ID</th>
+                      <th style={{ whiteSpace: 'nowrap', width: '1%' }}>ID</th>
                       <th>Task</th>
                       <th>Description</th>
-                      <th>Assigned To</th>
-                      <th>Action</th>
+                      <th style={{ whiteSpace: 'nowrap', width: '1%' }}>Assigned To</th>
+                      <th style={{ whiteSpace: 'nowrap', width: '1%' }}>Action</th>
                     </tr>
                   ) : (
                     <tr>
@@ -208,11 +209,11 @@ export default function UserSprints() {
                     currentTasks.map((task) =>
                       activeTab[sprint.id] === "all" ? (
                         <tr key={task.id}>
-                          <td >{task.id}</td>
+                          <td style={{ whiteSpace: 'nowrap', width: '1%' }}>{task.id}</td>
                           <td>{task.userstory}</td>
                           <td>{task.description}</td>
-                          <td>{task.user?.first_name || "-"}</td>
-                          <td>
+                          <td style={{ whiteSpace: 'nowrap', width: '1%' }}>{task.user?.first_name || "-"}</td>
+                          <td style={{ whiteSpace: 'nowrap', width: '1%' }}>
                             {task.user ? (
                               task.user.id === currentUser?.id ? (
                                 <button
@@ -239,7 +240,9 @@ export default function UserSprints() {
                       ) : (
                         <tr key={task.id}>
                           <td >{task.id}</td>
-                          <td>{task.userstory || "-"}</td>
+                          <td style={{ maxWidth: '250px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={task.userstory}>
+                        {task.userstory || "-"}
+                      </td>
                           <td>{task.storypoints ?? "-"}</td>
                           <td>{task.sprint?.sprintName || task.sprint?.name || "-"}({task.sprint.status})</td>
                           <td>{task.feature?.name || "-"}</td>
@@ -259,9 +262,11 @@ export default function UserSprints() {
                           </td>
                           <td>{task.start_date ? new Date(task.start_date).toLocaleDateString() : "-"}</td>
                           <td>
-                            <button className="view-btn" onClick={() => navigate(`/task/${task.id}`)}>
-                              View
-                            </button>
+                            <div className="action-buttons">
+                              <button className="icon-btn" onClick={() => navigate(`/task/${task.id}`)} title="View">
+                                <FaEye />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       )

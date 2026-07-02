@@ -44,6 +44,7 @@ import { ToastContainer } from "react-toastify";
 import EditSprint from './sprint/EditSprint';
 import TimesheetSummary from './DailyTimesheets/AllTimesheetSummary';
 import AdminAllTimesheets from './DailyTimesheets/AdminAllTimesheets';
+import AdminTimesheetDetails from "./DailyTimesheets/AdminTimesheetDetails";
 import EditAnyTimesheet from './DailyTimesheets/EditTimesheets';
 
 // 🔹 Small component for logout route
@@ -73,11 +74,8 @@ function App() {
     <Router>
       {isLoggedIn ? (
         <>
+          <Navbar collapsed={sidebarCollapsed} />
           <Sidebar collapsed={sidebarCollapsed} onToggle={setSidebarCollapsed} />
-          <Navbar
-            collapsed={sidebarCollapsed}
-            onToggleSidebar={() => setSidebarCollapsed(prev => !prev)}
-          />
           <div className={`home-container ${sidebarCollapsed ? 'full' : ''}`}>
             <Routes>
               <Route path="/home" element={<Home />} />
@@ -111,7 +109,8 @@ function App() {
               <Route path="/ViewSprintsByFeatureid/:featureId" element={<ViewSprintsByFeatureid />} />
               <Route path="/active-sprints" element={<ActiveSprints />} />
               <Route path="/time-sheets" element={<TimesheetForm />} />
-              <Route path="/task/:id/buglist" element={<BugList/>} />
+              <Route path="/bugs" element={<BugList/>} />
+              <Route path="/create-bug" element={<BugForm />} />
               <Route path="/task/:id/bug" element={<BugForm />} />
               <Route path="/bug/:id" element={<BugDetails/>} />
               {/* <Route path="/Daily-time-sheets" element={<DailyTimesheet/>} /> */}
@@ -123,6 +122,7 @@ function App() {
                 <Route path="/timesheet-summary" element={<TimesheetSummary/>} />
                 <Route path="/admin/timesheet-export" element={<TimesheetExcelExport />} />
                 <Route path="/admin/timesheet" element={<AdminAllTimesheets />} />
+                <Route path="/admin/timesheet-details/:userId" element={<AdminTimesheetDetails />} />
                 <Route path="/edit-sprint/:id" element={<EditSprint />} />
                <Route path="/timesheet/edit/:userId/:date" element={<EditAnyTimesheet />} />
               {/* 🔹 Logout Route */}

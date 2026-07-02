@@ -5,8 +5,10 @@ import com.telusko.demo.Model.Team;
 import com.telusko.demo.Model.User;
 import com.telusko.demo.Model.createsprint;
 import com.telusko.demo.Model.task;
+import com.telusko.demo.Model.TaskAttachment;
 import com.telusko.demo.config.CustomUserDetails;
 import com.telusko.demo.repo.TaskRepository;
+import com.telusko.demo.repo.TaskAttachmentRepository;
 import com.telusko.demo.service.TaskSprintTrackService;
 import com.telusko.demo.service.TaskTrackService;
 import com.telusko.demo.service.Taskservice;
@@ -41,6 +43,9 @@ public class TaskController {
 
     @Autowired
     public TaskRepository repo;
+
+    @Autowired
+    public TaskAttachmentRepository taskAttachmentRepository;
 
     @Autowired
     public Taskservice service;
@@ -133,8 +138,9 @@ public class TaskController {
             @RequestParam("description") String description,
             @RequestParam("acceptance_criteria") String acceptanceCriteria,
             @RequestParam(value = "storypoints", required = false) Integer storypoints,
+            @RequestParam(value = "complexity", required = false) Integer complexity,
             @RequestParam("attachment_flag") String attachmentFlag,
-            @RequestParam(value = "attachment", required = false) MultipartFile attachment,
+            @RequestParam(value = "attachment", required = false) List<MultipartFile> attachments,
             @RequestParam("feature_id") Long featureId,
             @RequestParam(value = "sprint_id", required = false) Long sprintId,
             @RequestParam(value = "user_id", required = false) Long userId,
@@ -150,8 +156,9 @@ public class TaskController {
                     description,
                     acceptanceCriteria,
                     storypoints,
+                    complexity,
                     attachmentFlag,
-                    attachment,
+                    attachments,
                     featureId,
                     sprintId,
                     userId,
@@ -193,17 +200,39 @@ public class TaskController {
                 .body(resource);
     }
 
+    @GetMapping("/tasks/attachment/{attachmentId}/download")
+    public ResponseEntity<Resource> downloadSingleAttachment(@PathVariable int attachmentId) throws IOException {
+        Optional<TaskAttachment> attachmentOptional = taskAttachmentRepository.findById(attachmentId);
+        if (attachmentOptional.isEmpty()) return ResponseEntity.notFound().build();
+        TaskAttachment attachment = attachmentOptional.get();
+
+        Path filePath = Paths.get("").toAbsolutePath().resolve(attachment.getAttachmentPath()).normalize();
+        File file = filePath.toFile();
+
+        if (!file.exists()) return ResponseEntity.notFound().build();
+
+        Resource resource = new org.springframework.core.io.UrlResource(file.toPath().toUri());
+        
+        String mimeType = attachment.getAttachmentType();
+        if (mimeType == null || mimeType.isEmpty()) mimeType = MediaType.APPLICATION_OCTET_STREAM_VALUE;
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + attachment.getAttachmentName() + "\"")
+                .contentType(MediaType.parseMediaType(mimeType))
+                .body(resource);
+    }
+
 
 
     @PutMapping("/task/{id}")
     public ResponseEntity<task> updateTask(
             @PathVariable int id,
             @RequestPart("task") task Task,   // JSON part
-            @RequestPart(value = "attachment", required = false) MultipartFile attachment // File part
+            @RequestPart(value = "attachment", required = false) List<MultipartFile> attachments // File part
     ) {
         try {
             // attachmentFlag is not needed here because we just check if attachment exists
-            task updatedTask = service.updateTask(id, Task, attachment, null);
+            task updatedTask = service.updateTask(id, Task, attachments, null);
             return ResponseEntity.ok(updatedTask);
         } catch (Exception e) {
             e.printStackTrace();
@@ -322,6 +351,11 @@ public class TaskController {
     public List<task> viewMyActiveTasks(Authentication authentication) {
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
         int userId = userDetails.getUser().getId();
+        return service.viewActiveTasksByUserId(userId);
+    }
+
+    @GetMapping("/user/{userId}/tasks")
+    public List<task> viewTasksByUserId(@PathVariable int userId) {
         return service.viewActiveTasksByUserId(userId);
     }
 

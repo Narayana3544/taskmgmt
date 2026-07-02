@@ -242,7 +242,9 @@ const formatHours = (entry) => {
                   <tr key={idx}>
                     <td>{entry.start_time || "-"}</td>
                     <td>{entry.end_time || "-"}</td>
-                    <td>{entry.task?.userstory || "-"}</td>
+                    <td style={{ maxWidth: '300px', whiteSpace: 'normal', wordWrap: 'break-word', overflowWrap: 'anywhere' }}>
+                      {entry.task?.userstory || "-"}
+                    </td>
                     <td>{entry.workType?.description || "-"}</td>
                     <td>{entry.description}</td>
                     <td>

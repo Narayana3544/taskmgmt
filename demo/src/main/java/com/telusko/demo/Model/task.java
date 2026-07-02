@@ -9,6 +9,8 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.List;
+import java.util.ArrayList;
 
 @Entity
 @Data
@@ -25,6 +27,7 @@ public class task {
     private createsprint sprint;
 
     private Integer storypoints;
+    private Integer complexity;
     private String userstory;
     private String description;
 
@@ -37,6 +40,10 @@ public class task {
     private String attachmentPath;
 
     private String attachmentName;
+    private String attachmentType; // To store file MIME type
+
+    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    private List<TaskAttachment> attachments = new ArrayList<>();
 
     @ManyToOne
     @JoinColumn(name = "user_id")
@@ -84,7 +91,13 @@ public class task {
         this.attachmentName = attachmentName;
     }
 
-    private String attachmentType; // To store file MIME type
+    public List<TaskAttachment> getAttachments() {
+        return attachments;
+    }
+
+    public void setAttachments(List<TaskAttachment> attachments) {
+        this.attachments = attachments;
+    }
 
     public User getReportedTo() {
         return reportedTo;

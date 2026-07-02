@@ -52,6 +52,42 @@ const EditFeature = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Check if user is trying to close the feature
+    const selectedStatusObj = statuses.find(s => s.id === parseInt(featureData.status));
+    const isClosing = selectedStatusObj && 
+      (selectedStatusObj.decription.toLowerCase() === 'closed' || selectedStatusObj.decription.toLowerCase() === 'completed');
+
+    if (isClosing) {
+      try {
+        const sprintsRes = await api.get(`/features/${id}/sprints`, { withCredentials: true });
+        
+        let projectTasks = [];
+        if (featureData.project?.id) {
+            const tasksRes = await api.get(`/viewTaskByProjectId/${featureData.project.id}`, { withCredentials: true });
+            projectTasks = tasksRes.data.filter(t => t.feature?.id === parseInt(id));
+        }
+
+        const hasOpenSprints = sprintsRes.data.some(s => {
+          const stat = s.status?.toLowerCase() || '';
+          return stat !== 'closed' && stat !== 'completed';
+        });
+
+        const hasOpenTasks = projectTasks.some(t => {
+          const stat = t.taskStatus?.decription?.toLowerCase() || '';
+          return stat !== 'done' && stat !== 'closed' && stat !== 'completed';
+        });
+
+        if (hasOpenSprints || hasOpenTasks) {
+          alert("Please close sprint and tasks first.");
+          return; // Stop submission
+        }
+      } catch (err) {
+        console.error("Error validating feature closure:", err);
+        alert("Failed to validate feature closure requirements.");
+        return;
+      }
+    }
+
     const payload = {
       name: featureData.name,
       description: featureData.description,
@@ -118,16 +154,10 @@ const EditFeature = () => {
           ))}
         </select>
 
-        <div className="button-group">
-          <button type="submit" className="action-btn">Save</button>
-          <button type="button" className="action-btn" onClick={handleDelete}>Delete</button>
-          <button
-            type="button"
-            className="action-btn"
-            onClick={() => navigate("/view-features")}
-          >
-            Back
-          </button>
+        <div className="btn-container full-width">
+          <button type="button" className="btn-global btn-secondary" onClick={() => navigate(-1)}>Back</button>
+          <button type="button" className="btn-global btn-danger" onClick={handleDelete}>Delete</button>
+          <button type="submit" className="btn-global btn-primary">Save</button>
         </div>
       </form>
     </div>

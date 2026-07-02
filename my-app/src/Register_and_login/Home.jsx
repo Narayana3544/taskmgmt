@@ -3,6 +3,7 @@ import { FaEye } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import "./Home.css";
 import api from "../api";
+import { sortAlphabetically, sortLatestFirst } from "../utils/sortUtils";
 
 const Home = () => {
   const [tasks, setTasks] = useState({ todo: [], inprogress: [], done: [] });
@@ -44,8 +45,8 @@ const Home = () => {
           assignedUser: bug.assignedUser,
         }));
 
-        // 3️⃣ Merge tasks + bugs
-        allTasks = [...allTasks, ...bugs];
+        // 3️⃣ Merge tasks + bugs and sort latest first
+        allTasks = sortLatestFirst([...allTasks, ...bugs]);
 
         // 4️⃣ Group by status
         const grouped = { todo: [], inprogress: [], done: [] };
@@ -62,7 +63,7 @@ const Home = () => {
 
         // 6️⃣ Fetch users
         const usersRes = await api.get("/users", { withCredentials: true });
-        setUsers(usersRes.data);
+        setUsers(sortAlphabetically(usersRes.data));
       } catch (err) {
         console.error("Error fetching data:", err);
       }
@@ -103,7 +104,7 @@ const Home = () => {
           const updated = { ...prev };
           Object.keys(updated).forEach((col) => {
             updated[col] = updated[col].map((task) =>
-              task.id === selectedTask.id
+              task.id === selectedTask.id && task.type === selectedTask.type
                 ? { ...task, assignedUser: users.find((u) => u.id === parseInt(selectedUserId)) }
                 : task
             );
@@ -132,7 +133,7 @@ const Home = () => {
           const updated = { todo: [], inprogress: [], done: [] };
           const all = [...prev.todo, ...prev.inprogress, ...prev.done];
           all.forEach((task) => {
-            if (task.id === taskId) {
+            if (task.id === taskId && task.type === selectedTask.type) {
               const updatedTask = {
                 ...task,
                 taskStatus: newStatus,
@@ -194,22 +195,29 @@ const Home = () => {
             <div
               className={`task-card ${task.type === "bug" ? "bug-card" : ""}`}
               key={task.id}
+              style={{ minHeight: 'auto', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}
             >
-              <div className="task-id">
-                {task.type === "bug" && "🐞 "}ID: {task.id}
-              </div>
+              <strong style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', margin: 0, fontSize: '13px' }}>
+                {task.type === "bug" && "🐞 "}#{task.id} - {task.userstory || task.title}
+              </strong>
 
-              <div className="task-content">
-                <strong>{task.userstory || task.title}</strong>
-                <div className="task-actions">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div
+                  className={`storypoints-badge ${
+                    task.storypoints <= 1 ? "low" : task.storypoints <= 3 ? "medium" : "high"
+                  }`}
+                  style={{ position: 'static', margin: 0 }}
+                >
+                  {task.storypoints} SP
+                </div>
+                
+                <div className="task-actions" style={{ display: 'flex', alignItems: 'center' }}>
                   <button
                     className="arrow-btn"
-                    onClick={() =>
-                      navigate(task.type === "bug" ? `/bug/${task.id}` : `/task/${task.id}`)
-                    }
+                    onClick={() => navigate(task.type === "bug" ? `/bug/${task.id}` : `/task/${task.id}`)}
                     title="View"
                   >
-                    <FaEye size={18} />
+                    <FaEye size={16} />
                   </button>
                   <button
                     className="arrow-btn"
@@ -219,18 +227,6 @@ const Home = () => {
                     ➔
                   </button>
                 </div>
-              </div>
-
-              <div
-                className={`storypoints-badge ${
-                  task.storypoints <= 1
-                    ? "low"
-                    : task.storypoints <= 3
-                    ? "medium"
-                    : "high"
-                }`}
-              >
-                {task.storypoints} SP
               </div>
             </div>
           ))
@@ -252,7 +248,6 @@ const Home = () => {
               ✖
             </button>
             <h3>{selectedTask.userstory || selectedTask.title}</h3>
-            <p>{selectedTask.description}</p>
 
             {/* Assign User */}
             <div className="popup-section">

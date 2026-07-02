@@ -109,7 +109,6 @@ export default function BugForm() {
 
   return (
     <div className="bug-form-container">
-      <button className="back-btn" onClick={() => navigate(-1)}>⬅ Back</button>
       <h2>Edit Bug</h2>
 
       <form onSubmit={handleSubmit} className="bug-form">
@@ -176,7 +175,10 @@ export default function BugForm() {
           ))}
         </ul>
 
-        <button type="submit" className="submit-btn">Update Bug</button>
+        <div className="btn-container full-width">
+          <button type="button" className="btn-global btn-secondary" onClick={() => navigate(-1)}>Back</button>
+          <button type="submit" className="btn-global btn-primary">Update Bug</button>
+        </div>
       </form>
     </div>
   );

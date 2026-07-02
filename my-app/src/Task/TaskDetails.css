@@ -1,7 +1,7 @@
 .task-details-container {
-  max-width: 800px;
-  margin: 30px auto;
-  padding: 20px;
+  max-width: 95%;
+  margin: 10px auto;
+  padding: 10px;
   background: hsl(130, 13%, 91%);
   color: black;
   border-radius: 10px;
@@ -66,9 +66,9 @@
 
 .task-info-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 8px 20px;
-  margin-bottom: 15px;
+  margin-bottom: 10px;
 }
 
 .task-section {
@@ -171,7 +171,12 @@
   background-color: #444;
 }
 
-/* Show dropdown on hover */
-.dropdown:hover .dropdown-content {
+/* Show dropdown on click */
+.dropdown-content.show {
   display: block;
+}
+
+.task-info-grid p {
+  margin: 0;
+  font-size: 13px;
 }

@@ -19,16 +19,12 @@ export default function AdminAllTimesheets() {
   const [summaries, setSummaries] = useState([]);
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState("");
-  const [entries, setEntries] = useState([]);
-  const [dailyDetails, setDailyDetails] = useState([]);
-  const [selectedDate, setSelectedDate] = useState(null);
 
   // ✅ Default dates
   const [start, setStart] = useState(pastWeekStr);
   const [end, setEnd] = useState(todayStr);
 
   const [loading, setLoading] = useState(false);
-  const [loadingDaily, setLoadingDaily] = useState(false);
 
   // Fetch users
   useEffect(() => {
@@ -50,56 +46,8 @@ export default function AdminAllTimesheets() {
   };
 
   // Fetch selected user's range
-  const fetchRange = async (userId) => {
-    setSelectedUser(userId);
-    setDailyDetails([]);
-    setSelectedDate(null);
-
-    setLoading(true);
-
-    try {
-      const res = await api.get(`/timesheets/range-summary/${userId}`, {
-        params: { start, end },
-        withCredentials: true,
-      });
-
-      setEntries(res.data);
-
-    } catch (err) {
-      console.error("Error fetching range summary:", err);
-    }
-
-    setLoading(false);
-  };
-
-  // Daily logs
-  const handleViewDay = async (date) => {
-
-    setLoadingDaily(true);
-
-    try {
-
-      const res = await api.get(`/timesheets/day/${selectedUser}/${date}`, {
-        withCredentials: true,
-      });
-
-      const sorted = res.data.sort((a, b) =>
-        a.start_time?.localeCompare(b.start_time)
-      );
-
-      setDailyDetails(sorted);
-      setSelectedDate(date);
-
-    } catch (err) {
-
-      console.error("Error fetching daily details:", err);
-      setDailyDetails([]);
-      setSelectedDate(null);
-
-    }
-
-    setLoadingDaily(false);
-
+  const handleViewUser = (userId, username) => {
+    navigate(`/admin/timesheet-details/${userId}?start=${start}&end=${end}&name=${encodeURIComponent(username || '')}`);
   };
 
   // Excel Export
@@ -240,7 +188,9 @@ export default function AdminAllTimesheets() {
 
     <div className="admin-all-container">
 
-      <h2>Admin Timesheet Overview</h2>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+        <h2>Admin Timesheet Overview</h2>
+      </div>
 
       <div className="filter-section">
 
@@ -294,7 +244,7 @@ export default function AdminAllTimesheets() {
                   <FaEye
                     title="View Range Summary"
                     className="view-icon"
-                    onClick={() => fetchRange(s.userId)}
+                    onClick={() => handleViewUser(s.userId, s.username)}
                   />
 
                   <FaFileExcel
@@ -312,127 +262,6 @@ export default function AdminAllTimesheets() {
           </tbody>
 
         </table>
-
-      )}
-
-      {selectedUser && entries.length > 0 && (
-
-        <div className="range-section">
-
-          <h3>Details for Selected User</h3>
-
-          <table className="timesheet-table">
-
-            <thead>
-
-              <tr>
-                <th>Date</th>
-                <th>Total Hours</th>
-                <th>Action</th>
-              </tr>
-
-            </thead>
-
-            <tbody>
-
-              {entries.map((e, idx) => (
-
-                <tr key={idx}>
-
-                  <td>{e.date}</td>
-
-                  <td>{formatHours(e)}</td>
-
-                  <td>
-
-                    <button onClick={() => handleViewDay(e.date)}>
-                      View
-                    </button>
-
-                    <button onClick={() =>
-                      navigate(`/timesheet/edit/${selectedUser}/${e.date}`)
-                    }>
-                      Edit
-                    </button>
-
-                  </td>
-
-                </tr>
-
-              ))}
-
-            </tbody>
-
-          </table>
-
-        </div>
-
-      )}
-
-      {selectedDate && (
-
-        <div className="daily-section">
-
-          <h3>Logs for {selectedDate}</h3>
-
-          {loadingDaily ? (
-
-            <p>Loading...</p>
-
-          ) : dailyDetails.length > 0 ? (
-
-            <table className="timesheet-table">
-
-              <thead>
-
-                <tr>
-                  <th>Start</th>
-                  <th>End</th>
-                  <th>Task</th>
-                  <th>Work Type</th>
-                  <th>Description</th>
-                  <th>Permission</th>
-                </tr>
-
-              </thead>
-
-              <tbody>
-
-                {dailyDetails.map((d, i) => (
-
-                  <tr key={i}>
-
-                    <td>{d.start_time || "-"}</td>
-
-                    <td>{d.end_time || "-"}</td>
-
-                    <td>{d.task?.userstory || "-"}</td>
-
-                    <td>{d.workType?.description || "-"}</td>
-
-                    <td>{d.description}</td>
-
-                    <td>
-                      {["Official", "Time Off"].includes(d.workType?.description)
-                        ? d.permissionGranted ? "Yes" : "No"
-                        : "-"}
-                    </td>
-
-                  </tr>
-
-                ))}
-
-              </tbody>
-
-            </table>
-
-          ) : (
-
-            <p>No logs available for this date.</p>
-
-          )}
-
-        </div>
 
       )}
 

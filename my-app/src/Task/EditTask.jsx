@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../api";
+import { sortAlphabetically, sortLatestFirst } from "../utils/sortUtils";
 import "./TaskForm.css";
 
 export default function EditTask() {
@@ -28,16 +29,17 @@ export default function EditTask() {
   const [description, setDescription] = useState("");
   const [acceptanceCriteria, setAcceptanceCriteria] = useState("");
   const [storypoints, setStorypoints] = useState("");
+  const [complexity, setComplexity] = useState("");
   const [attachmentFlag, setAttachmentFlag] = useState("No");
-  const [attachmentFile, setAttachmentFile] = useState(null);
-  const [existingAttachmentName, setExistingAttachmentName] = useState("");
+  const [attachmentFiles, setAttachmentFiles] = useState([]);
+  const [existingAttachments, setExistingAttachments] = useState([]);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
   // Fetch dropdown data
   useEffect(() => {
-    api.get("/projects", { withCredentials: true }).then((res) => setProjects(res.data));
-    api.get("/users", { withCredentials: true }).then((res) => setManagers(res.data));
+    api.get("/projects", { withCredentials: true }).then((res) => setProjects(sortLatestFirst(res.data)));
+    api.get("/users", { withCredentials: true }).then((res) => setManagers(sortAlphabetically(res.data)));
     api.get("/gettype", { withCredentials: true }).then((res) => setTaskTypes(res.data));
     api.get("/getstatusForTask", { withCredentials: true }).then((res) => setTaskStatuses(res.data));
   }, []);
@@ -52,6 +54,7 @@ export default function EditTask() {
         setDescription(t.description || "");
         setAcceptanceCriteria(t.acceptance_criteria || "");
         setStorypoints(t.storypoints || "");
+        setComplexity(t.complexity || "");
         setStartDate(t.start_date ? t.start_date.slice(0, 16) : "");
         setEndDate(t.end_date ? t.end_date.slice(0, 16) : "");
 
@@ -64,11 +67,16 @@ export default function EditTask() {
         setSelectedSprint(t.sprint?.id || "");
         setSelectedProject(t.feature?.project?.id || "");
 
-        if (t.attachment_flag === "Yes" && t.attachmentName) {
+        if (t.attachment_flag === "Yes") {
           setAttachmentFlag("Yes");
-          setExistingAttachmentName(t.attachmentName);
+          if (t.attachments && t.attachments.length > 0) {
+            setExistingAttachments(t.attachments);
+          } else if (t.attachmentName || t.attachment_name) {
+            setExistingAttachments([{ id: 'legacy', attachmentName: t.attachmentName || t.attachment_name }]);
+          }
         } else {
           setAttachmentFlag("No");
+          setExistingAttachments([]);
         }
       })
       .catch((err) => console.error("Error loading task:", err));
@@ -79,12 +87,12 @@ export default function EditTask() {
     if (selectedProject) {
       api
         .get(`/features/project/${selectedProject}`, { withCredentials: true })
-        .then((res) => setFeatures(res.data))
+        .then((res) => setFeatures(sortLatestFirst(res.data)))
         .catch(console.error);
 
       api
         .get(`/project/users/${selectedProject}`, { withCredentials: true })
-        .then((res) => setUsers(res.data))
+        .then((res) => setUsers(sortAlphabetically(res.data)))
         .catch(console.error);
     } else {
       setFeatures([]);
@@ -99,7 +107,7 @@ export default function EditTask() {
     if (selectedFeature) {
       api
         .get(`/features/${selectedFeature}/sprints`, { withCredentials: true })
-        .then((res) => setSprints(res.data))
+        .then((res) => setSprints(sortLatestFirst(res.data)))
         .catch(console.error);
     } else {
       setSprints([]);
@@ -117,6 +125,7 @@ const handleSubmit = async (e) => {
     description,
     acceptance_criteria: acceptanceCriteria,
     storypoints: storypoints ? Number(storypoints) : null,
+    complexity: complexity ? Number(complexity) : null,
     feature: selectedFeature ? { id: Number(selectedFeature) } : null,
     sprint: selectedSprint ? { id: Number(selectedSprint) } : null,
     user: selectedUser ? { id: Number(selectedUser) } : null,
@@ -131,8 +140,10 @@ const handleSubmit = async (e) => {
   const formData = new FormData();
   formData.append("task", new Blob([JSON.stringify(taskData)], { type: "application/json" }));
 
-  if (attachmentFlag === "Yes" && attachmentFile) {
-    formData.append("attachment", attachmentFile);
+  if (attachmentFlag === "Yes" && attachmentFiles.length > 0) {
+    attachmentFiles.forEach(file => {
+      formData.append("attachment", file);
+    });
   }
 
   try {
@@ -157,9 +168,14 @@ const handleSubmit = async (e) => {
       formData.append("description", description);
       formData.append("acceptance_criteria", acceptanceCriteria);
       formData.append("storypoints", storypoints ? Number(storypoints) : "");
+      formData.append("complexity", complexity ? Number(complexity) : "");
       formData.append("feature_id", selectedFeature ? Number(selectedFeature) : "");
-      if (attachmentFlag === "Yes" && attachmentFile)
-        formData.append("attachment", attachmentFile);
+      
+      if (attachmentFlag === "Yes" && attachmentFiles.length > 0) {
+        attachmentFiles.forEach(file => {
+          formData.append("attachment", file);
+        });
+      }
 
       await api.post(`/tasks/${id}/clone`, formData, {
         withCredentials: true,
@@ -175,14 +191,10 @@ const handleSubmit = async (e) => {
 
   return (
     <form onSubmit={handleSubmit} className="task-form">
-      <button onClick={() => navigate(-1)} type="button" className="back-btn">
-        Back
-      </button>
-      <h2>Edit Task</h2>
 
       {/* Project */}
       <div className="form-group">
-        <label>Project</label>
+        <label>Project<sup style={{color: "red"}}>*</sup></label>
         <select
           value={selectedProject}
           onChange={(e) => setSelectedProject(e.target.value)}
@@ -199,7 +211,7 @@ const handleSubmit = async (e) => {
 
       {/* Feature */}
       <div className="form-group">
-        <label>Feature</label>
+        <label>Feature<sup style={{color: "red"}}>*</sup></label>
         <select
           value={selectedFeature}
           onChange={(e) => setSelectedFeature(e.target.value)}
@@ -216,7 +228,7 @@ const handleSubmit = async (e) => {
 
       {/* Task Type */}
       <div className="form-group">
-        <label>Task Type</label>
+        <label>Task Type<sup style={{color: "red"}}>*</sup></label>
         <select
           value={selectedTaskType}
           onChange={(e) => setSelectedTaskType(e.target.value)}
@@ -233,7 +245,7 @@ const handleSubmit = async (e) => {
 
       {/* Task Status */}
       <div className="form-group">
-        <label>Task Status</label>
+        <label>Task Status<sup style={{color: "red"}}>*</sup></label>
         <select
           value={selectedTaskStatus}
           onChange={(e) => setSelectedTaskStatus(e.target.value)}
@@ -250,38 +262,69 @@ const handleSubmit = async (e) => {
 
       {/* User Story */}
       <div className="form-group full-width">
-        <label>User Story</label>
-        <input
-          type="text"
+        <label>User Story<sup style={{color: "red"}}>*</sup></label>
+        <textarea
           value={userstory}
           onChange={(e) => setUserstory(e.target.value)}
+          rows={1}
+          maxLength={255}
+          onDoubleClick={(e) => e.target.rows = e.target.rows === 1 ? 4 : 1}
           required
         />
       </div>
 
       {/* Description */}
-      <div className="form-group full-width">
+      <div className="form-group half-width">
         <label>Description</label>
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          rows={3}
+          rows={1}
+          maxLength={255}
+          onDoubleClick={(e) => e.target.rows = e.target.rows === 1 ? 4 : 1}
         />
       </div>
 
       {/* Acceptance Criteria */}
-      <div className="form-group full-width">
+      <div className="form-group half-width">
         <label>Acceptance Criteria</label>
         <textarea
           value={acceptanceCriteria}
           onChange={(e) => setAcceptanceCriteria(e.target.value)}
-          rows={3}
+          rows={1}
+          maxLength={255}
+          onDoubleClick={(e) => e.target.rows = e.target.rows === 1 ? 4 : 1}
+        />
+      </div>
+
+      {/* Complexity */}
+      <div className="form-group">
+        <label>Complexity<sup style={{color: "red"}}>*</sup></label>
+        <input
+          type="number"
+          min="1"
+          max="5"
+          value={complexity}
+          onChange={(e) => {
+            let val = e.target.value;
+            if (val === "") {
+              setComplexity("");
+              return;
+            }
+            let intVal = parseInt(val, 10);
+            if (!isNaN(intVal)) {
+              if (intVal < 1) intVal = 1;
+              if (intVal > 5) intVal = 5;
+              setComplexity(intVal);
+            }
+          }}
+          required
         />
       </div>
 
       {/* Story Points */}
       <div className="form-group">
-        <label>Story Points</label>
+        <label>Story Points<sup style={{color: "red"}}>*</sup></label>
         <input
           type="number"
           min="0"
@@ -369,31 +412,35 @@ const handleSubmit = async (e) => {
         </select>
       </div>
 
+      {attachmentFlag === "Yes" && existingAttachments.length > 0 && (
+        <div className="form-group half-width" style={{ marginBottom: "10px" }}>
+          <label>Existing Attachments</label>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+            {existingAttachments.map((att, index) => (
+              <div key={index} className="attachment-file" style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '5px' }}>
+                <span>📎 {att.attachmentName || att.attachment_name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {attachmentFlag === "Yes" && (
-        <div className="form-group full-width attachment-container">
-          {existingAttachmentName && !attachmentFile && (
-            <div className="attachment-file">
-              <span>{existingAttachmentName}</span>
-              <button
-                type="button"
-                className="remove-btn"
-                onClick={() => setExistingAttachmentName("")}
-              >
-                ✖
-              </button>
-            </div>
-          )}
-          <input type="file" onChange={(e) => setAttachmentFile(e.target.files[0])} />
-          {attachmentFile && (
-            <div className="attachment-file">
-              <span>{attachmentFile.name}</span>
-              <button
-                type="button"
-                className="remove-btn"
-                onClick={() => setAttachmentFile(null)}
-              >
-                ✖
-              </button>
+        <div className={`form-group ${existingAttachments.length > 0 ? 'half-width' : 'full-width'} attachment-container`}>
+          <label>{existingAttachments.length > 0 ? "Add Additional Attachments" : "Add Attachments"}</label>
+          <input type="file" multiple onChange={(e) => {
+            const files = Array.from(e.target.files);
+            setAttachmentFiles(prev => [...prev, ...files]);
+            e.target.value = null;
+          }} />
+          {attachmentFiles.length > 0 && (
+            <div className="attachment-files-list">
+              {attachmentFiles.map((file, index) => (
+                <div key={index} className="attachment-file" style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '5px' }}>
+                  <span>📎 {file.name}</span>
+                  <button type="button" className="remove-btn" onClick={() => setAttachmentFiles(prev => prev.filter((_, i) => i !== index))}>✖</button>
+                </div>
+              ))}
             </div>
           )}
         </div>
@@ -401,10 +448,9 @@ const handleSubmit = async (e) => {
 
       {/* Buttons */}
       <div className="btn-container full-width">
-        <button type="submit">Update Task</button>
-        <button type="button" onClick={handleClone}>
-          Clone Task
-        </button>
+        <button type="button" className="btn-global btn-secondary" onClick={() => navigate(-1)}>Back</button>
+        <button type="button" className="btn-global btn-success" onClick={handleClone}>Clone Task</button>
+        <button type="submit" className="btn-global btn-primary">Update Task</button>
       </div>
     </form>
   );

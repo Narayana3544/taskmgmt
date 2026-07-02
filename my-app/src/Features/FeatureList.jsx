@@ -3,6 +3,7 @@ import api from '../api';
 import { useNavigate } from 'react-router-dom';
 import './FeatureList.css';
 import { FaEdit, FaEye } from 'react-icons/fa'; // ✅ Icons
+import { sortLatestFirst } from "../utils/sortUtils";
 
 const FeatureList = () => {
   const [features, setFeatures] = useState([]);
@@ -13,8 +14,9 @@ const FeatureList = () => {
   useEffect(() => {
     api.get('/features', { withCredentials: true })
       .then(res => {
-        setFeatures(res.data);
-        setFilteredFeatures(res.data);
+        const sorted = sortLatestFirst(res.data);
+        setFeatures(sorted);
+        setFilteredFeatures(sorted);
       })
       .catch(err => console.error('Error fetching features:', err));
   }, []);
@@ -35,7 +37,7 @@ const FeatureList = () => {
     <div className="features-list-page">
       <div className="header-bar">
         <h2>Features</h2>
-        <button className="create-feature-btn" onClick={() => navigate('/features')}>
+        <button className="btn-global btn-primary" onClick={() => navigate('/features')}>
           + Create Feature
         </button>
       </div>
@@ -47,7 +49,7 @@ const FeatureList = () => {
           placeholder="Search"
           value={searchTerm}
           onChange={e => setSearchTerm(e.target.value)}
-          className="medium-search-input"
+          className="form-control-global"
         />
       </div>
 

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import api from '../api';
+import { sortAlphabetically } from "../utils/sortUtils";
 import "./AssignUsersToProject.css";
 
 export default function AssignUsersForm() {
@@ -11,7 +12,7 @@ export default function AssignUsersForm() {
   const fetchUsers = async () => {
     try {
       const response = await api.get("/users",{withCredentials:true});
-      setUsers(response.data);
+      setUsers(sortAlphabetically(response.data));
       console.log("Fetched Users:", response.data); // ✅ check in console
     } catch (error) {
       console.error("Error fetching users:", error);
@@ -23,7 +24,7 @@ export default function AssignUsersForm() {
   // Fetch all users for dropdown
   useEffect(() => {
     api.get("/users",{withCredentials:true})
-      .then((res) => setUsers(res.data))
+      .then((res) => setUsers(sortAlphabetically(res.data)))
       .catch((err) => console.error("Error fetching users:", err));
       
   }, []);

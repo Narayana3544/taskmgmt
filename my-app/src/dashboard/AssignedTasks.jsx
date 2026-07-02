@@ -146,7 +146,9 @@ export default function AssignedTasks() {
             {currentTasks.map(task => (
               <tr key={task.id}>
                 <td >{task.id}</td>
-                <td>{task.userstory || "-"}</td>
+                <td style={{ maxWidth: '250px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={task.userstory}>
+                  {task.userstory || "-"}
+                </td>
                 <td>{task.storypoints ?? "-"}</td>
                 <td>{task.sprint?.name || "-"}</td>
                 <td>{task.feature?.name || "-"}</td>

@@ -4,14 +4,14 @@ import './Sidebar.css';
 import {
   FaClipboardList, FaChevronDown, FaChevronUp ,
   FaUserCircle, FaPlusCircle, FaChartBar, FaCog,
-  FaRegCalendarAlt, FaFileInvoiceDollar, FaBars, FaUser, FaThList
+  FaRegCalendarAlt, FaFileInvoiceDollar, FaBars, FaUser, FaThList, FaSignOutAlt
 } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 
 const Sidebar = ({ onToggle }) => {
   const [openDashboard, setOpenDashboard] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
-    const [timeSheetOpen, setTimeSheetOpen] = useState(true);
+  const [timeSheetOpen, setTimeSheetOpen] = useState(true);
   const navigate = useNavigate();
   const today = new Date().toISOString().split("T")[0];
 
@@ -42,108 +42,104 @@ const Sidebar = ({ onToggle }) => {
       <div className="sidebar-toggle" onClick={handleToggle}>
         <FaBars />
       </div>
-      
-
       <div className={`sidebar-content ${collapsed ? 'collapse-anim' : 'expand-anim'}`}>
-        {!collapsed && (
-          <>
-            <div className="profile-section">
-              <FaUserCircle className="profile-icon" />
-              <div>
-                <p className="profile-name">{user.first_name} {user.last_name}</p>
-                <p className="profile-role">{user.role.description} </p>
+        <div className="sidebar-top-nav">
+          <div className="nav-section">
+            <div className="nav-item" title="Dashboard" onClick={() => navigate('/home')}><FaThList /> <span>Dashboard</span></div>
+            <div className="nav-item" title="My Tasks" onClick={() => navigate('/my-stories')}><FaChartBar /><span>My Tasks</span></div>
+            <div className="nav-item" title="Task" onClick={() => navigate('/task')}>
+                <FaChartBar /><span>Task</span>
               </div>
-            </div>
-
-            <div className="nav-section">
-            <div className="nav-item" onClick={() => navigate('/home')}><FaThList /> Dashboard</div>
-            <div className="nav-item"onClick={() => navigate('/my-stories')}><FaChartBar />My Tasks</div>
-            <div className="nav-item" onClick={() => navigate('/task')}>
-                <FaChartBar /><span> Search Task</span>
+            <div className="nav-item" title="Bugs" onClick={() => navigate('/bugs')}>
+                <FaChartBar /><span>Bugs</span>
               </div>
 
             {user.role?.description === "Admin" && (
-            <div className="nav-item" onClick={() => navigate('/manage-projects')}>
+            <div className="nav-item" title="Projects" onClick={() => navigate('/manage-projects')}>
               <FaFileInvoiceDollar /><span>Projects</span>
               </div>
               )}
               {user.role?.description === "Admin" && (
-                <div className="nav-item" onClick={() => navigate('/view-features')}>
+                <div className="nav-item" title="Features" onClick={() => navigate('/view-features')}>
               <FaFileInvoiceDollar /><span>Features</span>
               </div>
             )}
 
                  {user.role?.description === "Admin" && (
-                <div className="nav-item" onClick={() => navigate('/manage-sprints')}>
+                <div className="nav-item" title="Sprints" onClick={() => navigate('/manage-sprints')}>
                   <FaChartBar /><span>Sprints</span>
                 </div>
               )}
 
 
 
-              {/* <div className="nav-item" onClick={() => navigate('/manage-sprints')}>
+              {/* <div className="nav-item" title="Sprints" onClick={() => navigate('/manage-sprints')}>
                 <FaChartBar /><span>Sprints</span>
               </div> */}
               
               
-              {/* <div className="nav-item" onClick={() => navigate('/profile')}><FaUser /><span>Profile</span></div> */}
-               {/* <div className="nav-item" onClick={() => navigate('/view-projectsByUserId')}><FaUser /><span>My Projects</span></div> */}
-              <div className="nav-item" onClick={() => navigate('/active-sprints')}>
+              {/* <div className="nav-item" title="Profile" onClick={() => navigate('/profile')}><FaUser /><span>Profile</span></div> */}
+               {/* <div className="nav-item" title="My Projects" onClick={() => navigate('/view-projectsByUserId')}><FaUser /><span>My Projects</span></div> */}
+              <div className="nav-item" title="Sprint Tasks" onClick={() => navigate('/active-sprints')}>
                 <FaChartBar /><span>Sprint Tasks</span>
               </div>
         <div
-        className="nav-item "
-        onClick={() => setTimeSheetOpen(!timeSheetOpen)}
-        style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <FaRegCalendarAlt />
-          <span>Timesheets</span>
-        </div>
-        {timeSheetOpen ? <FaChevronUp /> : <FaChevronDown />}
-      </div>
-
-      {/* Sub-navigation */}
-      {timeSheetOpen && (
-        <div className="sub-nav" style={{ paddingLeft: "20px", marginTop: "5px" }}>
-          <div
-            className="nav-item"
-            onClick={() => navigate(`/timesheet/${today}`)}
-          >
+          className="nav-item "
+          title="Timesheets"
+          onClick={() => setTimeSheetOpen(!timeSheetOpen)}
+          style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <FaRegCalendarAlt />
-            <span>create</span>
+            <span>Timesheets</span>
           </div>
+          {timeSheetOpen ? <FaChevronUp /> : <FaChevronDown />}
+        </div>
+
+        {/* Sub-navigation */}
+        {timeSheetOpen && (
+          <div className="sub-nav" style={{ paddingLeft: "20px", marginTop: "5px" }}>
+            <div
+              className="nav-item"
+              title="Create Timesheet"
+              onClick={() => navigate(`/timesheet/${today}`)}
+            >
+              <FaRegCalendarAlt />
+              <span>create</span>
+            </div>
+            <div
+              className="nav-item"
+              title="Search Timesheets"
+              onClick={() => navigate("/Monthly-time-sheets")}
+            >
+              <FaUser />
+              <span>search</span>
+            </div>
+            {/* {user.role?.description === "Admin" && (
+              <div
+                className="nav-item"
+                onClick={() => navigate("/admin/timesheets")}
+              >
+                <FaClipboardList />
+                <span>Admin Timesheet</span>
+              </div>
+            )} */}
+          </div>
+        )}
+        
+        {user.role?.description === "Admin" && (
           <div
             className="nav-item"
-            onClick={() => navigate("/Monthly-time-sheets")}
+            title="All Timesheets"
+            onClick={() => navigate("/admin/timesheet")}
           >
-            <FaUser />
-            <span>search</span>
+            <FaClipboardList />
+            <span>All Timesheets</span>
           </div>
-          {user.role?.description === "Admin" && (
-            <div
-              className="nav-item"
-              onClick={() => navigate("/admin/timesheets")}
-            >
-              <FaClipboardList />
-              <span>Admin Timesheet</span>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-         {user.role?.description === "Admin" && (
-            <div
-              className="nav-item"
-              onClick={() => navigate("/admin/timesheet")}
-            >
-              <FaClipboardList />
-              <span>All Timesheets</span>
-            </div>
-          )}
-
-          </>
         )}
+
+      </div>
+        </div>
       </div>
     </div>
   );

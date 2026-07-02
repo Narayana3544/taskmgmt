@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../api";
+import { sortAlphabetically } from "../utils/sortUtils";
 import "./TaskDetails.css";
 
 export default function TaskDetails() {
@@ -27,7 +28,7 @@ export default function TaskDetails() {
 
         setTask(taskRes.data);
         setComments(commentRes.data);
-        setUsers(usersRes.data);
+        setUsers(sortAlphabetically(usersRes.data));
 
         // ✅ Bind dropdown to current assigned user
         setSelectedUser(taskRes.data.user?.id || "");
@@ -75,38 +76,52 @@ export default function TaskDetails() {
   };
 
   // ✅ File download function
-  const downloadFile = async (taskId) => {
+  const downloadFile = async (taskId, attachmentId = null, filename = null, contentTypeStr = null) => {
     if (!task || task.attachment_flag !== "Yes") {
       alert("No attachment exists for this task.");
       return;
     }
 
     try {
-      const response = await fetch(`/tasks/${taskId}/download`, {
-        method: "GET",
-        credentials: "include",
+      let url = `/tasks/${taskId}/download`;
+      if (attachmentId) {
+        url = `/tasks/attachment/${attachmentId}/download`;
+      }
+
+      const response = await api.get(url, {
+        responseType: "blob",
       });
 
-      if (!response.ok) {
-        alert("Failed to download attachment.");
-        return;
-      }
-
-      const blob = await response.blob();
-      const disposition = response.headers.get("Content-Disposition");
-      let filename = task.attachment_name;
+      const contentType = response.headers["content-type"] || contentTypeStr || "";
+      const blob = new Blob([response.data], { type: contentType });
+      const disposition = response.headers["content-disposition"];
+      
+      let finalFilename = filename || task.attachment_name || task.attachmentName;
       if (disposition && disposition.includes("filename=")) {
-        filename = disposition.split("filename=")[1].replace(/"/g, "");
+        finalFilename = disposition.split("filename=")[1].replace(/"/g, "");
+      }
+      
+      finalFilename = finalFilename || `attachment_${taskId}`;
+      
+      if (!finalFilename.includes(".")) {
+        let ext = "";
+        if (contentType.includes("pdf")) ext = ".pdf";
+        else if (contentType.includes("spreadsheetml") || contentType.includes("excel")) ext = ".xlsx";
+        else if (contentType.includes("text")) ext = ".txt";
+        else if (contentType.includes("image/jpeg")) ext = ".jpg";
+        else if (contentType.includes("image/png")) ext = ".png";
+        
+        finalFilename += ext;
       }
 
-      const url = window.URL.createObjectURL(blob);
+      const urlObj = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
-      a.href = url;
-      a.download = filename;
+      a.href = urlObj;
+      a.download = finalFilename;
       document.body.appendChild(a);
       a.click();
       a.remove();
-      window.URL.revokeObjectURL(url);
+      window.URL.revokeObjectURL(urlObj);
     } catch (err) {
       console.error("Download failed:", err);
       alert("Download failed");
@@ -119,35 +134,29 @@ export default function TaskDetails() {
 
   return (
     <div className="task-details-container">
-      <button className="back-btn" onClick={() => navigate(-1)}>
-        ⬅ Back
-      </button>
 
-      <div className="task-card">
-        {/* Bugs dropdown */}
-        <div className="bugs-dropdown">
-          <div className="dropdown">
-            <button className="dropdown-btn">🐞 Bugs ▾</button>
-            <div className="dropdown-content">
-              <button onClick={() => navigate(`/task/${id}/bug`)}>➕ Create Bug</button>
-              <button onClick={() => navigate(`/task/${id}/buglist`)}>📋 View Bugs</button>
-            </div>
-          </div>
-        </div>
-
+      <div className="task-card" style={{ padding: '15px' }}>
         {/* Header */}
-        <div className="task-header">
-          <div className="task-icon">📌</div>
-          <h1>{task.userstory || "Untitled Task"}</h1>
-          <span
-            className={`status-badge ${
-              task.taskStatus?.description?.toLowerCase().replace(" ", "-") || ""
-            }`}
-          >
-            {task.taskStatus?.decription ||
-              task.taskStatus?.description ||
-              "No Status"}
-          </span>
+        <div className="task-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div className="task-icon">📌</div>
+            <h1 style={{ margin: 0, fontSize: '18px' }}>{task.userstory || "Untitled Task"}</h1>
+            <span
+              className={`status-badge ${
+                task.taskStatus?.description?.toLowerCase().replace(" ", "-") || ""
+              }`}
+            >
+              {task.taskStatus?.decription ||
+                task.taskStatus?.description ||
+                "No Status"}
+            </span>
+          </div>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button type="button" className="btn-global btn-secondary" style={{ padding: '5px 15px', fontSize: '13px' }} onClick={() => navigate(-1)}>
+              Back
+            </button>
+            <button className="btn-global btn-primary" style={{ padding: '5px 10px' }} onClick={() => navigate(`/task/${id}/bug`)}>➕ Create Bug</button>
+          </div>
         </div>
         {/* Info grid */}
         <div className="task-info-grid">
@@ -159,89 +168,129 @@ export default function TaskDetails() {
           <p><strong>Start Date:</strong> {task.start_date ? new Date(task.start_date).toLocaleDateString() : "-"}</p>
           <p><strong>End Date:</strong> {task.end_date ? new Date(task.end_date).toLocaleDateString() : "-"}</p>
           <p><strong>Story Points:</strong> {task.storypoints ?? "-"}</p>
+          <p><strong>Complexity:</strong> {task.complexity ?? "-"}</p>
         </div>
 
-        {/* Description */}
-        <div className="task-section">
-          <h3>Description</h3>
-          <ul>
-            {task.description
-              ? task.description
-                  .split(/\d+:/)
-                  .filter((line) => line.trim() !== "")
-                  .map((line, idx) => <li key={idx}>{line.trim()}</li>)
-              : <li>-</li>}
-          </ul>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+          {/* Description */}
+          <div className="task-section" style={{ marginTop: 0, padding: '8px' }}>
+            <h3 style={{ fontSize: '13px' }}>Description</h3>
+            <ul style={{ fontSize: '13px', margin: 0, paddingLeft: '15px' }}>
+              {task.description
+                ? task.description
+                    .split(/\d+:/)
+                    .filter((line) => line.trim() !== "")
+                    .map((line, idx) => <li key={idx}>{line.trim()}</li>)
+                : <li>-</li>}
+            </ul>
+          </div>
+
+          {/* Acceptance Criteria */}
+          <div className="task-section" style={{ marginTop: 0, padding: '8px' }}>
+            <h3 style={{ fontSize: '13px' }}>Acceptance Criteria</h3>
+            <ul style={{ fontSize: '13px', margin: 0, paddingLeft: '15px' }}>
+              {task.acceptance_criteria
+                ? task.acceptance_criteria
+                    .split(/\d+\)/)
+                    .filter((line) => line.trim() !== "")
+                    .map((line, idx) => <li key={idx}>{line.trim()}</li>)
+                : <li>-</li>}
+            </ul>
+          </div>
         </div>
 
-        {/* Acceptance Criteria */}
-        <div className="task-section">
-          <h3>Acceptance Criteria</h3>
-          <ul>
-            {task.acceptance_criteria
-              ? task.acceptance_criteria
-                  .split(/\d+\)/)
-                  .filter((line) => line.trim() !== "")
-                  .map((line, idx) => <li key={idx}>{line.trim()}</li>)
-              : <li>-</li>}
-          </ul>
-        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '10px' }}>
+          {/* Comments */}
+          <div className="task-section" style={{ marginTop: 0, padding: '8px', display: 'flex', flexDirection: 'column' }}>
+            <h3 style={{ fontSize: '13px', marginBottom: '5px' }}>Comments</h3>
+            <ul className="comment-list" style={{ fontSize: '13px', margin: 0, paddingLeft: '15px', flexGrow: 1, maxHeight: '80px', overflowY: 'auto' }}>
+              {comments.length > 0 ? (
+                comments.map((c) => (
+                  <li key={c.id}>
+                    <strong>{c.user?.first_name || "Unknown"}:</strong> {c.description}
+                  </li>
+                ))
+              ) : (
+                <li>No comments yet.</li>
+              )}
+            </ul>
+            <div style={{ display: 'flex', gap: '5px', marginTop: '5px' }}>
+              <textarea
+                placeholder="Add a comment..."
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                style={{ height: '30px', padding: '5px', flexGrow: 1, resize: 'none', fontSize: '12px', minHeight: '30px' }}
+              />
+              <button className="comment-btn" style={{ padding: '5px 10px', fontSize: '12px' }} onClick={handleAddComment}>
+                Comment
+              </button>
+            </div>
+          </div>
 
-        {/* Comments */}
-        <div className="task-section">
-          <h3>Comments</h3>
-          <ul className="comment-list">
-            {comments.length > 0 ? (
-              comments.map((c) => (
-                <li key={c.id}>
-                  <strong>{c.user?.first_name || "Unknown"}:</strong> {c.description}
-                </li>
-              ))
-            ) : (
-              <li>No comments yet.</li>
-            )}
-          </ul>
-          <textarea
-            placeholder="Add a comment..."
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-          />
-          <button className="comment-btn" onClick={handleAddComment}>
-            Comment
-          </button>
-        </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {/* Assign Task */}
+            <div className="task-section" style={{ marginTop: 0, padding: '8px' }}>
+              <h3 style={{ fontSize: '13px', marginBottom: '5px' }}>Assign Task</h3>
+              <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
+                <select
+                  value={selectedUser}
+                  onChange={(e) => setSelectedUser(e.target.value)}
+                  style={{ fontSize: '12px', padding: '4px', flexGrow: 1 }}
+                >
+                  <option value="">-- Select User --</option>
+                  {users.map((u) => (
+                    <option key={u.user?.id} value={u.user?.id}>
+                      {u.user?.first_name}
+                    </option>
+                  ))}
+                </select>
+                <button className="assign-btn" onClick={handleAssignTask} style={{ margin: 0, padding: '4px 8px', fontSize: '12px' }}>
+                  Assign
+                </button>
+              </div>
+            </div>
 
-        {/* Assign Task */}
-        <div className="task-section">
-          <h3>Assign Task</h3>
-          <select
-            value={selectedUser}
-            onChange={(e) => setSelectedUser(e.target.value)}
-          >
-            <option value="">-- Select User --</option>
-            {users.map((u) => (
-              <option key={u.user?.id} value={u.user?.id}>
-                {u.user?.first_name}
-              </option>
-            ))}
-          </select>
-          <button className="assign-btn" onClick={handleAssignTask}>
-            Assign
-          </button>
+            {/* Attachments */}
+            <div className="task-section" style={{ marginTop: 0, padding: '8px', flexGrow: 1 }}>
+              <h3 style={{ fontSize: '13px', marginBottom: '5px' }}>Attachments</h3>
+              {task.attachment_flag === "Yes" ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                  {task.attachments && task.attachments.length > 0 ? (
+                    task.attachments.map((att) => (
+                      <div key={att.id} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                        <span style={{ fontWeight: "bold", color: "#555", fontSize: '12px' }}>
+                          📎 {att.attachmentName}
+                        </span>
+                        <button
+                          onClick={() => downloadFile(task.id, att.id, att.attachmentName, att.attachmentType)}
+                          className="btn-global btn-primary"
+                          style={{ padding: '3px 8px', fontSize: '11px' }}
+                        >
+                          Download
+                        </button>
+                      </div>
+                    ))
+                  ) : (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                      <span style={{ fontWeight: "bold", color: "#555", fontSize: '12px' }}>
+                        📎 {task.attachmentName || task.attachment_name || "Attached File"}
+                      </span>
+                      <button
+                        onClick={() => downloadFile(task.id)}
+                        className="btn-global btn-primary"
+                        style={{ padding: '3px 8px', fontSize: '11px' }}
+                      >
+                        Download
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <p style={{ color: "#777", margin: 0, fontSize: '12px' }}>No Attachments</p>
+              )}
+            </div>
+          </div>
         </div>
-
-        {/* Download */}
-        <button
-          onClick={() => downloadFile(task.id)}
-          disabled={task.attachment_flag !== "Yes"}
-          className={`download-btn ${
-            task.attachment_flag !== "Yes" ? "disabled" : ""
-          }`}
-        >
-          {task.attachment_flag === "Yes"
-            ? "Download Attachment"
-            : "No Attachment"}
-        </button>
       </div>
     </div>
   );

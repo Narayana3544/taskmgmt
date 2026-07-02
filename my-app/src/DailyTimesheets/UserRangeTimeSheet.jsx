@@ -84,9 +84,16 @@ const formatHours = (entry) => {
   };
   return (
     <div className="timesheet-container">
-      <h2>My Timesheets</h2>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+        <h2 style={{ margin: 0 }}>My Timesheets</h2>
+        {selectedDate && (
+          <button className="btn-global btn-secondary" onClick={() => setSelectedDate(null)}>Back</button>
+        )}
+      </div>
 
-      <div className="range-picker">
+      {!selectedDate ? (
+        <>
+          <div className="range-picker">
         <label>
           Start Date:
           <input
@@ -113,7 +120,6 @@ const formatHours = (entry) => {
       {loading ? (
         <p>Loading...</p>
       ) : (
-        <>
           <table className="timesheet-table">
             <thead>
               <tr>
@@ -167,10 +173,11 @@ const formatHours = (entry) => {
           })}
             </tbody>
           </table>
-
-          {selectedDate && (
-            <div className="daily-details">
-              <h3>Details for {selectedDate}</h3>
+      )}
+        </>
+      ) : (
+        <div className="daily-details">
+          <h3>Details for {selectedDate}</h3>
               {loadingDaily ? (
                 <p>Loading daily entries...</p>
               ) : dailyDetails.length > 0 ? (
@@ -189,7 +196,9 @@ const formatHours = (entry) => {
                       <tr key={idx}>
                         <td>{entry.start_time || "-"}</td>
                         <td>{entry.end_time || "-"}</td>
-                        <td>{entry.task?.userstory || "-"}</td>
+                        <td style={{ maxWidth: '300px', whiteSpace: 'normal', wordWrap: 'break-word', overflowWrap: 'anywhere' }}>
+                          {entry.task?.userstory || "-"}
+                        </td>
                         <td>{entry.workType?.description || "-"}</td>
                         <td>{entry.description || "-"}</td>
                       </tr>
@@ -200,8 +209,6 @@ const formatHours = (entry) => {
                 <p className="no-entries">No records found (assumed leave)</p>
               )}
             </div>
-          )}
-        </>
       )}
     </div>
   );

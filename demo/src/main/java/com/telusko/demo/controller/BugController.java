@@ -16,7 +16,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.format.annotation.DateTimeFormat;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -39,7 +41,11 @@ public class BugController {
             @RequestParam int priorityId,
             @RequestParam(required = false) Integer statusId,
             @RequestParam int assignedToId,
-            @RequestPart(required = false) List<MultipartFile> attachments,
+            @RequestParam(required = false) Integer sprintId,
+            @RequestParam(required = false) Integer storypoints,
+            @RequestParam(required = false) Integer complexity,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate targetDate,
+            @RequestParam(value = "attachments", required = false) List<MultipartFile> attachments,
             @AuthenticationPrincipal CustomUserDetails userDetails
     )
 
@@ -52,6 +58,10 @@ public class BugController {
                 priorityId,
                 statusId,
                 assignedToId,
+                sprintId,
+                storypoints,
+                complexity,
+                targetDate,
                 attachments,
                 reporterId
         );
@@ -62,6 +72,23 @@ public class BugController {
     public ResponseEntity<List<Bug>> getBugsByTask(@PathVariable int taskId) {
         List<Bug> bugs = repo.findByTaskId(taskId);
         return ResponseEntity.ok(bugs);
+    }
+
+    @GetMapping("/view-bugs")
+    public ResponseEntity<List<Bug>> viewAllBugs() {
+        return ResponseEntity.ok(repo.findAll());
+    }
+
+    @GetMapping("/sprints/{sprintId}/bugs")
+    public ResponseEntity<List<Bug>> getBugsBySprint(@PathVariable int sprintId) {
+        List<Bug> bugs = bugService.getBugsBySprint(sprintId);
+        return ResponseEntity.ok(bugs);
+    }
+
+    @PutMapping("/bugs/{bugId}/status/{statusId}")
+    public ResponseEntity<String> updateBugStatus(@PathVariable int bugId, @PathVariable int statusId) {
+        bugService.updateBugStatus(bugId, statusId);
+        return ResponseEntity.ok("Status updated successfully");
     }
 
     @GetMapping("/user/bugs")

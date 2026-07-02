@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import api from '../api';
 import { useNavigate, useParams } from 'react-router-dom';
 import { FaEdit } from "react-icons/fa";
+import { sortLatestFirst } from "../utils/sortUtils";
 
 const ViewFeaturesByProjectId = () => {
   const [features, setFeatures] = useState([]);
@@ -15,8 +16,9 @@ const ViewFeaturesByProjectId = () => {
       api
         .get(`/features/project/${projectId}`, { withCredentials: true })
         .then((res) => {
-          setFeatures(res.data);
-          setFilteredFeatures(res.data); // ✅ initialize filteredFeatures as well
+          const sorted = sortLatestFirst(res.data);
+          setFeatures(sorted);
+          setFilteredFeatures(sorted); // ✅ initialize filteredFeatures as well
         })
         .catch((err) => console.error("Error fetching features:", err));
     }
@@ -61,7 +63,6 @@ useEffect(() => {
 
   return (
     <div className="features-list-page">
-       <button className="back-btn" onClick={() => navigate(-1)}>⬅ Back</button>
       <div className="header-bar">
         
         <h2>Features for Project {projectId}</h2>
@@ -118,6 +119,10 @@ useEffect(() => {
           </tbody>
         </table>
       )}
+
+      <div className="btn-container full-width" style={{ marginTop: '20px' }}>
+        <button type="button" className="btn-global btn-secondary" onClick={() => navigate(-1)}>Back</button>
+      </div>
     </div>
   );
 };

@@ -139,12 +139,12 @@ const Features = () => {
             </select>
             </div>
 
-            <div className="form-actions">
-              <button type="submit" className="submit-btn">
-                Add Feature
-              </button>
-              <button type="button" className="back-btn" onClick={handleBack}>
+            <div className="btn-container full-width">
+              <button type="button" className="btn-global btn-secondary" onClick={handleBack}>
                 Back
+              </button>
+              <button type="submit" className="btn-global btn-primary">
+                Add Feature
               </button>
             </div>
           </>

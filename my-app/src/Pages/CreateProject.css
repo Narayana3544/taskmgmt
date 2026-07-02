@@ -63,11 +63,6 @@
   resize: none;
 }
 
-.btn-container {
- display: flex;
-  justify-content: space-between;
-  margin-top: 15px;
-}
 
 .submit-btn {
     background-color: #1976d2;

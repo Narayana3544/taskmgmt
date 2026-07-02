@@ -6,6 +6,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import jakarta.persistence.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -40,6 +41,16 @@ public class Bug {
     @ManyToOne
     @JoinColumn(name = "assigned_to")
     private User assignedUser;
+
+    @ManyToOne
+    @JoinColumn(name = "Sprint_id")
+    private createsprint sprint;
+
+    private Integer storypoints;
+    private Integer complexity;
+
+    @Column(name = "target_date")
+    private LocalDate targetDate;
 
     @CreationTimestamp
     private LocalDateTime createdAt;
@@ -109,6 +120,38 @@ public class Bug {
 
     public void setAssignedUser(User assignedUser) {
         this.assignedUser = assignedUser;
+    }
+
+    public createsprint getSprint() {
+        return sprint;
+    }
+
+    public void setSprint(createsprint sprint) {
+        this.sprint = sprint;
+    }
+
+    public Integer getStorypoints() {
+        return storypoints;
+    }
+
+    public void setStorypoints(Integer storypoints) {
+        this.storypoints = storypoints;
+    }
+
+    public Integer getComplexity() {
+        return complexity;
+    }
+
+    public void setComplexity(Integer complexity) {
+        this.complexity = complexity;
+    }
+
+    public LocalDate getTargetDate() {
+        return targetDate;
+    }
+
+    public void setTargetDate(LocalDate targetDate) {
+        this.targetDate = targetDate;
     }
 
     public LocalDateTime getCreatedAt() {

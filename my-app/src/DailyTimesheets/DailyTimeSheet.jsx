@@ -244,14 +244,16 @@ export default function DailyTimesheet() {
             onChange={handleChange}
           />
 
-          {editingId ? (
-            <>
-              <button onClick={handleUpdate}>Update</button>
-              <button onClick={resetForm}>Cancel</button>
-            </>
-          ) : (
-            <button onClick={handleAdd}>+ Add</button>
-          )}
+          <div className="btn-container full-width" style={{ marginTop: '10px' }}>
+            {editingId ? (
+              <>
+                <button onClick={resetForm} className="btn-global btn-secondary">Cancel</button>
+                <button onClick={handleUpdate} className="btn-global btn-primary">Update</button>
+              </>
+            ) : (
+              <button onClick={handleAdd} className="btn-global btn-primary">+ Add</button>
+            )}
+          </div>
         </div>
       )}
 
@@ -272,7 +274,9 @@ export default function DailyTimesheet() {
             <tr key={idx} className={entry.isAutoMarkedLeave ? "auto-leave" : ""}>
               <td>{entry.start_time || "-"}</td>
               <td>{entry.end_time || "-"}</td>
-              <td>{entry.task?.userstory || "-"}</td>
+              <td style={{ maxWidth: '300px', whiteSpace: 'normal', wordWrap: 'break-word', overflowWrap: 'anywhere' }}>
+                {entry.task?.userstory || "-"}
+              </td>
               <td>{entry.workType?.description || "-"}</td>
               <td>{entry.description}</td>
               <td>
@@ -284,23 +288,15 @@ export default function DailyTimesheet() {
               </td>
               {canEdit && (
                 <td>
-                  <button
-                  onClick={() => handleEdit(entry)}
-                  style={{
-                    background: "#007bff",
-                    border: "none",
-                    width: "28px",
-                    height: "28px",
-                    borderRadius: "50%",
-                    cursor: "pointer",
-                    color: "#fff",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center"
-                  }}
-                >
-                  <FaEdit/>
-                </button>
+                  <div className="action-buttons">
+                    <div className="tooltip">
+                      <FaEdit
+                        className="icon-btn edit-icon"
+                        onClick={() => handleEdit(entry)}
+                      />
+                      <span className="tooltip-text">Edit</span>
+                    </div>
+                  </div>
                 </td>
               )}
             </tr>

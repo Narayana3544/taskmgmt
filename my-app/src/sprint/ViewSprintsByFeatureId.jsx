@@ -4,6 +4,7 @@ import './ManageSprints.css';
 import { FaEye } from 'react-icons/fa';
 
 import { useNavigate, useParams } from 'react-router-dom';
+import { sortLatestFirst } from "../utils/sortUtils";
 
 const ViewSprintsByFeatureid = () => {
   const [sprints, setSprints] = useState([]);
@@ -18,7 +19,7 @@ const ViewSprintsByFeatureid = () => {
 
   const fetchSprints = () => {
     api.get(`/features/${featureId}/sprints`, { withCredentials: true })
-      .then(res => setSprints(res.data))
+      .then(res => setSprints(sortLatestFirst(res.data)))
       .catch(err => console.error('Error fetching sprints:', err));
   };
 
@@ -33,7 +34,6 @@ const ViewSprintsByFeatureid = () => {
 
   return (
     <div className="manage-sprints-page">
-        <button className="back-btn" onClick={() => navigate(-1)}>⬅ Back</button>
       <div className="sprint-header">
         <h2>Your Sprints</h2>
       </div>
@@ -100,6 +100,10 @@ const ViewSprintsByFeatureid = () => {
           )}
         </tbody>
       </table>
+
+      <div className="btn-container full-width" style={{ marginTop: '20px' }}>
+        <button type="button" className="btn-global btn-secondary" onClick={() => navigate(-1)}>Back</button>
+      </div>
     </div>
   );
 };

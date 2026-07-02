@@ -21,6 +21,158 @@ html, body {
   width: 100%;
   height: 100%;
   overflow-x: hidden;
-  background-color: #1e1e2f;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
   font-family: 'Segoe UI', sans-serif;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+* {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* ==========================================================================
+   GLOBAL DESIGN SYSTEM VARIABLES
+   ========================================================================== */
+:root {
+  /* Colors (Black, White, Blue Only) */
+  --bg-primary: #000000;
+  --bg-secondary: #f9f9f9;
+  --bg-tertiary: #ffffff;
+  
+  --text-primary: #000000;
+  --text-secondary: #000000;
+  --text-muted: #333333;
+  
+  --color-primary: #0055ff; /* Blue */
+  --color-primary-hover: #0044cc;
+  --color-secondary: #000000; /* Black */
+  --color-secondary-hover: #333333;
+  
+  /* Overriding standard state colors to adhere to black/white/blue strictness */
+  --color-success: #0055ff; /* Blue */
+  --color-success-hover: #0044cc;
+  --color-danger: #000000; /* Black */
+  --color-danger-hover: #333333;
+  --color-warning: #000000; /* Black */
+
+  /* Borders & Shadows */
+  --border-radius-sm: 4px;
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+  --border-color: rgba(0, 0, 0, 0.15);
+  --box-shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+  --box-shadow-md: 0 4px 8px rgba(0, 0, 0, 0.1);
+  --box-shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.15);
+
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+}
+
+/* ==========================================================================
+   GLOBAL UTILITY CLASSES
+   ========================================================================== */
+
+/* Buttons */
+.btn-global {
+  padding: 10px 15px;
+  border: none;
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.3s ease, transform 0.1s ease;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.btn-global:active { transform: translateY(1px); }
+.btn-global:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.btn-primary { background-color: var(--color-primary); }
+.btn-primary:hover:not(:disabled) { background-color: var(--color-primary-hover); }
+
+.btn-secondary { background-color: var(--color-secondary); }
+.btn-secondary:hover:not(:disabled) { background-color: var(--color-secondary-hover); }
+
+.btn-success { background-color: var(--color-success); }
+.btn-success:hover:not(:disabled) { background-color: var(--color-success-hover); }
+
+.btn-danger { background-color: var(--color-danger); }
+.btn-danger:hover:not(:disabled) { background-color: var(--color-danger-hover); }
+
+/* Forms & Inputs */
+.form-group-global {
+  margin-bottom: var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.form-group-global label {
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.form-control-global {
+  width: 100%;
+  padding: 10px;
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  font-size: 14px;
+  transition: border-color 0.3s ease;
+}
+.form-control-global:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+/* Cards & Containers */
+.card-global {
+  background-color: var(--bg-secondary);
+  border-radius: var(--border-radius-md);
+  padding: var(--spacing-lg);
+  box-shadow: var(--box-shadow-md);
+  border: 1px solid var(--border-color);
+}
+
+.card-title-global {
+  margin-top: 0;
+  margin-bottom: var(--spacing-md);
+  color: var(--text-primary);
+  font-size: 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: var(--spacing-sm);
+}
+
+.btn-container {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-md);
+}
+
+.btn-container.full-width {
+  width: 100%;
+}
+
+/* Ensure long text breaks properly across all screens */
+td, th, h1, h2, h3, h4, h5, h6, p, span, div, strong, a {
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
 }

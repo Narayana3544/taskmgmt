@@ -1,23 +1,24 @@
 .bug-form-container {
   max-width: 600px;
-  color: black;
+  color: var(--text-primary);
   margin: 2rem auto;
   padding: 1.5rem;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  background: #fff;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  background-color: var(--bg-secondary);
+  box-shadow: var(--box-shadow-md);
 }
 
 .bug-form h2 {
   margin-bottom: 1rem;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .bug-form label {
   display: block;
   margin-top: 0.8rem;
   font-weight: bold;
+  color: var(--text-secondary);
 }
 
 .bug-form input,
@@ -26,8 +27,10 @@
   width: 100%;
   margin-top: 0.3rem;
   padding: 0.5rem;
-  border: 1px solid #ccc;
-  border-radius: 6px;
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
   font-size: 14px;
 }
 
@@ -41,56 +44,39 @@
   font-size: 14px;
   margin: 0.3rem 0;
   padding: 0.4rem;
-  background: #f9f9f9;
-  border: 1px solid #eee;
-  border-radius: 4px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  color: var(--text-primary);
 }
 
 .file-list .progress {
   margin-left: 8px;
   font-size: 12px;
-  color: green;
+  color: var(--color-success);
   font-weight: bold;
 }
 
-.submit-btn {
-  /* margin-top: 1rem; */
-  padding: 0.6rem 1.2rem;
-  background: #007bff;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 13px;
-}
-
-.submit-btn:hover {
-  background: #0056b3;
-}
-.file-list {
-  list-style: none;
-  padding-left: 0;
-  margin-top: 10px;
-}
+/* Buttons use global classes */
 
 .file-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #f8f9fa;
+  background: var(--bg-tertiary);
   padding: 6px 10px;
   margin-bottom: 6px;
-  border-radius: 6px;
+  border-radius: var(--border-radius-sm);
 }
 
 .remove-btn {
   border: none;
   background: none;
   cursor: pointer;
-  color: red;
+  color: var(--color-danger);
   font-size: 16px;
 }
 
 .remove-btn:hover {
-  color: darkred;
+  color: var(--color-danger-hover);
 }

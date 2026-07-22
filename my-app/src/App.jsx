@@ -36,6 +36,7 @@ import TimesheetForm from './TimeSheets/TimeSheetForm';
 import BugForm from './Bugs/Bugform';
 import BugList from './Bugs/BugList';
 import BugDetails from './Bugs/BugDetails';
+import EditBug from './Bugs/EditBug';
 import DailyTimesheet from './DailyTimesheets/DailyTimeSheet';
 import MonthlyTimesheet from './DailyTimesheets/UserRangeTimeSheet';
 import AdminRangeTimeSheet from './DailyTimesheets/AdminRangeTimeSheet';
@@ -113,6 +114,7 @@ function App() {
               <Route path="/create-bug" element={<BugForm />} />
               <Route path="/task/:id/bug" element={<BugForm />} />
               <Route path="/bug/:id" element={<BugDetails/>} />
+              <Route path="/edit-bug/:id" element={<EditBug />} />
               {/* <Route path="/Daily-time-sheets" element={<DailyTimesheet/>} /> */}
               <Route path="/Monthly-time-sheets" element={<MonthlyTimesheet/>} />
                <Route path="/timesheet/:date" element={<DailyTimesheet />} />

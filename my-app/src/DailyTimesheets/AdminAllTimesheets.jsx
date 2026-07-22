@@ -8,31 +8,24 @@ import "./AdminAllTimesheet.css";
 export default function AdminAllTimesheets() {
 
   const navigate = useNavigate();
-
   const today = new Date();
   const todayStr = today.toISOString().split("T")[0];
-
   const pastWeek = new Date();
   pastWeek.setDate(today.getDate() - 7);
   const pastWeekStr = pastWeek.toISOString().split("T")[0];
-
   const [summaries, setSummaries] = useState([]);
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState("");
-
   // ✅ Default dates
   const [start, setStart] = useState(pastWeekStr);
   const [end, setEnd] = useState(todayStr);
-
   const [loading, setLoading] = useState(false);
-
   // Fetch users
   useEffect(() => {
     api.get("/users", { withCredentials: true })
       .then((res) => setUsers(res.data))
       .catch((err) => console.error("Error fetching users:", err));
   }, []);
-
   // Fetch summary
   const fetchSummary = async () => {
     setLoading(true);
@@ -44,15 +37,12 @@ export default function AdminAllTimesheets() {
     }
     setLoading(false);
   };
-
   // Fetch selected user's range
   const handleViewUser = (userId, username) => {
     navigate(`/admin/timesheet-details/${userId}?start=${start}&end=${end}&name=${encodeURIComponent(username || '')}`);
   };
-
   // Excel Export
   const exportToExcel = async (userId, username) => {
-
     try {
 
       const res = await api.get(`/timesheet/range-summary-with-logs/${userId}`, {

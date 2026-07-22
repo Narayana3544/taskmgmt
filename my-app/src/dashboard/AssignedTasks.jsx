@@ -66,19 +66,23 @@ export default function AssignedTasks() {
     fetchTasks();
   }, [selectedSprint, selectedStatus]);
 
-  const handleStatusChange = (taskId, statusId) => {
-    api
-      .put(`/tasks/${taskId}/status/${statusId}`, {}, { withCredentials: true })
-      .then(() => {
-        setTasks(prev =>
-          prev.map(task =>
-            task.id === taskId
-              ? { ...task, taskStatus: statuses.find(s => s.id === parseInt(statusId)) }
-              : task
-          )
-        );
-      })
-      .catch(err => console.error("Error updating status:", err));
+  const handleStatusChange = async (taskId, statusId) => {
+    if (!window.confirm("Are you sure you want to change the status?")) {
+      return;
+    }
+    try {
+      await api.put(`/tasks/${taskId}/status/${statusId}`, null, { withCredentials: true });
+      setTasks(prev =>
+        prev.map(task =>
+          task.id === taskId
+            ? { ...task, taskStatus: statuses.find(s => s.id === parseInt(statusId)) }
+            : task
+        )
+      );
+    } catch (err) {
+      console.error("Error updating status:", err);
+      alert("Failed to update status.");
+    }
   };
 
   // Pagination Logic
@@ -98,26 +102,12 @@ export default function AssignedTasks() {
         <table className="task-table">
           <thead>
             <tr>
+              <th>Project Name</th>
+              <th>Feature Name</th>
+              <th>Sprint</th>
+              <th>Task Name</th>
               <th>ID</th>
-              <th>Story</th>
-              <th>Story Points</th>
-              <th>
-                Sprint
-                <div>
-                  <select
-                    className="column-filter"
-                    value={selectedSprint}
-                    onChange={(e) => setSelectedSprint(e.target.value)}
-                  >
-                    <option value="">All</option>
-                    {sprints.map(s => (
-                      <option key={s.id} value={s.id}>{s.name}</option>
-                    ))}
-                  </select>
-                </div>
-              </th>
-              <th>Feature</th>
-              <th>Task Type</th>
+              <th>User</th>
               <th>
                 Status
                 <div>
@@ -145,18 +135,19 @@ export default function AssignedTasks() {
             )}
             {currentTasks.map(task => (
               <tr key={task.id}>
-                <td >{task.id}</td>
+                <td>{task.feature?.project?.name || "-"}</td>
+                <td>{task.feature?.name || "-"}</td>
+                <td>{task.sprint?.name || "-"}</td>
                 <td style={{ maxWidth: '250px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={task.userstory}>
                   {task.userstory || "-"}
                 </td>
-                <td>{task.storypoints ?? "-"}</td>
-                <td>{task.sprint?.name || "-"}</td>
-                <td>{task.feature?.name || "-"}</td>
-                <td>{task.taskType?.description || "-"}</td>
+                <td >{task.id}</td>
+                <td>{task.user?.first_name || task.user?.name || "-"}</td>
                 <td>
                   <select
                     value={task.taskStatus?.id || ""}
                     onChange={(e) => handleStatusChange(task.id, e.target.value)}
+                    style={{ padding: "4px 8px", borderRadius: "4px", border: "1px solid #ccc" }}
                   >
                     <option value="">-- Select --</option>
                     {statuses.map(status => (

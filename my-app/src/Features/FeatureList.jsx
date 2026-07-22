@@ -1,14 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import api from '../api';
 import { useNavigate } from 'react-router-dom';
+import Select from 'react-select';
 import './FeatureList.css';
 import { FaEdit, FaEye } from 'react-icons/fa'; // ✅ Icons
 import { sortLatestFirst } from "../utils/sortUtils";
+import StatusSummary from '../components/StatusSummary';
 
 const FeatureList = () => {
   const [features, setFeatures] = useState([]);
   const [filteredFeatures, setFilteredFeatures] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [projects, setProjects] = useState([]);
+  const [selectedProject, setSelectedProject] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -19,38 +22,49 @@ const FeatureList = () => {
         setFilteredFeatures(sorted);
       })
       .catch(err => console.error('Error fetching features:', err));
+
+    api.get('/projects', { withCredentials: true })
+      .then(res => {
+        setProjects(sortLatestFirst(res.data));
+      })
+      .catch(err => console.error('Error fetching projects:', err));
   }, []);
 
   useEffect(() => {
-    if (searchTerm.trim() === '') {
+    if (!selectedProject) {
       setFilteredFeatures(features);
     } else {
-      const term = searchTerm.toLowerCase();
       const filtered = features.filter(feature =>
-        JSON.stringify(feature).toLowerCase().includes(term)
+        feature.project?.id === selectedProject.value
       );
       setFilteredFeatures(filtered);
     }
-  }, [searchTerm, features]);
+  }, [selectedProject, features]);
+
+  const projectOptions = projects.map(p => ({ label: p.name, value: p.id }));
 
   return (
     <div className="features-list-page">
-      <div className="header-bar">
-        <h2>Features</h2>
-        <button className="btn-global btn-primary" onClick={() => navigate('/features')}>
+      <div className="header-bar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', gap: '15px', flexWrap: 'wrap' }}>
+        <h2 style={{ margin: 0, whiteSpace: 'nowrap' }}>Features</h2>
+
+        {/* 🔍 Project Dropdown Inline */}
+        <div className="filter-sections" style={{ display: 'flex', gap: '10px', alignItems: 'center', flex: 1 }}>
+          <Select
+            options={projectOptions}
+            value={selectedProject}
+            onChange={(option) => setSelectedProject(option)}
+            isClearable
+            placeholder="-- Select Project --"
+            styles={{ container: (base) => ({ ...base, minWidth: '200px' }) }}
+          />
+
+          <StatusSummary data={filteredFeatures} statusExtractor={(feature) => feature.status?.decription || feature.status || 'Unknown'} showBuckets={['In Progress', 'Completed']} />
+        </div>
+
+        <button className="btn-global btn-primary" onClick={() => navigate('/features')} style={{ flexShrink: 0 }}>
           + Create Feature
         </button>
-      </div>
-
-      {/* 🔍 Medium Search Bar */}
-      <div className="search-bar">
-        <input
-          type="text"
-          placeholder="Search"
-          value={searchTerm}
-          onChange={e => setSearchTerm(e.target.value)}
-          className="form-control-global"
-        />
       </div>
 
       {filteredFeatures.length === 0 ? (

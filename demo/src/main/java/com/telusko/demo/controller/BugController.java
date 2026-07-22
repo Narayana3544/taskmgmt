@@ -5,6 +5,7 @@ import com.telusko.demo.Model.BugAttachment;
 import com.telusko.demo.Model.Project;
 import com.telusko.demo.config.CustomUserDetails;
 import com.telusko.demo.dto.BugDTO;
+import com.telusko.demo.dto.BugListDTO;
 import com.telusko.demo.repo.BugAttachmentRepo;
 import com.telusko.demo.repo.BugRepo;
 import com.telusko.demo.service.BugService;
@@ -35,7 +36,7 @@ public class BugController {
 
     @PostMapping(value = "/bugs",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Bug> createBug(
-            @RequestParam int taskId,
+            @RequestParam(required = false) Integer taskId,
             @RequestParam String title,
             @RequestParam String description,
             @RequestParam int priorityId,
@@ -75,8 +76,49 @@ public class BugController {
     }
 
     @GetMapping("/view-bugs")
-    public ResponseEntity<List<Bug>> viewAllBugs() {
-        return ResponseEntity.ok(repo.findAll());
+    public ResponseEntity<List<BugListDTO>> viewAllBugs() {
+        List<Bug> bugs = repo.findAll();
+        List<BugListDTO> dtos = bugs.stream().map(bug -> {
+            // Get project/feature/sprint from task.sprint or bug.sprint
+            String projectName = null;
+            String featureName = null;
+            String sprintName = null;
+            if (bug.getTask() != null && bug.getTask().getSprint() != null) {
+                var sprint = bug.getTask().getSprint();
+                sprintName = sprint.getName();
+                if (sprint.getFeature() != null) {
+                    featureName = sprint.getFeature().getName();
+                    if (sprint.getFeature().getProject() != null) {
+                        projectName = sprint.getFeature().getProject().getName();
+                    }
+                }
+            } else if (bug.getSprint() != null) {
+                sprintName = bug.getSprint().getName();
+                if (bug.getSprint().getFeature() != null) {
+                    featureName = bug.getSprint().getFeature().getName();
+                    if (bug.getSprint().getFeature().getProject() != null) {
+                        projectName = bug.getSprint().getFeature().getProject().getName();
+                    }
+                }
+            }
+            return new BugListDTO(
+                bug.getId(),
+                bug.getTitle(),
+                bug.getDescription(),
+                projectName,
+                featureName,
+                sprintName,
+                bug.getStatus() != null ? bug.getStatus().getDecription() : null,
+                bug.getStatus() != null ? bug.getStatus().getId() : null,
+                bug.getPriority() != null ? bug.getPriority().getDescription() : null,
+                bug.getPriority() != null ? bug.getPriority().getId() : null,
+                bug.getAssignedUser() != null ? bug.getAssignedUser().getFirst_name() : null,
+                bug.getAssignedUser() != null ? bug.getAssignedUser().getId() : null,
+                bug.getReportedUser() != null ? bug.getReportedUser().getFirst_name() : null,
+                bug.getCreatedAt()
+            );
+        }).toList();
+        return ResponseEntity.ok(dtos);
     }
 
     @GetMapping("/sprints/{sprintId}/bugs")
@@ -111,16 +153,29 @@ public class BugController {
                 .body(fileData);
     }
 
-//    @PutMapping("/edit-bug/{id}")
-//    public ResponseEntity<Bug> editBug(@PathVariable Integer id,@RequestBody Bug bug) {
-//        return repo.findById(id)
-//                .map(bug1 -> {
-//                    bug.setTitle();
-//                    bug.setDescription(updatedProject.getDescription());
-//                    bug.setStatus(updatedProject.getStatus());
-//                    return repo.save(bug);
-//                })
-//                .orElseThrow(() -> new RuntimeException("Project not found with id: " + id));
-//    }
+    @PutMapping(value = "/bugs/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Bug> updateBug(
+            @PathVariable Integer id,
+            @RequestParam String title,
+            @RequestParam String description,
+            @RequestParam int priorityId,
+            @RequestParam(required = false) Integer statusId,
+            @RequestParam int assignedToId,
+            @RequestParam(value = "attachments", required = false) List<MultipartFile> attachments,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        int reporterId = userDetails.getUser().getId();
+        Bug updatedBug = bugService.updateBug(
+                id,
+                title,
+                description,
+                priorityId,
+                statusId,
+                assignedToId,
+                attachments,
+                reporterId
+        );
+        return ResponseEntity.ok(updatedBug);
+    }
 
 }

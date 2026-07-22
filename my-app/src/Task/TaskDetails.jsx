@@ -155,7 +155,6 @@ export default function TaskDetails() {
             <button type="button" className="btn-global btn-secondary" style={{ padding: '5px 15px', fontSize: '13px' }} onClick={() => navigate(-1)}>
               Back
             </button>
-            <button className="btn-global btn-primary" style={{ padding: '5px 10px' }} onClick={() => navigate(`/task/${id}/bug`)}>➕ Create Bug</button>
           </div>
         </div>
         {/* Info grid */}

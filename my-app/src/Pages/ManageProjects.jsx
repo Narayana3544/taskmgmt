@@ -4,6 +4,7 @@ import './ManageProject.css';
 import { FaEdit, FaPlus, FaUsers, FaListUl } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { sortLatestFirst } from "../utils/sortUtils";
+import StatusSummary from '../components/StatusSummary';
 
 export default function ManageProjects() {
   const [projects, setProjects] = useState([]);
@@ -31,24 +32,17 @@ export default function ManageProjects() {
     : [];
   return (
     <div className="manage-projects-page">
-      <div className="manage-header">
-        <h2 className="manage-title">Projects</h2>
-          <button
-            className="btn-global btn-primary"
-            onClick={() => navigate('/create-project')}
-          >
-            <FaPlus /> Create Project
+      <div className="manage-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', gap: '15px', flexWrap: 'wrap' }}>
+        <h2 className="manage-title" style={{ margin: 0, whiteSpace: 'nowrap' }}>Projects</h2>
+
+        <button
+          className="btn-global btn-primary"
+          onClick={() => navigate('/create-project')}
+          style={{ flexShrink: 0 }}
+        >
+          <FaPlus /> Create Project
         </button>
       </div>
-        <div className="search-bar">
-          <input
-            type="text"
-            placeholder="Search by name or ID"
-            className="form-control-global"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
         <table className="projects-table">
           <thead>
             <tr>

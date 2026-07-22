@@ -1,0 +1,58 @@
+SELECT
+    i.inv_id,
+    l.location_name AS [Location],
+    lv_type.lookup_value_name AS item_type,
+    lv_uom.lookup_value_name AS Uom,
+    ac.asset_category_name AS [Category],
+    COALESCE(at.asset_type_name, mt.material_type_name) AS item_name,
+    i.inv_curbal AS [Current Balance],
+    i.inv_reserved_qty AS [Reserved Qty],
+    i.inv_latestunitcost AS [Latest Unit Cost],
+    i.inv_avgcost AS [Average Cost],
+    i.inv_min_qty AS [Minimum Qty],
+    i.inv_status AS [Status],
+    i.inv_create_datetime AS [Created Date]
+FROM InvInventory i
+
+LEFT JOIN Locations l
+    ON l.location_id = i.inv_location_id
+
+LEFT JOIN Lookups it
+    ON it.lookup_id = i.inv_item_type
+
+LEFT JOIN LookupValues lv_uom
+    ON lv_uom.lookup_value_id = i.inv_uom
+
+LEFT JOIN LookupValues lv_type
+    ON lv_type.lookup_value_id = i.inv_item_type
+
+LEFT JOIN AssetCategories ac
+    ON ac.asset_category_id = i.inv_category
+
+LEFT JOIN AssetTypes at
+    ON lv_type.lookup_value_name = 'Asset'
+   AND at.asset_type_id = i.inv_item_id
+   AND at.asset_type_asset_category = i.inv_category
+
+LEFT JOIN MaterialTypes mt
+    ON lv_type.lookup_value_name = 'Material'
+   AND mt.material_type_id = i.inv_item_id
+   AND mt.material_type_Asset_category = i.inv_category
+
+WHERE
+(
+    @Store = 0
+    OR i.inv_location_id = @Store
+)
+AND
+(
+    @ItemType = 0
+    OR i.inv_item_type = @ItemType
+)
+
+ORDER BY
+    l.location_name,
+    lv_type.lookup_value_name,
+    ac.asset_category_name,
+    COALESCE(at.asset_type_name, mt.material_type_name),
+    lv_uom.lookup_value_name;

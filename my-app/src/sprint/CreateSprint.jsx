@@ -95,56 +95,9 @@ const CreateSprint = () => {
 
       <h2>Create Sprint</h2>
 
-      <form onSubmit={handleSubmit} className="sprint-form">
-        {/* Sprint Name */}
-        <div className="form-group">
-          <label>Sprint Name:</label>
-          <input
-            type="text"
-            name="name"
-            value={sprint.name}
-            onChange={handleChange}
-            required
-          />
-        </div>
-         {/* Sprint Goals */}
-        <div className="form-group">
-          <label>Sprint Goals:</label>
-          <textarea
-            name="sprintGoals"
-            value={sprint.sprintGoals}
-            onChange={handleChange}
-            placeholder="Enter key goals or objectives for this sprint..."
-            rows="3"
-            required
-          />
-        </div>
-        {/* Start Date */}
-        <div className="form-group">
-          <label>Start Date:</label>
-          <input
-            type="date"
-            name="startDate"
-            value={sprint.startDate}
-            onChange={handleChange}
-            required
-          />
-        </div>
-
-        {/* End Date */}
-        <div className="form-group">
-          <label>End Date:</label>
-          <input
-            type="date"
-            name="endDate"
-            value={sprint.endDate}
-            onChange={handleChange}
-            required
-          />
-        </div>
-
+      <form onSubmit={handleSubmit} className="sprint-form" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
         {/* Project Dropdown */}
-        <div className="form-group">
+        <div className="form-group" style={{ marginBottom: 0 }}>
           <label>Project:</label>
           <select
             name="projectId"
@@ -162,7 +115,7 @@ const CreateSprint = () => {
         </div>
 
         {/* Feature Dropdown */}
-        <div className="form-group">
+        <div className="form-group" style={{ marginBottom: 0 }}>
           <label>Feature:</label>
           <select
             name="featureId"
@@ -186,7 +139,56 @@ const CreateSprint = () => {
           </select>
         </div>
 
-        <div className="btn-container full-width" style={{ marginTop: '20px' }}>
+        {/* Sprint Name */}
+        <div className="form-group" style={{ gridColumn: 'span 2', marginBottom: 0 }}>
+          <label>Sprint Name:</label>
+          <input
+            type="text"
+            name="name"
+            value={sprint.name}
+            onChange={handleChange}
+            required
+          />
+        </div>
+
+        {/* Start Date */}
+        <div className="form-group" style={{ marginBottom: 0 }}>
+          <label>Start Date:</label>
+          <input
+            type="date"
+            name="startDate"
+            value={sprint.startDate}
+            onChange={handleChange}
+            required
+          />
+        </div>
+
+        {/* End Date */}
+        <div className="form-group" style={{ marginBottom: 0 }}>
+          <label>End Date:</label>
+          <input
+            type="date"
+            name="endDate"
+            value={sprint.endDate}
+            onChange={handleChange}
+            required
+          />
+        </div>
+
+        {/* Sprint Goals */}
+        <div className="form-group" style={{ gridColumn: 'span 2', marginBottom: 0 }}>
+          <label>Sprint Goals:</label>
+          <textarea
+            name="sprintGoals"
+            value={sprint.sprintGoals}
+            onChange={handleChange}
+            placeholder="Enter key goals or objectives for this sprint..."
+            rows="2"
+            required
+          />
+        </div>
+
+        <div className="btn-container full-width" style={{ gridColumn: 'span 2', marginTop: '10px', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
           <button type="button" className="btn-global btn-secondary" onClick={() => navigate(-1)}>Back</button>
           <button type="submit" className="btn-global btn-primary">Create Sprint</button>
         </div>

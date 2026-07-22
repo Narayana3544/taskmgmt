@@ -20,7 +20,6 @@ export default function BugForm() {
   const [features, setFeatures] = useState([]);
   const [selectedProject, setSelectedProject] = useState("");
   const [selectedFeature, setSelectedFeature] = useState("");
-  const [selectedFilterSprint, setSelectedFilterSprint] = useState("");
 
   // Selections
   const [sprintId, setSprintId] = useState("");
@@ -113,7 +112,7 @@ export default function BugForm() {
        setSelectedTaskId("");
        setTaskObj(null);
     }
-  }, [selectedFeature, selectedFilterSprint, id]);
+  }, [selectedFeature, sprintId, id]);
 
   // Fetch active sprints based on project and feature
   useEffect(() => {
@@ -131,7 +130,7 @@ export default function BugForm() {
         .catch(err => console.error("Error fetching sprints:", err));
     } else {
       setSprints([]);
-      setSelectedFilterSprint("");
+      setSprintId("");
     }
   }, [selectedProject, selectedFeature, taskObj, id]);
 
@@ -148,18 +147,15 @@ export default function BugForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const finalTaskId = id || selectedTaskId;
-
-    if (!finalTaskId) {
-      return alert("Please select a Task.");
-    }
-
     if (!title.trim() || !description.trim() || !priority || !assignedTo) {
       return alert("Please fill all required fields (Title, Description, Priority, Assigned To).");
     }
 
     const formData = new FormData();
-    formData.append("taskId", finalTaskId);
+    if (id) formData.append("taskId", id);
+    if (selectedProject) formData.append("projectId", selectedProject);
+    if (selectedFeature) formData.append("featureId", selectedFeature);
+    
     formData.append("title", title);
     formData.append("description", description);
     formData.append("priorityId", priority);
@@ -215,7 +211,7 @@ export default function BugForm() {
       return false;
     }
     
-    if (selectedFilterSprint && t.sprint?.id !== parseInt(selectedFilterSprint)) {
+    if (sprintId && t.sprint?.id !== parseInt(sprintId)) {
       return false;
     }
     return true;
@@ -227,11 +223,11 @@ export default function BugForm() {
   }));
 
   return (
-    <form onSubmit={handleSubmit} className="task-form" style={{ padding: '15px', gap: '8px 15px', margin: '5px auto' }}>
+    <form onSubmit={handleSubmit} className="task-form" style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '15px' }}>
       {/* Top Row: Task, Project, Feature */}
       {!id ? (
         <>
-          <div className="form-group" style={{ gridColumn: 'span 1' }}>
+          <div className="form-group" style={{ gridColumn: 'span 2' }}>
             <label>Project</label>
             <select value={selectedProject} onChange={(e) => setSelectedProject(e.target.value)}>
               <option value="">-- Select Project --</option>
@@ -241,7 +237,7 @@ export default function BugForm() {
             </select>
           </div>
           
-          <div className="form-group" style={{ gridColumn: 'span 1' }}>
+          <div className="form-group" style={{ gridColumn: 'span 2' }}>
             <label>Feature</label>
             <select value={selectedFeature} onChange={(e) => setSelectedFeature(e.target.value)} disabled={!selectedProject}>
               <option value="">-- Select Feature --</option>
@@ -251,47 +247,27 @@ export default function BugForm() {
             </select>
           </div>
 
-          <div className="form-group" style={{ gridColumn: 'span 1' }}>
-            <label>Sprint (Filter Tasks)</label>
-            <select value={selectedFilterSprint} onChange={(e) => setSelectedFilterSprint(e.target.value)} disabled={!selectedFeature}>
+          <div className="form-group" style={{ gridColumn: 'span 2' }}>
+            <label>Sprint</label>
+            <select value={sprintId} onChange={(e) => setSprintId(e.target.value)} disabled={!selectedFeature}>
               <option value="">-- All Sprints --</option>
               {sprints.map((s) => (
                 <option key={s.id} value={s.id}>{s.name}</option>
               ))}
             </select>
           </div>
-
-          <div className="form-group" style={{ gridColumn: 'span 1', zIndex: 100 }}>
-            <label>Select Task (In Progress / Done) <sup style={{color: "red"}}>*</sup></label>
-            <Select
-              options={taskOptions}
-              value={taskOptions.find(opt => opt.value === parseInt(selectedTaskId)) || null}
-              onChange={(selected) => setSelectedTaskId(selected ? selected.value : "")}
-              isClearable
-              placeholder="Search for a task..."
-              styles={{
-                control: (base) => ({
-                  ...base,
-                  minHeight: '34px',
-                  borderRadius: 'var(--border-radius-sm, 4px)',
-                  borderColor: 'var(--border-color, #ccc)'
-                }),
-                valueContainer: (base) => ({ ...base, padding: '0 8px' })
-              }}
-            />
-          </div>
         </>
       ) : (
         <>
-          <div className="form-group" style={{ gridColumn: 'span 2' }}>
-            <label>Task</label>
-            <input type="text" value={`#${taskObj?.id} - ${taskObj?.userstory || "Untitled Task"}`} disabled />
+          <div className="form-group" style={{ gridColumn: 'span 6' }}>
+            <label>Bug ID</label>
+            <input type="text" value={`#${id} - ${title || ""}`} disabled />
           </div>
-          <div className="form-group" style={{ gridColumn: 'span 1' }}>
+          <div className="form-group" style={{ gridColumn: 'span 3' }}>
             <label>Project</label>
             <input type="text" value={taskObj?.feature?.project?.name || ""} disabled />
           </div>
-          <div className="form-group" style={{ gridColumn: 'span 1' }}>
+          <div className="form-group" style={{ gridColumn: 'span 3' }}>
             <label>Feature</label>
             <input type="text" value={taskObj?.feature?.name || ""} disabled />
           </div>
@@ -299,7 +275,7 @@ export default function BugForm() {
       )}
 
       {/* Bug Title and Description on the same row */}
-      <div className="form-group half-width">
+      <div className="form-group" style={{ gridColumn: 'span 3', marginBottom: 0 }}>
         <label>Bug Title <sup style={{color: "red"}}>*</sup></label>
         <input
           type="text"
@@ -309,10 +285,10 @@ export default function BugForm() {
         />
       </div>
 
-      <div className="form-group half-width">
+      <div className="form-group" style={{ gridColumn: 'span 3', marginBottom: 0 }}>
         <label>Description <sup style={{color: "red"}}>*</sup></label>
         <textarea
-          rows="1"
+          rows="2"
           style={{ minHeight: '34px', padding: '8px' }}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
@@ -320,8 +296,8 @@ export default function BugForm() {
         />
       </div>
 
-      {/* Category / Assignments Row (4 columns) */}
-      <div className="form-group">
+      {/* Category / Assignments Row */}
+      <div className="form-group" style={{ gridColumn: 'span 2', marginBottom: 0 }}>
         <label>Priority <sup style={{color: "red"}}>*</sup></label>
         <select value={priority} onChange={(e) => setPriority(e.target.value)} required>
           <option value="">-- Select Priority --</option>
@@ -333,7 +309,7 @@ export default function BugForm() {
         </select>
       </div>
       
-      <div className="form-group">
+      <div className="form-group" style={{ gridColumn: 'span 2', marginBottom: 0 }}>
         <label>Status</label>
         <select value={status} onChange={(e) => setStatus(e.target.value)}>
           <option value="">-- Select Status --</option>
@@ -345,7 +321,7 @@ export default function BugForm() {
         </select>
       </div>
 
-      <div className="form-group">
+      <div className="form-group" style={{ gridColumn: 'span 2', marginBottom: 0 }}>
         <label>Assign To (Developer) <sup style={{color: "red"}}>*</sup></label>
         <select value={assignedTo} onChange={(e) => setAssignedTo(e.target.value)} required>
           <option value="">-- Select Developer --</option>
@@ -357,7 +333,7 @@ export default function BugForm() {
         </select>
       </div>
 
-      <div className="form-group">
+      <div className="form-group" style={{ gridColumn: 'span 3', marginBottom: 0 }}>
         <label>Reported To (Optional)</label>
         <select value={reportedTo} onChange={(e) => setReportedTo(e.target.value)}>
           <option value="">-- Select User --</option>
@@ -369,20 +345,7 @@ export default function BugForm() {
         </select>
       </div>
 
-      {/* Estimates / Dates Row (4 columns) */}
-      <div className="form-group">
-        <label>Sprint</label>
-        <select value={sprintId} onChange={(e) => setSprintId(e.target.value)}>
-          <option value="">-- Select Sprint --</option>
-          {sprints.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.name}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div className="form-group">
+      <div className="form-group" style={{ gridColumn: 'span 3', marginBottom: 0 }}>
         <label>Story Points</label>
         <input
           type="number"
@@ -392,7 +355,7 @@ export default function BugForm() {
         />
       </div>
       
-      <div className="form-group">
+      <div className="form-group" style={{ gridColumn: 'span 3', marginBottom: 0 }}>
         <label>Complexity</label>
         <input
           type="number"
@@ -404,7 +367,7 @@ export default function BugForm() {
         />
       </div>
 
-      <div className="form-group">
+      <div className="form-group" style={{ gridColumn: 'span 3', marginBottom: 0 }}>
         <label>Target Date</label>
         <input
           type="date"
@@ -414,7 +377,7 @@ export default function BugForm() {
       </div>
 
       {/* File Attachments */}
-      <div className="form-group full-width attachment-container" style={{ margin: 0 }}>
+      <div className="form-group full-width attachment-container" style={{ gridColumn: 'span 6', margin: 0 }}>
         <label>Attachments</label>
         <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
           <div style={{ flex: 1 }}>
@@ -436,7 +399,7 @@ export default function BugForm() {
         </div>
       </div>
 
-      <div className="btn-container full-width" style={{ marginTop: '5px' }}>
+      <div className="btn-container full-width" style={{ gridColumn: 'span 6', display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
         <button type="button" className="btn-global btn-secondary" onClick={() => navigate(-1)}>Back</button>
         <button type="submit" className="btn-global btn-primary">Report Bug</button>
       </div>

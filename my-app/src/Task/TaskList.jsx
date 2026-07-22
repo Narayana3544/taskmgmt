@@ -7,6 +7,7 @@ import { FaEdit, FaPlus, FaEye, FaDownload } from "react-icons/fa";
 import { useDebounce } from "use-debounce";
 import * as XLSX from "xlsx";
 import { sortLatestFirst, sortAlphabetically } from "../utils/sortUtils";
+import StatusSummary from "../components/StatusSummary";
 
 export default function TaskList() {
 
@@ -163,6 +164,24 @@ export default function TaskList() {
 
   };
 
+  const handleStatusChange = async (taskId, newStatusId) => {
+    if (!window.confirm("Are you sure you want to change the status?")) {
+      return;
+    }
+    try {
+      await api.put(`/tasks/${taskId}/status/${newStatusId}`, null, { withCredentials: true });
+      // Update local state
+      setTasks((prev) =>
+        prev.map((t) =>
+          t.id === taskId ? { ...t, taskStatus: statuses.find(s => s.id === parseInt(newStatusId)) } : t
+        )
+      );
+    } catch (err) {
+      console.error("Error updating status:", err);
+      alert("Failed to update status.");
+    }
+  };
+
   // Filtering
   const filteredTasks = useMemo(() => {
 
@@ -223,37 +242,36 @@ export default function TaskList() {
 
     <div className="task-list-page">
 
-      <h2>Search Tasks</h2>
+<div className="header-bar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', gap: '15px', flexWrap: 'wrap' }}>
+  <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flexWrap: 'wrap', flex: 1 }}>
+    <h2 style={{ margin: 0, whiteSpace: 'nowrap' }}>Search Tasks</h2>
 
-<div className="header-bar">
-
-  <div className="filter-section">
-    <Select
-      options={projects.map((p) => ({ value: p.id, label: p.name }))}
-      value={
-        projects.find((p) => p.id == selectedProject)
-          ? { value: selectedProject, label: projects.find((p) => p.id == selectedProject)?.name }
-          : null
-      }
-      onChange={handleProjectChange}
-      placeholder="Select Project..."
-      isClearable
-      className="project-select"
-    />
+    <div style={{ minWidth: '220px' }}>
+      <Select
+        options={projects.map((p) => ({ value: p.id, label: p.name }))}
+        value={
+          projects.find((p) => p.id == selectedProject)
+            ? { value: selectedProject, label: projects.find((p) => p.id == selectedProject)?.name }
+            : null
+        }
+        onChange={handleProjectChange}
+        placeholder="Select Project..."
+        isClearable
+        className="project-select"
+      />
+    </div>
+    
+    <StatusSummary data={filteredTasks} statusExtractor={(task) => task.taskStatus?.description || task.status} />
   </div>
 
-  <div className="header-actions">
-
-    <button className="icon-download-btn" onClick={downloadExcel}>
+  <div className="header-actions" style={{ flexShrink: 0, display: 'flex', gap: '10px' }}>
+    <button className="icon-download-btn" onClick={downloadExcel} title="Download Excel">
       <FaDownload />
     </button>
-
-    <button className="create-btn" onClick={() => navigate("/create-task")}>
+    <button className="create-btn" onClick={() => navigate("/create-task")} style={{ whiteSpace: 'nowrap' }}>
       <FaPlus /> Create Task
     </button>
-
   </div>
-
 </div>
 
       {loading && <p>Loading tasks...</p>}
@@ -264,26 +282,25 @@ export default function TaskList() {
         <table className="task-table">
 
           <thead>
-
             <tr>
-
+              <th>Project Name</th>
               <th>
-                Story
+                Feature Name
                 <br />
-                <input
-                  type="text"
-                  placeholder="Search Story"
-                  value={searchStory}
+                <select
+                  value={selectedFeature}
                   onChange={(e) => {
-                    setSearchStory(e.target.value);
-                    updateURL("story", e.target.value);
+                    setSelectedFeature(e.target.value);
+                    updateURL("feature", e.target.value);
                     setCurrentPage(0);
                   }}
-                />
+                >
+                  <option value="">All</option>
+                  {features.map((f) => (
+                    <option key={f.id} value={f.id}>{f.name}</option>
+                  ))}
+                </select>
               </th>
-
-              <th>Story Points</th>
-
               <th>
                 Sprint
                 <br />
@@ -301,27 +318,10 @@ export default function TaskList() {
                   ))}
                 </select>
               </th>
-
+              <th>Task Name</th>
+              <th>ID</th>
               <th>
-                Feature
-                <br />
-                <select
-                  value={selectedFeature}
-                  onChange={(e) => {
-                    setSelectedFeature(e.target.value);
-                    updateURL("feature", e.target.value);
-                    setCurrentPage(0);
-                  }}
-                >
-                  <option value="">All</option>
-                  {features.map((f) => (
-                    <option key={f.id} value={f.id}>{f.name}</option>
-                  ))}
-                </select>
-              </th>
-
-              <th>
-                Assigned To
+                User
                 <br />
                 <select
                   value={selectedUser}
@@ -339,9 +339,6 @@ export default function TaskList() {
                   ))}
                 </select>
               </th>
-
-              <th>Task Type</th>
-
               <th>
                 Status
                 <br />
@@ -359,17 +356,11 @@ export default function TaskList() {
                   ))}
                 </select>
               </th>
-
               <th>Start Date</th>
-
               <th>Actions</th>
-
             </tr>
-
           </thead>
-
           <tbody>
-
             {!selectedProject ? (
               <tr>
                 <td colSpan="9" className="no-data">
@@ -385,42 +376,47 @@ export default function TaskList() {
             ) : (
               currentTasks.map((task) => (
                 <tr key={task.id}>
-
+                  <td>{projects.find(p => p.id === parseInt(selectedProject))?.name || "-"}</td>
+                  <td>{task.feature?.name || "-"}</td>
+                  <td>{task.sprint?.name || "-"}</td>
                   <td style={{ maxWidth: '250px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={task.userstory}>
                     {task.userstory || "-"}
                   </td>
-                  <td>{task.storypoints ?? "-"}</td>
-                  <td>{task.sprint?.name || "-"}</td>
-                  <td>{task.feature?.name || "-"}</td>
+                  <td>{task.id}</td>
                   <td>{task.user?.first_name || "-"}</td>
-                  <td>{task.taskType?.description || "-"}</td>
-                  <td>{task.taskStatus?.decription || "-"}</td>
+                  <td>
+                    <select
+                      value={task.taskStatus?.id || ""}
+                      onChange={(e) => handleStatusChange(task.id, e.target.value)}
+                      style={{ padding: "4px 8px", borderRadius: "4px", border: "1px solid #ccc" }}
+                    >
+                      {statuses.map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {s.decription || s.description || s.name}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
                   <td>{task.start_date ? new Date(task.start_date).toLocaleDateString() : "-"}</td>
-
                   <td>
                     <div className="action-buttons">
-
                       <div className="tooltip">
                         <button className="icon-btn" onClick={() => navigate(`/task/${task.id}`)}>
                           <FaEye />
                         </button>
                         <span className="tooltip-text">View Task</span>
                       </div>
-
                       <div className="tooltip">
                         <button className="icon-btn" onClick={() => navigate(`/edit-task/${task.id}`)}>
                           <FaEdit />
                         </button>
                         <span className="tooltip-text">Edit Task</span>
                       </div>
-
                     </div>
                   </td>
-
                 </tr>
               ))
             )}
-
           </tbody>
 
         </table>

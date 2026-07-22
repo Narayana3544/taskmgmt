@@ -1,0 +1,40 @@
+.status-summary-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin: 0;
+}
+
+.summary-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  font-family: 'Inter', sans-serif;
+  color: #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.summary-badge.bg-grey {
+  background: #64748b; /* slate-500 */
+}
+
+.summary-badge.bg-blue {
+  background: #3b82f6; /* blue-500 */
+}
+
+.summary-badge.bg-green {
+  background: #10b981; /* emerald-500 */
+}
+
+.summary-badge.bg-yellow {
+  background: #eab308; /* yellow-500 */
+}
+
+.summary-badge.bg-red {
+  background: #ef4444; /* red-500 */
+}

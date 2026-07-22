@@ -11,6 +11,7 @@
   width: 100%;
   overflow-x: auto;
 }
+
 .task-list-container h2 {
   text-align: center;
   margin-bottom: 1rem;
@@ -22,6 +23,14 @@
 .header-actions {
   display: flex;
   gap: 10px;
+}
+
+/* Action buttons layout */
+.action-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  align-items: center;
 }
 
 /* Base icon button */
@@ -139,3 +148,4 @@ h2 {
   margin-top: 20px;
   font-family: Arial, sans-serif;
 }
+.bug-table th, .bug-table td { white-space: nowrap; }

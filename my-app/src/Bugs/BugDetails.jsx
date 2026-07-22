@@ -24,7 +24,7 @@ export default function BugDetails() {
   if (!bug) return <p>Loading...</p>;
 
   const handleDownload = (attachmentId) => {
-    window.location.href = `/bugs/${id}/attachments/${attachmentId}/download`;
+    window.location.href = `${api.defaults.baseURL}/attachments/${attachmentId}/download`;
   };
 
 return (

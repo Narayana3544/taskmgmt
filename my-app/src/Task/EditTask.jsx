@@ -35,6 +35,7 @@ export default function EditTask() {
   const [existingAttachments, setExistingAttachments] = useState([]);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [initialData, setInitialData] = useState(null);
 
   // Fetch dropdown data
   useEffect(() => {
@@ -78,6 +79,24 @@ export default function EditTask() {
           setAttachmentFlag("No");
           setExistingAttachments([]);
         }
+
+        setInitialData({
+          userstory: t.userstory || "",
+          description: t.description || "",
+          acceptanceCriteria: t.acceptance_criteria || "",
+          storypoints: t.storypoints || "",
+          complexity: t.complexity || "",
+          startDate: t.start_date ? t.start_date.slice(0, 16) : "",
+          endDate: t.end_date ? t.end_date.slice(0, 16) : "",
+          selectedTaskType: t.taskType?.id || "",
+          selectedTaskStatus: t.taskStatus?.id || "",
+          reportedTo: t.reportedTo?.id || "",
+          selectedUser: t.user?.id || "",
+          selectedFeature: t.feature?.id || "",
+          selectedSprint: t.sprint?.id || "",
+          selectedProject: t.feature?.project?.id || "",
+          attachmentFlag: t.attachment_flag === "Yes" ? "Yes" : "No",
+        });
       })
       .catch((err) => console.error("Error loading task:", err));
   }, [id]);
@@ -152,7 +171,7 @@ const handleSubmit = async (e) => {
       headers: { "Content-Type": "multipart/form-data" },
     });
     alert("Task updated successfully!");
-    navigate(-1);
+    navigate(`/task?project=${selectedProject}&feature=${selectedFeature}`);
   } catch (err) {
     console.error("Update failed:", err);
     alert("Failed to update task.");
@@ -189,11 +208,30 @@ const handleSubmit = async (e) => {
     }
   };
 
+  const hasChanges = initialData && (
+    userstory !== initialData.userstory ||
+    description !== initialData.description ||
+    acceptanceCriteria !== initialData.acceptanceCriteria ||
+    String(storypoints) !== String(initialData.storypoints) ||
+    String(complexity) !== String(initialData.complexity) ||
+    startDate !== initialData.startDate ||
+    endDate !== initialData.endDate ||
+    String(selectedTaskType) !== String(initialData.selectedTaskType) ||
+    String(selectedTaskStatus) !== String(initialData.selectedTaskStatus) ||
+    String(reportedTo) !== String(initialData.reportedTo) ||
+    String(selectedUser) !== String(initialData.selectedUser) ||
+    String(selectedFeature) !== String(initialData.selectedFeature) ||
+    String(selectedSprint) !== String(initialData.selectedSprint) ||
+    String(selectedProject) !== String(initialData.selectedProject) ||
+    attachmentFlag !== initialData.attachmentFlag ||
+    attachmentFiles.length > 0
+  );
+
   return (
-    <form onSubmit={handleSubmit} className="task-form">
+    <form onSubmit={handleSubmit} className="task-form" style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '15px' }}>
 
       {/* Project */}
-      <div className="form-group">
+      <div className="form-group" style={{ gridColumn: 'span 2', marginBottom: 0 }}>
         <label>Project<sup style={{color: "red"}}>*</sup></label>
         <select
           value={selectedProject}
@@ -210,7 +248,7 @@ const handleSubmit = async (e) => {
       </div>
 
       {/* Feature */}
-      <div className="form-group">
+      <div className="form-group" style={{ gridColumn: 'span 2', marginBottom: 0 }}>
         <label>Feature<sup style={{color: "red"}}>*</sup></label>
         <select
           value={selectedFeature}
@@ -227,7 +265,7 @@ const handleSubmit = async (e) => {
       </div>
 
       {/* Task Type */}
-      <div className="form-group">
+      <div className="form-group" style={{ gridColumn: 'span 2', marginBottom: 0 }}>
         <label>Task Type<sup style={{color: "red"}}>*</sup></label>
         <select
           value={selectedTaskType}
@@ -244,7 +282,7 @@ const handleSubmit = async (e) => {
       </div>
 
       {/* Task Status */}
-      <div className="form-group">
+      <div className="form-group" style={{ gridColumn: 'span 2', marginBottom: 0 }}>
         <label>Task Status<sup style={{color: "red"}}>*</sup></label>
         <select
           value={selectedTaskStatus}
@@ -261,44 +299,41 @@ const handleSubmit = async (e) => {
       </div>
 
       {/* User Story */}
-      <div className="form-group full-width">
+      <div className="form-group full-width" style={{ gridColumn: 'span 3', marginBottom: 0 }}>
         <label>User Story<sup style={{color: "red"}}>*</sup></label>
         <textarea
           value={userstory}
           onChange={(e) => setUserstory(e.target.value)}
-          rows={1}
-          maxLength={255}
-          onDoubleClick={(e) => e.target.rows = e.target.rows === 1 ? 4 : 1}
+          rows={2} style={{ minHeight: '34px', padding: '8px' }}
+          maxLength={255} onDoubleClick={(e) => e.target.rows = e.target.rows === 2 ? 4 : 2}
           required
         />
       </div>
 
       {/* Description */}
-      <div className="form-group half-width">
+      <div className="form-group half-width" style={{ gridColumn: 'span 3', marginBottom: 0 }}>
         <label>Description</label>
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          rows={1}
-          maxLength={255}
-          onDoubleClick={(e) => e.target.rows = e.target.rows === 1 ? 4 : 1}
+          rows={2} style={{ minHeight: '34px', padding: '8px' }}
+          maxLength={255} onDoubleClick={(e) => e.target.rows = e.target.rows === 2 ? 4 : 2}
         />
       </div>
 
       {/* Acceptance Criteria */}
-      <div className="form-group half-width">
+      <div className="form-group half-width" style={{ gridColumn: 'span 6', marginBottom: 0 }}>
         <label>Acceptance Criteria</label>
         <textarea
           value={acceptanceCriteria}
           onChange={(e) => setAcceptanceCriteria(e.target.value)}
-          rows={1}
-          maxLength={255}
-          onDoubleClick={(e) => e.target.rows = e.target.rows === 1 ? 4 : 1}
+          rows={2} style={{ minHeight: '34px', padding: '8px' }}
+          maxLength={255} onDoubleClick={(e) => e.target.rows = e.target.rows === 2 ? 4 : 2}
         />
       </div>
 
       {/* Complexity */}
-      <div className="form-group">
+      <div className="form-group" style={{ gridColumn: 'span 2', marginBottom: 0 }}>
         <label>Complexity<sup style={{color: "red"}}>*</sup></label>
         <input
           type="number"
@@ -323,7 +358,7 @@ const handleSubmit = async (e) => {
       </div>
 
       {/* Story Points */}
-      <div className="form-group">
+      <div className="form-group" style={{ gridColumn: 'span 2', marginBottom: 0 }}>
         <label>Story Points<sup style={{color: "red"}}>*</sup></label>
         <input
           type="number"
@@ -334,7 +369,7 @@ const handleSubmit = async (e) => {
       </div>
 
       {/* Sprint */}
-      <div className="form-group">
+      <div className="form-group" style={{ gridColumn: 'span 2', marginBottom: 0 }}>
         <label>Sprint</label>
         <select
           value={selectedSprint}
@@ -350,7 +385,7 @@ const handleSubmit = async (e) => {
       </div>
 
       {/* Dates */}
-      <div className="form-group">
+      <div className="form-group" style={{ gridColumn: 'span 3', marginBottom: 0 }}>
         <label>Start Date</label>
         <input
           type="datetime-local"
@@ -359,7 +394,7 @@ const handleSubmit = async (e) => {
         />
       </div>
 
-      <div className="form-group">
+      <div className="form-group" style={{ gridColumn: 'span 3', marginBottom: 0 }}>
         <label>End Date</label>
         <input
           type="datetime-local"
@@ -369,7 +404,7 @@ const handleSubmit = async (e) => {
       </div>
 
       {/* User */}
-      <div className="form-group">
+      <div className="form-group" style={{ gridColumn: 'span 2', marginBottom: 0 }}>
         <label>User</label>
         <select
           value={selectedUser}
@@ -385,7 +420,7 @@ const handleSubmit = async (e) => {
       </div>
 
       {/* Reported To */}
-      <div className="form-group">
+      <div className="form-group" style={{ gridColumn: 'span 2', marginBottom: 0 }}>
         <label>Reported To</label>
         <select
           value={reportedTo}
@@ -401,7 +436,7 @@ const handleSubmit = async (e) => {
       </div>
 
       {/* Attachment */}
-      <div className="form-group">
+      <div className="form-group" style={{ gridColumn: 'span 6', marginBottom: 0 }}>
         <label>Attachment Flag</label>
         <select
           value={attachmentFlag}
@@ -413,7 +448,7 @@ const handleSubmit = async (e) => {
       </div>
 
       {attachmentFlag === "Yes" && existingAttachments.length > 0 && (
-        <div className="form-group half-width" style={{ marginBottom: "10px" }}>
+        <div className="form-group half-width" style={{ gridColumn: 'span 6', marginBottom: "10px" }}>
           <label>Existing Attachments</label>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
             {existingAttachments.map((att, index) => (
@@ -426,19 +461,19 @@ const handleSubmit = async (e) => {
       )}
 
       {attachmentFlag === "Yes" && (
-        <div className={`form-group ${existingAttachments.length > 0 ? 'half-width' : 'full-width'} attachment-container`}>
+        <div className={`form-group ${existingAttachments.length > 0 ? 'half-width' : 'full-width'} attachment-container`} style={{ gridColumn: 'span 6', margin: 0 }}>
           <label>{existingAttachments.length > 0 ? "Add Additional Attachments" : "Add Attachments"}</label>
           <input type="file" multiple onChange={(e) => {
             const files = Array.from(e.target.files);
             setAttachmentFiles(prev => [...prev, ...files]);
             e.target.value = null;
-          }} />
+          }} style={{ padding: '4px' }} />
           {attachmentFiles.length > 0 && (
             <div className="attachment-files-list">
               {attachmentFiles.map((file, index) => (
-                <div key={index} className="attachment-file" style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '5px' }}>
-                  <span>📎 {file.name}</span>
-                  <button type="button" className="remove-btn" onClick={() => setAttachmentFiles(prev => prev.filter((_, i) => i !== index))}>✖</button>
+                <div key={index} className="attachment-file" style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '5px', padding: '2px 8px' }}>
+                  <span style={{ fontSize: '13px' }}>📎 {file.name}</span>
+                  <button type="button" className="remove-btn" onClick={() => setAttachmentFiles(prev => prev.filter((_, i) => i !== index))} style={{ width: '16px', height: '16px', fontSize: '10px' }}>✖</button>
                 </div>
               ))}
             </div>
@@ -447,10 +482,16 @@ const handleSubmit = async (e) => {
       )}
 
       {/* Buttons */}
-      <div className="btn-container full-width">
-        <button type="button" className="btn-global btn-secondary" onClick={() => navigate(-1)}>Back</button>
-        <button type="button" className="btn-global btn-success" onClick={handleClone}>Clone Task</button>
-        <button type="submit" className="btn-global btn-primary">Update Task</button>
+      <div className="btn-container full-width" style={{ gridColumn: 'span 6', display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
+        <button type="button" className="btn-global btn-secondary" onClick={() => navigate(-1)}>
+          Back
+        </button>
+        <button type="button" className="btn-global btn-secondary" onClick={handleClone} style={{ marginLeft: "10px" }}>
+          Clone Task
+        </button>
+        <button type="submit" className="btn-global btn-primary" style={{ marginLeft: "10px", opacity: !hasChanges ? 0.6 : 1, cursor: !hasChanges ? 'not-allowed' : 'pointer' }} disabled={!hasChanges}>
+          Update Task
+        </button>
       </div>
     </form>
   );

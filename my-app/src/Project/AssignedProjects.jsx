@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import api from '../api';
 import { useNavigate } from 'react-router-dom';
 import { FaEye, FaEdit, FaTrash, FaList } from 'react-icons/fa';
+import StatusSummary from '../components/StatusSummary';
 
 export default function ViewProjectById() {
   const [projects, setProjects] = useState([]);
@@ -41,18 +42,8 @@ export default function ViewProjectById() {
     <div className="manage-projects-page">
       <div className="manage-main">
         <div className="manage-container">
-          <div className="manage-header">
-            <h1 className="manage-title">Your Assigned Projects</h1>
-          </div>
-
-          <div className="search-bar">
-            <input
-              type="text"
-              placeholder="Search by name or ID"
-              className="search-input"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+          <div className="manage-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', gap: '15px', flexWrap: 'wrap' }}>
+            <h1 className="manage-title" style={{ margin: 0, whiteSpace: 'nowrap', fontSize: '1.2rem', fontWeight: 700 }}>Your Assigned Projects</h1>
           </div>
 
           <table className="projects-table">

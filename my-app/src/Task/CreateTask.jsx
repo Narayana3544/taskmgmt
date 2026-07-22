@@ -73,19 +73,6 @@
 //     if (startDate) formData.append("start_date", startDate + ":00");
 //     if (endDate) formData.append("end_date", endDate + ":00");
 
-//     try {
-//       await api.post("/create", formData, {
-//         withCredentials: true,
-//         headers: { "Content-Type": "multipart/form-data" },
-//       });
-//       alert("Task created successfully!");
-//       navigate(-1);
-//     } catch (err) {
-//       console.error(err);
-//       alert("Failed to create task.");
-//     }
-//   };
-
 //   return (
 //     <form onSubmit={handleSubmit} className="task-form" style={{ maxWidth: 600, margin: "auto" }}>
 //       <button onClick={() => navigate(-1)} className="back-btn">Back</button>
@@ -284,9 +271,11 @@ export default function CreateTask() {
     formData.append("complexity", complexity ? Number(complexity) : "");
     formData.append("feature_id", selectedFeature ? Number(selectedFeature) : "");
     if (selectedSprint) formData.append("sprint_id", selectedSprint);
-    formData.append("attachment_flag", attachmentFlag || "No");
     
-    if (attachmentFlag === "Yes" && attachmentFiles.length > 0) {
+    const flag = attachmentFiles.length > 0 ? "Yes" : "No";
+    formData.append("attachment_flag", flag);
+    
+    if (attachmentFiles.length > 0) {
       attachmentFiles.forEach(file => {
         formData.append("attachment", file);
       });
@@ -305,7 +294,7 @@ export default function CreateTask() {
         headers: { "Content-Type": "multipart/form-data" },
       });
       alert("Task created successfully!");
-      navigate(-1);
+      navigate(`/task?project=${selectedProject}&feature=${selectedFeature}`);
     } catch (err) {
       console.error(err);
       alert("Failed to create task.");
@@ -313,10 +302,10 @@ export default function CreateTask() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="task-form">
+    <form onSubmit={handleSubmit} className="task-form" style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '15px' }}>
 
-      {/* Project */}
-      <div className="form-group">
+      {/* Row 1: First 4 Fields */}
+      <div className="form-group" style={{ gridColumn: 'span 3', marginBottom: 0 }}>
         <label>Project<sup style={{color: "red"}}>*</sup></label>
         <select value={selectedProject} onChange={e => setSelectedProject(e.target.value)} required>
           <option value="">-- Select Project --</option>
@@ -324,8 +313,7 @@ export default function CreateTask() {
         </select>
       </div>
 
-      {/* Feature */}
-      <div className="form-group">
+      <div className="form-group" style={{ gridColumn: 'span 3', marginBottom: 0 }}>
         <label>Feature<sup style={{color: "red"}}>*</sup></label>
         <select value={selectedFeature} onChange={e => setSelectedFeature(e.target.value)} disabled={!selectedProject} required>
           <option value="">-- Select Feature --</option>
@@ -333,8 +321,7 @@ export default function CreateTask() {
         </select>
       </div>
 
-      {/* Task Type */}
-      <div className="form-group">
+      <div className="form-group" style={{ gridColumn: 'span 3', marginBottom: 0 }}>
         <label>Task Type<sup style={{color: "red"}}>*</sup></label>
         <select value={selectedTaskType} onChange={e => setSelectedTaskType(e.target.value)} required>
           <option value="">-- Select Task Type --</option>
@@ -342,8 +329,7 @@ export default function CreateTask() {
         </select>
       </div>
 
-      {/* Task Status */}
-      <div className="form-group">
+      <div className="form-group" style={{ gridColumn: 'span 3', marginBottom: 0 }}>
         <label>Task Status<sup style={{color: "red"}}>*</sup></label>
         <select value={selectedTaskStatus} onChange={e => setSelectedTaskStatus(e.target.value)} required>
           <option value="">-- Select Task Status --</option>
@@ -351,26 +337,24 @@ export default function CreateTask() {
         </select>
       </div>
 
-      {/* User Story */}
-      <div className="form-group full-width">
+      {/* Text Areas */}
+      <div className="form-group" style={{ gridColumn: 'span 6', marginBottom: 0 }}>
         <label>User Story<sup style={{color: "red"}}>*</sup></label>
-        <textarea value={userstory} onChange={e => setUserstory(e.target.value)} rows={1} maxLength={255} onDoubleClick={(e) => e.target.rows = e.target.rows === 1 ? 4 : 1} required />
+        <textarea value={userstory} onChange={e => setUserstory(e.target.value)} rows={2} style={{ minHeight: '34px', padding: '8px' }} maxLength={255} required />
       </div>
 
-      {/* Description */}
-      <div className="form-group half-width">
+      <div className="form-group" style={{ gridColumn: 'span 6', marginBottom: 0 }}>
         <label>Description</label>
-        <textarea value={description} onChange={e => setDescription(e.target.value)} rows={1} maxLength={255} onDoubleClick={(e) => e.target.rows = e.target.rows === 1 ? 4 : 1} />
+        <textarea value={description} onChange={e => setDescription(e.target.value)} rows={2} style={{ minHeight: '34px', padding: '8px' }} maxLength={255} />
       </div>
 
-      {/* Acceptance Criteria */}
-      <div className="form-group half-width">
+      <div className="form-group" style={{ gridColumn: 'span 12', marginBottom: 0 }}>
         <label>Acceptance Criteria</label>
-        <textarea value={acceptanceCriteria} onChange={e => setAcceptanceCriteria(e.target.value)} rows={1} maxLength={255} onDoubleClick={(e) => e.target.rows = e.target.rows === 1 ? 4 : 1} />
+        <textarea value={acceptanceCriteria} onChange={e => setAcceptanceCriteria(e.target.value)} rows={2} style={{ minHeight: '34px', padding: '8px' }} maxLength={255} />
       </div>
 
-      {/* User */}
-      <div className="form-group">
+      {/* Row 2: Next 3 Fields */}
+      <div className="form-group" style={{ gridColumn: 'span 4', marginBottom: 0 }}>
         <label>User</label>
         <select value={selectedUser} onChange={e => setSelectedUser(e.target.value)}>
           <option value="">-- Select User --</option>
@@ -378,8 +362,7 @@ export default function CreateTask() {
         </select>
       </div>
 
-      {/* Reported To */}
-      <div className="form-group">
+      <div className="form-group" style={{ gridColumn: 'span 4', marginBottom: 0 }}>
         <label>Reported To</label>
         <select value={reportedTo} onChange={e => setReportedTo(e.target.value)}>
           <option value="">-- Select Manager --</option>
@@ -387,8 +370,7 @@ export default function CreateTask() {
         </select>
       </div>
 
-      {/* Complexity */}
-      <div className="form-group">
+      <div className="form-group" style={{ gridColumn: 'span 4', marginBottom: 0 }}>
         <label>Complexity<sup style={{color: "red"}}>*</sup></label>
         <input
           type="number"
@@ -396,82 +378,63 @@ export default function CreateTask() {
           max="5"
           placeholder="(1 to 5)"
           value={complexity}
-          onChange={(e) => {
-            let val = e.target.value;
-            if (val === "") {
-              setComplexity("");
-              return;
-            }
-            let intVal = parseInt(val, 10);
-            if (!isNaN(intVal)) {
-              if (intVal < 1) intVal = 1;
-              if (intVal > 5) intVal = 5;
-              setComplexity(intVal);
-            }
-          }}
+          onChange={(e) => setComplexity(e.target.value)}
           required
         />
       </div>
 
-      {/* Story Points */}
-      <div className="form-group">
+      {/* Row 3: Next 4 Fields */}
+      <div className="form-group" style={{ gridColumn: 'span 3', marginBottom: 0 }}>
         <label>Story Points<sup style={{color: "red"}}>*</sup></label>
-        <input type="number" min="1" value={storypoints} onChange={e => setStorypoints(e.target.value)}required />
+        <input type="number" min="1" value={storypoints} onChange={e => setStorypoints(e.target.value)} required />
       </div>
 
-            {/* Start/End Dates */}
-      <div className="form-group">
+      <div className="form-group" style={{ gridColumn: 'span 3', marginBottom: 0 }}>
         <label>Start Date</label>
         <input type="datetime-local" value={startDate} onChange={e => setStartDate(e.target.value)} />
       </div>
 
-      <div className="form-group">
+      <div className="form-group" style={{ gridColumn: 'span 3', marginBottom: 0 }}>
         <label>End Date</label>
         <input type="datetime-local" value={endDate} onChange={e => setEndDate(e.target.value)} />
       </div>
-      {/* Sprint */}
-      <div className="form-group">
+
+      <div className="form-group" style={{ gridColumn: 'span 3', marginBottom: 0 }}>
         <label>Sprint (Optional)</label>
         <select value={selectedSprint} onChange={e => setSelectedSprint(e.target.value)} disabled={!selectedFeature}>
           <option value="">-- Select Sprint --</option>
           {sprints.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
         </select>
       </div>
-      
-      {/* Attachment */}
-      <div className="form-group">
-        <label>Attachment Flag</label>
-        <select value={attachmentFlag} onChange={e => setAttachmentFlag(e.target.value)}>
-          <option value="No">No</option>
-          <option value="Yes">Yes</option>
-        </select>
+
+      {/* Attachments - Bug Style */}
+      <div className="form-group attachment-container" style={{ gridColumn: 'span 12', margin: 0 }}>
+        <label>Attachments:</label>
+        <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
+          <div style={{ flex: 1 }}>
+            <input type="file" multiple onChange={e => {
+              const files = Array.from(e.target.files);
+              setAttachmentFiles(prev => [...prev, ...files]);
+              e.target.value = null; // reset input
+            }} style={{ padding: '4px' }} />
+          </div>
+          <div style={{ flex: 1 }}>
+            {attachmentFiles.length > 0 && (
+              <ul className="file-list" style={{ marginTop: 0 }}>
+                {attachmentFiles.map((file, index) => (
+                  <li key={index} className="file-item" style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '2px', padding: '2px 8px' }}>
+                    <span style={{ fontSize: '13px' }}>📎 {file.name}</span>
+                    <button type="button" className="remove-btn" onClick={() => setAttachmentFiles(prev => prev.filter((_, i) => i !== index))} style={{ width: '16px', height: '16px', fontSize: '10px' }}>❌</button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
       </div>
 
-      {attachmentFlag === "Yes" && (
-        <div className="form-group full-width attachment-container">
-          <label>Attachments</label>
-          <input type="file" multiple onChange={e => {
-            const files = Array.from(e.target.files);
-            setAttachmentFiles(prev => [...prev, ...files]);
-            e.target.value = null; // reset input
-          }} />
-          {attachmentFiles.length > 0 && (
-            <div className="attachment-files-list">
-              {attachmentFiles.map((file, index) => (
-                <div key={index} className="attachment-file" style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '5px' }}>
-                  <span>📎 {file.name}</span>
-                  <button type="button" className="remove-btn" onClick={() => {
-                    setAttachmentFiles(prev => prev.filter((_, i) => i !== index));
-                  }}>✖</button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      <div className="btn-container full-width">
-        <button onClick={() => navigate(-1)} type="button" className="btn-global btn-secondary">Back</button>
+      <div className="btn-container full-width" style={{ gridColumn: 'span 12', display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
+        <button type="button" className="btn-global btn-secondary" onClick={() => navigate(-1)}>Cancel</button>
         <button type="submit" className="btn-global btn-primary">Create Task</button>
       </div>
     </form>

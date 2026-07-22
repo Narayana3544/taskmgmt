@@ -86,13 +86,18 @@ api.interceptors.response.use(
     if (error.response) {
       const status = error.response.status;
 
-      if (!isAuthEndpoint && (status === 401 || status === 403)) {
-        // Only trigger popup for session expiry on secured routes
+      if (!isAuthEndpoint && (status === 401 || (status === 403 && url.includes("/user/profile")))) {
+        // Trigger popup for session expiry on 401 Unauthorized or 403 on profile load
         showSessionPopup();
+      } else if (status === 403) {
+        // 403 Forbidden means permission denied or business rule violation (e.g., cannot change status backwards)
+        // Do NOT log out the user, just let the promise reject so the UI can show an error toast.
+        console.error("403 Forbidden: You do not have permission to perform this action.");
       }
     } else if (error.request) {
-      // Backend unreachable — safe to show popup
-      showSessionPopup();
+      // Backend unreachable or CORS issue. Showing session timeout here causes false positives.
+      console.error("Network Error or Backend Unreachable:", error);
+      // We will no longer show the session popup here to prevent false session timeouts on 500s that cause CORS errors.
     }
 
     return Promise.reject(error);

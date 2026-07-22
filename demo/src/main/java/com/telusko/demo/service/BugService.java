@@ -40,7 +40,7 @@ public class BugService {
     public profilerepo userdetails;
 
     public Bug createBug(
-            int taskId,
+            Integer taskId,
             String title,
             String description,
             int priorityId,
@@ -54,8 +54,11 @@ public class BugService {
             int reporter
     ) {
         // Get task
-        task taskEntity = taskRepository.findById(taskId)
-                .orElseThrow(() -> new RuntimeException("Task not found"));
+        task taskEntity = null;
+        if (taskId != null) {
+            taskEntity = taskRepository.findById(taskId)
+                    .orElseThrow(() -> new RuntimeException("Task not found"));
+        }
 
         // Get priority
         Priority priority = priorityRepository.findById(priorityId)
@@ -169,8 +172,54 @@ public class BugService {
         return att.getFileData(); // this is your @Lob field
     }
 
-//    public Bug editBugById(Integer id, Bug bug) {
-//
-//
-//    }
+    @Transactional
+    public Bug updateBug(
+            Integer id,
+            String title,
+            String description,
+            int priorityId,
+            Integer statusId,
+            int assignedToId,
+            List<MultipartFile> attachments,
+            int reporterId
+    ) {
+        Bug bug = repo.findById(id).orElseThrow(() -> new RuntimeException("Bug not found"));
+        
+        Priority priority = priorityRepository.findById(priorityId)
+                .orElseThrow(() -> new RuntimeException("Priority not found"));
+        
+        Task_status status = (statusId != null) 
+                ? taskStatusRepository.findById(statusId).orElseThrow(() -> new RuntimeException("Status not found"))
+                : bug.getStatus();
+                
+        User assignedUser = userRepository.findById(assignedToId);
+        if (assignedUser == null) throw new RuntimeException("Assigned user not found");
+
+        User reportedUser = userdetails.findById(reporterId)
+                .orElseThrow(() -> new RuntimeException("Reporter not found"));
+
+        bug.setTitle(title);
+        bug.setDescription(description);
+        bug.setPriority(priority);
+        bug.setStatus(status);
+        bug.setAssignedUser(assignedUser);
+
+        Bug updatedBug = repo.save(bug);
+
+        if (attachments != null && !attachments.isEmpty()) {
+            for (MultipartFile file : attachments) {
+                try {
+                    BugAttachment attachment = new BugAttachment();
+                    attachment.setBug(updatedBug);
+                    attachment.setFileName(file.getOriginalFilename());
+                    attachment.setFileData(file.getBytes());
+                    attachment.setUploadedBy(reportedUser);
+                    bugAttachmentRepo.save(attachment);
+                } catch (Exception e) {
+                    throw new RuntimeException("Failed to save attachment", e);
+                }
+            }
+        }
+        return updatedBug;
+    }
 }

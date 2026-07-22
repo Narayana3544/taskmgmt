@@ -6,6 +6,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { sortLatestFirst } from "../utils/sortUtils";
 import { FaTasks, FaPlus, FaEye } from 'react-icons/fa';
 import { FaEdit } from "react-icons/fa";
+import StatusSummary from '../components/StatusSummary';
 
 const ManageSprints = () => {
   const [sprints, setSprints] = useState([]);
@@ -149,32 +150,41 @@ const ManageSprints = () => {
 
   return (
     <div className="manage-sprints-page">
-      <div className="sprint-header">
-        <h2>Sprints</h2>
-        <div className="top-actions">
+      <div className="sprint-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', gap: '15px', flexWrap: 'wrap' }}>
+        <h2 style={{ margin: 0, whiteSpace: 'nowrap' }}>Sprints</h2>
+        
+        {/* Filter Section Inline */}
+        <div className="filter-sections" style={{ display: 'flex', gap: '10px', alignItems: 'center', flex: 1 }}>
+          <Select
+            options={projectOptions}
+            value={selectedProject}
+            onChange={handleProjectChange}
+            isClearable
+            placeholder="-- Select Project --"
+            styles={{ container: (base) => ({ ...base, minWidth: '200px' }) }}
+          />
+          <Select
+            options={featureOptions}
+            value={selectedFeature}
+            onChange={handleFeatureChange}
+            isClearable
+            placeholder="-- Select Feature --"
+            isDisabled={!features.length}
+            styles={{ container: (base) => ({ ...base, minWidth: '200px' }) }}
+          />
+
+          <StatusSummary 
+            data={filteredSprints} 
+            statusExtractor={(sprint) => isSprintDisabled(sprint) ? 'Inactive' : 'Active'} 
+            showBuckets={['Active', 'Inactive']}
+          />
+        </div>
+
+        <div className="top-actions" style={{ flexShrink: 0 }}>
           <button className="create-sprint-btn" onClick={() => navigate('/create-sprint')}>
             <FaPlus className="icon" /> Create Sprint
           </button>
         </div>
-      </div>
-
-      {/* Filter Section */}
-      <div className="filter-sections">
-        <Select
-          options={projectOptions}
-          value={selectedProject}
-          onChange={handleProjectChange}
-          isClearable
-          placeholder="-- Select Project --"
-        />
-        <Select
-          options={featureOptions}
-          value={selectedFeature}
-          onChange={handleFeatureChange}
-          isClearable
-          placeholder="-- Select Feature --"
-          isDisabled={!features.length}
-        />
       </div>
 
       {/* Table Section */}

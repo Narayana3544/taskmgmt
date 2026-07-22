@@ -25,6 +25,7 @@ public class BugAttachment {
 
     @ManyToOne
     @JoinColumn(name = "bug_id")
+    @JsonIgnore
     private Bug bug;
 
     @ManyToOne

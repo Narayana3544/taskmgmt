@@ -4,14 +4,18 @@ import { useNavigate } from "react-router-dom";
 import "./Home.css";
 import api from "../api";
 import { sortAlphabetically, sortLatestFirst } from "../utils/sortUtils";
+import { isTaskLocked, getLockedReason } from "../utils/lockUtils";
 
 const Home = () => {
-  const [tasks, setTasks] = useState({ todo: [], inprogress: [], done: [] });
+  const [tasks, setTasks] = useState({ backlog: [], todo: [], inprogress: [], done: [] });
   const [selectedTask, setSelectedTask] = useState(null);
   const [statuses, setStatuses] = useState([]);
   const [users, setUsers] = useState([]);
+  const [sprints, setSprints] = useState([]);
+  const [userProfile, setUserProfile] = useState(null);
   const [selectedUserId, setSelectedUserId] = useState("");
   const [selectedStatusId, setSelectedStatusId] = useState("");
+  const [selectedMoveSprintId, setSelectedMoveSprintId] = useState("");
   const [sprintProgressList, setSprintProgressList] = useState([]);
   const navigate = useNavigate();
 
@@ -29,41 +33,92 @@ const Home = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // 1️⃣ Fetch tasks
-        const tasksRes = await api.get("/user/Sprintactive/tasks", { withCredentials: true });
-        let allTasks = tasksRes.data;
+        const profileRes = await api.get('/user/profile', { withCredentials: true });
+        const user = profileRes.data;
+        setUserProfile(user);
+        const isAdmin = user?.role?.description === "Admin";
 
-        // 2️⃣ Fetch bugs assigned to user
-        const bugsRes = await api.get("/user/bugs", { withCredentials: true });
-        const bugs = bugsRes.data.map((bug) => ({
+        // 1️⃣ Fetch Backlog Tasks (Only for Admin: Unassigned tasks from entire system)
+        let backlogItems = [];
+        if (isAdmin) {
+          try {
+            const [allTasksRes, allBugsRes] = await Promise.all([
+              api.get("/view-tasks", { withCredentials: true }),
+              api.get("/view-bugs", { withCredentials: true })
+            ]);
+            const allSystemTasks = [
+              ...allTasksRes.data,
+              ...allBugsRes.data.map(b => ({ ...b, type: 'bug', taskStatus: b.status }))
+            ];
+            backlogItems = allSystemTasks.filter(t => {
+              const assigneeId = t.user?.id || t.assignedUser?.id;
+              return !assigneeId; // Only unassigned tasks
+            });
+          } catch (e) {
+            console.error("Error fetching backlog data:", e);
+          }
+        }
+
+        // 2️⃣ Fetch CURRENT USER'S tasks & bugs
+        const myTasksRes = await api.get("/user/tasks", { withCredentials: true });
+        const myBugsRes = await api.get("/user/bugs", { withCredentials: true });
+
+        let myTasks = myTasksRes.data || [];
+        let myBugs = (myBugsRes.data || []).map((bug) => ({
           ...bug,
           type: "bug",
           title: bug.title,
           description: bug.description,
-          storypoints: bug.storypoints || 1, // default SP if missing
           taskStatus: bug.status,
           assignedUser: bug.assignedUser,
         }));
 
-        // 3️⃣ Merge tasks + bugs and sort latest first
-        allTasks = sortLatestFirst([...allTasks, ...bugs]);
+        // 3️⃣ Merge user tasks + bugs and sort
+        const myAllTasks = sortLatestFirst([...myTasks, ...myBugs]);
 
         // 4️⃣ Group by status
-        const grouped = { todo: [], inprogress: [], done: [] };
-        allTasks.forEach((task) => {
-          const label = task.taskStatus?.decription || task.status;
-          grouped[toColKey(label)].push(task);
+        const grouped = { backlog: backlogItems, todo: [], inprogress: [], done: [] };
+        
+        myAllTasks.forEach((task) => {
+          let statusStr = '';
+          const statusObj = task.taskStatus || task.status;
+          if (typeof statusObj === 'string') {
+            statusStr = statusObj;
+          } else if (statusObj) {
+            statusStr = statusObj.decription || statusObj.description || statusObj.name || '';
+          }
+          statusStr = statusStr.trim().toLowerCase();
+
+          const sprintStatus = (task.sprint?.status || '').toLowerCase();
+          const isActiveSprint = sprintStatus === 'active';
+
+          if (statusStr.includes('todo') || statusStr.includes('open') || statusStr.includes('new') || statusStr.includes('assigned') || statusStr === '') {
+            grouped.todo.push(task);
+          } else if (statusStr.includes('progress') || statusStr.includes('working') || statusStr === 'active') {
+            grouped.inprogress.push(task);
+          } else if (statusStr.includes('done') || statusStr.includes('completed') || statusStr.includes('closed') || statusStr.includes('resolved')) {
+            // ✅ Done: ONLY tasks from an Active Sprint (per role rules)
+            if (isActiveSprint) {
+              grouped.done.push(task);
+            }
+          } else {
+             // Fallback: show in To Do
+             grouped.todo.push(task);
+          }
         });
 
         setTasks(grouped);
 
-        // 5️⃣ Fetch statuses
-        const statusRes = await api.get("/getstatusForTask", { withCredentials: true });
+        // 5️⃣ Fetch statuses, users, sprints
+        const [statusRes, usersRes, sprintsRes] = await Promise.all([
+          api.get("/getstatusForTask", { withCredentials: true }),
+          api.get("/users", { withCredentials: true }),
+          api.get("/sprints", { withCredentials: true }) // fetch sprints for moving
+        ]);
         setStatuses(statusRes.data);
-
-        // 6️⃣ Fetch users
-        const usersRes = await api.get("/users", { withCredentials: true });
         setUsers(sortAlphabetically(usersRes.data));
+        setSprints(sortLatestFirst(sprintsRes.data || []));
+
       } catch (err) {
         console.error("Error fetching data:", err);
       }
@@ -73,10 +128,9 @@ const Home = () => {
     fetchData();
   }, []);
 
-  // ✅ Converts status label to key
   const toColKey = (label) => {
     const key = (label || "").toLowerCase().replace(/\s/g, "");
-    return ["todo", "inprogress", "done"].includes(key) ? key : "todo";
+    return ["backlog", "todo", "inprogress", "done"].includes(key) ? key : "todo";
   };
 
   // ✅ Popup open/close
@@ -84,37 +138,10 @@ const Home = () => {
     setSelectedTask(task);
     setSelectedUserId(task.user?.id || task.assignedUser?.id || "");
     setSelectedStatusId(task.taskStatus?.id || "");
+    setSelectedMoveSprintId("");
   };
 
   const closePopup = () => setSelectedTask(null);
-
-  // ✅ Assign user
-  const handleAssignUser = () => {
-    if (!selectedUserId || !selectedTask) return;
-
-    const url =
-      selectedTask.type === "bug"
-        ? `/bugs/${selectedTask.id}/assignTo/${selectedUserId}`
-        : `/tasks/${selectedTask.id}/assignTo/${selectedUserId}`;
-
-    api
-      .put(url, {}, { withCredentials: true })
-      .then(() => {
-        setTasks((prev) => {
-          const updated = { ...prev };
-          Object.keys(updated).forEach((col) => {
-            updated[col] = updated[col].map((task) =>
-              task.id === selectedTask.id && task.type === selectedTask.type
-                ? { ...task, assignedUser: users.find((u) => u.id === parseInt(selectedUserId)) }
-                : task
-            );
-          });
-          return updated;
-        });
-        closePopup();
-      })
-      .catch((err) => console.error("Error assigning user:", err));
-  };
 
   // ✅ Change task status
   const handleStatusChange = (taskId, statusId) => {
@@ -128,37 +155,43 @@ const Home = () => {
     api
       .put(url, {}, { withCredentials: true })
       .then(() => {
-        const newStatus = statuses.find((s) => s.id === Number(statusId));
-        setTasks((prev) => {
-          const updated = { todo: [], inprogress: [], done: [] };
-          const all = [...prev.todo, ...prev.inprogress, ...prev.done];
-          all.forEach((task) => {
-            if (task.id === taskId && task.type === selectedTask.type) {
-              const updatedTask = {
-                ...task,
-                taskStatus: newStatus,
-                status: newStatus?.decription,
-              };
-              updated[toColKey(newStatus?.decription)].push(updatedTask);
-            } else {
-              const currentLabel = task.taskStatus?.decription || task.status;
-              updated[toColKey(currentLabel)].push(task);
-            }
-          });
-          return updated;
-        });
-
-        closePopup();
-
-        // ✅ Fetch sprint progress again after status update
-        fetchAllSprintProgress();
+        window.location.reload();
       })
       .catch((err) => console.error("Error updating status:", err));
   };
 
+  // ✅ Move to sprint
+  const handleMoveSprint = (taskId, sprintId) => {
+    if (!selectedTask) return;
+    if (selectedTask.type === "bug") {
+      alert("Bugs cannot be moved to another sprint directly via this menu currently.");
+      return;
+    }
+
+    if (!window.confirm("Are you sure you want to move this task to another sprint?")) return;
+
+    api
+      .put(`/tasks/${taskId}/move/${sprintId}`, {}, { withCredentials: true })
+      .then(() => {
+        alert("Task moved successfully!");
+        window.location.reload();
+      })
+      .catch((err) => {
+        console.error("Error moving task:", err);
+        alert("Failed to move task.");
+      });
+  };
+
+  const isAdmin = userProfile?.role?.description === "Admin";
+  const columnsToRender = isAdmin ? ["backlog", "todo", "inprogress", "done"] : ["todo", "inprogress", "done"];
+
+  // Helper to check if task is locked
+  const isContainerClosed = selectedTask ? isTaskLocked(selectedTask) : false;
+  const lockedReason = selectedTask ? getLockedReason(selectedTask) : '';
+
   return (
     <div className="home">
-      {/* ✅ Sprint Progress Section */}
+      {/* ✅ Sprint Progress Section (Switched from Story Points to Tasks) */}
       <div className="sprint-progress-container">
         {sprintProgressList.map((sp) => (
           <div key={sp.sprintId} className="sprint-progress-card">
@@ -166,11 +199,10 @@ const Home = () => {
               {sp.projectName} → {sp.sprintName}
             </h4>
             <p>
-              {/* {sp.completedTasks}/{sp.totalTasks} tasks completed ({sp.progress}%) */}
-              {sp.completedStoryPoints}/{sp.TargettedStoryPoints} story points completed ({sp.progress1}%)
+              {sp.completedTasks}/{sp.totalTasks} tasks completed ({sp.progress}%)
             </p>
             <div className="progress-bar">
-              <div className="progress-fill" style={{ width: `${sp.progress1}%` }}></div>
+              <div className="progress-fill" style={{ width: `${sp.progress}%` }}></div>
             </div>
           </div>
         ))}
@@ -179,94 +211,80 @@ const Home = () => {
       <h2 className="board-title">Dashboard</h2>
 
       {/* ✅ Task Columns */}
-<div className="columns">
-  {["todo", "inprogress", "done"].map((colKey) => (
-    <div className="column" key={colKey}>
-      <h3>
-        {colKey === "todo" && "📝 To Do"}
-        {colKey === "inprogress" && "⏳ In Progress"}
-        {colKey === "done" && "✅ Done"}
-      </h3>
+      <div className="columns" style={{ display: 'flex', gap: '15px' }}>
+        {columnsToRender.map((colKey) => (
+          <div className="column" key={colKey} style={{ flex: 1, minWidth: '250px' }}>
+            <h3>
+              {colKey === "backlog" && "📋 Backlog"}
+              {colKey === "todo" && "📝 To Do"}
+              {colKey === "inprogress" && "⏳ In Progress"}
+              {colKey === "done" && "✅ Done"}
+            </h3>
 
-      {/* 🌀 Scrollable content container */}
-      <div className="column-tasks">
-        {tasks[colKey].length > 0 ? (
-          tasks[colKey].map((task) => (
-            <div
-              className={`task-card ${task.type === "bug" ? "bug-card" : ""}`}
-              key={task.id}
-              style={{ minHeight: 'auto', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}
-            >
-              <strong style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', margin: 0, fontSize: '13px' }}>
-                {task.type === "bug" && "🐞 "}#{task.id} - {task.userstory || task.title}
-              </strong>
+            {/* 🌀 Scrollable content container */}
+            <div className="column-tasks">
+              {tasks[colKey] && tasks[colKey].length > 0 ? (
+                tasks[colKey].map((task) => (
+                  <div
+                    className={`task-card ${task.type === "bug" ? "bug-card" : ""}`}
+                    key={task.id}
+                    style={{ minHeight: 'auto', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}
+                  >
+                    <strong style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', margin: 0, fontSize: '13px' }}>
+                      {task.type === "bug" && "🐞 "}#{task.id} - {task.userstory || task.title}
+                    </strong>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <div
-                  className={`storypoints-badge ${
-                    task.storypoints <= 1 ? "low" : task.storypoints <= 3 ? "medium" : "high"
-                  }`}
-                  style={{ position: 'static', margin: 0 }}
-                >
-                  {task.storypoints} SP
-                </div>
-                
-                <div className="task-actions" style={{ display: 'flex', alignItems: 'center' }}>
-                  <button
-                    className="arrow-btn"
-                    onClick={() => navigate(task.type === "bug" ? `/bug/${task.id}` : `/task/${task.id}`)}
-                    title="View"
-                  >
-                    <FaEye size={16} />
-                  </button>
-                  <button
-                    className="arrow-btn"
-                    onClick={() => openPopup(task)}
-                    title="Move"
-                  >
-                    ➔
-                  </button>
-                </div>
-              </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <div className="task-actions" style={{ display: 'flex', alignItems: 'center' }}>
+                        <button
+                          className="arrow-btn"
+                          onClick={() => navigate(task.type === "bug" ? `/bug/${task.id}` : `/task/${task.id}`)}
+                          title="View"
+                        >
+                          <FaEye size={16} />
+                        </button>
+                        <button
+                          className="arrow-btn"
+                          onClick={() => openPopup(task)}
+                          title="Move or Update"
+                        >
+                          ➔
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p style={{ color: "#aaa", fontSize: "0.9rem", textAlign: "center", marginTop: "20px" }}>
+                  No tasks here
+                </p>
+              )}
             </div>
-          ))
-        ) : (
-          <p style={{ color: "#aaa", fontSize: "0.9rem", textAlign: "center", marginTop: "20px" }}>
-            No tasks here
-          </p>
-        )}
+          </div>
+        ))}
       </div>
-    </div>
-  ))}
-</div>
 
       {/* ✅ Popup Section */}
       {selectedTask && (
         <div className="popup-overlay">
-          <div className="popup-card">
+          <div className="popup-card" style={{ maxWidth: '400px' }}>
             <button className="close-btn" onClick={closePopup}>
               ✖
             </button>
-            <h3>{selectedTask.userstory || selectedTask.title}</h3>
+            <h3 style={{ marginBottom: '5px' }}>{selectedTask.userstory || selectedTask.title}</h3>
+            
+            {/* Status alerts */}
+            {selectedTask.sprint?.status && (
+              <p style={{ fontSize: '12px', color: '#555', margin: '0 0 15px 0' }}>
+                Sprint: <strong>{selectedTask.sprint.name} ({selectedTask.sprint.status})</strong>
+              </p>
+            )}
 
-            {/* Assign User */}
-            <div className="popup-section">
-              {/* <label>Assigned User:</label>
-              <select
-                value={selectedUserId}
-                onChange={(e) => setSelectedUserId(e.target.value)}
-              >
-                <option value="">-- Select User --</option>
-                {users.map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.preffered_name || u.username}
-                  </option>
-                ))}
-              </select>
-              <button className="assign-btn" onClick={handleAssignUser}>
-                Assign User
-              </button> */}
-            </div>
+            {isContainerClosed && (
+              <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '10px', borderRadius: '5px', fontSize: '13px', marginBottom: '15px' }}>
+                <strong>Notice:</strong> {lockedReason || "This task belongs to a completed/closed Sprint, Feature, or Project."} Other updates are restricted, but you can still change the status.
+              </div>
+            )}
 
             {/* Change Status */}
             <div className="popup-section">
@@ -284,6 +302,8 @@ const Home = () => {
               </select>
               <button
                 className="status-btn"
+                disabled={!selectedStatusId}
+                style={{ cursor: !selectedStatusId ? 'not-allowed' : 'pointer' }}
                 onClick={() =>
                   selectedStatusId &&
                   handleStatusChange(selectedTask.id, selectedStatusId)
@@ -292,6 +312,37 @@ const Home = () => {
                 Change Status
               </button>
             </div>
+
+            {/* Move Sprint (Tasks Only) */}
+            {selectedTask.type !== "bug" && (
+              <div className="popup-section" style={{ marginTop: '20px', paddingTop: '15px', borderTop: '1px solid #eee' }}>
+                <label>Move to Sprint:</label>
+                <select
+                  value={selectedMoveSprintId}
+                  onChange={(e) => setSelectedMoveSprintId(e.target.value)}
+                >
+                  <option value="">-- Select Sprint --</option>
+                  {sprints
+                    .filter(s => s.id !== selectedTask.sprint?.id) // exclude current sprint
+                    .map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name} ({s.status || 'No status'})
+                    </option>
+                  ))}
+                </select>
+                <button
+                  className="status-btn"
+                  style={{ background: '#f59e0b', marginTop: '10px' }}
+                  disabled={!selectedMoveSprintId}
+                  onClick={() =>
+                    selectedMoveSprintId &&
+                    handleMoveSprint(selectedTask.id, selectedMoveSprintId)
+                  }
+                >
+                  Move Task
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

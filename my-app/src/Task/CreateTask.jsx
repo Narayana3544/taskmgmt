@@ -434,7 +434,7 @@ export default function CreateTask() {
       </div>
 
       <div className="btn-container full-width" style={{ gridColumn: 'span 12', display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
-        <button type="button" className="btn-global btn-secondary" onClick={() => navigate(-1)}>Cancel</button>
+        <button type="button" className="btn-global btn-secondary" onClick={() => navigate(-1)}>Back</button>
         <button type="submit" className="btn-global btn-primary">Create Task</button>
       </div>
     </form>

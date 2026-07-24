@@ -47,33 +47,14 @@ const ViewFeaturesByProjectId = () => {
         .catch((err) => console.error('Error deleting feature:', err));
     }
   };
-  const [searchTerm, setSearchTerm] = useState('');
 
-useEffect(() => {
-  if (searchTerm.trim() === '') {
-    setFilteredFeatures(features);
-  } else {
-    const term = searchTerm.toLowerCase();
-    const filtered = features.filter(feature =>
-      JSON.stringify(feature).toLowerCase().includes(term)
-    );
-    setFilteredFeatures(filtered);
-  }
-}, [searchTerm, features]);
+
+  const projectName = features.length > 0 ? features[0].project?.name : projectId;
 
   return (
     <div className="features-list-page">
       <div className="header-bar">
-        
-        <h2>Features for Project {projectId}</h2>
-      </div>
-      <div className="search-bar">
-        <input
-          type="text"
-      placeholder="Search..."
-      value={searchTerm}
-      onChange={e => setSearchTerm(e.target.value)}
-        />
+        <h2>Features for Project: {projectName}</h2>
       </div>
 
       {filteredFeatures.length === 0 ? (

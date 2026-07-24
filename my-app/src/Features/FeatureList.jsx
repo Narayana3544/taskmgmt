@@ -46,10 +46,10 @@ const FeatureList = () => {
   return (
     <div className="features-list-page">
       <div className="header-bar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', gap: '15px', flexWrap: 'wrap' }}>
-        <h2 style={{ margin: 0, whiteSpace: 'nowrap' }}>Features</h2>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flexWrap: 'wrap', flex: 1 }}>
+          <h2 style={{ margin: 0, whiteSpace: 'nowrap' }}>Features</h2>
 
-        {/* 🔍 Project Dropdown Inline */}
-        <div className="filter-sections" style={{ display: 'flex', gap: '10px', alignItems: 'center', flex: 1 }}>
+          {/* 🔍 Project Dropdown Inline */}
           <Select
             options={projectOptions}
             value={selectedProject}

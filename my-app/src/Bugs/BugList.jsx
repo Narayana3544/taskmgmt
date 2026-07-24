@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { FaEye, FaEdit } from "react-icons/fa";
+import { FaEye, FaEdit, FaPlus } from "react-icons/fa";
 import api from "../api";
 import { ToastContainer, toast } from "react-toastify";
 import Select from "react-select";
@@ -108,8 +108,8 @@ export default function BugList() {
             </div>
 
             <div style={{ flexShrink: 0 }}>
-              <button className="btn-global btn-primary" onClick={() => navigate('/create-bug')} style={{ whiteSpace: 'nowrap' }}>
-                ➕ Create Bug
+              <button className="create-btn" onClick={() => navigate('/create-bug')} style={{ whiteSpace: 'nowrap' }}>
+                <FaPlus /> Create Bug
               </button>
             </div>
           </div>
@@ -120,10 +120,10 @@ export default function BugList() {
                 <th>Feature Name</th>
                 <th>Sprint</th>
                 <th>Bug Title</th>
-                <th>ID</th>
+                <th style={{ whiteSpace: 'nowrap' }}>ID</th>
                 <th>User</th>
-                <th>Status</th>
-                <th>Created At</th>
+                <th style={{ whiteSpace: 'nowrap' }}>Status</th>
+                <th style={{ whiteSpace: 'nowrap' }}>Created At</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -136,9 +136,9 @@ export default function BugList() {
                   <td style={{ maxWidth: '250px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={bug.title}>
                     {bug.title}
                   </td>
-                  <td>{bug.id}</td>
+                  <td style={{ whiteSpace: 'nowrap' }}>{bug.id}</td>
                   <td>{bug.assignedUser || "-"}</td>
-                  <td>
+                  <td style={{ whiteSpace: 'nowrap' }}>
                     <select
                       value={bug.statusId || ""}
                       onChange={(e) => handleStatusChange(bug.id, e.target.value)}
@@ -151,7 +151,7 @@ export default function BugList() {
                       ))}
                     </select>
                   </td>
-                  <td>{bug.createdAt ? new Date(bug.createdAt).toLocaleDateString() : "-"}</td>
+                  <td style={{ whiteSpace: 'nowrap' }}>{bug.createdAt ? new Date(bug.createdAt).toLocaleDateString() : "-"}</td>
                   <td>
                     <div className="action-buttons">
                       <div className="tooltip">

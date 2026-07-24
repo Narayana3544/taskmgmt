@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import api from '../api';
 import './ManageProject.css';
-import { FaEdit, FaPlus, FaUsers, FaListUl } from 'react-icons/fa';
+import { FaEdit, FaPlus, FaUsers, FaListUl, FaEye } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { sortLatestFirst } from "../utils/sortUtils";
 import StatusSummary from '../components/StatusSummary';
@@ -89,7 +89,7 @@ export default function ManageProjects() {
 
                     {/* 📋 View Features */}
                     <div className="tooltip">
-                      <FaListUl
+                      <FaEye
                         className="icon-btn view-icon"
                         onClick={() =>
                           navigate(`/view-featuresByprojectid/${project.id}`)

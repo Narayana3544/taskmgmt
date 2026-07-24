@@ -4,6 +4,8 @@ import api from '../api';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { differenceInDays, addDays, format, isBefore, isSameDay } from "date-fns";
 import { sortAlphabetically, sortLatestFirst } from "../utils/sortUtils";
+import { isTaskLocked, getLockedReason } from "../utils/lockUtils";
+import { FaLock } from "react-icons/fa";
 import "./SprintOverview.css";
 
 export default function SprintOverview({ sprintId: propSprintId }) {
@@ -21,7 +23,8 @@ export default function SprintOverview({ sprintId: propSprintId }) {
    const [error, setError] = useState(null);
   const navigate = useNavigate();
   // Add this state at the top
-const [allSprints, setAllSprints] = useState([]);
+  const [allSprints, setAllSprints] = useState([]);
+  const [lockedMsg, setLockedMsg] = useState(""); // popup message for locked tasks
 
 // Fetch all sprints in fetchData or a separate useEffect
 useEffect(() => {
@@ -161,10 +164,10 @@ useEffect(() => {
       .catch((err) => console.error("Error fetching statuses:", err));
   }, []);
 
-  const handleStatusChange = (taskId, statusId) => {
+  const handleStatusChange = async (task, statusId) => {
   api
     .put(
-      `/tasks/${taskId}/status/${statusId}`,
+      `/tasks/${task.id}/status/${statusId}`,
       {},
       { withCredentials: true }
     )
@@ -383,76 +386,72 @@ useEffect(() => {
                     <tr key={task.id}>
                       <td>{task.userstory}</td>
 
-                      {/* Assignee dropdown (always available) */}
+                      {/* Assignee dropdown */}
+                      <td>
+                        {isTaskLocked(task) ? (
+                          <span style={{ color: '#aaa' }}><FaLock size={12}/> {task.user?.preffered_name || task.user?.name || "-"}</span>
+                        ) : (
+                          <select
+                            onChange={(e) => handleAssign(task.id, e.target.value)}
+                            value={task.user?.id || ""}
+                          >
+                            <option value="" disabled>Assign to...</option>
+                            {users.map((u) => (
+                              <option key={u.id} value={u.id}>{u.preffered_name || u.name}</option>
+                            ))}
+                          </select>
+                        )}
+                      </td>
+
+                      {/* Status */}
                       <td>
                         <select
-                          onChange={(e) =>
-                            handleAssign(task.id, e.target.value)
-                          }
-                          value={task.user?.id || ""}
+                          value={task.taskStatus?.id || ""}
+                          onChange={(e) => handleStatusChange(task, e.target.value)}
                         >
-                          <option value="" disabled>
-                            Assign to...
-                          </option>
-                          {users.map((u) => (
-                            <option key={u.id} value={u.id}>
-                              {u.preffered_name || u.name}
+                          <option value="">-- Select Status --</option>
+                          {statuses.map((status) => (
+                            <option key={status.id} value={status.id}>
+                              {status.decription}
                             </option>
                           ))}
                         </select>
                       </td>
-
-                     
-                      <td>
-                    <select
-                      value={task.taskStatus?.id || ""}
-                      onChange={(e) => handleStatusChange(task.id, e.target.value)}
-                    >
-                      <option value="">-- Select Status --</option>
-                      {statuses.map((status) => (
-                        <option key={status.id} value={status.id}>
-                          {status.decription}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
 
                       {/* Story points */}
                       <td>{task.storypoints}</td>
 
                       {/* Report To dropdown */}
                       <td>
+                        {isTaskLocked(task) ? (
+                          <span style={{ color: '#aaa' }}><FaLock size={12}/> {task.reportedTo?.preffered_name || task.reportedTo?.name || "-"}</span>
+                        ) : (
+                          <select
+                            onChange={(e) => handleAssignReport(task.id, e.target.value)}
+                            value={task.reportedTo?.id || ""}
+                          >
+                            <option value="" disabled>Report to...</option>
+                            {managers.map((m) => (
+                              <option key={m.id} value={m.id}>{m.preffered_name || m.name}</option>
+                            ))}
+                          </select>
+                        )}
+                      </td>
+
+                      {/* Move sprint */}
+                      <td>
                         <select
-                          onChange={(e) =>
-                            handleAssignReport(task.id, e.target.value)
-                          }
-                          value={task.reportedTo?.id || ""}
+                          onChange={(e) => handleMoveTask(task.id, e.target.value)}
+                          defaultValue=""
                         >
-                          <option value="" disabled>
-                            Report to...
-                          </option>
-                          {managers.map((m) => (
-                            <option key={m.id} value={m.id}>
-                              {m.preffered_name || m.name}
-                            </option>
-                          ))}
+                          <option value="" disabled>Move to sprint...</option>
+                          {allSprints
+                            .filter(s => s.id !== sprint.id)
+                            .map(s => (
+                              <option key={s.id} value={s.id}>{s.name}</option>
+                            ))}
                         </select>
                       </td>
-                    <td>
-                      <select
-                        onChange={(e) => handleMoveTask(task.id, e.target.value)}
-                        defaultValue=""
-                      >
-                        <option value="" disabled>Move to sprint...</option>
-                        {allSprints
-                          .filter(s => s.id !== sprint.id)
-                          .map(s => (
-                            <option key={s.id} value={s.id}>
-                              {s.name}
-                            </option>
-                          ))}
-                      </select>
-                    </td>
 
                     </tr>
                   ))}
@@ -499,6 +498,27 @@ useEffect(() => {
           );
         })}
       </div>
+      
+      {/* 🔒 Locked Task Popup */}
+      {lockedMsg && (
+        <div className="popup-overlay" style={{ zIndex: 1000, position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="popup-card" style={{ background: '#fff', padding: '20px', borderRadius: '8px', maxWidth: '400px', width: '90%', textAlign: 'center', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+            <div style={{ color: '#dc2626', fontSize: '32px', marginBottom: '10px' }}>
+              <FaLock />
+            </div>
+            <h3 style={{ margin: '0 0 15px 0', color: '#1f2937' }}>Task Locked</h3>
+            <p style={{ color: '#4b5563', whiteSpace: 'pre-line', marginBottom: '20px', lineHeight: '1.5' }}>
+              {lockedMsg}
+            </p>
+            <button 
+              onClick={() => setLockedMsg("")} 
+              style={{ background: '#3b82f6', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

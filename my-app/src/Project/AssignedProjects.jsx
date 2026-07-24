@@ -111,7 +111,7 @@ export default function ViewProjectById() {
                           justifyContent: "center"
                         }}
                       >
-                        <FaList />
+                        <FaEye />
                       </button>
                     </td>
                   </tr>

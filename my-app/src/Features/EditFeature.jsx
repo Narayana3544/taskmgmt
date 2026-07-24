@@ -1,32 +1,23 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../api";
-import "./EditFeature.css";
+import "../Task/TaskForm.css";
 
 const EditFeature = () => {
-  const { id } = useParams(); // feature id from URL
+  const { id } = useParams();
   const navigate = useNavigate();
 
-  const [featureData, setFeatureData] = useState({
-    name: "",
-    description: "",
-    status: "",
-    project: { id: "" },
-  });
-
+  const [featureData, setFeatureData] = useState({ name: "", description: "", status: "", project: { id: "" } });
   const [statuses, setStatuses] = useState([]);
 
   useEffect(() => {
-    // Fetch statuses and feature details
     const fetchData = async () => {
       try {
         const [statusRes, featureRes] = await Promise.all([
           api.get("/getstatusForFeature", { withCredentials: true }),
           api.get(`/features/${id}`, { withCredentials: true }),
         ]);
-
         setStatuses(statusRes.data);
-
         const feature = featureRes.data;
         setFeatureData({
           name: feature.name || "",
@@ -38,48 +29,38 @@ const EditFeature = () => {
         console.error("Error loading feature or statuses:", err);
       }
     };
-
     fetchData();
   }, [id]);
 
   const handleChange = (e) => {
-    setFeatureData({
-      ...featureData,
-      [e.target.name]: e.target.value,
-    });
+    setFeatureData({ ...featureData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // Check if user is trying to close the feature
     const selectedStatusObj = statuses.find(s => s.id === parseInt(featureData.status));
-    const isClosing = selectedStatusObj && 
+    const isClosing = selectedStatusObj &&
       (selectedStatusObj.decription.toLowerCase() === 'closed' || selectedStatusObj.decription.toLowerCase() === 'completed');
 
     if (isClosing) {
       try {
         const sprintsRes = await api.get(`/features/${id}/sprints`, { withCredentials: true });
-        
         let projectTasks = [];
         if (featureData.project?.id) {
-            const tasksRes = await api.get(`/viewTaskByProjectId/${featureData.project.id}`, { withCredentials: true });
-            projectTasks = tasksRes.data.filter(t => t.feature?.id === parseInt(id));
+          const tasksRes = await api.get(`/viewTaskByProjectId/${featureData.project.id}`, { withCredentials: true });
+          projectTasks = tasksRes.data.filter(t => t.feature?.id === parseInt(id));
         }
-
         const hasOpenSprints = sprintsRes.data.some(s => {
           const stat = s.status?.toLowerCase() || '';
           return stat !== 'closed' && stat !== 'completed';
         });
-
         const hasOpenTasks = projectTasks.some(t => {
           const stat = t.taskStatus?.decription?.toLowerCase() || '';
           return stat !== 'done' && stat !== 'closed' && stat !== 'completed';
         });
-
         if (hasOpenSprints || hasOpenTasks) {
           alert("Please close sprint and tasks first.");
-          return; // Stop submission
+          return;
         }
       } catch (err) {
         console.error("Error validating feature closure:", err);
@@ -119,48 +100,34 @@ const EditFeature = () => {
   };
 
   return (
-    <div className="edit-feature-container">
-      <h2>Edit Feature</h2>
-      <form className="edit-feature-form" onSubmit={handleSubmit}>
-        <label>Feature Name</label>
-        <input
-          type="text"
-          name="name"
-          value={featureData.name}
-          onChange={handleChange}
-          required
-        />
+    <form onSubmit={handleSubmit} className="task-form" style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '15px' }}>
 
-        <label>Description</label>
-        <textarea
-          name="description"
-          value={featureData.description}
-          onChange={handleChange}
-          required
-        />
+      <div className="form-group" style={{ gridColumn: 'span 6', marginBottom: 0 }}>
+        <label>Feature Name<sup style={{color:'red'}}>*</sup></label>
+        <input type="text" name="name" value={featureData.name} onChange={handleChange} required />
+      </div>
 
-        <label>Status</label>
-        <select
-          name="status"
-          value={featureData.status}
-          onChange={handleChange}
-          required
-        >
+      <div className="form-group" style={{ gridColumn: 'span 6', marginBottom: 0 }}>
+        <label>Status<sup style={{color:'red'}}>*</sup></label>
+        <select name="status" value={featureData.status} onChange={handleChange} required>
           <option value="">Select a status</option>
           {statuses.map((status) => (
-            <option key={status.id} value={status.id}>
-              {status.decription}
-            </option>
+            <option key={status.id} value={status.id}>{status.decription}</option>
           ))}
         </select>
+      </div>
 
-        <div className="btn-container full-width">
-          <button type="button" className="btn-global btn-secondary" onClick={() => navigate(-1)}>Back</button>
-          <button type="button" className="btn-global btn-danger" onClick={handleDelete}>Delete</button>
-          <button type="submit" className="btn-global btn-primary">Save</button>
-        </div>
-      </form>
-    </div>
+      <div className="form-group" style={{ gridColumn: 'span 12', marginBottom: 0 }}>
+        <label>Description<sup style={{color:'red'}}>*</sup></label>
+        <textarea name="description" value={featureData.description} onChange={handleChange} rows={3} style={{ padding: '8px' }} required />
+      </div>
+
+      <div className="btn-container" style={{ gridColumn: 'span 12', display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '5px' }}>
+        <button type="button" className="btn-global btn-secondary" onClick={() => navigate(-1)}>Back</button>
+        <button type="button" className="btn-global btn-danger" onClick={handleDelete}>Delete</button>
+        <button type="submit" className="btn-global btn-primary">Update Feature</button>
+      </div>
+    </form>
   );
 };
 

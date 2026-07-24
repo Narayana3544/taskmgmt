@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../api";
 import { sortAlphabetically, sortLatestFirst } from "../utils/sortUtils";
+import { isTaskLocked, getLockedReason } from "../utils/lockUtils";
+import { FaLock } from 'react-icons/fa';
 import "./TaskForm.css";
 
 export default function EditTask() {
@@ -36,6 +38,8 @@ export default function EditTask() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [initialData, setInitialData] = useState(null);
+  const [isLocked, setIsLocked] = useState(false);
+  const [lockedMsg, setLockedMsg] = useState("");
 
   // Fetch dropdown data
   useEffect(() => {
@@ -97,6 +101,11 @@ export default function EditTask() {
           selectedProject: t.feature?.project?.id || "",
           attachmentFlag: t.attachment_flag === "Yes" ? "Yes" : "No",
         });
+
+        if (isTaskLocked(t)) {
+          setIsLocked(true);
+          setLockedMsg(getLockedReason(t));
+        }
       })
       .catch((err) => console.error("Error loading task:", err));
   }, [id]);
@@ -228,10 +237,21 @@ const handleSubmit = async (e) => {
   );
 
   return (
-    <form onSubmit={handleSubmit} className="task-form" style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '15px' }}>
+    <div className="task-form-container">
+      {isLocked && (
+        <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '15px', borderRadius: '5px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <FaLock size={20} />
+          <div>
+            <strong>Task Locked:</strong>
+            <p style={{ margin: '5px 0 0 0', whiteSpace: 'pre-line' }}>{lockedMsg}</p>
+          </div>
+        </div>
+      )}
+      
+      <form onSubmit={handleSubmit} className="task-form" style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '15px', opacity: isLocked ? 0.6 : 1, pointerEvents: isLocked ? 'none' : 'auto' }}>
 
       {/* Project */}
-      <div className="form-group" style={{ gridColumn: 'span 2', marginBottom: 0 }}>
+      <div className="form-group" style={{ gridColumn: 'span 3', marginBottom: 0 }}>
         <label>Project<sup style={{color: "red"}}>*</sup></label>
         <select
           value={selectedProject}
@@ -248,7 +268,7 @@ const handleSubmit = async (e) => {
       </div>
 
       {/* Feature */}
-      <div className="form-group" style={{ gridColumn: 'span 2', marginBottom: 0 }}>
+      <div className="form-group" style={{ gridColumn: 'span 3', marginBottom: 0 }}>
         <label>Feature<sup style={{color: "red"}}>*</sup></label>
         <select
           value={selectedFeature}
@@ -265,7 +285,7 @@ const handleSubmit = async (e) => {
       </div>
 
       {/* Task Type */}
-      <div className="form-group" style={{ gridColumn: 'span 2', marginBottom: 0 }}>
+      <div className="form-group" style={{ gridColumn: 'span 3', marginBottom: 0 }}>
         <label>Task Type<sup style={{color: "red"}}>*</sup></label>
         <select
           value={selectedTaskType}
@@ -282,7 +302,7 @@ const handleSubmit = async (e) => {
       </div>
 
       {/* Task Status */}
-      <div className="form-group" style={{ gridColumn: 'span 2', marginBottom: 0 }}>
+      <div className="form-group" style={{ gridColumn: 'span 3', marginBottom: 0 }}>
         <label>Task Status<sup style={{color: "red"}}>*</sup></label>
         <select
           value={selectedTaskStatus}
@@ -299,7 +319,7 @@ const handleSubmit = async (e) => {
       </div>
 
       {/* User Story */}
-      <div className="form-group full-width" style={{ gridColumn: 'span 3', marginBottom: 0 }}>
+      <div className="form-group full-width" style={{ gridColumn: 'span 6', marginBottom: 0 }}>
         <label>User Story<sup style={{color: "red"}}>*</sup></label>
         <textarea
           value={userstory}
@@ -311,7 +331,7 @@ const handleSubmit = async (e) => {
       </div>
 
       {/* Description */}
-      <div className="form-group half-width" style={{ gridColumn: 'span 3', marginBottom: 0 }}>
+      <div className="form-group half-width" style={{ gridColumn: 'span 6', marginBottom: 0 }}>
         <label>Description</label>
         <textarea
           value={description}
@@ -322,7 +342,7 @@ const handleSubmit = async (e) => {
       </div>
 
       {/* Acceptance Criteria */}
-      <div className="form-group half-width" style={{ gridColumn: 'span 6', marginBottom: 0 }}>
+      <div className="form-group half-width" style={{ gridColumn: 'span 12', marginBottom: 0 }}>
         <label>Acceptance Criteria</label>
         <textarea
           value={acceptanceCriteria}
@@ -333,7 +353,7 @@ const handleSubmit = async (e) => {
       </div>
 
       {/* Complexity */}
-      <div className="form-group" style={{ gridColumn: 'span 2', marginBottom: 0 }}>
+      <div className="form-group" style={{ gridColumn: 'span 4', marginBottom: 0 }}>
         <label>Complexity<sup style={{color: "red"}}>*</sup></label>
         <input
           type="number"
@@ -358,7 +378,7 @@ const handleSubmit = async (e) => {
       </div>
 
       {/* Story Points */}
-      <div className="form-group" style={{ gridColumn: 'span 2', marginBottom: 0 }}>
+      <div className="form-group" style={{ gridColumn: 'span 4', marginBottom: 0 }}>
         <label>Story Points<sup style={{color: "red"}}>*</sup></label>
         <input
           type="number"
@@ -369,7 +389,7 @@ const handleSubmit = async (e) => {
       </div>
 
       {/* Sprint */}
-      <div className="form-group" style={{ gridColumn: 'span 2', marginBottom: 0 }}>
+      <div className="form-group" style={{ gridColumn: 'span 4', marginBottom: 0 }}>
         <label>Sprint</label>
         <select
           value={selectedSprint}
@@ -384,7 +404,7 @@ const handleSubmit = async (e) => {
         </select>
       </div>
 
-      {/* Dates */}
+      {/* Dates + User + Reported To — all on ONE line */}
       <div className="form-group" style={{ gridColumn: 'span 3', marginBottom: 0 }}>
         <label>Start Date</label>
         <input
@@ -403,8 +423,7 @@ const handleSubmit = async (e) => {
         />
       </div>
 
-      {/* User */}
-      <div className="form-group" style={{ gridColumn: 'span 2', marginBottom: 0 }}>
+      <div className="form-group" style={{ gridColumn: 'span 3', marginBottom: 0 }}>
         <label>User</label>
         <select
           value={selectedUser}
@@ -419,8 +438,7 @@ const handleSubmit = async (e) => {
         </select>
       </div>
 
-      {/* Reported To */}
-      <div className="form-group" style={{ gridColumn: 'span 2', marginBottom: 0 }}>
+      <div className="form-group" style={{ gridColumn: 'span 3', marginBottom: 0 }}>
         <label>Reported To</label>
         <select
           value={reportedTo}
@@ -435,8 +453,8 @@ const handleSubmit = async (e) => {
         </select>
       </div>
 
-      {/* Attachment */}
-      <div className="form-group" style={{ gridColumn: 'span 6', marginBottom: 0 }}>
+      {/* Attachment — all 3 side by side */}
+      <div className="form-group" style={{ gridColumn: 'span 4', marginBottom: 0 }}>
         <label>Attachment Flag</label>
         <select
           value={attachmentFlag}
@@ -447,21 +465,23 @@ const handleSubmit = async (e) => {
         </select>
       </div>
 
-      {attachmentFlag === "Yes" && existingAttachments.length > 0 && (
-        <div className="form-group half-width" style={{ gridColumn: 'span 6', marginBottom: "10px" }}>
+      {attachmentFlag === "Yes" && existingAttachments.length > 0 ? (
+        <div className="form-group" style={{ gridColumn: 'span 4', marginBottom: 0 }}>
           <label>Existing Attachments</label>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
             {existingAttachments.map((att, index) => (
-              <div key={index} className="attachment-file" style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '5px' }}>
+              <div key={index} className="attachment-file" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span>📎 {att.attachmentName || att.attachment_name}</span>
               </div>
             ))}
           </div>
         </div>
+      ) : (
+        <div style={{ gridColumn: 'span 4' }} />
       )}
 
-      {attachmentFlag === "Yes" && (
-        <div className={`form-group ${existingAttachments.length > 0 ? 'half-width' : 'full-width'} attachment-container`} style={{ gridColumn: 'span 6', margin: 0 }}>
+      {attachmentFlag === "Yes" ? (
+        <div className="form-group attachment-container" style={{ gridColumn: 'span 4', marginBottom: 0 }}>
           <label>{existingAttachments.length > 0 ? "Add Additional Attachments" : "Add Attachments"}</label>
           <input type="file" multiple onChange={(e) => {
             const files = Array.from(e.target.files);
@@ -471,7 +491,7 @@ const handleSubmit = async (e) => {
           {attachmentFiles.length > 0 && (
             <div className="attachment-files-list">
               {attachmentFiles.map((file, index) => (
-                <div key={index} className="attachment-file" style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '5px', padding: '2px 8px' }}>
+                <div key={index} className="attachment-file" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px', padding: '2px 6px' }}>
                   <span style={{ fontSize: '13px' }}>📎 {file.name}</span>
                   <button type="button" className="remove-btn" onClick={() => setAttachmentFiles(prev => prev.filter((_, i) => i !== index))} style={{ width: '16px', height: '16px', fontSize: '10px' }}>✖</button>
                 </div>
@@ -479,14 +499,16 @@ const handleSubmit = async (e) => {
             </div>
           )}
         </div>
+      ) : (
+        <div style={{ gridColumn: 'span 8' }} />
       )}
 
       {/* Buttons */}
-      <div className="btn-container full-width" style={{ gridColumn: 'span 6', display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
+      <div className="btn-container full-width" style={{ gridColumn: 'span 12', display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
         <button type="button" className="btn-global btn-secondary" onClick={() => navigate(-1)}>
           Back
         </button>
-        <button type="button" className="btn-global btn-secondary" onClick={handleClone} style={{ marginLeft: "10px" }}>
+        <button type="button" className="btn-global btn-secondary" onClick={handleClone}>
           Clone Task
         </button>
         <button type="submit" className="btn-global btn-primary" style={{ marginLeft: "10px", opacity: !hasChanges ? 0.6 : 1, cursor: !hasChanges ? 'not-allowed' : 'pointer' }} disabled={!hasChanges}>
@@ -494,5 +516,6 @@ const handleSubmit = async (e) => {
         </button>
       </div>
     </form>
+    </div>
   );
 }

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../api";
 import "./Bugform.css";
+import "../Task/TaskForm.css";
 
 export default function BugForm() {
   const { id } = useParams(); // bugId for edit
@@ -130,68 +131,42 @@ export default function BugForm() {
   );
 
   return (
-    <div className="bug-form-container" style={{ maxWidth: '900px' }}>
-      <h2>Edit Bug</h2>
+    <form onSubmit={handleSubmit} className="task-form" style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '15px' }}>
+      <div className="form-group" style={{ gridColumn: 'span 6', marginBottom: 0 }}>
+        <label>Title<sup style={{color:'red'}}>*</sup></label>
+        <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} required />
+      </div>
 
-      <form onSubmit={handleSubmit} className="bug-form task-form" style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '15px' }}>
-        <div className="form-group" style={{ gridColumn: 'span 3', marginBottom: 0 }}>
-          <label>Title:</label>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            required
-          />
-        </div>
+      <div className="form-group" style={{ gridColumn: 'span 6', marginBottom: 0 }}>
+        <label>Description<sup style={{color:'red'}}>*</sup></label>
+        <textarea rows="2" style={{ minHeight: '34px', padding: '8px' }} value={description} onChange={(e) => setDescription(e.target.value)} required />
+      </div>
 
-        <div className="form-group" style={{ gridColumn: 'span 3', marginBottom: 0 }}>
-          <label>Description:</label>
-          <textarea
-            rows="2"
-            style={{ minHeight: '34px', padding: '8px' }}
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            required
-          />
-        </div>
+      <div className="form-group" style={{ gridColumn: 'span 4', marginBottom: 0 }}>
+        <label>Priority<sup style={{color:'red'}}>*</sup></label>
+        <select value={priority} onChange={(e) => setPriority(e.target.value)} required>
+          <option value="">-- Select Priority --</option>
+          {priorities.map((p) => (<option key={p.id} value={p.id}>{p.decription || p.description || p.name}</option>))}
+        </select>
+      </div>
 
-        <div className="form-group" style={{ gridColumn: 'span 2', marginBottom: 0 }}>
-          <label>Priority:</label>
-          <select value={priority} onChange={(e) => setPriority(e.target.value)} required>
-            <option value="">-- Select Priority --</option>
-            {priorities.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.decription || p.description || p.name}
-              </option>
-            ))}
-          </select>
-        </div>
+      <div className="form-group" style={{ gridColumn: 'span 4', marginBottom: 0 }}>
+        <label>Status</label>
+        <select value={status} onChange={(e) => setStatus(e.target.value)}>
+          <option value="">-- Select Status --</option>
+          {statuses.map((s) => (<option key={s.id} value={s.id}>{s.decription || s.description || s.name}</option>))}
+        </select>
+      </div>
 
-        <div className="form-group" style={{ gridColumn: 'span 2', marginBottom: 0 }}>
-          <label>Status:</label>
-          <select value={status} onChange={(e) => setStatus(e.target.value)}>
-            <option value="">-- Select Status --</option>
-            {statuses.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.decription || s.description || s.name}
-              </option>
-            ))}
-          </select>
-        </div>
+      <div className="form-group" style={{ gridColumn: 'span 4', marginBottom: 0 }}>
+        <label>Assign To<sup style={{color:'red'}}>*</sup></label>
+        <select value={assignedTo} onChange={(e) => setAssignedTo(e.target.value)} required>
+          <option value="">-- Select Developer --</option>
+          {developers.map((d) => (<option key={d.id} value={d.id}>{d.first_name || d.name || d.username}</option>))}
+        </select>
+      </div>
 
-        <div className="form-group" style={{ gridColumn: 'span 2', marginBottom: 0 }}>
-          <label>Assign To (Developer):</label>
-          <select value={assignedTo} onChange={(e) => setAssignedTo(e.target.value)} required>
-            <option value="">-- Select Developer --</option>
-            {developers.map((d) => (
-              <option key={d.id} value={d.id}>
-                {d.first_name || d.name || d.username}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="form-group full-width attachment-container" style={{ gridColumn: 'span 6', margin: 0 }}>
+      <div className="form-group full-width attachment-container" style={{ gridColumn: 'span 12', margin: 0 }}>
           {existingAttachments.length > 0 && (
             <div style={{ marginBottom: '15px' }}>
               <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Existing Attachments:</label>
@@ -230,11 +205,10 @@ export default function BugForm() {
           </div>
         </div>
 
-        <div className="btn-container full-width" style={{ gridColumn: 'span 6', display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
-          <button type="button" className="btn-global btn-secondary" onClick={() => navigate(-1)}>Back</button>
-          <button type="submit" className="btn-global btn-primary" disabled={!hasChanges} style={{ opacity: !hasChanges ? 0.6 : 1, cursor: !hasChanges ? 'not-allowed' : 'pointer' }}>Update Bug</button>
-        </div>
-      </form>
-    </div>
+      <div className="btn-container full-width" style={{ gridColumn: 'span 12', display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
+        <button type="button" className="btn-global btn-secondary" onClick={() => navigate(-1)}>Back</button>
+        <button type="submit" className="btn-global btn-primary" disabled={!hasChanges} style={{ opacity: !hasChanges ? 0.6 : 1, cursor: !hasChanges ? 'not-allowed' : 'pointer' }}>Update Bug</button>
+      </div>
+    </form>
   );
 }

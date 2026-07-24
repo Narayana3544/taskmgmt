@@ -3,11 +3,12 @@ import api from "../api";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Select from "react-select";
 import "./TaskList.css";
-import { FaEdit, FaPlus, FaEye, FaDownload } from "react-icons/fa";
+import { FaEdit, FaPlus, FaEye, FaDownload, FaLock } from "react-icons/fa";
 import { useDebounce } from "use-debounce";
 import * as XLSX from "xlsx";
 import { sortLatestFirst, sortAlphabetically } from "../utils/sortUtils";
 import StatusSummary from "../components/StatusSummary";
+import { isTaskLocked, getLockedReason } from "../utils/lockUtils";
 
 export default function TaskList() {
 
@@ -20,6 +21,7 @@ export default function TaskList() {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [lockedMsg, setLockedMsg] = useState(""); // popup message for locked tasks
 
   // Filters
   const [selectedFeature, setSelectedFeature] = useState("");
@@ -164,16 +166,13 @@ export default function TaskList() {
 
   };
 
-  const handleStatusChange = async (taskId, newStatusId) => {
-    if (!window.confirm("Are you sure you want to change the status?")) {
-      return;
-    }
+  const handleStatusChange = async (task, newStatusId) => {
+    if (!window.confirm("Are you sure you want to change the status?")) return;
     try {
-      await api.put(`/tasks/${taskId}/status/${newStatusId}`, null, { withCredentials: true });
-      // Update local state
+      await api.put(`/tasks/${task.id}/status/${newStatusId}`, null, { withCredentials: true });
       setTasks((prev) =>
         prev.map((t) =>
-          t.id === taskId ? { ...t, taskStatus: statuses.find(s => s.id === parseInt(newStatusId)) } : t
+          t.id === task.id ? { ...t, taskStatus: statuses.find(s => s.id === parseInt(newStatusId)) } : t
         )
       );
     } catch (err) {
@@ -261,7 +260,7 @@ export default function TaskList() {
       />
     </div>
     
-    <StatusSummary data={filteredTasks} statusExtractor={(task) => task.taskStatus?.description || task.status} />
+    <StatusSummary data={filteredTasks} statusExtractor={(task) => task.taskStatus?.decription || task.taskStatus?.description || task.status || ''} />
   </div>
 
   <div className="header-actions" style={{ flexShrink: 0, display: 'flex', gap: '10px' }}>
@@ -319,7 +318,7 @@ export default function TaskList() {
                 </select>
               </th>
               <th>Task Name</th>
-              <th>ID</th>
+              <th style={{ whiteSpace: 'nowrap' }}>ID</th>
               <th>
                 User
                 <br />
@@ -339,7 +338,7 @@ export default function TaskList() {
                   ))}
                 </select>
               </th>
-              <th>
+              <th style={{ whiteSpace: 'nowrap' }}>
                 Status
                 <br />
                 <select
@@ -356,7 +355,7 @@ export default function TaskList() {
                   ))}
                 </select>
               </th>
-              <th>Start Date</th>
+              <th style={{ whiteSpace: 'nowrap' }}>Start Date</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -382,12 +381,12 @@ export default function TaskList() {
                   <td style={{ maxWidth: '250px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={task.userstory}>
                     {task.userstory || "-"}
                   </td>
-                  <td>{task.id}</td>
+                  <td style={{ whiteSpace: 'nowrap' }}>{task.id}</td>
                   <td>{task.user?.first_name || "-"}</td>
-                  <td>
+                  <td style={{ whiteSpace: 'nowrap' }}>
                     <select
                       value={task.taskStatus?.id || ""}
-                      onChange={(e) => handleStatusChange(task.id, e.target.value)}
+                      onChange={(e) => handleStatusChange(task, e.target.value)}
                       style={{ padding: "4px 8px", borderRadius: "4px", border: "1px solid #ccc" }}
                     >
                       {statuses.map((s) => (
@@ -397,7 +396,7 @@ export default function TaskList() {
                       ))}
                     </select>
                   </td>
-                  <td>{task.start_date ? new Date(task.start_date).toLocaleDateString() : "-"}</td>
+                  <td style={{ whiteSpace: 'nowrap' }}>{task.start_date ? new Date(task.start_date).toLocaleDateString() : "-"}</td>
                   <td>
                     <div className="action-buttons">
                       <div className="tooltip">
@@ -407,10 +406,18 @@ export default function TaskList() {
                         <span className="tooltip-text">View Task</span>
                       </div>
                       <div className="tooltip">
-                        <button className="icon-btn" onClick={() => navigate(`/edit-task/${task.id}`)}>
-                          <FaEdit />
+                        <button
+                          className="icon-btn"
+                          title={isTaskLocked(task) ? 'Locked — cannot edit completed Sprint/Feature/Project' : 'Edit Task'}
+                          onClick={() => {
+                            if (isTaskLocked(task)) { setLockedMsg(getLockedReason(task)); return; }
+                            navigate(`/edit-task/${task.id}`);
+                          }}
+                          style={isTaskLocked(task) ? { opacity: 0.4, cursor: 'not-allowed' } : {}}
+                        >
+                          {isTaskLocked(task) ? <FaLock /> : <FaEdit />}
                         </button>
-                        <span className="tooltip-text">Edit Task</span>
+                        <span className="tooltip-text">{isTaskLocked(task) ? 'Locked' : 'Edit Task'}</span>
                       </div>
                     </div>
                   </td>
@@ -431,26 +438,36 @@ export default function TaskList() {
             >
               Prev
             </button>
-
-            {[...Array(totalPages)].map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setCurrentPage(i)}
-                className={currentPage === i ? "active" : ""}
-              >
-                {i + 1}
+            {Array.from({ length: totalPages }, (_, index) => (
+              <button key={index} className={currentPage === index ? "active" : ""} onClick={() => setCurrentPage(index)}>
+                {index + 1}
               </button>
             ))}
-
-            <button
-              onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages - 1))}
-              disabled={currentPage === totalPages - 1}
-            >
+            <button disabled={currentPage === totalPages - 1 || totalPages === 0} onClick={() => setCurrentPage((prev) => prev + 1)}>
               Next
             </button>
-
           </div>
+        )}
 
+        {/* 🔒 Locked Task Popup */}
+        {lockedMsg && (
+          <div className="popup-overlay" style={{ zIndex: 1000, position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div className="popup-card" style={{ background: '#fff', padding: '20px', borderRadius: '8px', maxWidth: '400px', width: '90%', textAlign: 'center', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+              <div style={{ color: '#dc2626', fontSize: '32px', marginBottom: '10px' }}>
+                <FaLock />
+              </div>
+              <h3 style={{ margin: '0 0 15px 0', color: '#1f2937' }}>Task Locked</h3>
+              <p style={{ color: '#4b5563', whiteSpace: 'pre-line', marginBottom: '20px', lineHeight: '1.5' }}>
+                {lockedMsg}
+              </p>
+              <button 
+                onClick={() => setLockedMsg("")} 
+                style={{ background: '#3b82f6', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+              >
+                OK
+              </button>
+            </div>
+          </div>
         )}
 
       </div>

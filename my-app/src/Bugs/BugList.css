@@ -1,31 +1,134 @@
-/* BugList.css */
-.task-list-page {
+/* ===== PAGE CONTAINER ===== */
+.features-list-page {
   max-width: 1100px;
   margin: auto;
   padding: 20px;
   background: hsl(130, 13%, 91%);
   color: black;
   border-radius: 10px;
-}
-.task-table-container {
-  width: 100%;
-  overflow-x: auto;
+  font-family: 'Segoe UI', sans-serif;
+  overflow-x: hidden;
 }
 
-.task-list-container h2 {
-  text-align: center;
-  margin-bottom: 1rem;
-  font-weight: 700;
-  color: #1e293b;
-  font-family: 'Segoe UI', sans-serif;
+/* ===== HEADER ===== */
+.header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+/* ===== FILTER SECTION ===== */
+.filter-section {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 15px;
+}
+
+/* Medium size project dropdown */
+.filter-section select {
+  width: 220px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  background: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
 }
 
 .header-actions {
   display: flex;
+  align-items: center;
   gap: 10px;
 }
 
-/* Action buttons layout */
+.icon-download-btn {
+  background: #1D6F42;
+  color: white;
+  border: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: 0.2s;
+  font-size: 16px;
+}
+
+.icon-download-btn:hover {
+  background: #155d36;
+}
+
+.filter-section select:hover {
+  border-color: #1976d2;
+}
+
+/* ===== CREATE BUTTON ===== */
+.create-btn {
+  background: #1a71e2;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: white;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: 0.3s;
+}
+
+.create-btn:hover {
+  background: #3e76ee;
+}
+
+/* ===== TABLE ===== */
+.task-table-container {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+.bug-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: auto;
+}
+
+.bug-table th,
+.bug-table td {
+  padding: 10px;
+  border: 1px solid #ddd;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.bug-table th {
+  background-color: #2875e7;
+  color: white;
+}
+
+.bug-table tbody tr:nth-child(even) {
+  background-color: #f9fafb;
+}
+
+/* ===== INPUTS AND SELECTS IN TABLE ===== */
+.bug-table th select,
+.bug-table th input[type="text"] {
+  margin-top: 5px;
+  width: 100%;
+  padding: 4px 6px;
+  font-size: 13px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  background: #fff;
+  box-sizing: border-box;
+}
+
+/* ===== ACTION BUTTONS (ICON + TOOLTIP) ===== */
 .action-buttons {
   display: flex;
   gap: 12px;
@@ -37,19 +140,16 @@
 .icon-btn {
   background: none;
   border: none;
-  color: #007bff; /* Blue icons */
-  font-size: 18px;
+  color: #007bff;
+  font-size: 20px;
   cursor: pointer;
   transition: transform 0.2s ease, color 0.2s ease;
   position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .icon-btn:hover {
-  color: #0056b3; /* Darker blue hover */
-  transform: scale(1.15);
+  color: #0056b3;
+  transform: scale(1.2);
 }
 
 .icon-btn:focus {
@@ -73,7 +173,7 @@
   padding: 5px 8px;
   position: absolute;
   z-index: 1;
-  bottom: 125%; /* Show above icon */
+  bottom: 125%;
   left: 50%;
   transform: translateX(-50%);
   opacity: 0;
@@ -85,7 +185,7 @@
 .tooltip .tooltip-text::after {
   content: "";
   position: absolute;
-  top: 100%; /* Arrow below tooltip */
+  top: 100%;
   left: 50%;
   margin-left: -5px;
   border-width: 5px;
@@ -99,53 +199,42 @@
   opacity: 1;
 }
 
-.header-bar {
+/* ===== PAGINATION ===== */
+.pagination {
+  margin-top: 15px;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
+  justify-content: center;
+  gap: 8px;
 }
 
-.bug-table {
-  min-width: 700px; /* Adjust based on how many columns you have */
-  border-collapse: collapse;
-}
-
-.bug-table th,
-.bug-table td {
-padding: 10px;
-  border: 1px solid #ddd;
-  text-align: left;
-}
-
-.bug-table th {
-  background-color: #2875e7;
-  color: white;
-}
-
-.bug-table tr:nth-child(even) {
-  background-color: #f9f9f9;
-}
-
-.bug-table tr:hover {
-  background-color: #f1f1f1;
-}
-
-.bug-table button {
-  padding: 6px 10px;
-  border: none;
-  border-radius: 4px;
-  font-size: 13px;
+.pagination button {
+  padding: 6px 12px;
+  border: 1px solid #ccc;
+  background: #fff;
   cursor: pointer;
+  border-radius: 4px;
+  font-size: 14px;
   transition: 0.2s;
 }
 
-.bug-table button:hover {
-  background-color: #0b7dda;
+.pagination button.active {
+  background: #0275d8;
+  color: white;
+  border-color: #0275d8;
 }
 
-h2 {
-  margin-top: 20px;
-  font-family: Arial, sans-serif;
+.pagination button:disabled {
+  background: #eee;
+  cursor: not-allowed;
 }
-.bug-table th, .bug-table td { white-space: nowrap; }
+
+/* ===== RESPONSIVE FIX ===== */
+@media (max-width: 900px) {
+  .task-table-container {
+    overflow-x: auto;
+  }
+
+  .action-buttons {
+    flex-wrap: wrap;
+  }
+}

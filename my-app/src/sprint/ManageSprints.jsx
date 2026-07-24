@@ -27,26 +27,22 @@ const ManageSprints = () => {
 
     const urlProject = searchParams.get('project');
     const urlFeature = searchParams.get('feature');
-
     if (urlProject) {
       // We only store IDs in URL, but react-select needs an object.
       // We will set selectedProject when projects are loaded.
       // So this is handled in another useEffect below.
     }
   }, []);
-
   const fetchProjects = () => {
     api.get('/projects', { withCredentials: true })
       .then(res => setProjects(sortLatestFirst(res.data)))
       .catch(err => console.error('Error fetching projects:', err));
   };
-
   const fetchFeatures = (projectId) => {
     api.get(`/features/project/${projectId}`, { withCredentials: true })
       .then(res => setFeatures(sortLatestFirst(res.data)))
       .catch(err => console.error('Error fetching features:', err));
   };
-
   const fetchSprints = () => {
     api.get(`/sprints`, { withCredentials: true })
       .then(res => {

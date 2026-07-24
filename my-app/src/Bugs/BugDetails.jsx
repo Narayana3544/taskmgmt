@@ -1,19 +1,18 @@
 import React, { useEffect, useState } from "react";
-import { useParams,useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import api from "../api";
-import "./BugDetails.css";
+import "../Task/TaskForm.css";
 
 export default function BugDetails() {
-  const { id } = useParams(); // bugId
+  const { id } = useParams();
   const [bug, setBug] = useState(null);
-  const navigate=useNavigate();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const res = await api.get(`view-bug/${id}`, { withCredentials: true });
         setBug(res.data);
-        console.log(res.data);
       } catch (err) {
         console.error("Error loading bug:", err);
       }
@@ -21,63 +20,69 @@ export default function BugDetails() {
     fetchData();
   }, [id]);
 
-  if (!bug) return <p>Loading...</p>;
-
   const handleDownload = (attachmentId) => {
     window.location.href = `${api.defaults.baseURL}/attachments/${attachmentId}/download`;
   };
 
-return (
-  <div className="bug-details">
-    <div className="bug-card">
-      <div className="bug-header">
-        <h2>Bug #{bug.id} - {bug.title}</h2>
-        <span className={`status-badge ${bug.status.toLowerCase().replace(" ", "-")}`}>
-          {bug.status}
-        </span>
+  if (!bug) return <p>Loading...</p>;
+
+  return (
+    <div className="task-form" style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '15px' }}>
+
+      {/* Row 1: Title · Status · Priority · Assigned To */}
+      <div className="form-group" style={{ gridColumn: 'span 6', marginBottom: 0 }}>
+        <label>Bug Title</label>
+        <input type="text" readOnly value={`#${bug.id} - ${bug.title}`} style={{ fontWeight: 600 }} />
+      </div>
+      <div className="form-group" style={{ gridColumn: 'span 2', marginBottom: 0 }}>
+        <label>Status</label>
+        <input type="text" readOnly value={bug.status || "-"} style={{ fontWeight: 600, color: '#1a71e2' }} />
+      </div>
+      <div className="form-group" style={{ gridColumn: 'span 2', marginBottom: 0 }}>
+        <label>Priority</label>
+        <input type="text" readOnly value={bug.priority || "-"} />
+      </div>
+      <div className="form-group" style={{ gridColumn: 'span 2', marginBottom: 0 }}>
+        <label>Assigned To</label>
+        <input type="text" readOnly value={bug.assignee || bug.assignedUser || "-"} />
       </div>
 
-      <div className="bug-info-grid">
-        <div>
-            <strong>Priority:</strong>{" "}
-            <span className={`priority-badge ${bug.priority?.toLowerCase()}`}>
-                {bug.priority || "-"}
-            </span>
-            </div>
-        <div><strong>Assigned To:</strong> {bug.assignee || "-"}</div>
-        <div><strong>Reported By:</strong> {bug.reporter || "-"}</div>
+      {/* Row 2: Reporter */}
+      <div className="form-group" style={{ gridColumn: 'span 12', marginBottom: 0 }}>
+        <label>Reporter</label>
+        <input type="text" readOnly value={bug.reporter || "-"} />
       </div>
 
-      <div className="bug-section">
-        <h3>Description</h3>
-        <p>{bug.description}</p>
+      {/* Row 3: Description */}
+      <div className="form-group" style={{ gridColumn: 'span 12', marginBottom: 0 }}>
+        <label>Description</label>
+        <textarea readOnly rows={3} style={{ padding: '8px', resize: 'none' }} value={bug.description || "-"} />
       </div>
 
-      <div className="bug-section">
-        <h3>Attachments</h3>
-        {bug.attachments.length > 0 ? (
-          <ul>
+      {/* Row 4: Attachments */}
+      <div className="form-group" style={{ gridColumn: 'span 12', marginBottom: 0 }}>
+        <label>Attachments</label>
+        {bug.attachments && bug.attachments.length > 0 ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             {bug.attachments.map(att => (
-              <li key={att.id}>
-                {att.fileName} ({new Date(att.uploadedAt).toLocaleString()})
-                <button
-                  className="download-btn"
-                  onClick={() => handleDownload(att.id)}
-                >
+              <div key={att.id} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ fontSize: '13px' }}>📎 {att.fileName} ({new Date(att.uploadedAt).toLocaleString()})</span>
+                <button className="btn-global btn-primary" onClick={() => handleDownload(att.id)} style={{ padding: '3px 10px', fontSize: '12px' }}>
                   Download
                 </button>
-              </li>
+              </div>
             ))}
-          </ul>
+          </div>
         ) : (
-          <p>No attachments</p>
+          <input type="text" readOnly value="No attachments" />
         )}
       </div>
 
-      <div className="btn-container full-width" style={{ marginTop: '20px' }}>
+      {/* Buttons */}
+      <div style={{ gridColumn: 'span 12', display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '5px' }}>
         <button type="button" className="btn-global btn-secondary" onClick={() => navigate(-1)}>Back</button>
+        <button type="button" className="btn-global btn-primary" onClick={() => navigate(`/edit-bug/${bug.id}`)}>Edit Bug</button>
       </div>
     </div>
-  </div>
-);
+  );
 }

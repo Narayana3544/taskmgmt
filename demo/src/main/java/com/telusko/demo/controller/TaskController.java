@@ -26,6 +26,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.bind.annotation.DeleteMapping;
 
 import java.io.File;
 import java.io.IOException;
@@ -225,7 +226,7 @@ public class TaskController {
 
 
     @PutMapping("/task/{id}")
-    public ResponseEntity<task> updateTask(
+    public ResponseEntity<String> updateTask(
             @PathVariable int id,
             @RequestPart("task") task Task,   // JSON part
             @RequestPart(value = "attachment", required = false) List<MultipartFile> attachments // File part
@@ -233,11 +234,46 @@ public class TaskController {
         try {
             // attachmentFlag is not needed here because we just check if attachment exists
             task updatedTask = service.updateTask(id, Task, attachments, null);
-            return ResponseEntity.ok(updatedTask);
+            return ResponseEntity.ok("Task updated successfully");
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to update task");
         }
+    }
+
+    @Autowired
+    private com.telusko.demo.repo.TaskAttachmentRepository taskAttachmentRepo;
+
+    @DeleteMapping("/tasks/attachments/{id}")
+    public ResponseEntity<String> deleteTaskAttachment(@PathVariable Integer id) {
+        com.telusko.demo.Model.TaskAttachment attachment = taskAttachmentRepo.findById(id).orElse(null);
+        if (attachment != null) {
+            task Task = attachment.getTask();
+            if (Task != null) {
+                Task.getAttachments().remove(attachment);
+                if (Task.getAttachments().isEmpty() && Task.getAttachmentName() == null) {
+                    Task.setAttachment_flag("No");
+                }
+                repo.save(Task);
+            } else {
+                taskAttachmentRepo.deleteById(id);
+            }
+        }
+        return ResponseEntity.ok("Attachment deleted successfully");
+    }
+
+    @DeleteMapping("/tasks/{taskId}/legacy-attachment")
+    public ResponseEntity<String> deleteLegacyTaskAttachment(@PathVariable Integer taskId) {
+        task Task = service.getTaskById(taskId);
+        if(Task != null) {
+            Task.setAttachmentName(null);
+            Task.setAttachmentPath(null);
+            if (Task.getAttachments() == null || Task.getAttachments().isEmpty()) {
+                Task.setAttachment_flag("No");
+            }
+            repo.save(Task);
+        }
+        return ResponseEntity.ok("Legacy attachment deleted successfully");
     }
 
 

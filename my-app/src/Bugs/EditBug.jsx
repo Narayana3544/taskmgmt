@@ -34,23 +34,38 @@ export default function BugForm() {
           api.get(`/view-bug/${id}`, { withCredentials: true })
         ]);
 
-        setDevelopers(devRes.data || []);
-        setPriorities(priorityRes.data || []);
-        setStatuses(statusRes.data || []);
+        const devs = devRes.data || [];
+        const prios = priorityRes.data || [];
+        const stats = statusRes.data || [];
+
+        setDevelopers(devs);
+        setPriorities(prios);
+        setStatuses(stats);
 
         // Populate form with existing bug data
         const bug = bugRes.data;
+
+        // BugDTO returns strings for priority, status, assignee. Find their IDs:
+        const matchedPriority = prios.find(p => (p.decription || p.description || p.name) === bug.priority);
+        const matchedStatus = stats.find(s => (s.decription || s.description || s.name) === bug.status);
+        const matchedUser = devs.find(d => (d.first_name || d.name || d.username) === (bug.assignee || bug.reporter || bug.assignedUser)); // Note: BugDTO has assignee
+
+        const pId = matchedPriority?.id || bug.priority?.id || bug.priority || "";
+        const sId = matchedStatus?.id || bug.status?.id || bug.status || "";
+        const aId = matchedUser?.id || bug.assignedUser?.id || bug.assignedUser || bug.assignee || "";
+
         setTitle(bug.title || "");
         setDescription(bug.description || "");
-        setPriority(bug.priority?.id || bug.priority || "");
-        setStatus(bug.status?.id || bug.status || "");
-        setAssignedTo(bug.assignedUser?.id || bug.assignedUser || "");
+        setPriority(pId);
+        setStatus(sId);
+        setAssignedTo(aId);
         
         setInitialData({
+          title: bug.title || "",
           description: bug.description || "",
-          priority: bug.priority?.id || bug.priority || "",
-          status: bug.status?.id || bug.status || "",
-          assignedTo: bug.assignedUser?.id || bug.assignedUser || ""
+          priority: pId,
+          status: sId,
+          assignedTo: aId
         });
 
         if (bug.attachments && bug.attachments.length > 0) {
@@ -75,6 +90,17 @@ export default function BugForm() {
 
   const handleRemoveFile = (index) => {
     setFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleDeleteExistingAttachment = async (attachmentId) => {
+    if (!window.confirm("Are you sure you want to delete this attachment?")) return;
+    try {
+      await api.delete(`/bugs/attachments/${attachmentId}`, { withCredentials: true });
+      setExistingAttachments((prev) => prev.filter((att) => att.id !== attachmentId));
+    } catch (err) {
+      console.error("Error deleting attachment:", err);
+      alert("Failed to delete attachment.");
+    }
   };
 
   // Submit (Edit Bug)
@@ -174,6 +200,14 @@ export default function BugForm() {
                 {existingAttachments.map((att) => (
                   <div key={att.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'white', padding: '4px 10px', borderRadius: '4px', border: '1px solid #ccc' }}>
                     <span>📎 {att.fileName || att.filename || att.attachmentName}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteExistingAttachment(att.id)}
+                      style={{ background: 'none', border: 'none', color: 'red', cursor: 'pointer', fontWeight: 'bold', marginLeft: '5px' }}
+                      title="Delete attachment"
+                    >
+                      X
+                    </button>
                   </div>
                 ))}
               </div>

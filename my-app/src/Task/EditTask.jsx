@@ -143,6 +143,21 @@ export default function EditTask() {
     }
   }, [selectedFeature]);
 
+  const handleDeleteExistingAttachment = async (attachmentId) => {
+    if (!window.confirm("Are you sure you want to delete this attachment?")) return;
+    try {
+      if (attachmentId === 'legacy') {
+        await api.delete(`/tasks/${id}/legacy-attachment`, { withCredentials: true });
+      } else {
+        await api.delete(`/tasks/attachments/${attachmentId}`, { withCredentials: true });
+      }
+      setExistingAttachments((prev) => prev.filter((att) => att.id !== attachmentId));
+    } catch (err) {
+      console.error("Error deleting attachment:", err);
+      alert("Failed to delete attachment.");
+    }
+  };
+
   // Handle update
 const handleSubmit = async (e) => {
   e.preventDefault();
@@ -470,8 +485,16 @@ const handleSubmit = async (e) => {
           <label>Existing Attachments</label>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
             {existingAttachments.map((att, index) => (
-              <div key={index} className="attachment-file" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div key={index} className="attachment-file" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'white', padding: '4px 10px', borderRadius: '4px', border: '1px solid #ccc' }}>
                 <span>📎 {att.attachmentName || att.attachment_name}</span>
+                <button
+                  type="button"
+                  onClick={() => handleDeleteExistingAttachment(att.id)}
+                  style={{ background: 'none', border: 'none', color: 'red', cursor: 'pointer', fontWeight: 'bold', marginLeft: '5px' }}
+                  title="Delete attachment"
+                >
+                  X
+                </button>
               </div>
             ))}
           </div>

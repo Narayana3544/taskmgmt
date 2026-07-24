@@ -18,7 +18,6 @@ const ManageSprints = () => {
   const [userName, setUserName] = useState('');
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-
   // ✅ Fetch all required data and initialize from URL params
   useEffect(() => {
     fetchProjects();
@@ -72,7 +71,6 @@ const ManageSprints = () => {
       }
     }
   }, [projects, searchParams]);
-
   useEffect(() => {
     const urlFeature = searchParams.get('feature');
     if (urlFeature && features.length > 0) {

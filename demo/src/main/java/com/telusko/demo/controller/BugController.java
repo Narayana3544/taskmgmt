@@ -154,7 +154,7 @@ public class BugController {
     }
 
     @PutMapping(value = "/bugs/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Bug> updateBug(
+    public ResponseEntity<String> updateBug(
             @PathVariable Integer id,
             @RequestParam String title,
             @RequestParam String description,
@@ -175,7 +175,7 @@ public class BugController {
                 attachments,
                 reporterId
         );
-        return ResponseEntity.ok(updatedBug);
+        return ResponseEntity.ok("Bug updated successfully");
     }
 
 }

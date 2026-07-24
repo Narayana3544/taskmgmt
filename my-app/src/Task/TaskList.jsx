@@ -9,6 +9,7 @@ import * as XLSX from "xlsx";
 import { sortLatestFirst, sortAlphabetically } from "../utils/sortUtils";
 import StatusSummary from "../components/StatusSummary";
 import { isTaskLocked, getLockedReason } from "../utils/lockUtils";
+import Pagination from "../components/Pagination";
 
 export default function TaskList() {
 
@@ -34,8 +35,8 @@ export default function TaskList() {
   const [debouncedStory] = useDebounce(searchStory, 350);
 
   // Pagination
-  const [currentPage, setCurrentPage] = useState(0);
-  const tasksPerPage = 5;
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
 
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -127,7 +128,7 @@ export default function TaskList() {
     try {
       const res = await api.get(`/viewTaskByProjectId/${projectId}`, { withCredentials: true });
       setTasks(sortLatestFirst(res.data));
-      setCurrentPage(0);
+      setCurrentPage(1);
     } catch {
       setError("Failed to load tasks.");
     } finally {
@@ -194,9 +195,8 @@ export default function TaskList() {
   }, [tasks, selectedFeature, selectedSprint, selectedUser, selectedStatus, debouncedStory]);
 
   // Pagination
-  const indexOfLastTask = (currentPage + 1) * tasksPerPage;
-  const currentTasks = filteredTasks.slice(indexOfLastTask - tasksPerPage, indexOfLastTask);
-  const totalPages = Math.ceil(filteredTasks.length / tasksPerPage);
+  const indexOfLastTask = currentPage * itemsPerPage;
+  const currentTasks = filteredTasks.slice(indexOfLastTask - itemsPerPage, indexOfLastTask);
 
   // Download Excel
   const downloadExcel = () => {
@@ -243,7 +243,7 @@ export default function TaskList() {
 
 <div className="header-bar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', gap: '15px', flexWrap: 'wrap' }}>
   <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flexWrap: 'wrap', flex: 1 }}>
-    <h2 style={{ margin: 0, whiteSpace: 'nowrap' }}>Search Tasks</h2>
+    <h2 style={{ margin: 0, whiteSpace: 'nowrap' }}>Tasks</h2>
 
     <div style={{ minWidth: '220px' }}>
       <Select
@@ -291,7 +291,7 @@ export default function TaskList() {
                   onChange={(e) => {
                     setSelectedFeature(e.target.value);
                     updateURL("feature", e.target.value);
-                    setCurrentPage(0);
+                    setCurrentPage(1);
                   }}
                 >
                   <option value="">All</option>
@@ -308,7 +308,7 @@ export default function TaskList() {
                   onChange={(e) => {
                     setSelectedSprint(e.target.value);
                     updateURL("sprint", e.target.value);
-                    setCurrentPage(0);
+                    setCurrentPage(1);
                   }}
                 >
                   <option value="">All</option>
@@ -327,7 +327,7 @@ export default function TaskList() {
                   onChange={(e) => {
                     setSelectedUser(e.target.value);
                     updateURL("user", e.target.value);
-                    setCurrentPage(0);
+                    setCurrentPage(1);
                   }}
                 >
                   <option value="">All</option>
@@ -346,7 +346,7 @@ export default function TaskList() {
                   onChange={(e) => {
                     setSelectedStatus(e.target.value);
                     updateURL("status", e.target.value);
-                    setCurrentPage(0);
+                    setCurrentPage(1);
                   }}
                 >
                   <option value="">All</option>
@@ -428,25 +428,14 @@ export default function TaskList() {
 
         </table>
 
-        {selectedProject && totalPages > 1 && (
-
-          <div className="pagination">
-
-            <button
-              onClick={() => setCurrentPage((p) => Math.max(p - 1, 0))}
-              disabled={currentPage === 0}
-            >
-              Prev
-            </button>
-            {Array.from({ length: totalPages }, (_, index) => (
-              <button key={index} className={currentPage === index ? "active" : ""} onClick={() => setCurrentPage(index)}>
-                {index + 1}
-              </button>
-            ))}
-            <button disabled={currentPage === totalPages - 1 || totalPages === 0} onClick={() => setCurrentPage((prev) => prev + 1)}>
-              Next
-            </button>
-          </div>
+        {selectedProject && filteredTasks.length > 0 && (
+          <Pagination
+            totalItems={filteredTasks.length}
+            itemsPerPage={itemsPerPage}
+            currentPage={currentPage}
+            onPageChange={setCurrentPage}
+            onItemsPerPageChange={setItemsPerPage}
+          />
         )}
 
         {/* 🔒 Locked Task Popup */}

@@ -8,6 +8,7 @@ import { sortLatestFirst } from "../utils/sortUtils";
 import "react-toastify/dist/ReactToastify.css";
 import "./BugList.css";
 import StatusSummary from '../components/StatusSummary';
+import Pagination from '../components/Pagination';
 
 export default function BugList() {
   const navigate = useNavigate();
@@ -16,6 +17,17 @@ export default function BugList() {
   const [projects, setProjects] = useState([]);
   const [selectedProject, setSelectedProject] = useState("");
   const [searchTitle, setSearchTitle] = useState("");
+  const [selectedFeature, setSelectedFeature] = useState("");
+  const [selectedSprint, setSelectedSprint] = useState("");
+  const [selectedUser, setSelectedUser] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState("");
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
+
+  const uniqueFeatures = Array.from(new Set(bugs.map(b => b.featureName))).filter(Boolean).sort();
+  const uniqueSprints = Array.from(new Set(bugs.map(b => b.sprintName))).filter(Boolean).sort();
+  const uniqueUsers = Array.from(new Set(bugs.map(b => b.assignedUser))).filter(Boolean).sort();
 
   useEffect(() => {
     const fetchBugs = async () => {
@@ -53,13 +65,29 @@ export default function BugList() {
   const filteredBugs = React.useMemo(() => {
     let result = bugs;
     if (selectedProject) {
-      result = result.filter((bug) => bug.projectName === projects.find(p => p.id === parseInt(selectedProject))?.name);
+      const pName = projects.find(p => p.id === parseInt(selectedProject))?.name;
+      result = result.filter((bug) => bug.projectName === pName);
+    }
+    if (selectedFeature) {
+      result = result.filter(bug => bug.featureName === selectedFeature);
+    }
+    if (selectedSprint) {
+      result = result.filter(bug => bug.sprintName === selectedSprint);
+    }
+    if (selectedUser) {
+      result = result.filter(bug => bug.assignedUser === selectedUser);
+    }
+    if (selectedStatus) {
+      result = result.filter(bug => bug.statusId === parseInt(selectedStatus) || bug.status === selectedStatus);
     }
     if (searchTitle) {
       result = result.filter(bug => bug.title?.toLowerCase().includes(searchTitle.toLowerCase()));
     }
     return result;
-  }, [bugs, selectedProject, projects, searchTitle]);
+  }, [bugs, selectedProject, projects, searchTitle, selectedFeature, selectedSprint, selectedUser, selectedStatus]);
+
+  const indexOfLastBug = currentPage * itemsPerPage;
+  const currentBugs = filteredBugs.slice(indexOfLastBug - itemsPerPage, indexOfLastBug);
 
   // Handle status change
   const handleStatusChange = async (bugId, newStatusId) => {
@@ -88,7 +116,7 @@ export default function BugList() {
         <div className="table-wrapper">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', gap: '15px', flexWrap: 'wrap' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flexWrap: 'wrap', flex: 1 }}>
-              <h2 style={{ margin: 0, whiteSpace: 'nowrap' }}>All Bugs</h2>
+              <h2 style={{ margin: 0, whiteSpace: 'nowrap' }}>Bugs</h2>
               
               <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                 <div style={{ minWidth: '200px' }}>
@@ -97,7 +125,10 @@ export default function BugList() {
                     value={projects.find(p => p.id === parseInt(selectedProject)) 
                       ? { value: selectedProject, label: projects.find(p => p.id === parseInt(selectedProject)).name } 
                       : null}
-                    onChange={(option) => setSelectedProject(option ? option.value : "")}
+                    onChange={(option) => {
+                      setSelectedProject(option ? option.value : "");
+                      setCurrentPage(1);
+                    }}
                     isClearable
                     placeholder="-- Select Project --"
                   />
@@ -117,18 +148,66 @@ export default function BugList() {
             <thead>
               <tr>
                 <th>Project Name</th>
-                <th>Feature Name</th>
-                <th>Sprint</th>
+                <th>
+                  Feature Name
+                  <br />
+                  <select
+                    value={selectedFeature}
+                    onChange={(e) => { setSelectedFeature(e.target.value); setCurrentPage(1); }}
+                  >
+                    <option value="">All</option>
+                    {uniqueFeatures.map(f => (
+                      <option key={f} value={f}>{f}</option>
+                    ))}
+                  </select>
+                </th>
+                <th>
+                  Sprint
+                  <br />
+                  <select
+                    value={selectedSprint}
+                    onChange={(e) => { setSelectedSprint(e.target.value); setCurrentPage(1); }}
+                  >
+                    <option value="">All</option>
+                    {uniqueSprints.map(s => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                </th>
                 <th>Bug Title</th>
                 <th style={{ whiteSpace: 'nowrap' }}>ID</th>
-                <th>User</th>
-                <th style={{ whiteSpace: 'nowrap' }}>Status</th>
+                <th>
+                  User
+                  <br />
+                  <select
+                    value={selectedUser}
+                    onChange={(e) => { setSelectedUser(e.target.value); setCurrentPage(1); }}
+                  >
+                    <option value="">All</option>
+                    {uniqueUsers.map(u => (
+                      <option key={u} value={u}>{u}</option>
+                    ))}
+                  </select>
+                </th>
+                <th style={{ whiteSpace: 'nowrap' }}>
+                  Status
+                  <br />
+                  <select
+                    value={selectedStatus}
+                    onChange={(e) => { setSelectedStatus(e.target.value); setCurrentPage(1); }}
+                  >
+                    <option value="">All</option>
+                    {statuses.map((s) => (
+                      <option key={s.id} value={s.id}>{s.decription}</option>
+                    ))}
+                  </select>
+                </th>
                 <th style={{ whiteSpace: 'nowrap' }}>Created At</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {filteredBugs.map((bug) => (
+              {currentBugs.map((bug) => (
                 <tr key={bug.id}>
                   <td>{bug.projectName || "-"}</td>
                   <td>{bug.featureName || "-"}</td>
@@ -172,6 +251,16 @@ export default function BugList() {
               ))}
             </tbody>
           </table>
+
+          {filteredBugs.length > 0 && (
+            <Pagination
+              totalItems={filteredBugs.length}
+              itemsPerPage={itemsPerPage}
+              currentPage={currentPage}
+              onPageChange={setCurrentPage}
+              onItemsPerPageChange={setItemsPerPage}
+            />
+          )}
         </div>
       </div>
     </div>

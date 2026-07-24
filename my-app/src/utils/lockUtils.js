@@ -24,44 +24,8 @@ function isClosed(value) {
  * @param {Object} task - task or bug object from the API
  */
 export function isTaskLocked(task) {
-  if (!task) return false;
-
-  // Project locked?
-  const projectStatus =
-    task.feature?.project?.status?.decription ||
-    task.feature?.project?.status?.description ||
-    task.feature?.project?.status ||
-    '';
-  if (isClosed(projectStatus)) return true;
-
-  // Feature locked?
-  const featureStatus =
-    task.feature?.status?.decription ||
-    task.feature?.status?.description ||
-    task.feature?.status ||
-    '';
-  if (isClosed(featureStatus)) return true;
-
-  // Sprint locked?
-  const sprintStatus = task.sprint?.status || '';
-  if (isClosed(sprintStatus)) {
-    // If the sprint is closed, we only lock the task if it is already "Done".
-    // Incomplete tasks (To Do, In Progress) remain unlocked so they can be moved/updated.
-    const taskStatusStr = String(
-      task.taskStatus?.decription ||
-      task.taskStatus?.description ||
-      task.taskStatus?.name ||
-      task.status ||
-      ''
-    ).toLowerCase();
-
-    if (taskStatusStr.includes('done') || taskStatusStr.includes('closed') || taskStatusStr.includes('completed')) {
-      return true;
-    }
-    
-    return false;
-  }
-
+  // 🔓 User requested: "edit option enable all...conditions accepted to edit"
+  // Tasks are now never locked from being edited, regardless of Sprint/Feature/Project status.
   return false;
 }
 

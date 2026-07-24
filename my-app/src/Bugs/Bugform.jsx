@@ -198,9 +198,6 @@ export default function BugForm() {
 
   // Filter tasks to only show "In Progress" or "Done" tasks in the dropdown
   const filteredTasks = tasks.filter(t => {
-    const statusDesc = t.taskStatus?.decription?.toLowerCase() || t.taskStatus?.description?.toLowerCase() || "";
-    const isRightStatus = statusDesc.includes("progress") || statusDesc.includes("done");
-    if (!isRightStatus) return false;
 
     if (selectedFeature && t.feature?.id !== parseInt(selectedFeature)) {
       return false;
@@ -255,6 +252,17 @@ export default function BugForm() {
                 <option key={s.id} value={s.id}>{s.name}</option>
               ))}
             </select>
+          </div>
+          
+          <div className="form-group" style={{ gridColumn: 'span 6' }}>
+            <label>Related Task (Optional)</label>
+            <Select
+              options={taskOptions}
+              value={taskOptions.find(o => o.value === parseInt(selectedTaskId)) || null}
+              onChange={opt => setSelectedTaskId(opt ? opt.value : "")}
+              isClearable
+              placeholder="-- Select a Task --"
+            />
           </div>
         </>
       ) : (
@@ -333,47 +341,49 @@ export default function BugForm() {
         </select>
       </div>
 
-      <div className="form-group" style={{ gridColumn: 'span 3', marginBottom: 0 }}>
-        <label>Reported To (Optional)</label>
-        <select value={reportedTo} onChange={(e) => setReportedTo(e.target.value)}>
-          <option value="">-- Select User --</option>
-          {developers.map((d) => (
-            <option key={d.id} value={d.id}>
-              {d.first_name || d.name || d.username}
-            </option>
-          ))}
-        </select>
-      </div>
+      <div style={{ gridColumn: 'span 6', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '15px' }}>
+        <div className="form-group" style={{ marginBottom: 0 }}>
+          <label>Reported To (Optional)</label>
+          <select value={reportedTo} onChange={(e) => setReportedTo(e.target.value)}>
+            <option value="">-- Select User --</option>
+            {developers.map((d) => (
+              <option key={d.id} value={d.id}>
+                {d.first_name || d.name || d.username}
+              </option>
+            ))}
+          </select>
+        </div>
 
-      <div className="form-group" style={{ gridColumn: 'span 3', marginBottom: 0 }}>
-        <label>Story Points</label>
-        <input
-          type="number"
-          min="0"
-          value={storypoints}
-          onChange={(e) => setStorypoints(e.target.value)}
-        />
-      </div>
-      
-      <div className="form-group" style={{ gridColumn: 'span 3', marginBottom: 0 }}>
-        <label>Complexity</label>
-        <input
-          type="number"
-          min="0"
-          max="5"
-          placeholder="(1 to 5)"
-          value={complexity}
-          onChange={(e) => setComplexity(e.target.value)}
-        />
-      </div>
+        <div className="form-group" style={{ marginBottom: 0 }}>
+          <label>Story Points</label>
+          <input
+            type="number"
+            min="0"
+            value={storypoints}
+            onChange={(e) => setStorypoints(e.target.value)}
+          />
+        </div>
+        
+        <div className="form-group" style={{ marginBottom: 0 }}>
+          <label>Complexity</label>
+          <input
+            type="number"
+            min="0"
+            max="5"
+            placeholder="(1 to 5)"
+            value={complexity}
+            onChange={(e) => setComplexity(e.target.value)}
+          />
+        </div>
 
-      <div className="form-group" style={{ gridColumn: 'span 3', marginBottom: 0 }}>
-        <label>Target Date</label>
-        <input
-          type="date"
-          value={targetDate}
-          onChange={(e) => setTargetDate(e.target.value)}
-        />
+        <div className="form-group" style={{ marginBottom: 0 }}>
+          <label>Target Date</label>
+          <input
+            type="date"
+            value={targetDate}
+            onChange={(e) => setTargetDate(e.target.value)}
+          />
+        </div>
       </div>
 
       {/* File Attachments */}

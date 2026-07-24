@@ -24,7 +24,6 @@ const ManageSprints = () => {
     fetchProjects();
     fetchSprints();
     fetchUser();
-
     const urlProject = searchParams.get('project');
     const urlFeature = searchParams.get('feature');
     if (urlProject) {

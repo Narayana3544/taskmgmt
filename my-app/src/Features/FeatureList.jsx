@@ -6,6 +6,7 @@ import './FeatureList.css';
 import { FaEdit, FaEye } from 'react-icons/fa'; // ✅ Icons
 import { sortLatestFirst } from "../utils/sortUtils";
 import StatusSummary from '../components/StatusSummary';
+import Pagination from '../components/Pagination';
 
 const FeatureList = () => {
   const [features, setFeatures] = useState([]);
@@ -13,6 +14,9 @@ const FeatureList = () => {
   const [projects, setProjects] = useState([]);
   const [selectedProject, setSelectedProject] = useState(null);
   const navigate = useNavigate();
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
 
   useEffect(() => {
     api.get('/features', { withCredentials: true })
@@ -41,6 +45,9 @@ const FeatureList = () => {
     }
   }, [selectedProject, features]);
 
+  const indexOfLastFeature = currentPage * itemsPerPage;
+  const currentFeatures = filteredFeatures.slice(indexOfLastFeature - itemsPerPage, indexOfLastFeature);
+
   const projectOptions = projects.map(p => ({ label: p.name, value: p.id }));
 
   return (
@@ -53,7 +60,7 @@ const FeatureList = () => {
           <Select
             options={projectOptions}
             value={selectedProject}
-            onChange={(option) => setSelectedProject(option)}
+            onChange={(option) => { setSelectedProject(option); setCurrentPage(1); }}
             isClearable
             placeholder="-- Select Project --"
             styles={{ container: (base) => ({ ...base, minWidth: '200px' }) }}
@@ -82,7 +89,7 @@ const FeatureList = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredFeatures.map((feature) => (
+            {currentFeatures.map((feature) => (
               <tr key={feature.id}>
                 <td>{feature.id}</td>
                 <td>{feature.project?.name}</td>
@@ -94,15 +101,6 @@ const FeatureList = () => {
                   </span>
                 </td>
                 <td className="action-buttons">
-                  {/* 🖊️ Edit */}
-                  <div className="tooltip">
-                    <FaEdit
-                      className="icon-btn edit-icon"
-                      onClick={() => navigate(`/edit-feature/${feature.id}`)}
-                    />
-                    <span className="tooltip-text">Edit Feature</span>
-                  </div>
-
                   {/* 👁️ View Sprints */}
                   <div className="tooltip">
                     <FaEye
@@ -111,11 +109,30 @@ const FeatureList = () => {
                     />
                     <span className="tooltip-text">View Sprints</span>
                   </div>
+
+                  {/* 🖊️ Edit */}
+                  <div className="tooltip">
+                    <FaEdit
+                      className="icon-btn edit-icon"
+                      onClick={() => navigate(`/edit-feature/${feature.id}`)}
+                    />
+                    <span className="tooltip-text">Edit Feature</span>
+                  </div>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
+      )}
+
+      {filteredFeatures.length > 0 && (
+        <Pagination
+          totalItems={filteredFeatures.length}
+          itemsPerPage={itemsPerPage}
+          currentPage={currentPage}
+          onPageChange={setCurrentPage}
+          onItemsPerPageChange={setItemsPerPage}
+        />
       )}
     </div>
   );

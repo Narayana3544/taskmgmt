@@ -81,7 +81,6 @@ export default function BugDetails() {
       {/* Buttons */}
       <div style={{ gridColumn: 'span 12', display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '5px' }}>
         <button type="button" className="btn-global btn-secondary" onClick={() => navigate(-1)}>Back</button>
-        <button type="button" className="btn-global btn-primary" onClick={() => navigate(`/edit-bug/${bug.id}`)}>Edit Bug</button>
       </div>
     </div>
   );

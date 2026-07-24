@@ -262,9 +262,6 @@ export default function TaskDetails() {
         <button type="button" className="btn-global btn-secondary" onClick={() => navigate(-1)}>
           Back
         </button>
-        <button type="button" className="btn-global btn-primary" onClick={() => navigate(`/edit-task/${task.id}`)}>
-          Edit Task
-        </button>
       </div>
 
     </div>

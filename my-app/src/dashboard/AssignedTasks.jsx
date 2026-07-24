@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import api from '../api';
 import { useNavigate } from "react-router-dom";
-import { FaEye, FaLock } from "react-icons/fa";
+import { FaEye, FaLock, FaEdit } from "react-icons/fa";
 import StatusSummary from "../components/StatusSummary";
 import { isTaskLocked, getLockedReason } from "../utils/lockUtils";
 import Pagination from "../components/Pagination";
@@ -130,7 +130,7 @@ export default function AssignedTasks() {
 
           <thead>
             <tr>
-              <th>
+              <th style={{ whiteSpace: 'nowrap' }}>
                 Project Name
                 <br />
                 <select
@@ -143,7 +143,7 @@ export default function AssignedTasks() {
                   ))}
                 </select>
               </th>
-              <th>
+              <th style={{ whiteSpace: 'nowrap' }}>
                 Feature Name
                 <br />
                 <select
@@ -156,7 +156,7 @@ export default function AssignedTasks() {
                   ))}
                 </select>
               </th>
-              <th>
+              <th style={{ whiteSpace: 'nowrap' }}>
                 Sprint
                 <br />
                 <select
@@ -171,7 +171,7 @@ export default function AssignedTasks() {
               </th>
               <th>Task Name</th>
               <th style={{ whiteSpace: 'nowrap' }}>ID</th>
-              <th>User</th>
+              <th style={{ whiteSpace: 'nowrap' }}>User</th>
               <th style={{ whiteSpace: 'nowrap' }}>
                 Status
                 <br />
@@ -186,7 +186,7 @@ export default function AssignedTasks() {
                 </select>
               </th>
               <th style={{ whiteSpace: 'nowrap' }}>Start Date</th>
-              <th>Actions</th>
+              <th style={{ whiteSpace: 'nowrap' }}>Actions</th>
             </tr>
           </thead>
 
@@ -202,17 +202,14 @@ export default function AssignedTasks() {
             ) : (
               currentTasks.map(task => (
                 <tr key={task.id}>
-                  <td>{task.feature?.project?.name || "-"}</td>
-                  <td>{task.feature?.name || "-"}</td>
-                  <td>{task.sprint?.name || "-"}</td>
-                  <td
-                    style={{ maxWidth: '250px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
-                    title={task.userstory}
-                  >
+                  <td style={{ whiteSpace: 'nowrap' }}>{task.feature?.project?.name || "-"}</td>
+                  <td style={{ whiteSpace: 'nowrap' }}>{task.feature?.name || "-"}</td>
+                  <td style={{ whiteSpace: 'nowrap' }}>{task.sprint?.name || "-"}</td>
+                  <td style={{ maxWidth: '250px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={task.userstory}>
                     {task.userstory || "-"}
                   </td>
                   <td style={{ whiteSpace: 'nowrap' }}>{task.id}</td>
-                  <td>{task.user?.first_name || task.user?.name || "-"}</td>
+                  <td style={{ whiteSpace: 'nowrap' }}>{task.user?.first_name || task.user?.name || "-"}</td>
                   <td style={{ whiteSpace: 'nowrap' }}>
                     <select
                       value={task.taskStatus?.id || ""}
@@ -227,13 +224,26 @@ export default function AssignedTasks() {
                     </select>
                   </td>
                   <td style={{ whiteSpace: 'nowrap' }}>{task.start_date ? new Date(task.start_date).toLocaleDateString() : "-"}</td>
-                  <td>
+                  <td style={{ whiteSpace: 'nowrap' }}>
                     <div className="action-buttons">
                       <div className="tooltip">
                         <button className="icon-btn" onClick={() => navigate(`/task/${task.id}`)}>
                           <FaEye />
                         </button>
                         <span className="tooltip-text">View Task</span>
+                      </div>
+                      <div className="tooltip">
+                        <button 
+                          className="icon-btn edit-btn" 
+                          onClick={() => {
+                            if (isTaskLocked(task)) { setLockedMsg(getLockedReason(task)); return; }
+                            navigate(`/edit-task/${task.id}`);
+                          }}
+                          style={isTaskLocked(task) ? { opacity: 0.4, cursor: 'not-allowed' } : {}}
+                        >
+                          {isTaskLocked(task) ? <FaLock /> : <FaEdit />}
+                        </button>
+                        <span className="tooltip-text">{isTaskLocked(task) ? 'Locked' : 'Edit Task'}</span>
                       </div>
                     </div>
                   </td>

@@ -144,10 +144,9 @@ const ManageSprints = () => {
   return (
     <div className="manage-sprints-page">
       <div className="sprint-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', gap: '15px', flexWrap: 'wrap' }}>
-        <h2 style={{ margin: 0, whiteSpace: 'nowrap' }}>Sprints</h2>
-        
-        {/* Filter Section Inline */}
-        <div className="filter-sections" style={{ display: 'flex', gap: '10px', alignItems: 'center', flex: 1 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flexWrap: 'wrap', flex: 1 }}>
+          <h2 style={{ margin: 0, whiteSpace: 'nowrap' }}>Sprints</h2>
+          
           <Select
             options={projectOptions}
             value={selectedProject}

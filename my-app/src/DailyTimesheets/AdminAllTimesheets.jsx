@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
 import * as XLSX from "xlsx";
-import { FaFileExcel, FaEye } from "react-icons/fa";
+import { FaFileExcel, FaEye, FaDownload } from "react-icons/fa";
 import "./AdminAllTimesheet.css";
 
 export default function AdminAllTimesheets() {
@@ -40,6 +40,21 @@ export default function AdminAllTimesheets() {
   // Fetch selected user's range
   const handleViewUser = (userId, username) => {
     navigate(`/admin/timesheet-details/${userId}?start=${start}&end=${end}&name=${encodeURIComponent(username || '')}`);
+  };
+
+  const downloadSummaryExcel = () => {
+    if (summaries.length === 0) {
+      alert("No data to download.");
+      return;
+    }
+    const data = summaries.map(s => ({
+      User: s.username,
+      "Days Filled": s.daysFilled
+    }));
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Admin Summary");
+    XLSX.writeFile(workbook, `Admin_Timesheet_Summary_${start}_to_${end}.xlsx`);
   };
   // Excel Export
   const exportToExcel = async (userId, username) => {
@@ -175,30 +190,38 @@ export default function AdminAllTimesheets() {
   };
 
   return (
-
     <div className="admin-all-container">
-
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-        <h2>Admin Timesheet Overview</h2>
-      </div>
+        <h2 style={{ margin: 0 }}>Admin Timesheet Overview</h2>
+        
+        <div style={{ display: 'flex', gap: '15px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
+            <label style={{ margin: 0, fontWeight: 'bold' }}>Start:</label>
+            <input
+              type="date"
+              value={start}
+              onChange={(e) => setStart(e.target.value)}
+              style={{ padding: '6px', borderRadius: '4px', border: '1px solid #ccc' }}
+            />
+          </div>
 
-      <div className="filter-section">
+          <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
+            <label style={{ margin: 0, fontWeight: 'bold' }}>End:</label>
+            <input
+              type="date"
+              value={end}
+              max={todayStr}
+              onChange={(e) => setEnd(e.target.value)}
+              style={{ padding: '6px', borderRadius: '4px', border: '1px solid #ccc' }}
+            />
+          </div>
 
-        <input
-          type="date"
-          value={start}
-          onChange={(e) => setStart(e.target.value)}
-        />
+          <button className="btn-global btn-primary" onClick={fetchSummary} style={{ padding: '6px 12px' }}>Search</button>
 
-        <input
-          type="date"
-          value={end}
-          max={todayStr}
-          onChange={(e) => setEnd(e.target.value)}
-        />
-
-        <button onClick={fetchSummary}>Fetch All</button>
-
+          <button className="icon-download-btn" onClick={downloadSummaryExcel} title="Download Excel" style={{ padding: '6px 10px', marginLeft: '10px' }}>
+            <FaDownload />
+          </button>
+        </div>
       </div>
 
       {loading ? (

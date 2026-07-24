@@ -18,7 +18,9 @@ INSERT INTO status(
 			(8,'Completed',2,3),
 			(9,'Planned',1,4),
 			(10,'Active',2,4),
-			(11,'Completed',3,4);
+			(11,'Completed',3,4),
+			(12,'Backlog',4,1),
+			(13,'Backlog',4,3);
 
 INSERT INTO role(
 	id, description)

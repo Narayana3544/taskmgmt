@@ -134,7 +134,7 @@ export default function BugList() {
                   />
                 </div>
 
-                <StatusSummary data={filteredBugs} statusExtractor={(bug) => bug.status || 'Unknown'} />
+                <StatusSummary data={filteredBugs} statusExtractor={(bug) => bug.status?.decription || bug.status?.description || bug.status || 'Unknown'} />
               </div>
             </div>
 
@@ -147,8 +147,8 @@ export default function BugList() {
           <table className="bug-table">
             <thead>
               <tr>
-                <th>Project Name</th>
-                <th>
+                <th style={{ whiteSpace: 'nowrap' }}>Project Name</th>
+                <th style={{ whiteSpace: 'nowrap' }}>
                   Feature Name
                   <br />
                   <select
@@ -161,7 +161,7 @@ export default function BugList() {
                     ))}
                   </select>
                 </th>
-                <th>
+                <th style={{ whiteSpace: 'nowrap' }}>
                   Sprint
                   <br />
                   <select
@@ -176,7 +176,7 @@ export default function BugList() {
                 </th>
                 <th>Bug Title</th>
                 <th style={{ whiteSpace: 'nowrap' }}>ID</th>
-                <th>
+                <th style={{ whiteSpace: 'nowrap' }}>
                   User
                   <br />
                   <select
@@ -203,20 +203,20 @@ export default function BugList() {
                   </select>
                 </th>
                 <th style={{ whiteSpace: 'nowrap' }}>Created At</th>
-                <th>Actions</th>
+                <th style={{ whiteSpace: 'nowrap' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {currentBugs.map((bug) => (
                 <tr key={bug.id}>
-                  <td>{bug.projectName || "-"}</td>
-                  <td>{bug.featureName || "-"}</td>
-                  <td>{bug.sprintName || "-"}</td>
+                  <td style={{ whiteSpace: 'nowrap' }}>{bug.projectName || "-"}</td>
+                  <td style={{ whiteSpace: 'nowrap' }}>{bug.featureName || "-"}</td>
+                  <td style={{ whiteSpace: 'nowrap' }}>{bug.sprintName || "-"}</td>
                   <td style={{ maxWidth: '250px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={bug.title}>
-                    {bug.title}
+                    {bug.title || "-"}
                   </td>
                   <td style={{ whiteSpace: 'nowrap' }}>{bug.id}</td>
-                  <td>{bug.assignedUser || "-"}</td>
+                  <td style={{ whiteSpace: 'nowrap' }}>{bug.assignedUser || "-"}</td>
                   <td style={{ whiteSpace: 'nowrap' }}>
                     <select
                       value={bug.statusId || ""}
@@ -231,7 +231,7 @@ export default function BugList() {
                     </select>
                   </td>
                   <td style={{ whiteSpace: 'nowrap' }}>{bug.createdAt ? new Date(bug.createdAt).toLocaleDateString() : "-"}</td>
-                  <td>
+                  <td style={{ whiteSpace: 'nowrap' }}>
                     <div className="action-buttons">
                       <div className="tooltip">
                         <button className="icon-btn" onClick={() => navigate(`/bug/${bug.id}`)}>

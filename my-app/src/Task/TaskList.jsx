@@ -282,8 +282,8 @@ export default function TaskList() {
 
           <thead>
             <tr>
-              <th>Project Name</th>
-              <th>
+              <th style={{ whiteSpace: 'nowrap' }}>Project Name</th>
+              <th style={{ whiteSpace: 'nowrap' }}>
                 Feature Name
                 <br />
                 <select
@@ -300,7 +300,7 @@ export default function TaskList() {
                   ))}
                 </select>
               </th>
-              <th>
+              <th style={{ whiteSpace: 'nowrap' }}>
                 Sprint
                 <br />
                 <select
@@ -319,7 +319,7 @@ export default function TaskList() {
               </th>
               <th>Task Name</th>
               <th style={{ whiteSpace: 'nowrap' }}>ID</th>
-              <th>
+              <th style={{ whiteSpace: 'nowrap' }}>
                 User
                 <br />
                 <select
@@ -356,7 +356,7 @@ export default function TaskList() {
                 </select>
               </th>
               <th style={{ whiteSpace: 'nowrap' }}>Start Date</th>
-              <th>Actions</th>
+              <th style={{ whiteSpace: 'nowrap' }}>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -375,14 +375,14 @@ export default function TaskList() {
             ) : (
               currentTasks.map((task) => (
                 <tr key={task.id}>
-                  <td>{projects.find(p => p.id === parseInt(selectedProject))?.name || "-"}</td>
-                  <td>{task.feature?.name || "-"}</td>
-                  <td>{task.sprint?.name || "-"}</td>
+                  <td style={{ whiteSpace: 'nowrap' }}>{projects.find(p => p.id === parseInt(selectedProject))?.name || "-"}</td>
+                  <td style={{ whiteSpace: 'nowrap' }}>{task.feature?.name || "-"}</td>
+                  <td style={{ whiteSpace: 'nowrap' }}>{task.sprint?.name || "-"}</td>
                   <td style={{ maxWidth: '250px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={task.userstory}>
                     {task.userstory || "-"}
                   </td>
                   <td style={{ whiteSpace: 'nowrap' }}>{task.id}</td>
-                  <td>{task.user?.first_name || "-"}</td>
+                  <td style={{ whiteSpace: 'nowrap' }}>{task.user?.first_name || "-"}</td>
                   <td style={{ whiteSpace: 'nowrap' }}>
                     <select
                       value={task.taskStatus?.id || ""}
@@ -397,7 +397,7 @@ export default function TaskList() {
                     </select>
                   </td>
                   <td style={{ whiteSpace: 'nowrap' }}>{task.start_date ? new Date(task.start_date).toLocaleDateString() : "-"}</td>
-                  <td>
+                  <td style={{ whiteSpace: 'nowrap' }}>
                     <div className="action-buttons">
                       <div className="tooltip">
                         <button className="icon-btn" onClick={() => navigate(`/task/${task.id}`)}>

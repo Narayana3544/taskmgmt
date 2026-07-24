@@ -147,8 +147,8 @@ export default function BugForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!title.trim() || !description.trim() || !priority || !assignedTo) {
-      return alert("Please fill all required fields (Title, Description, Priority, Assigned To).");
+    if (!title.trim() || !description.trim() || !storypoints || !complexity) {
+      return alert("Please fill all required fields (Title, Description, Story Points, Complexity).");
     }
 
     const formData = new FormData();
@@ -306,8 +306,8 @@ export default function BugForm() {
 
       {/* Category / Assignments Row */}
       <div className="form-group" style={{ gridColumn: 'span 2', marginBottom: 0 }}>
-        <label>Priority <sup style={{color: "red"}}>*</sup></label>
-        <select value={priority} onChange={(e) => setPriority(e.target.value)} required>
+        <label>Priority</label>
+        <select value={priority} onChange={(e) => setPriority(e.target.value)}>
           <option value="">-- Select Priority --</option>
           {priorities.map((p) => (
             <option key={p.id} value={p.id}>
@@ -330,8 +330,8 @@ export default function BugForm() {
       </div>
 
       <div className="form-group" style={{ gridColumn: 'span 2', marginBottom: 0 }}>
-        <label>Assign To (Developer) <sup style={{color: "red"}}>*</sup></label>
-        <select value={assignedTo} onChange={(e) => setAssignedTo(e.target.value)} required>
+        <label>Assign To (Developer)</label>
+        <select value={assignedTo} onChange={(e) => setAssignedTo(e.target.value)}>
           <option value="">-- Select Developer --</option>
           {developers.map((d) => (
             <option key={d.id} value={d.id}>
@@ -355,17 +355,18 @@ export default function BugForm() {
         </div>
 
         <div className="form-group" style={{ marginBottom: 0 }}>
-          <label>Story Points</label>
+          <label>Story Points <sup style={{color: "red"}}>*</sup></label>
           <input
             type="number"
             min="0"
             value={storypoints}
             onChange={(e) => setStorypoints(e.target.value)}
+            required
           />
         </div>
         
         <div className="form-group" style={{ marginBottom: 0 }}>
-          <label>Complexity</label>
+          <label>Complexity <sup style={{color: "red"}}>*</sup></label>
           <input
             type="number"
             min="0"
@@ -373,6 +374,7 @@ export default function BugForm() {
             placeholder="(1 to 5)"
             value={complexity}
             onChange={(e) => setComplexity(e.target.value)}
+            required
           />
         </div>
 

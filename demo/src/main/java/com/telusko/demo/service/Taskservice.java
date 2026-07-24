@@ -417,7 +417,7 @@ public List<task> findUnassignedTasks(int featureId) {
         int userId = userDetails.getUser().getId();
 
 
-        List<task> tasks =repo.findByUser_Id(userId);
+        List<task> tasks =repo.findByUser_IdOrUserIsNull(userId);
 
         if(sprintId!=null) {
             tasks = tasks.stream()

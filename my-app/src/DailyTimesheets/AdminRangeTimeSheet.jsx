@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
 import "./AdminRangeTimeSheet.css";
-import { FaEye } from "react-icons/fa";
+import { FaEye, FaDownload } from "react-icons/fa";
 
 export default function AdminRangeTimeSheet() {
   const [users, setUsers] = useState([]);
@@ -104,58 +104,69 @@ const formatHours = (entry) => {
   };
   return (
     <div className="admin-timesheet-container">
-      <h2>Admin Timesheets</h2>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+        <h2 style={{ margin: 0 }}>Admin Timesheets</h2>
 
-      {/* Filters Row */}
-      <div className="filters">
-        <label>
-          User:
-          <select
-            value={selectedUser}
-            onChange={(e) => setSelectedUser(e.target.value)}
+        {/* Filters Row */}
+        <div style={{ display: 'flex', gap: '15px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
+            <label style={{ margin: 0, fontWeight: 'bold' }}>User:</label>
+            <select
+              value={selectedUser}
+              onChange={(e) => setSelectedUser(e.target.value)}
+              style={{ padding: '6px', borderRadius: '4px', border: '1px solid #ccc' }}
+            >
+              <option value="">Select User</option>
+              {users.map((user) => (
+                <option key={user.id} value={user.id}>
+                  {user.first_name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
+            <label style={{ margin: 0, fontWeight: 'bold' }}>Start:</label>
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              style={{ padding: '6px', borderRadius: '4px', border: '1px solid #ccc' }}
+            />
+          </div>
+
+          <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
+            <label style={{ margin: 0, fontWeight: 'bold' }}>End:</label>
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              style={{ padding: '6px', borderRadius: '4px', border: '1px solid #ccc' }}
+            />
+          </div>
+
+          <button className="btn-global btn-primary" onClick={fetchRange} style={{ padding: '6px 12px' }}>
+            Fetch
+          </button>
+
+          <button
+            className="icon-download-btn"
+            title="Download Excel"
+            style={{ padding: '6px 10px', marginLeft: '10px' }}
+            onClick={() => {
+              if (!selectedUser) {
+                alert("Please select a user to export data.");
+                return;
+              }
+              navigate("/timesheet-export", {
+                state: { userId: selectedUser, startDate, endDate },
+              });
+            }}
           >
-            <option value="">Select User</option>
-            {users.map((user) => (
-              <option key={user.id} value={user.id}>
-                {user.first_name}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label>
-          Start Date:
-          <input
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-          />
-        </label>
-
-        <label>
-          End Date:
-          <input
-            type="date"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-          />
-        </label>
-
-        <button className="fetch-btn" onClick={fetchRange}>
-          Fetch
-        </button>
+            <FaDownload />
+          </button>
+        </div>
       </div>
-
-      <button
-        className="export-btn"
-        onClick={() =>
-          navigate("/timesheet-export", {
-            state: { userId: selectedUser, startDate, endDate },
-          })
-        }
-      >
-        Export to Excel
-      </button>
 
       {loading ? (
         <p>Loading...</p>

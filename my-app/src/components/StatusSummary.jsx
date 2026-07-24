@@ -17,7 +17,18 @@ const StatusSummary = ({ data, statusExtractor, showBuckets }) => {
       const statusStr = statusExtractor(item);
       const status = (statusStr || '').trim().toLowerCase();
 
-      if (status === 'active') {
+      // Check if item has a user assigned
+      const hasUser = 
+        (item.user && Object.keys(item.user).length > 0) || 
+        (item.assignedUser && item.assignedUser.trim() !== "" && item.assignedUser !== "-") ||
+        item.assignee || 
+        item.assignedTo;
+
+      const isUnassigned = !hasUser;
+
+      if (isUnassigned || status.includes('backlog')) {
+        buckets['Backlog']++;
+      } else if (status === 'active') {
         buckets['Active']++;
         buckets['In Progress']++; // Maintain fallback behavior for existing screens
       } else if (status === 'inactive') {
@@ -37,13 +48,14 @@ const StatusSummary = ({ data, statusExtractor, showBuckets }) => {
         buckets['In Progress']++;
       } else if (
         status.includes('todo') || 
+        status.includes('to do') || 
         status.includes('open') || 
         status.includes('new') ||
         status.includes('assigned')
       ) {
         buckets['To Do']++;
       } else {
-        // Fallback for everything else (unassigned, empty, unknown) goes to Backlog
+        // Fallback for everything else (unknown) goes to Backlog
         buckets['Backlog']++;
       }
     });

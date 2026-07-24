@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useSearchParams, useNavigate } from "react-router-dom";
 import api from "../api";
-import { FaEye, FaEdit } from 'react-icons/fa';
+import { FaEye, FaEdit, FaDownload } from 'react-icons/fa';
+import * as XLSX from "xlsx";
 import "./AdminAllTimesheet.css";
 
 export default function AdminTimesheetDetails() {
@@ -117,6 +118,72 @@ export default function AdminTimesheetDetails() {
     }
   };
 
+  const downloadExcel = () => {
+    if (selectedDate) {
+      if (dailyDetails.length === 0) {
+        alert("No logs to download.");
+        return;
+      }
+      const data = dailyDetails.map(d => ({
+        Start: d.start_time || "-",
+        End: d.end_time || "-",
+        Task: d.task?.userstory || "-",
+        "Work Type": d.workType?.description || "-",
+        Description: d.description || "-",
+        Permission: ["Official", "Time Off"].includes(d.workType?.description) ? (d.permissionGranted ? "Yes" : "No") : "-"
+      }));
+      const worksheet = XLSX.utils.json_to_sheet(data);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, `Logs_${selectedDate}`);
+      XLSX.writeFile(workbook, `Logs_${userName}_${selectedDate}.xlsx`);
+    } else if (selectedTaskObj) {
+      if (taskLogs.length === 0) {
+        alert("No logs to download.");
+        return;
+      }
+      const data = taskLogs.map(d => ({
+        Date: d.date,
+        Start: d.start_time || "-",
+        End: d.end_time || "-",
+        "Work Type": d.workType?.description || "-",
+        Description: d.description || "-",
+        Permission: ["Official", "Time Off"].includes(d.workType?.description) ? (d.permissionGranted ? "Yes" : "No") : "-"
+      }));
+      const worksheet = XLSX.utils.json_to_sheet(data);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, `Task_${selectedTaskObj.id}`);
+      XLSX.writeFile(workbook, `Task_Logs_${userName}_Task_${selectedTaskObj.id}.xlsx`);
+    } else {
+      if (viewMode === 'date') {
+        if (entries.length === 0) {
+          alert("No data to download.");
+          return;
+        }
+        const data = entries.map(e => ({
+          Date: e.date,
+          "Total Hours": formatHours(e)
+        }));
+        const worksheet = XLSX.utils.json_to_sheet(data);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "By Date");
+        XLSX.writeFile(workbook, `Timesheet_By_Date_${userName}_${startDate}_to_${endDate}.xlsx`);
+      } else {
+        if (taskSummary.length === 0) {
+          alert("No data to download.");
+          return;
+        }
+        const data = taskSummary.map(t => ({
+          Task: t.task ? `#${t.task.id} - ${t.task.userstory}` : "Unknown Task",
+          "Total Hours": formatMinutes(t.totalMinutes)
+        }));
+        const worksheet = XLSX.utils.json_to_sheet(data);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "By Task");
+        XLSX.writeFile(workbook, `Timesheet_By_Task_${userName}_${startDate}_to_${endDate}.xlsx`);
+      }
+    }
+  };
+
   return (
     <div className="admin-all-container">
       <div style={{ marginBottom: "20px" }}>
@@ -127,7 +194,7 @@ export default function AdminTimesheetDetails() {
         <div className="range-section">
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: '10px' }}>
             <h3>Details from {startDate} to {endDate}</h3>
-            <div>
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
               <button 
                 className={`btn-global ${viewMode === 'date' ? 'btn-primary' : 'btn-secondary'}`} 
                 onClick={() => setViewMode('date')}
@@ -137,11 +204,15 @@ export default function AdminTimesheetDetails() {
               <button 
                 className={`btn-global ${viewMode === 'task' ? 'btn-primary' : 'btn-secondary'}`} 
                 onClick={() => setViewMode('task')}
-                style={{ marginLeft: '10px' }}
               >
                 By Task
               </button>
-              <button className="btn-global btn-secondary" onClick={handleBack} style={{ marginLeft: '10px' }}>Back</button>
+              <button className="btn-global btn-secondary" onClick={handleBack}>
+                Back
+              </button>
+              <button className="icon-download-btn" onClick={downloadExcel} title="Download Excel" style={{ padding: '6px 10px' }}>
+                <FaDownload />
+              </button>
             </div>
           </div>
           
@@ -223,7 +294,12 @@ export default function AdminTimesheetDetails() {
         <div className="daily-section">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px', gap: '15px' }}>
             <h3 style={{ margin: 0, flex: 1, wordWrap: 'break-word', overflowWrap: 'anywhere' }}>Logs for {selectedDate}</h3>
-            <button className="btn-global btn-secondary" onClick={handleBack} style={{ flexShrink: 0, whiteSpace: 'nowrap' }}>Back</button>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button className="icon-download-btn" onClick={downloadExcel} title="Download Excel" style={{ padding: '6px 10px' }}>
+                <FaDownload />
+              </button>
+              <button className="btn-global btn-secondary" onClick={handleBack} style={{ flexShrink: 0, whiteSpace: 'nowrap' }}>Back</button>
+            </div>
           </div>
           {loadingDaily ? (
             <p>Loading...</p>
@@ -266,7 +342,12 @@ export default function AdminTimesheetDetails() {
         <div className="daily-section">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px', gap: '15px' }}>
             <h3 style={{ margin: 0, flex: 1, wordWrap: 'break-word', overflowWrap: 'anywhere' }}>Logs for Task: {selectedTaskObj ? `#${selectedTaskObj.id} - ${selectedTaskObj.userstory}` : "Unknown"}</h3>
-            <button className="btn-global btn-secondary" onClick={handleBack} style={{ flexShrink: 0, whiteSpace: 'nowrap' }}>Back</button>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button className="icon-download-btn" onClick={downloadExcel} title="Download Excel" style={{ padding: '6px 10px' }}>
+                <FaDownload />
+              </button>
+              <button className="btn-global btn-secondary" onClick={handleBack} style={{ flexShrink: 0, whiteSpace: 'nowrap' }}>Back</button>
+            </div>
           </div>
           <table className="timesheet-table">
             <thead>

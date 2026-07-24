@@ -210,7 +210,7 @@ public class Taskservice {
 
         // Attachments (optional)
         if ("Yes".equalsIgnoreCase(attachmentFlag) && attachments != null && !attachments.isEmpty()) {
-            String uploadDir = System.getProperty("user.dir") + "/uploads/";
+            String uploadDir = System.getProperty("user.home") + "/taskmgmt_uploads/";
             File dir = new File(uploadDir);
             if (!dir.exists()) dir.mkdirs();
 

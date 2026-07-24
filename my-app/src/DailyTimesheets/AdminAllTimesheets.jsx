@@ -217,10 +217,6 @@ export default function AdminAllTimesheets() {
           </div>
 
           <button className="btn-global btn-primary" onClick={fetchSummary} style={{ padding: '6px 12px' }}>Search</button>
-
-          <button className="icon-download-btn" onClick={downloadSummaryExcel} title="Download Excel" style={{ padding: '6px 10px', marginLeft: '10px' }}>
-            <FaDownload />
-          </button>
         </div>
       </div>
 

@@ -50,16 +50,13 @@ const ManageSprints = () => {
       })
       .catch(err => console.error('Error fetching sprints:', err));
   };
-
   const fetchUser = () => {
     api.get('/user/profile', { withCredentials: true })
       .then(res => setUserName(res.data.preffered_name))
       .catch(err => console.error('Error fetching user profile:', err));
   };
-
   const projectOptions = projects.map(p => ({ value: p.id, label: p.name }));
   const featureOptions = features.map(f => ({ value: f.id, label: f.name }));
-
   // ✅ Sync URL params with select state once projects/features are loaded
   useEffect(() => {
     const urlProject = searchParams.get('project');
@@ -153,15 +150,6 @@ const ManageSprints = () => {
             onChange={handleProjectChange}
             isClearable
             placeholder="-- Select Project --"
-            styles={{ container: (base) => ({ ...base, minWidth: '200px' }) }}
-          />
-          <Select
-            options={featureOptions}
-            value={selectedFeature}
-            onChange={handleFeatureChange}
-            isClearable
-            placeholder="-- Select Feature --"
-            isDisabled={!features.length}
             styles={{ container: (base) => ({ ...base, minWidth: '200px' }) }}
           />
 

@@ -157,6 +157,7 @@ const ManageSprints = () => {
             data={filteredSprints} 
             statusExtractor={(sprint) => isSprintDisabled(sprint) ? 'Inactive' : 'Active'} 
             showBuckets={['Active', 'Inactive']}
+            ignoreUnassigned={true}
           />
         </div>
 

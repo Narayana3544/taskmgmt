@@ -177,20 +177,27 @@ public class sprintservice {
                 List<task> tasks = taskrepo.findBySprintId(sprint.getId());
                 int total = tasks.size();
                 int completed = (int) tasks.stream()
-                        .filter(t -> t.getTaskStatus().getDecription().equalsIgnoreCase("Done"))
+                        .filter(t -> t != null && t.getTaskStatus() != null && t.getTaskStatus().getDecription() != null && t.getTaskStatus().getDecription().equalsIgnoreCase("Done"))
                         .count();
                 int completedsp=0;
                 int targettedsp=0;
                 for(task t:tasks){
-                    if(t.getTaskStatus().getDecription().equalsIgnoreCase("Done")){
+                    if(t != null && t.getTaskStatus() != null && t.getTaskStatus().getDecription() != null && t.getTaskStatus().getDecription().equalsIgnoreCase("Done")){
                         completedsp+=t.getStorypoints();
                     }
-                    targettedsp+=t.getStorypoints();
+                    if(t != null) {
+                        targettedsp+=t.getStorypoints();
+                    }
                 }
                 Map<String, Object> map = new HashMap<>();
                 map.put("sprintId", sprint.getId());
                 map.put("sprintName", sprint.getName());
-                map.put("projectName", sprint.getFeature().getProject().getName());
+                
+                String projectName = "Unknown Project";
+                if (sprint.getFeature() != null && sprint.getFeature().getProject() != null) {
+                    projectName = sprint.getFeature().getProject().getName();
+                }
+                map.put("projectName", projectName);
                 map.put("totalTasks", total);
                 map.put("completedTasks", completed);
                 map.put("completedStoryPoints",completedsp);

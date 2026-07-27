@@ -92,7 +92,10 @@ const Home = () => {
           const sprintStatus = (task.sprint?.status || '').toLowerCase();
           const isActiveSprint = sprintStatus === 'active';
 
-          if (statusStr.includes('todo') || statusStr.includes('open') || statusStr.includes('new') || statusStr.includes('assigned') || statusStr === '') {
+          if (statusStr.includes('backlog')) {
+            // Tasks with 'Backlog' status belong in the Backlog column
+            grouped.backlog.push(task);
+          } else if (statusStr.includes('todo') || statusStr.includes('open') || statusStr.includes('new') || statusStr.includes('assigned') || statusStr === '') {
             grouped.todo.push(task);
           } else if (statusStr.includes('progress') || statusStr.includes('working') || statusStr === 'active') {
             grouped.inprogress.push(task);
@@ -101,10 +104,8 @@ const Home = () => {
             if (isActiveSprint) {
               grouped.done.push(task);
             }
-          } else {
-             // Fallback: show in To Do
-             grouped.todo.push(task);
           }
+          // Other unknown statuses are intentionally not shown in any column
         });
 
         setTasks(grouped);

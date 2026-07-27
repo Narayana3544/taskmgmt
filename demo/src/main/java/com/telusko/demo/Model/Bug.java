@@ -1,6 +1,8 @@
 package com.telusko.demo.Model;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -20,6 +22,7 @@ public class Bug {
 
     @ManyToOne
     @JoinColumn(name = "task_id")
+    @JsonIgnoreProperties({"attachments", "sprint", "feature", "user", "reportedTo", "taskType", "taskStatus"})
     private task Task;
 
     private String title;
@@ -28,22 +31,27 @@ public class Bug {
 
     @ManyToOne
     @JoinColumn(name = "priority_id")
+    @JsonIgnoreProperties({"bugs", "tasks"})
     private Priority priority;
 
     @ManyToOne
     @JoinColumn(name = "status_id")
+    @JsonIgnoreProperties({"bugs", "tasks"})
     private Task_status status;
 
     @ManyToOne
     @JoinColumn(name = "reported_by")
+    @JsonIgnoreProperties({"sprint", "role", "password"})
     private User reportedUser;
 
     @ManyToOne
     @JoinColumn(name = "assigned_to")
+    @JsonIgnoreProperties({"sprint", "role", "password"})
     private User assignedUser;
 
     @ManyToOne
     @JoinColumn(name = "Sprint_id")
+    @JsonIgnoreProperties({"users", "feature", "tasks"})
     private createsprint sprint;
 
     private Integer storypoints;
@@ -179,6 +187,7 @@ public class Bug {
     }
 
     @OneToMany(mappedBy = "bug", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<BugAttachment> attachments;
 
 }

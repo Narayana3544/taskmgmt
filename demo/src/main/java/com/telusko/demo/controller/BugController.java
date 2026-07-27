@@ -4,6 +4,7 @@ import com.telusko.demo.Model.Bug;
 import com.telusko.demo.Model.BugAttachment;
 import com.telusko.demo.Model.Project;
 import com.telusko.demo.config.CustomUserDetails;
+import com.telusko.demo.Model.createsprint;
 import com.telusko.demo.dto.BugDTO;
 import com.telusko.demo.dto.BugListDTO;
 import com.telusko.demo.repo.BugAttachmentRepo;
@@ -18,6 +19,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -83,8 +85,14 @@ public class BugController {
             String projectName = null;
             String featureName = null;
             String sprintName = null;
+            createsprint sprint = null;
             if (bug.getTask() != null && bug.getTask().getSprint() != null) {
-                var sprint = bug.getTask().getSprint();
+                sprint = bug.getTask().getSprint();
+            } else if (bug.getSprint() != null) {
+                sprint = bug.getSprint();
+            }
+            
+            if (sprint != null) {
                 sprintName = sprint.getName();
                 if (sprint.getFeature() != null) {
                     featureName = sprint.getFeature().getName();
@@ -92,13 +100,12 @@ public class BugController {
                         projectName = sprint.getFeature().getProject().getName();
                     }
                 }
-            } else if (bug.getSprint() != null) {
-                sprintName = bug.getSprint().getName();
-                if (bug.getSprint().getFeature() != null) {
-                    featureName = bug.getSprint().getFeature().getName();
-                    if (bug.getSprint().getFeature().getProject() != null) {
-                        projectName = bug.getSprint().getFeature().getProject().getName();
-                    }
+            }
+            
+            if (projectName == null && bug.getTask() != null && bug.getTask().getFeature() != null) {
+                featureName = bug.getTask().getFeature().getName();
+                if (bug.getTask().getFeature().getProject() != null) {
+                    projectName = bug.getTask().getFeature().getProject().getName();
                 }
             }
             return new BugListDTO(
@@ -134,6 +141,7 @@ public class BugController {
     }
 
     @GetMapping("/user/bugs")
+    @Transactional(readOnly = true)
     public List<Bug> viewMyBugs(Authentication authentication) {
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
         int userId = userDetails.getUser().getId();

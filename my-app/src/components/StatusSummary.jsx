@@ -1,7 +1,7 @@
 import React from 'react';
 import './StatusSummary.css';
 
-const StatusSummary = ({ data, statusExtractor, showBuckets }) => {
+const StatusSummary = ({ data, statusExtractor, showBuckets, ignoreUnassigned = false }) => {
   const buckets = {
     'To Do': 0,
     'In Progress': 0,
@@ -24,7 +24,7 @@ const StatusSummary = ({ data, statusExtractor, showBuckets }) => {
         item.assignee || 
         item.assignedTo;
 
-      const isUnassigned = !hasUser;
+      const isUnassigned = !ignoreUnassigned && !hasUser;
 
       if (isUnassigned || status.includes('backlog')) {
         buckets['Backlog']++;

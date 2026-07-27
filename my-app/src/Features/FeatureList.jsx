@@ -66,7 +66,7 @@ const FeatureList = () => {
             styles={{ container: (base) => ({ ...base, minWidth: '200px' }) }}
           />
 
-          <StatusSummary data={filteredFeatures} statusExtractor={(feature) => feature.status?.decription || feature.status || 'Unknown'} showBuckets={['In Progress', 'Completed']} />
+          <StatusSummary data={filteredFeatures} statusExtractor={(feature) => feature.status?.decription || feature.status || 'Unknown'} showBuckets={['In Progress', 'Completed']} ignoreUnassigned={true} />
         </div>
 
         <button className="btn-global btn-primary" onClick={() => navigate('/features')} style={{ flexShrink: 0 }}>

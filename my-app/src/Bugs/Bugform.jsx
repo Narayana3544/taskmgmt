@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Select from "react-select";
 import api from "../api";
-import { sortLatestFirst } from "../utils/sortUtils";
+import { sortLatestFirst, sortStatuses } from "../utils/sortUtils";
 import "../Task/TaskForm.css"; // Reuse Task Form styles
 
 export default function BugForm() {
@@ -60,7 +60,7 @@ export default function BugForm() {
 
         setDevelopers(usersRes.data || []);
         setPriorities(priorityRes.data || []);
-        setStatuses(statusRes.data || []);
+        setStatuses(sortStatuses(statusRes.data || []));
         setProjects(sortLatestFirst(projectsRes.data || []));
 
         // If ID was in URL, find that specific task

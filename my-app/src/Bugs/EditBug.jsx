@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import api from "../api";
 import "./Bugform.css";
 import "../Task/TaskForm.css";
+import { sortStatuses } from "../utils/sortUtils";
 
 export default function BugForm() {
   const { id } = useParams(); // bugId for edit
@@ -55,7 +56,7 @@ export default function BugForm() {
 
         setDevelopers(devs);
         setPriorities(prios);
-        setStatuses(stats);
+        setStatuses(sortStatuses(stats));
 
         // Populate form with existing bug data
         const bug = bugRes.data;

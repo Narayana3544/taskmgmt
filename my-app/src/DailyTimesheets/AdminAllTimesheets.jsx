@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import api from "../api";
 import { FaEye } from "react-icons/fa";
 import "./AdminAllTimesheet.css";
@@ -16,20 +16,27 @@ export default function AdminAllTimesheets() {
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState("");
   // ✅ Default dates
-  const [start, setStart] = useState(pastWeekStr);
-  const [end, setEnd] = useState(todayStr);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [start, setStart] = useState(searchParams.get("start") || pastWeekStr);
+  const [end, setEnd] = useState(searchParams.get("end") || todayStr);
   const [loading, setLoading] = useState(false);
-  // Fetch users
+  
+  // Fetch users & auto-fetch summary on load
   useEffect(() => {
     api.get("/users", { withCredentials: true })
       .then((res) => setUsers(res.data))
       .catch((err) => console.error("Error fetching users:", err));
+      
+    fetchSummary(start, end);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  
   // Fetch summary
-  const fetchSummary = async () => {
+  const fetchSummary = async (s = start, e = end) => {
     setLoading(true);
+    setSearchParams({ start: s, end: e });
     try {
-      const res = await api.get(`/timesheet/all-summary?start=${start}&end=${end}`);
+      const res = await api.get(`/timesheet/all-summary?start=${s}&end=${e}`);
       setSummaries(res.data);
     } catch (err) {
       console.error("Error fetching summary:", err);
@@ -86,7 +93,7 @@ export default function AdminAllTimesheets() {
             />
           </div>
 
-          <button className="btn-global btn-primary" onClick={fetchSummary} style={{ padding: '6px 12px' }}>Search</button>
+          <button className="btn-global btn-primary" onClick={() => fetchSummary(start, end)} style={{ padding: '6px 12px' }}>Search</button>
         </div>
       </div>
 

@@ -34,7 +34,7 @@ export const sortAlphabetically = (users) => {
   });
 };
 
-const STATUS_ORDER = ["backlog", "to do", "to-do", "todo", "in progress", "inprogress", "progress", "fixed", "done", "completed", "closed", "resolved"];
+const STATUS_ORDER = ["backlog", "to do", "to-do", "todo", "in progress", "inprogress", "progress", "fixed", "re open", "reopen", "re-open", "done", "completed", "closed", "resolved"];
 
 export const sortStatuses = (statusList) => {
   if (!Array.isArray(statusList)) return [];

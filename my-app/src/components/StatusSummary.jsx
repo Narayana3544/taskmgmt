@@ -1,12 +1,13 @@
 import React from 'react';
 import './StatusSummary.css';
 
-const StatusSummary = ({ data, statusExtractor, showBuckets, ignoreUnassigned = false }) => {
+const StatusSummary = ({ data, statusExtractor, showBuckets, ignoreUnassigned = true }) => {
   const buckets = {
     'Backlog': 0,
     'To Do': 0,
     'In Progress': 0,
     'Fixed': 0,
+    'Re Open': 0,
     'Done': 0,
     'Completed': 0,
     'Active': 0,
@@ -36,6 +37,8 @@ const StatusSummary = ({ data, statusExtractor, showBuckets, ignoreUnassigned = 
         buckets['Inactive']++;
       } else if (status.includes('fixed')) {
         buckets['Fixed']++;
+      } else if (status.includes('re open') || status.includes('reopen') || status === 're-open') {
+        buckets['Re Open']++;
       } else if (
         status.includes('done') || 
         status.includes('completed') || 
@@ -66,7 +69,7 @@ const StatusSummary = ({ data, statusExtractor, showBuckets, ignoreUnassigned = 
   }
 
   // Define which buckets to render
-  const renderBuckets = showBuckets || ['Backlog', 'To Do', 'In Progress', 'Fixed', 'Done'];
+  const renderBuckets = showBuckets || ['Backlog', 'To Do', 'In Progress', 'Fixed', 'Re Open', 'Done'];
 
   return (
     <div className="status-summary-badges">
@@ -76,6 +79,7 @@ const StatusSummary = ({ data, statusExtractor, showBuckets, ignoreUnassigned = 
       {renderBuckets.includes('To Do') && <span className="summary-badge bg-grey">To Do: {buckets['To Do']}</span>}
       {renderBuckets.includes('In Progress') && <span className="summary-badge bg-blue">In Progress: {buckets['In Progress']}</span>}
       {renderBuckets.includes('Fixed') && <span className="summary-badge" style={{ backgroundColor: '#10b981', color: '#fff' }}>Fixed: {buckets['Fixed']}</span>}
+      {renderBuckets.includes('Re Open') && <span className="summary-badge" style={{ backgroundColor: '#f97316', color: '#fff' }}>Re Open: {buckets['Re Open']}</span>}
       {(renderBuckets.includes('Done') || renderBuckets.includes('Completed')) && <span className="summary-badge bg-green">{renderBuckets.includes('Completed') ? 'Completed' : 'Done'}: {buckets['Done']}</span>}
     </div>
   );

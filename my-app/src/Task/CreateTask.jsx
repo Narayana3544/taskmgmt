@@ -180,7 +180,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
-import { sortAlphabetically, sortLatestFirst } from "../utils/sortUtils";
+import { sortAlphabetically, sortLatestFirst, sortStatuses } from "../utils/sortUtils";
 import "./TaskForm.css";
 
 export default function CreateTask() {
@@ -218,7 +218,7 @@ export default function CreateTask() {
     api.get("/projects", { withCredentials: true }).then(res => setProjects(sortLatestFirst(res.data)));
     api.get("/users", { withCredentials: true }).then(res => setManagers(sortAlphabetically(res.data)));
     api.get("/gettype", { withCredentials: true }).then(res => setTaskTypes(res.data));
-    api.get("/getstatusForTask", { withCredentials: true }).then(res => setTaskStatuses(res.data));
+    api.get("/getstatusForTask", { withCredentials: true }).then(res => setTaskStatuses(sortStatuses(res.data)));
   }, []);
 
   // Fetch features when project changes

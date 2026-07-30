@@ -99,6 +99,7 @@ public class TimeSheetService {
         existing.setEnd_time(updatedEntry.getEnd_time());
         existing.setWorkType(updatedEntry.getWorkType());
         existing.setTask(updatedEntry.getTask());
+        existing.setBug(updatedEntry.getBug());
         existing.setDescription(updatedEntry.getDescription());
         existing.setPermission_granted(updatedEntry.isPermission_granted());
 
@@ -151,6 +152,7 @@ public Timesheet updatePastEntry(int id, Timesheet updatedEntry, Authentication 
     }
 
     existing.setTask(updatedEntry.getTask());
+    existing.setBug(updatedEntry.getBug());
     existing.setDescription(updatedEntry.getDescription());
     existing.setPermission_granted(updatedEntry.isPermission_granted());
 

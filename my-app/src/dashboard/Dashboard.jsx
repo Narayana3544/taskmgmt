@@ -98,7 +98,7 @@ const getBadgeClass = (task) => {
   const s = getStatusStr(task);
   if (s.includes('done') || s.includes('completed') || s.includes('closed')) return 'dash-badge-done';
   if (s.includes('progress') || s.includes('active')) return 'dash-badge-inprogress';
-  if (s.includes('todo') || s.includes('open') || s.includes('new')) return 'dash-badge-todo';
+  if (s.includes('todo') || s.includes('to do') || s.includes('to-do') || s.includes('open') || s.includes('new')) return 'dash-badge-todo';
   return 'dash-badge-default';
 };
 
@@ -118,12 +118,13 @@ const CustomBarTooltip = ({ active, payload, label }) => {
 
 // ── Main Dashboard ──────────────────────────────────────────
 const Dashboard = () => {
-  const [counts, setCounts]           = useState({ projects: 0, features: 0, bugs: 0 });
-  const [taskBuckets, setTaskBuckets] = useState({ backlog: 0, todo: 0, inProgress: 0, done: 0 });
-  const [pieData, setPieData]         = useState([]);
-  const [barData, setBarData]         = useState([]);
+  const [projects, setProjects]       = useState([]);
+  const [sprints, setSprints]         = useState([]);
+  const [rawFeatures, setRawFeatures] = useState([]);
+  const [rawTasks, setRawTasks]       = useState([]);
+  const [rawBugs, setRawBugs]         = useState([]);
+  const [selectedProject, setSelectedProject] = useState(localStorage.getItem("selectedProjectId") || "");
   const [userProfile, setUserProfile] = useState(null);
-  const [recentTasks, setRecentTasks] = useState([]);
   const [loading, setLoading]         = useState(true);
 
   const fetchStats = useCallback(async () => {
@@ -134,13 +135,18 @@ const Dashboard = () => {
       setUserProfile(user);
       const isAdmin = user?.role?.description === 'Admin';
 
-      const [projRes, featRes] = await Promise.all([
+      const [projRes, featRes, sprintRes] = await Promise.all([
         api.get('/projects', { withCredentials: true }),
         api.get('/features', { withCredentials: true }),
+        api.get('/sprints', { withCredentials: true }),
       ]);
 
+      setProjects(projRes.data || []);
+      setRawFeatures(featRes.data || []);
+      setSprints(sprintRes.data || []);
+
       let allTasks = [];
-      let bugsCount = 0;
+      let allBugs = [];
 
       if (isAdmin) {
         try {
@@ -149,7 +155,7 @@ const Dashboard = () => {
         } catch (e) { console.error('Admin tasks fetch error:', e); }
         try {
           const bugsRes = await api.get('/view-bugs', { withCredentials: true });
-          bugsCount = (bugsRes.data || []).length;
+          allBugs = bugsRes.data || [];
         } catch (e) {}
       } else {
         try {
@@ -158,42 +164,12 @@ const Dashboard = () => {
         } catch (e) {}
         try {
           const bugsRes = await api.get('/user/bugs', { withCredentials: true });
-          bugsCount = (bugsRes.data || []).length;
+          allBugs = bugsRes.data || [];
         } catch (e) {}
       }
 
-      setCounts({
-        projects: projRes.data.length,
-        features: featRes.data.length,
-        bugs: bugsCount,
-      });
-
-      let backlog = 0, todo = 0, inProgress = 0, done = 0;
-      const statusMap = {};
-
-      allTasks.forEach(task => {
-        const label = getStatusLabel(task);
-        statusMap[label] = (statusMap[label] || 0) + 1;
-        const bucket = getTaskBucket(task);
-        if (bucket === 'backlog')         backlog++;
-        else if (bucket === 'todo')       todo++;
-        else if (bucket === 'inProgress') inProgress++;
-        else if (bucket === 'done')       done++;
-      });
-
-      setPieData(Object.keys(statusMap).map(k => ({ name: k, value: statusMap[k] })));
-      setBarData([
-        { name: 'Backlog',     count: backlog,    fill: '#7c3aed' },
-        { name: 'To Do',       count: todo,       fill: '#ea580c' },
-        { name: 'In Progress', count: inProgress, fill: '#0055ff' },
-        { name: 'Done',        count: done,       fill: '#16a34a' },
-      ]);
-      setTaskBuckets({ backlog, todo, inProgress, done });
-
-      const sorted = [...allTasks]
-        .sort((a, b) => String(b.createdDate || '').localeCompare(String(a.createdDate || '')))
-        .slice(0, 8);
-      setRecentTasks(sorted);
+      setRawTasks(allTasks);
+      setRawBugs(allBugs);
 
     } catch (err) {
       console.error('Dashboard error:', err);
@@ -202,6 +178,88 @@ const Dashboard = () => {
   }, []);
 
   useEffect(() => { fetchStats(); }, [fetchStats]);
+
+  const filteredTasks = React.useMemo(() => {
+    let tasks = rawTasks;
+    if (selectedProject) {
+      tasks = tasks.filter(t => t.feature?.project?.id === parseInt(selectedProject));
+    }
+    const isAdmin = userProfile?.role?.description === 'Admin';
+    if (!isAdmin && userProfile) {
+      tasks = tasks.filter(t => {
+        const assignedUserId = t.user?.id || t.assignedUser?.id || t.assignedTo?.id;
+        return assignedUserId === userProfile.id;
+      });
+    }
+    return tasks;
+  }, [rawTasks, selectedProject, userProfile]);
+
+  const filteredBugsCount = React.useMemo(() => {
+    if (!selectedProject) return rawBugs.length;
+    return rawBugs.filter(b => {
+      if (b.task?.feature?.project?.id === parseInt(selectedProject)) return true;
+      if (b.sprint?.feature?.project?.id === parseInt(selectedProject)) return true;
+      return false;
+    }).length;
+  }, [rawBugs, selectedProject]);
+
+  const filteredFeaturesCount = React.useMemo(() => {
+    if (!selectedProject) return rawFeatures.length;
+    return rawFeatures.filter(f => f.project?.id === parseInt(selectedProject)).length;
+  }, [rawFeatures, selectedProject]);
+
+  const activeSprints = React.useMemo(() => {
+    return sprints.filter(s => {
+      const isAct = (s.status || '').trim().toLowerCase() === 'active';
+      if (!isAct) return false;
+      if (!selectedProject) return true;
+      return s.feature?.project?.id === parseInt(selectedProject);
+    });
+  }, [sprints, selectedProject]);
+
+  const taskBuckets = React.useMemo(() => {
+    let backlog = 0, todo = 0, inProgress = 0, done = 0;
+    filteredTasks.forEach(task => {
+      const bucket = getTaskBucket(task);
+      if (bucket === 'backlog')         backlog++;
+      else if (bucket === 'todo')       todo++;
+      else if (bucket === 'inProgress') inProgress++;
+      else if (bucket === 'done')       done++;
+    });
+    return { backlog, todo, inProgress, done };
+  }, [filteredTasks]);
+
+  const pieData = React.useMemo(() => {
+    const statusMap = {};
+    filteredTasks.forEach(task => {
+      const label = getStatusLabel(task);
+      statusMap[label] = (statusMap[label] || 0) + 1;
+    });
+    return Object.keys(statusMap).map(k => ({ name: k, value: statusMap[k] }));
+  }, [filteredTasks]);
+
+  const barData = React.useMemo(() => {
+    return [
+      { name: 'Backlog',     count: taskBuckets.backlog,    fill: '#7c3aed' },
+      { name: 'To Do',       count: taskBuckets.todo,       fill: '#ea580c' },
+      { name: 'In Progress', count: taskBuckets.inProgress, fill: '#0055ff' },
+      { name: 'Done',        count: taskBuckets.done,       fill: '#16a34a' },
+    ];
+  }, [taskBuckets]);
+
+  const recentTasks = React.useMemo(() => {
+    return [...filteredTasks]
+      .sort((a, b) => String(b.createdDate || '').localeCompare(String(a.createdDate || '')))
+      .slice(0, 8);
+  }, [filteredTasks]);
+
+  const counts = React.useMemo(() => {
+    return {
+      projects: projects.length,
+      features: filteredFeaturesCount,
+      bugs: filteredBugsCount
+    };
+  }, [projects, filteredFeaturesCount, filteredBugsCount]);
 
   const isAdminUser = userProfile?.role?.description === 'Admin';
   const userName    = userProfile?.preffered_name || userProfile?.first_name || 'User';
@@ -239,6 +297,73 @@ const Dashboard = () => {
         <button className="dash-refresh-btn" onClick={fetchStats}>
           🔄 Refresh
         </button>
+      </div>
+
+      {/* Project Selector */}
+      <div className="dash-project-filter-bar" style={{ display: 'flex', alignItems: 'center', gap: '12px', background: '#1e293b', padding: '12px 18px', borderRadius: '10px', marginBottom: '20px', border: '1px solid #334155' }}>
+        <span style={{ color: '#94a3b8', fontSize: '0.9rem', fontWeight: 600 }}>Filter by Project:</span>
+        <select
+          value={selectedProject}
+          onChange={(e) => {
+            const val = e.target.value;
+            setSelectedProject(val);
+            if (val) {
+              localStorage.setItem("selectedProjectId", val);
+            } else {
+              localStorage.removeItem("selectedProjectId");
+            }
+          }}
+          style={{
+            padding: '8px 16px',
+            borderRadius: '6px',
+            border: selectedProject ? '1px solid #16a34a' : '1px solid #475569',
+            background: selectedProject ? '#16a34a' : '#0f172a',
+            color: '#fff',
+            fontWeight: 500,
+            fontSize: '0.9rem',
+            outline: 'none',
+            cursor: 'pointer',
+            minWidth: '220px'
+          }}
+        >
+          <option value="">All Projects</option>
+          {projects.map(p => (
+            <option key={p.id} value={p.id}>{p.name}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* Active Sprints of Selected Project */}
+      <div className="dash-section-label">Active Sprints</div>
+      <div className="dash-active-sprints-row" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '15px', marginBottom: '20px' }}>
+        {activeSprints.length === 0 ? (
+          <div style={{ gridColumn: '1 / -1', background: '#1e293b', border: '1px dashed #334155', color: '#94a3b8', padding: '16px', borderRadius: '8px', textAlign: 'center', fontSize: '0.9rem' }}>
+            No active sprints found for the selected project filter.
+          </div>
+        ) : (
+          activeSprints.map(sprint => (
+            <div key={sprint.id} className="dash-stat-card" style={{
+              background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+              border: '2px solid #16a34a',
+              boxShadow: '0 0 15px rgba(22, 163, 74, 0.25)',
+              padding: '15px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '5px'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ color: '#fff', fontWeight: 700, fontSize: '0.95rem' }}>{sprint.name}</span>
+                <span className="dash-badge dash-badge-inprogress">Active</span>
+              </div>
+              <div style={{ color: '#94a3b8', fontSize: '0.82rem' }}>
+                Feature: <strong style={{ color: '#e2e8f0' }}>{sprint.feature?.name || '—'}</strong>
+              </div>
+              <div style={{ color: '#94a3b8', fontSize: '0.82rem' }}>
+                Dates: <strong style={{ color: '#e2e8f0' }}>{sprint.startDate || '—'}</strong> to <strong style={{ color: '#e2e8f0' }}>{sprint.endDate || '—'}</strong>
+              </div>
+            </div>
+          ))
+        )}
       </div>
 
       {/* ── Overview Cards ─────────────────────────────────── */}

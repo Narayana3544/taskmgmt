@@ -6,7 +6,7 @@ import "./TaskList.css";
 import { FaEdit, FaPlus, FaEye, FaDownload, FaLock } from "react-icons/fa";
 import { useDebounce } from "use-debounce";
 import * as XLSX from "xlsx";
-import { sortLatestFirst, sortAlphabetically } from "../utils/sortUtils";
+import { sortLatestFirst, sortAlphabetically, sortStatuses } from "../utils/sortUtils";
 import StatusSummary from "../components/StatusSummary";
 import { isTaskLocked, getLockedReason } from "../utils/lockUtils";
 import Pagination from "../components/Pagination";
@@ -35,8 +35,14 @@ export default function TaskList() {
   const [debouncedStory] = useDebounce(searchStory, 350);
 
   // Pagination
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(5);
+  const [currentPage, setCurrentPage] = useState(() => {
+    const saved = sessionStorage.getItem("TaskList_currentPage");
+    return saved ? parseInt(saved) : 1;
+  });
+  const [itemsPerPage, setItemsPerPage] = useState(() => {
+    const saved = sessionStorage.getItem("TaskList_itemsPerPage");
+    return saved ? parseInt(saved) : 5;
+  });
 
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -44,7 +50,15 @@ export default function TaskList() {
   // Load filters from URL
   useEffect(() => {
 
-    const project = searchParams.get("project") || "";
+    let project = searchParams.get("project");
+    if (!project) {
+      project = localStorage.getItem("selectedProjectId") || "";
+      if (project) {
+        updateURL("project", project);
+      }
+    } else {
+      localStorage.setItem("selectedProjectId", project);
+    }
     const feature = searchParams.get("feature") || "";
     const sprint = searchParams.get("sprint") || "";
     const user = searchParams.get("user") || "";
@@ -72,6 +86,14 @@ export default function TaskList() {
 
   }, []);
 
+  useEffect(() => {
+    sessionStorage.setItem("TaskList_currentPage", currentPage);
+  }, [currentPage]);
+
+  useEffect(() => {
+    sessionStorage.setItem("TaskList_itemsPerPage", itemsPerPage);
+  }, [itemsPerPage]);
+
   const updateURL = (key, value) => {
     if (value) searchParams.set(key, value);
     else searchParams.delete(key);
@@ -90,7 +112,7 @@ export default function TaskList() {
   const fetchStatuses = async () => {
     try {
       const res = await api.get("/getstatusForTask", { withCredentials: true });
-      setStatuses(res.data);
+      setStatuses(sortStatuses(res.data));
     } catch (err) {
       console.error(err);
     }
@@ -142,6 +164,11 @@ export default function TaskList() {
 
     setSelectedProject(projectId);
     updateURL("project", projectId);
+    if (projectId) {
+      localStorage.setItem("selectedProjectId", projectId);
+    } else {
+      localStorage.removeItem("selectedProjectId");
+    }
 
     if (projectId) {
 
@@ -257,6 +284,8 @@ export default function TaskList() {
         placeholder="Select Project..."
         isClearable
         className="project-select"
+        menuPortalTarget={document.body}
+        styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
       />
     </div>
     
@@ -293,6 +322,12 @@ export default function TaskList() {
                     updateURL("feature", e.target.value);
                     setCurrentPage(1);
                   }}
+                  style={{
+                    backgroundColor: selectedFeature ? '#16a34a' : '#fff',
+                    color: selectedFeature ? '#fff' : '#333',
+                    borderColor: selectedFeature ? '#16a34a' : '#ccc',
+                    fontWeight: selectedFeature ? 'bold' : 'normal',
+                  }}
                 >
                   <option value="">All</option>
                   {features.map((f) => (
@@ -310,6 +345,12 @@ export default function TaskList() {
                     updateURL("sprint", e.target.value);
                     setCurrentPage(1);
                   }}
+                  style={{
+                    backgroundColor: selectedSprint ? '#16a34a' : '#fff',
+                    color: selectedSprint ? '#fff' : '#333',
+                    borderColor: selectedSprint ? '#16a34a' : '#ccc',
+                    fontWeight: selectedSprint ? 'bold' : 'normal',
+                  }}
                 >
                   <option value="">All</option>
                   {sprints.map((s) => (
@@ -317,27 +358,8 @@ export default function TaskList() {
                   ))}
                 </select>
               </th>
-              <th>Task Name</th>
               <th style={{ whiteSpace: 'nowrap' }}>ID</th>
-              <th style={{ whiteSpace: 'nowrap' }}>
-                User
-                <br />
-                <select
-                  value={selectedUser}
-                  onChange={(e) => {
-                    setSelectedUser(e.target.value);
-                    updateURL("user", e.target.value);
-                    setCurrentPage(1);
-                  }}
-                >
-                  <option value="">All</option>
-                  {users.map((u) => (
-                    <option key={u.id} value={u.id}>
-                      {u.first_name || u.preferredName || u.username}
-                    </option>
-                  ))}
-                </select>
-              </th>
+              <th>Task Name</th>
               <th style={{ whiteSpace: 'nowrap' }}>
                 Status
                 <br />
@@ -348,10 +370,41 @@ export default function TaskList() {
                     updateURL("status", e.target.value);
                     setCurrentPage(1);
                   }}
+                  style={{
+                    backgroundColor: selectedStatus ? '#16a34a' : '#fff',
+                    color: selectedStatus ? '#fff' : '#333',
+                    borderColor: selectedStatus ? '#16a34a' : '#ccc',
+                    fontWeight: selectedStatus ? 'bold' : 'normal',
+                  }}
                 >
                   <option value="">All</option>
                   {statuses.map((s) => (
                     <option key={s.id} value={s.id}>{s.decription}</option>
+                  ))}
+                </select>
+              </th>
+              <th style={{ whiteSpace: 'nowrap' }}>
+                User
+                <br />
+                <select
+                  value={selectedUser}
+                  onChange={(e) => {
+                    setSelectedUser(e.target.value);
+                    updateURL("user", e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  style={{
+                    backgroundColor: selectedUser ? '#16a34a' : '#fff',
+                    color: selectedUser ? '#fff' : '#333',
+                    borderColor: selectedUser ? '#16a34a' : '#ccc',
+                    fontWeight: selectedUser ? 'bold' : 'normal',
+                  }}
+                >
+                  <option value="">All</option>
+                  {users.map((u) => (
+                    <option key={u.id} value={u.id}>
+                      {u.first_name || u.preferredName || u.username}
+                    </option>
                   ))}
                 </select>
               </th>
@@ -375,14 +428,13 @@ export default function TaskList() {
             ) : (
               currentTasks.map((task) => (
                 <tr key={task.id}>
-                  <td style={{ whiteSpace: 'nowrap' }}>{projects.find(p => p.id === parseInt(selectedProject))?.name || "-"}</td>
-                  <td style={{ whiteSpace: 'nowrap' }}>{task.feature?.name || "-"}</td>
-                  <td style={{ whiteSpace: 'nowrap' }}>{task.sprint?.name || "-"}</td>
-                  <td style={{ maxWidth: '250px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={task.userstory}>
+                  <td className="ellipsis-cell" title={projects.find(p => p.id === parseInt(selectedProject))?.name || "-"}>{projects.find(p => p.id === parseInt(selectedProject))?.name || "-"}</td>
+                  <td className="ellipsis-cell" title={task.feature?.name || "-"}>{task.feature?.name || "-"}</td>
+                  <td className="ellipsis-cell" title={task.sprint?.name || "-"}>{task.sprint?.name || "-"}</td>
+                  <td style={{ whiteSpace: 'nowrap' }}>{task.id}</td>
+                  <td className="ellipsis-cell" title={task.userstory}>
                     {task.userstory || "-"}
                   </td>
-                  <td style={{ whiteSpace: 'nowrap' }}>{task.id}</td>
-                  <td style={{ whiteSpace: 'nowrap' }}>{task.user?.first_name || "-"}</td>
                   <td style={{ whiteSpace: 'nowrap' }}>
                     <select
                       value={task.taskStatus?.id || ""}
@@ -396,6 +448,7 @@ export default function TaskList() {
                       ))}
                     </select>
                   </td>
+                  <td style={{ whiteSpace: 'nowrap' }}>{task.user?.first_name || "-"}</td>
                   <td style={{ whiteSpace: 'nowrap' }}>{task.start_date ? new Date(task.start_date).toLocaleDateString() : "-"}</td>
                   <td style={{ whiteSpace: 'nowrap' }}>
                     <div className="action-buttons">

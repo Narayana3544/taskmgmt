@@ -15,6 +15,21 @@ export default function BugForm() {
   const [assignedTo, setAssignedTo] = useState("");
   const [initialData, setInitialData] = useState(null);
   const [existingAttachments, setExistingAttachments] = useState([]);
+  const [projectName, setProjectName] = useState("");
+  const [featureName, setFeatureName] = useState("");
+  const [sprintName, setSprintName] = useState("");
+  const [taskId, setTaskId] = useState(null);
+  const [taskTitle, setTaskTitle] = useState("");
+  const [reporterName, setReporterName] = useState("");
+
+  const [projects, setProjects] = useState([]);
+  const [selectedProject, setSelectedProject] = useState("");
+  const [features, setFeatures] = useState([]);
+  const [selectedFeature, setSelectedFeature] = useState("");
+  const [sprints, setSprints] = useState([]);
+  const [sprintId, setSprintId] = useState("");
+  const [tasks, setTasks] = useState([]);
+  const [selectedTaskId, setSelectedTaskId] = useState("");
 
   const [developers, setDevelopers] = useState([]);
   const [priorities, setPriorities] = useState([]);
@@ -59,20 +74,76 @@ export default function BugForm() {
         setPriority(pId);
         setStatus(sId);
         setAssignedTo(aId);
+        setProjectName(bug.projectName || "");
+        setFeatureName(bug.featureName || "");
+        setSprintName(bug.sprintName || "");
+        setTaskId(bug.taskId || null);
+        setTaskTitle(bug.taskTitle || "");
+        setReporterName(bug.reporter || "");
+
+        // Load projects first
+        const projRes = await api.get("/projects", { withCredentials: true });
+        const allProjs = projRes.data || [];
+        setProjects(allProjs);
+
+        // Find matched project
+        let projId = "";
+        if (bug.projectName) {
+          const matchedProj = allProjs.find(p => p.name === bug.projectName);
+          projId = matchedProj ? matchedProj.id : "";
+        }
+        setSelectedProject(projId);
+
+        // Fetch features if project is known
+        let featId = "";
+        if (projId) {
+          const featRes = await api.get(`/features/project/${projId}`, { withCredentials: true });
+          const allFeats = featRes.data || [];
+          setFeatures(allFeats);
+          if (bug.featureName) {
+            const matchedFeat = allFeats.find(f => f.name === bug.featureName);
+            featId = matchedFeat ? matchedFeat.id : "";
+          }
+          setSelectedFeature(featId);
+        }
+
+        // Fetch sprints if project is known
+        let spId = "";
+        if (projId) {
+          const sprintRes = await api.get(`/project/activeSprints/${projId}`, { withCredentials: true });
+          const allSprints = sprintRes.data || [];
+          setSprints(allSprints);
+          if (bug.sprintName) {
+            const matchedSprint = allSprints.find(s => s.name === bug.sprintName);
+            spId = matchedSprint ? matchedSprint.id : "";
+          }
+          setSprintId(spId);
+        }
+
+        // Load tasks
+        const tasksRes = await api.get("/view-tasks?size=10000", { withCredentials: true });
+        const allTasks = tasksRes.data?.content || tasksRes.data || [];
+        setTasks(allTasks);
+
+        const bugTaskId = bug.taskId || "";
+        setSelectedTaskId(bugTaskId);
         
         setInitialData({
           title: bug.title || "",
           description: bug.description || "",
-          priority: pId,
-          status: sId,
-          assignedTo: aId
+          priority: pId || "",
+          status: sId || "",
+          assignedTo: aId || "",
+          selectedProject: projId || "",
+          selectedFeature: featId || "",
+          sprintId: spId || "",
+          selectedTaskId: bugTaskId || ""
         });
 
         if (bug.attachments && bug.attachments.length > 0) {
           setExistingAttachments(bug.attachments);
         }
 
-        // Optionally, you could also load existing attachments here
       } catch (err) {
         console.error("Error fetching data:", err);
       }
@@ -80,6 +151,41 @@ export default function BugForm() {
 
     fetchData();
   }, [id]);
+
+  // Fetch features when project changes
+  useEffect(() => {
+    if (initialData && selectedProject) {
+      api.get(`/features/project/${selectedProject}`, { withCredentials: true })
+        .then(res => {
+          const activeFeatures = res.data.filter(f => 
+            f.status?.decription !== "Completed" && 
+            f.status?.decription !== "DONE" &&
+            f.status?.decription !== "Completed "
+          );
+          setFeatures(activeFeatures);
+        })
+        .catch(err => console.error(err));
+    } else if (initialData && !selectedProject) {
+      setFeatures([]);
+    }
+  }, [selectedProject, initialData]);
+
+  // Fetch active sprints based on project and feature
+  useEffect(() => {
+    if (initialData && selectedProject) {
+      api.get(`/project/activeSprints/${selectedProject}`, { withCredentials: true })
+        .then(res => {
+          let activeSprints = res.data || [];
+          if (selectedFeature) {
+             activeSprints = activeSprints.filter(s => s.feature?.id === parseInt(selectedFeature));
+          }
+          setSprints(activeSprints);
+        })
+        .catch(err => console.error("Error fetching sprints:", err));
+    } else if (initialData && !selectedProject) {
+      setSprints([]);
+    }
+  }, [selectedProject, selectedFeature, initialData]);
 
   // File handlers
   const handleFileChange = (e) => {
@@ -117,6 +223,12 @@ export default function BugForm() {
     formData.append("priorityId", priority);
     formData.append("statusId", status || 1); 
     formData.append("assignedToId", assignedTo);
+    if (sprintId) {
+      formData.append("sprintId", sprintId);
+    }
+    if (selectedTaskId) {
+      formData.append("taskId", selectedTaskId);
+    }
 
     files.forEach((file) => {
       formData.append("attachments", file);
@@ -153,30 +265,47 @@ export default function BugForm() {
     String(priority) !== String(initialData.priority) ||
     String(status) !== String(initialData.status) ||
     String(assignedTo) !== String(initialData.assignedTo) ||
+    String(selectedProject) !== String(initialData.selectedProject) ||
+    String(selectedFeature) !== String(initialData.selectedFeature) ||
+    String(sprintId) !== String(initialData.sprintId) ||
+    String(selectedTaskId) !== String(initialData.selectedTaskId) ||
     files.length > 0
   );
 
   return (
-    <form onSubmit={handleSubmit} className="task-form" style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '15px' }}>
+    <div className="task-form-container">
+      <form onSubmit={handleSubmit} className="task-form" style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '15px' }}>
+      {/* Project · Feature · Sprint */}
+      <div className="form-group" style={{ gridColumn: 'span 4', marginBottom: 0 }}>
+        <label>Project Name</label>
+        <select value={selectedProject} onChange={(e) => { setSelectedProject(e.target.value); setSelectedFeature(""); setSprintId(""); setSelectedTaskId(""); }}>
+          <option value="">-- Select Project --</option>
+          {projects.map((p) => (<option key={p.id} value={p.id}>{p.name}</option>))}
+        </select>
+      </div>
+      <div className="form-group" style={{ gridColumn: 'span 4', marginBottom: 0 }}>
+        <label>Feature Name</label>
+        <select value={selectedFeature} onChange={(e) => { setSelectedFeature(e.target.value); setSprintId(""); setSelectedTaskId(""); }}>
+          <option value="">-- Select Feature --</option>
+          {features.map((f) => (<option key={f.id} value={f.id}>{f.name}</option>))}
+        </select>
+      </div>
+      <div className="form-group" style={{ gridColumn: 'span 4', marginBottom: 0 }}>
+        <label>Sprint Name</label>
+        <select value={sprintId} onChange={(e) => { setSprintId(e.target.value); setSelectedTaskId(""); }}>
+          <option value="">-- Select Sprint --</option>
+          {sprints.map((s) => (<option key={s.id} value={s.id}>{s.name}</option>))}
+        </select>
+      </div>
+
+      {/* Bug Title / Title */}
       <div className="form-group" style={{ gridColumn: 'span 6', marginBottom: 0 }}>
         <label>Title<sup style={{color:'red'}}>*</sup></label>
         <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} required />
       </div>
 
-      <div className="form-group" style={{ gridColumn: 'span 6', marginBottom: 0 }}>
-        <label>Description<sup style={{color:'red'}}>*</sup></label>
-        <textarea rows="2" style={{ minHeight: '34px', padding: '8px' }} value={description} onChange={(e) => setDescription(e.target.value)} required />
-      </div>
-
-      <div className="form-group" style={{ gridColumn: 'span 4', marginBottom: 0 }}>
-        <label>Priority</label>
-        <select value={priority} onChange={(e) => setPriority(e.target.value)}>
-          <option value="">-- Select Priority --</option>
-          {priorities.map((p) => (<option key={p.id} value={p.id}>{p.decription || p.description || p.name}</option>))}
-        </select>
-      </div>
-
-      <div className="form-group" style={{ gridColumn: 'span 4', marginBottom: 0 }}>
+      {/* Status */}
+      <div className="form-group" style={{ gridColumn: 'span 3', marginBottom: 0 }}>
         <label>Status</label>
         <select value={status} onChange={(e) => setStatus(e.target.value)}>
           <option value="">-- Select Status --</option>
@@ -184,12 +313,34 @@ export default function BugForm() {
         </select>
       </div>
 
-      <div className="form-group" style={{ gridColumn: 'span 4', marginBottom: 0 }}>
+      {/* Priority */}
+      <div className="form-group" style={{ gridColumn: 'span 3', marginBottom: 0 }}>
+        <label>Priority</label>
+        <select value={priority} onChange={(e) => setPriority(e.target.value)}>
+          <option value="">-- Select Priority --</option>
+          {priorities.map((p) => (<option key={p.id} value={p.id}>{p.decription || p.description || p.name}</option>))}
+        </select>
+      </div>
+
+      {/* Assigned To */}
+      <div className="form-group" style={{ gridColumn: 'span 6', marginBottom: 0 }}>
         <label>Assign To</label>
         <select value={assignedTo} onChange={(e) => setAssignedTo(e.target.value)}>
           <option value="">-- Select Developer --</option>
           {developers.map((d) => (<option key={d.id} value={d.id}>{d.first_name || d.name || d.username}</option>))}
         </select>
+      </div>
+
+      {/* Reported To (Optional) */}
+      <div className="form-group" style={{ gridColumn: 'span 6', marginBottom: 0 }}>
+        <label>Reported To (Optional)</label>
+        <input type="text" readOnly value={reporterName || "-"} style={{ background: '#f5f5f5', cursor: 'not-allowed' }} />
+      </div>
+
+      {/* Description */}
+      <div className="form-group" style={{ gridColumn: 'span 12', marginBottom: 0 }}>
+        <label>Description<sup style={{color:'red'}}>*</sup></label>
+        <textarea rows="3" style={{ padding: '8px' }} value={description} onChange={(e) => setDescription(e.target.value)} required />
       </div>
 
       <div className="form-group full-width attachment-container" style={{ gridColumn: 'span 12', margin: 0 }}>
@@ -217,7 +368,7 @@ export default function BugForm() {
           <label>{existingAttachments.length > 0 ? "Add Additional Attachments:" : "Attachments:"}</label>
           <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
             <div style={{ flex: 1 }}>
-              <input type="file" multiple onChange={handleFileChange} style={{ padding: '4px' }} />
+              <input type="file" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv" onChange={handleFileChange} style={{ padding: '4px' }} />
             </div>
             <div style={{ flex: 1 }}>
               {files.length > 0 && (
@@ -239,10 +390,73 @@ export default function BugForm() {
           </div>
         </div>
 
+      {/* Linked Task with Unlink button */}
+      <div className="form-group" style={{ gridColumn: 'span 12', marginBottom: 0 }}>
+        <label>Linked Task</label>
+        {selectedTaskId ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <input type="text" readOnly value={`#${selectedTaskId} - ${tasks.find(t => t.id === parseInt(selectedTaskId))?.userstory || taskTitle}`} style={{ flex: 1, background: '#f5f5f5', cursor: 'not-allowed' }} />
+            <button
+              type="button"
+              onClick={() => { setSelectedTaskId(""); setTaskTitle(""); }}
+              style={{
+                border: "none",
+                background: "#fee2e2",
+                color: "#dc2626",
+                width: "36px",
+                height: "36px",
+                borderRadius: "50%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                fontSize: "15px",
+                transition: "0.2s"
+              }}
+              title="Remove linked task"
+              onMouseEnter={(e) => {
+                e.target.style.background = "#dc2626";
+                e.target.style.color = "#fff";
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = "#fee2e2";
+                e.target.style.color = "#dc2626";
+              }}
+            >
+              ❌
+            </button>
+            <button
+              type="button"
+              className="btn-global btn-primary"
+              onClick={() => navigate(`/task/${selectedTaskId}`)}
+              style={{ whiteSpace: 'nowrap' }}
+            >
+              View Task
+            </button>
+          </div>
+        ) : (
+          <select value={selectedTaskId} onChange={(e) => setSelectedTaskId(e.target.value)}>
+            <option value="">-- Link to a Task (Optional) --</option>
+            {tasks
+              .filter(t => {
+                if (selectedFeature && t.feature?.id !== parseInt(selectedFeature)) return false;
+                if (selectedProject && t.feature?.project?.id !== parseInt(selectedProject)) return false;
+                if (sprintId && t.sprint?.id !== parseInt(sprintId)) return false;
+                return true;
+              })
+              .map(t => (
+                <option key={t.id} value={t.id}>#{t.id} - {t.userstory || "Untitled Task"}</option>
+              ))
+            }
+          </select>
+        )}
+      </div>
+
       <div className="btn-container full-width" style={{ gridColumn: 'span 12', display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
         <button type="button" className="btn-global btn-secondary" onClick={() => navigate(-1)}>Back</button>
         <button type="submit" className="btn-global btn-primary" disabled={!hasChanges} style={{ opacity: !hasChanges ? 0.6 : 1, cursor: !hasChanges ? 'not-allowed' : 'pointer' }}>Update Bug</button>
       </div>
-    </form>
+      </form>
+    </div>
   );
 }

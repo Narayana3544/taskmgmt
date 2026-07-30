@@ -12,11 +12,20 @@ const FeatureList = () => {
   const [features, setFeatures] = useState([]);
   const [filteredFeatures, setFilteredFeatures] = useState([]);
   const [projects, setProjects] = useState([]);
-  const [selectedProject, setSelectedProject] = useState(null);
+  const [selectedProject, setSelectedProject] = useState(() => {
+    const saved = sessionStorage.getItem("FeatureList_selectedProject");
+    return saved ? JSON.parse(saved) : null;
+  });
   const navigate = useNavigate();
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(5);
+  const [currentPage, setCurrentPage] = useState(() => {
+    const saved = sessionStorage.getItem("FeatureList_currentPage");
+    return saved ? parseInt(saved) : 1;
+  });
+  const [itemsPerPage, setItemsPerPage] = useState(() => {
+    const saved = sessionStorage.getItem("FeatureList_itemsPerPage");
+    return saved ? parseInt(saved) : 5;
+  });
 
   useEffect(() => {
     api.get('/features', { withCredentials: true })
@@ -33,6 +42,18 @@ const FeatureList = () => {
       })
       .catch(err => console.error('Error fetching projects:', err));
   }, []);
+
+  useEffect(() => {
+    sessionStorage.setItem("FeatureList_currentPage", currentPage);
+  }, [currentPage]);
+
+  useEffect(() => {
+    sessionStorage.setItem("FeatureList_itemsPerPage", itemsPerPage);
+  }, [itemsPerPage]);
+
+  useEffect(() => {
+    sessionStorage.setItem("FeatureList_selectedProject", JSON.stringify(selectedProject));
+  }, [selectedProject]);
 
   useEffect(() => {
     if (!selectedProject) {
@@ -63,7 +84,11 @@ const FeatureList = () => {
             onChange={(option) => { setSelectedProject(option); setCurrentPage(1); }}
             isClearable
             placeholder="-- Select Project --"
-            styles={{ container: (base) => ({ ...base, minWidth: '200px' }) }}
+            menuPortalTarget={document.body}
+            styles={{ 
+              container: (base) => ({ ...base, minWidth: '200px' }),
+              menuPortal: base => ({ ...base, zIndex: 9999 })
+            }}
           />
 
           <StatusSummary data={filteredFeatures} statusExtractor={(feature) => feature.status?.decription || feature.status || 'Unknown'} showBuckets={['In Progress', 'Completed']} ignoreUnassigned={true} />
@@ -94,7 +119,7 @@ const FeatureList = () => {
                 <td>{feature.id}</td>
                 <td>{feature.project?.name}</td>
                 <td>{feature.name}</td>
-                <td>{feature.description}</td>
+                <td className="ellipsis-cell" title={feature.description}>{feature.description}</td>
                 <td>
                   <span className="status">
                     {feature.status?.decription || 'Unknown'}

@@ -4,7 +4,7 @@ import { FaEye, FaEdit, FaPlus } from "react-icons/fa";
 import api from "../api";
 import { ToastContainer, toast } from "react-toastify";
 import Select from "react-select";
-import { sortLatestFirst } from "../utils/sortUtils";
+import { sortLatestFirst, sortStatuses } from "../utils/sortUtils";
 import "react-toastify/dist/ReactToastify.css";
 import "./BugList.css";
 import StatusSummary from '../components/StatusSummary';
@@ -15,15 +15,21 @@ export default function BugList() {
   const [bugs, setBugs] = useState([]);
   const [statuses, setStatuses] = useState([]);
   const [projects, setProjects] = useState([]);
-  const [selectedProject, setSelectedProject] = useState("");
+  const [selectedProject, setSelectedProject] = useState(localStorage.getItem("selectedProjectId") || "");
   const [searchTitle, setSearchTitle] = useState("");
   const [selectedFeature, setSelectedFeature] = useState("");
   const [selectedSprint, setSelectedSprint] = useState("");
   const [selectedUser, setSelectedUser] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(5);
+  const [currentPage, setCurrentPage] = useState(() => {
+    const saved = sessionStorage.getItem("BugList_currentPage");
+    return saved ? parseInt(saved) : 1;
+  });
+  const [itemsPerPage, setItemsPerPage] = useState(() => {
+    const saved = sessionStorage.getItem("BugList_itemsPerPage");
+    return saved ? parseInt(saved) : 5;
+  });
 
   const uniqueFeatures = Array.from(new Set(bugs.map(b => b.featureName))).filter(Boolean).sort();
   const uniqueSprints = Array.from(new Set(bugs.map(b => b.sprintName))).filter(Boolean).sort();
@@ -42,7 +48,7 @@ export default function BugList() {
     const fetchStatuses = async () => {
       try {
         const res = await api.get("/getstatusForTask", { withCredentials: true });
-        setStatuses(res.data || []);
+        setStatuses(sortStatuses(res.data || []));
       } catch (err) {
         console.error("Error fetching statuses:", err);
       }
@@ -61,6 +67,14 @@ export default function BugList() {
     fetchStatuses();
     fetchProjects();
   }, []);
+
+  useEffect(() => {
+    sessionStorage.setItem("BugList_currentPage", currentPage);
+  }, [currentPage]);
+
+  useEffect(() => {
+    sessionStorage.setItem("BugList_itemsPerPage", itemsPerPage);
+  }, [itemsPerPage]);
 
   const filteredBugs = React.useMemo(() => {
     let result = bugs;
@@ -126,11 +140,19 @@ export default function BugList() {
                       ? { value: selectedProject, label: projects.find(p => p.id === parseInt(selectedProject)).name } 
                       : null}
                     onChange={(option) => {
-                      setSelectedProject(option ? option.value : "");
+                      const val = option ? option.value : "";
+                      setSelectedProject(val);
+                      if (val) {
+                        localStorage.setItem("selectedProjectId", val);
+                      } else {
+                        localStorage.removeItem("selectedProjectId");
+                      }
                       setCurrentPage(1);
                     }}
                     isClearable
                     placeholder="-- Select Project --"
+                    menuPortalTarget={document.body}
+                    styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
                   />
                 </div>
 
@@ -154,6 +176,12 @@ export default function BugList() {
                   <select
                     value={selectedFeature}
                     onChange={(e) => { setSelectedFeature(e.target.value); setCurrentPage(1); }}
+                    style={{
+                      backgroundColor: selectedFeature ? '#16a34a' : '#fff',
+                      color: selectedFeature ? '#fff' : '#333',
+                      borderColor: selectedFeature ? '#16a34a' : '#ccc',
+                      fontWeight: selectedFeature ? 'bold' : 'normal',
+                    }}
                   >
                     <option value="">All</option>
                     {uniqueFeatures.map(f => (
@@ -167,6 +195,12 @@ export default function BugList() {
                   <select
                     value={selectedSprint}
                     onChange={(e) => { setSelectedSprint(e.target.value); setCurrentPage(1); }}
+                    style={{
+                      backgroundColor: selectedSprint ? '#16a34a' : '#fff',
+                      color: selectedSprint ? '#fff' : '#333',
+                      borderColor: selectedSprint ? '#16a34a' : '#ccc',
+                      fontWeight: selectedSprint ? 'bold' : 'normal',
+                    }}
                   >
                     <option value="">All</option>
                     {uniqueSprints.map(s => (
@@ -174,31 +208,43 @@ export default function BugList() {
                     ))}
                   </select>
                 </th>
-                <th>Bug Title</th>
                 <th style={{ whiteSpace: 'nowrap' }}>ID</th>
-                <th style={{ whiteSpace: 'nowrap' }}>
-                  User
-                  <br />
-                  <select
-                    value={selectedUser}
-                    onChange={(e) => { setSelectedUser(e.target.value); setCurrentPage(1); }}
-                  >
-                    <option value="">All</option>
-                    {uniqueUsers.map(u => (
-                      <option key={u} value={u}>{u}</option>
-                    ))}
-                  </select>
-                </th>
+                <th>Bug Title</th>
                 <th style={{ whiteSpace: 'nowrap' }}>
                   Status
                   <br />
                   <select
                     value={selectedStatus}
                     onChange={(e) => { setSelectedStatus(e.target.value); setCurrentPage(1); }}
+                    style={{
+                      backgroundColor: selectedStatus ? '#16a34a' : '#fff',
+                      color: selectedStatus ? '#fff' : '#333',
+                      borderColor: selectedStatus ? '#16a34a' : '#ccc',
+                      fontWeight: selectedStatus ? 'bold' : 'normal',
+                    }}
                   >
                     <option value="">All</option>
                     {statuses.map((s) => (
                       <option key={s.id} value={s.id}>{s.decription}</option>
+                    ))}
+                  </select>
+                </th>
+                <th style={{ whiteSpace: 'nowrap' }}>
+                  User
+                  <br />
+                  <select
+                    value={selectedUser}
+                    onChange={(e) => { setSelectedUser(e.target.value); setCurrentPage(1); }}
+                    style={{
+                      backgroundColor: selectedUser ? '#16a34a' : '#fff',
+                      color: selectedUser ? '#fff' : '#333',
+                      borderColor: selectedUser ? '#16a34a' : '#ccc',
+                      fontWeight: selectedUser ? 'bold' : 'normal',
+                    }}
+                  >
+                    <option value="">All</option>
+                    {uniqueUsers.map(u => (
+                      <option key={u} value={u}>{u}</option>
                     ))}
                   </select>
                 </th>
@@ -209,14 +255,13 @@ export default function BugList() {
             <tbody>
               {currentBugs.map((bug) => (
                 <tr key={bug.id}>
-                  <td style={{ whiteSpace: 'nowrap' }}>{bug.projectName || "-"}</td>
-                  <td style={{ whiteSpace: 'nowrap' }}>{bug.featureName || "-"}</td>
-                  <td style={{ whiteSpace: 'nowrap' }}>{bug.sprintName || "-"}</td>
-                  <td style={{ maxWidth: '250px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={bug.title}>
+                  <td className="ellipsis-cell" title={bug.projectName || "-"}>{bug.projectName || "-"}</td>
+                  <td className="ellipsis-cell" title={bug.featureName || "-"}>{bug.featureName || "-"}</td>
+                  <td className="ellipsis-cell" title={bug.sprintName || "-"}>{bug.sprintName || "-"}</td>
+                  <td style={{ whiteSpace: 'nowrap' }}>{bug.id}</td>
+                  <td className="ellipsis-cell" title={bug.title}>
                     {bug.title || "-"}
                   </td>
-                  <td style={{ whiteSpace: 'nowrap' }}>{bug.id}</td>
-                  <td style={{ whiteSpace: 'nowrap' }}>{bug.assignedUser || "-"}</td>
                   <td style={{ whiteSpace: 'nowrap' }}>
                     <select
                       value={bug.statusId || ""}
@@ -224,12 +269,11 @@ export default function BugList() {
                       style={{ padding: "4px 8px", borderRadius: "4px", border: "1px solid #ccc" }}
                     >
                       {statuses.map((s) => (
-                        <option key={s.id} value={s.id}>
-                          {s.decription || s.description || s.name}
-                        </option>
+                        <option key={s.id} value={s.id}>{s.decription}</option>
                       ))}
                     </select>
                   </td>
+                  <td style={{ whiteSpace: 'nowrap' }}>{bug.assignedUser || "-"}</td>
                   <td style={{ whiteSpace: 'nowrap' }}>{bug.createdAt ? new Date(bug.createdAt).toLocaleDateString() : "-"}</td>
                   <td style={{ whiteSpace: 'nowrap' }}>
                     <div className="action-buttons">

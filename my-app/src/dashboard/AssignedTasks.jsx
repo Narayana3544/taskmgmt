@@ -5,6 +5,7 @@ import { FaEye, FaLock, FaEdit } from "react-icons/fa";
 import StatusSummary from "../components/StatusSummary";
 import { isTaskLocked, getLockedReason } from "../utils/lockUtils";
 import Pagination from "../components/Pagination";
+import { sortStatuses } from "../utils/sortUtils";
 import "./AssignedTasks.css";
 
 export default function AssignedTasks() {
@@ -14,6 +15,7 @@ export default function AssignedTasks() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lockedMsg, setLockedMsg] = useState(""); // popup message for locked tasks
+  const [userProfile, setUserProfile] = useState(null);
 
   // Filters
   const [searchTitle, setSearchTitle] = useState("");
@@ -23,15 +25,31 @@ export default function AssignedTasks() {
   const [selectedStatus, setSelectedStatus] = useState("");
 
   // Pagination
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(5);
+  const [currentPage, setCurrentPage] = useState(() => {
+    const saved = sessionStorage.getItem("AssignedTasks_currentPage");
+    return saved ? parseInt(saved) : 1;
+  });
+  const [itemsPerPage, setItemsPerPage] = useState(() => {
+    const saved = sessionStorage.getItem("AssignedTasks_itemsPerPage");
+    return saved ? parseInt(saved) : 5;
+  });
 
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchSprints();
     fetchStatuses();
+    fetchUserProfile();
   }, []);
+
+  const fetchUserProfile = async () => {
+    try {
+      const res = await api.get('/user/profile', { withCredentials: true });
+      setUserProfile(res.data);
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   const fetchSprints = async () => {
     try {
@@ -45,7 +63,7 @@ export default function AssignedTasks() {
   const fetchStatuses = async () => {
     try {
       const res = await api.get("/getstatusForTask", { withCredentials: true });
-      setStatuses(res.data);
+      setStatuses(sortStatuses(res.data));
     } catch (err) {
       console.error("Error fetching statuses:", err);
     }
@@ -69,11 +87,28 @@ export default function AssignedTasks() {
     fetchTasks();
   }, []);
 
-  const uniqueProjects = Array.from(new Set(tasks.map(t => t.feature?.project?.name))).filter(Boolean).sort();
-  const uniqueFeatures = Array.from(new Set(tasks.map(t => t.feature?.name))).filter(Boolean).sort();
+  useEffect(() => {
+    sessionStorage.setItem("AssignedTasks_currentPage", currentPage);
+  }, [currentPage]);
+
+  useEffect(() => {
+    sessionStorage.setItem("AssignedTasks_itemsPerPage", itemsPerPage);
+  }, [itemsPerPage]);
+
+  const allowedTasks = React.useMemo(() => {
+    const isAdmin = userProfile?.role?.description === 'Admin';
+    if (isAdmin) return tasks;
+    return tasks.filter(t => {
+      const assignedUserId = t.user?.id || t.assignedUser?.id || t.assignedTo?.id;
+      return assignedUserId === userProfile?.id;
+    });
+  }, [tasks, userProfile]);
+
+  const uniqueProjects = Array.from(new Set(allowedTasks.map(t => t.feature?.project?.name))).filter(Boolean).sort();
+  const uniqueFeatures = Array.from(new Set(allowedTasks.map(t => t.feature?.name))).filter(Boolean).sort();
 
   const filteredTasks = React.useMemo(() => {
-    return tasks.filter((t) => {
+    return allowedTasks.filter((t) => {
       if (selectedProject && t.feature?.project?.name !== selectedProject) return false;
       if (selectedFeature && t.feature?.name !== selectedFeature) return false;
       if (selectedSprint && String(t.sprint?.id) !== String(selectedSprint)) return false;
@@ -81,7 +116,7 @@ export default function AssignedTasks() {
       if (searchTitle && !t.userstory?.toLowerCase().includes(searchTitle.toLowerCase())) return false;
       return true;
     });
-  }, [tasks, selectedProject, selectedFeature, selectedSprint, selectedStatus, searchTitle]);
+  }, [allowedTasks, selectedProject, selectedFeature, selectedSprint, selectedStatus, searchTitle]);
 
   const handleStatusChange = async (task, statusId) => {
     if (!window.confirm("Are you sure you want to change the status?")) {
@@ -136,6 +171,12 @@ export default function AssignedTasks() {
                 <select
                   value={selectedProject}
                   onChange={(e) => { setSelectedProject(e.target.value); setCurrentPage(1); }}
+                  style={{
+                    backgroundColor: selectedProject ? '#16a34a' : '#fff',
+                    color: selectedProject ? '#fff' : '#333',
+                    borderColor: selectedProject ? '#16a34a' : '#ccc',
+                    fontWeight: selectedProject ? 'bold' : 'normal',
+                  }}
                 >
                   <option value="">All</option>
                   {uniqueProjects.map(p => (
@@ -149,6 +190,12 @@ export default function AssignedTasks() {
                 <select
                   value={selectedFeature}
                   onChange={(e) => { setSelectedFeature(e.target.value); setCurrentPage(1); }}
+                  style={{
+                    backgroundColor: selectedFeature ? '#16a34a' : '#fff',
+                    color: selectedFeature ? '#fff' : '#333',
+                    borderColor: selectedFeature ? '#16a34a' : '#ccc',
+                    fontWeight: selectedFeature ? 'bold' : 'normal',
+                  }}
                 >
                   <option value="">All</option>
                   {uniqueFeatures.map(f => (
@@ -162,6 +209,12 @@ export default function AssignedTasks() {
                 <select
                   value={selectedSprint}
                   onChange={(e) => { setSelectedSprint(e.target.value); setCurrentPage(1); }}
+                  style={{
+                    backgroundColor: selectedSprint ? '#16a34a' : '#fff',
+                    color: selectedSprint ? '#fff' : '#333',
+                    borderColor: selectedSprint ? '#16a34a' : '#ccc',
+                    fontWeight: selectedSprint ? 'bold' : 'normal',
+                  }}
                 >
                   <option value="">All</option>
                   {sprints.map(s => (
@@ -169,15 +222,20 @@ export default function AssignedTasks() {
                   ))}
                 </select>
               </th>
-              <th>Task Name</th>
               <th style={{ whiteSpace: 'nowrap' }}>ID</th>
-              <th style={{ whiteSpace: 'nowrap' }}>User</th>
+              <th>Task Name</th>
               <th style={{ whiteSpace: 'nowrap' }}>
                 Status
                 <br />
                   <select
                     value={selectedStatus}
                     onChange={(e) => { setSelectedStatus(e.target.value); setCurrentPage(1); }}
+                    style={{
+                      backgroundColor: selectedStatus ? '#16a34a' : '#fff',
+                      color: selectedStatus ? '#fff' : '#333',
+                      borderColor: selectedStatus ? '#16a34a' : '#ccc',
+                      fontWeight: selectedStatus ? 'bold' : 'normal',
+                    }}
                   >
                   <option value="">All</option>
                   {statuses.map(s => (
@@ -185,6 +243,7 @@ export default function AssignedTasks() {
                   ))}
                 </select>
               </th>
+              <th style={{ whiteSpace: 'nowrap' }}>User</th>
               <th style={{ whiteSpace: 'nowrap' }}>Start Date</th>
               <th style={{ whiteSpace: 'nowrap' }}>Actions</th>
             </tr>
@@ -202,14 +261,13 @@ export default function AssignedTasks() {
             ) : (
               currentTasks.map(task => (
                 <tr key={task.id}>
-                  <td style={{ whiteSpace: 'nowrap' }}>{task.feature?.project?.name || "-"}</td>
-                  <td style={{ whiteSpace: 'nowrap' }}>{task.feature?.name || "-"}</td>
-                  <td style={{ whiteSpace: 'nowrap' }}>{task.sprint?.name || "-"}</td>
-                  <td style={{ maxWidth: '250px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={task.userstory}>
+                  <td className="ellipsis-cell" title={task.feature?.project?.name || "-"}>{task.feature?.project?.name || "-"}</td>
+                  <td className="ellipsis-cell" title={task.feature?.name || "-"}             >{task.feature?.name || "-"}</td>
+                  <td className="ellipsis-cell" title={task.sprint?.name || "-"}              >{task.sprint?.name || "-"}</td>
+                  <td style={{ whiteSpace: 'nowrap' }}>{task.id}</td>
+                  <td className="ellipsis-cell" title={task.userstory}>
                     {task.userstory || "-"}
                   </td>
-                  <td style={{ whiteSpace: 'nowrap' }}>{task.id}</td>
-                  <td style={{ whiteSpace: 'nowrap' }}>{task.user?.first_name || task.user?.name || "-"}</td>
                   <td style={{ whiteSpace: 'nowrap' }}>
                     <select
                       value={task.taskStatus?.id || ""}
@@ -223,6 +281,7 @@ export default function AssignedTasks() {
                       ))}
                     </select>
                   </td>
+                  <td style={{ whiteSpace: 'nowrap' }}>{task.user?.first_name || task.user?.name || "-"}</td>
                   <td style={{ whiteSpace: 'nowrap' }}>{task.start_date ? new Date(task.start_date).toLocaleDateString() : "-"}</td>
                   <td style={{ whiteSpace: 'nowrap' }}>
                     <div className="action-buttons">

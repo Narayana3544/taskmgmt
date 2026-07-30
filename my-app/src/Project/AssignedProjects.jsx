@@ -3,6 +3,7 @@ import api from '../api';
 import { useNavigate } from 'react-router-dom';
 import { FaEye, FaEdit, FaTrash, FaList } from 'react-icons/fa';
 import StatusSummary from '../components/StatusSummary';
+import '../Pages/ManageProject.css';
 
 export default function ViewProjectById() {
   const [projects, setProjects] = useState([]);

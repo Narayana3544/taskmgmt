@@ -25,11 +25,15 @@
 	</properties>
 
 	<dependencies>
-		<!-- Provided Tomcat for external deployment -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-tomcat</artifactId>
-			<scope>provided</scope>
+<!--			<scope>provided</scope>-->
+		</dependency>
+		<dependency>
+			<groupId>jakarta.servlet</groupId>
+			<artifactId>jakarta.servlet-api</artifactId>
+			<scope>compile</scope>
 		</dependency>
 
 		<!-- Spring Boot Starters (3.x versions use jakarta.* internally) -->

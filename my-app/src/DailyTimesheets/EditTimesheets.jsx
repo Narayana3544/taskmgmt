@@ -62,10 +62,24 @@ export default function EditAnyTimesheet() {
 
   const fetchTasks = async () => {
     try {
-      const res = await api.get(`/user/${userId}/tasks`, { withCredentials: true });
-      setTasks(res.data);
+      const [tasksRes, bugsRes] = await Promise.all([
+        api.get(`/user/${userId}/tasks`, { withCredentials: true }),
+        api.get(`/user/${userId}/bugs`, { withCredentials: true })
+      ]);
+      
+      const formattedTasks = (tasksRes.data || []).map(t => ({
+        id: `task-${t.id}`,
+        userstory: `Task: #${t.id} - ${t.userstory || "Untitled Task"}`
+      }));
+      
+      const formattedBugs = (bugsRes.data || []).map(b => ({
+        id: `bug-${b.id}`,
+        userstory: `Bug: #${b.id} - ${b.title || "Untitled Bug"}`
+      }));
+
+      setTasks([...formattedTasks, ...formattedBugs]);
     } catch (err) {
-      console.error("Error fetching tasks:", err);
+      console.error("Error fetching tasks and bugs:", err);
     }
   };
 
@@ -123,12 +137,17 @@ const resetForm = () => {
       return;
     }
 
+    const isTask = form.taskId && form.taskId.startsWith("task-");
+    const isBug = form.taskId && form.taskId.startsWith("bug-");
+    const dbId = form.taskId ? Number(form.taskId.split("-")[1]) : null;
+
     const payload = {
       userId: Number(userId),
       date: normalizedDate,
       start_time: form.startTime,
       end_time: form.endTime,
-      task: form.taskId ? { id: Number(form.taskId) } : null,
+      task: isTask ? { id: dbId } : null,
+      bug: isBug ? { id: dbId } : null,
       workType: form.workTypeId ? { id: Number(form.workTypeId) } : null,
       description: form.description,
       permission_granted: form.isPermissionGranted
@@ -147,11 +166,17 @@ const resetForm = () => {
   // --------------- Edit Entry ---------------
 const handleEdit = (entry) => {
   setEditingId(entry.id);
+  let selectedId = "";
+  if (entry.task) {
+    selectedId = `task-${entry.task.id}`;
+  } else if (entry.bug) {
+    selectedId = `bug-${entry.bug.id}`;
+  }
 
   setForm({
     startTime: entry.start_time,
     endTime: entry.end_time,
-    taskId: entry.task?.id?.toString() || "",
+    taskId: selectedId,
     workTypeId: entry.workType?.id?.toString() || "",
     description: entry.description,
     isPermissionGranted: entry.permission_granted
@@ -159,12 +184,17 @@ const handleEdit = (entry) => {
 };
 
   const handleUpdate = async () => {
+    const isTask = form.taskId && form.taskId.startsWith("task-");
+    const isBug = form.taskId && form.taskId.startsWith("bug-");
+    const dbId = form.taskId ? Number(form.taskId.split("-")[1]) : null;
+
     const payload = {
       userId: Number(userId),
       date: normalizedDate,
       start_time: form.startTime,
       end_time: form.endTime,
-      task: form.taskId ? { id: Number(form.taskId) } : null,
+      task: isTask ? { id: dbId } : null,
+      bug: isBug ? { id: dbId } : null,
       workType: form.workTypeId ? { id: Number(form.workTypeId) } : null,
       description: form.description,
       permission_granted: form.isPermissionGranted
@@ -254,7 +284,7 @@ const handleEdit = (entry) => {
               <td>{e.start_time || "-"}</td>
               <td>{e.end_time || "-"}</td>
               <td style={{ maxWidth: '300px', whiteSpace: 'normal', wordWrap: 'break-word', overflowWrap: 'anywhere' }}>
-                {e.task?.userstory || "-"}
+                {e.task?.userstory || (e.bug ? `Bug: #${e.bug.id} - ${e.bug.title}` : "-")}
               </td>
               <td>{e.workType?.description || "-"}</td>
               <td>{e.description}</td>

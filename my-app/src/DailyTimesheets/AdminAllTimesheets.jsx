@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
-import * as XLSX from "xlsx";
-import { FaFileExcel, FaEye, FaDownload } from "react-icons/fa";
+import { FaEye } from "react-icons/fa";
 import "./AdminAllTimesheet.css";
 
 export default function AdminAllTimesheets() {
@@ -42,135 +41,6 @@ export default function AdminAllTimesheets() {
     navigate(`/admin/timesheet-details/${userId}?start=${start}&end=${end}&name=${encodeURIComponent(username || '')}`);
   };
 
-  const downloadSummaryExcel = () => {
-    if (summaries.length === 0) {
-      alert("No data to download.");
-      return;
-    }
-    const data = summaries.map(s => ({
-      User: s.username,
-      "Days Filled": s.daysFilled
-    }));
-    const worksheet = XLSX.utils.json_to_sheet(data);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Admin Summary");
-    XLSX.writeFile(workbook, `Admin_Timesheet_Summary_${start}_to_${end}.xlsx`);
-  };
-  // Excel Export
-  const exportToExcel = async (userId, username) => {
-    try {
-
-      const res = await api.get(`/timesheet/range-summary-with-logs/${userId}`, {
-        params: { start, end },
-        withCredentials: true,
-      });
-
-      const flat = flattenForExcel(res.data);
-
-      exportExcel(flat, username, start, end);
-
-    } catch (err) {
-      console.error("Export failed:", err);
-    }
-
-  };
-
-  const flattenForExcel = (data) => {
-
-    const rows = [];
-
-    data.forEach((day) => {
-
-      const dayStr = day.date;
-      const status = day.status;
-      const totalHours = day.totalHours;
-
-      if (!day.logs || day.logs.length === 0) {
-
-        rows.push({
-          Date: dayStr,
-          Status: status,
-          "Total Hours": totalHours,
-          Start: "-",
-          End: "-",
-          Duration: "-",
-          Task: "-",
-          Description: "-",
-          "Work Type": "-",
-          Permission: "-",
-        });
-
-      } else {
-
-        rows.push({
-          Date: dayStr,
-          Status: status,
-          "Total Hours": totalHours,
-          Start: "-",
-          End: "-",
-          Duration: "-",
-          Task: "-",
-          Description: "-",
-          "Work Type": "-",
-          Permission: "-",
-        });
-
-        day.logs.forEach((log) => {
-
-          const start = log.start_time || "-";
-          const end = log.end_time || "-";
-
-          const duration =
-            log.start_time && log.end_time
-              ? (
-                  (new Date(`1970-01-01T${end}`) -
-                    new Date(`1970-01-01T${start}`)) / 3600000
-                ).toFixed(2)
-              : "-";
-
-          rows.push({
-            Date: "",
-            Status: "",
-            "Total Hours": "",
-            Start: start,
-            End: end,
-            Duration: duration,
-            Task: log.task?.userstory || "-",
-            Description: log.description || "-",
-            "Work Type": log.workType?.description || "-",
-            Permission: ["Official", "Time Off"].includes(log.workType?.description)
-              ? log.permissionGranted ? "Yes" : "No"
-              : "-",
-          });
-
-        });
-
-      }
-
-    });
-
-    return rows;
-
-  };
-
-  const exportExcel = (data, username, startDate, endDate) => {
-
-    const ws = XLSX.utils.json_to_sheet(data, { origin: 4 });
-
-    XLSX.utils.sheet_add_aoa(ws, [
-      [`Username: ${username}`],
-      [`Start Date: ${startDate}`],
-      [`End Date: ${endDate}`],
-      [],
-    ]);
-
-    const wb = XLSX.utils.book_new();
-
-    XLSX.utils.book_append_sheet(wb, ws, "Timesheet");
-
-    XLSX.writeFile(wb, `Timesheet_${username}_${startDate}_to_${endDate}.xlsx`);
-
-  };
 
   const formatHours = (entry) => {
 
@@ -256,11 +126,7 @@ export default function AdminAllTimesheets() {
                     onClick={() => handleViewUser(s.userId, s.username)}
                   />
 
-                  <FaFileExcel
-                    title="Export Excel"
-                    className="excel-icon"
-                    onClick={() => exportToExcel(s.userId, s.username)}
-                  />
+
 
                 </td>
 

@@ -109,3 +109,17 @@
   margin-bottom: 10px;
   color: #1e40af;
 }
+
+/* Fix wrapping rules for timesheet tables */
+.timesheet-table th,
+.timesheet-table td {
+  white-space: nowrap !important;
+}
+
+.timesheet-table td.description-cell,
+.timesheet-table td.task-cell,
+.timesheet-table td:nth-child(5) {
+  white-space: normal !important;
+  word-break: break-word !important;
+  overflow-wrap: anywhere !important;
+}

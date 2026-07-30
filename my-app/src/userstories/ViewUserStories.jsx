@@ -113,8 +113,8 @@ const ViewStories = () => {
               {filteredStories.map((story) => (
                 <tr key={story.id}>
                   <td>{story.id}</td>
-                  <td>{story.description}</td>
-                  <td>{story.acceptancecriteria}</td>
+                  <td className="ellipsis-cell" title={story.description}>{story.description}</td>
+                  <td className="ellipsis-cell" title={story.acceptancecriteria}>{story.acceptancecriteria}</td>
                   <td>{story.storypoints}</td>
                   <td>
                     <select

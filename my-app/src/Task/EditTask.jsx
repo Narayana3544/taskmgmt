@@ -506,7 +506,7 @@ const handleSubmit = async (e) => {
       {attachmentFlag === "Yes" ? (
         <div className="form-group attachment-container" style={{ gridColumn: 'span 4', marginBottom: 0 }}>
           <label>{existingAttachments.length > 0 ? "Add Additional Attachments" : "Add Attachments"}</label>
-          <input type="file" multiple onChange={(e) => {
+          <input type="file" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv" onChange={(e) => {
             const files = Array.from(e.target.files);
             setAttachmentFiles(prev => [...prev, ...files]);
             e.target.value = null;

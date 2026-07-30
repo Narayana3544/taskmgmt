@@ -63,4 +63,39 @@
   flex-wrap: wrap;
   gap: 8px;
 }
+
+.features-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.features-table th,
+.features-table td {
+  word-wrap: break-word;
+  word-break: break-word;
+  white-space: normal;
+}
+
+.features-table th:first-child,
+.features-table td:first-child {
+  width: 80px !important;
+  white-space: nowrap !important;
+}
+
+.features-table td .status,
+.features-table td .status-tags,
+.features-table td .status-tag,
+.features-table th:nth-child(5),
+.features-table td:nth-child(5),
+.features-table th:nth-child(4),
+.features-table td:nth-child(4) {
+  white-space: nowrap !important;
+}
+
+.features-table th:last-child,
+.features-table td:last-child {
+  width: 100px;
+  white-space: nowrap !important;
+}
 /* Redundant definitions removed */

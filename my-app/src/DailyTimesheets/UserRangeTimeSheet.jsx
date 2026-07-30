@@ -2,8 +2,7 @@ import React, { useState } from "react";
 import api from "../api";
 import { useNavigate } from "react-router-dom";
 import "./UserRangeTimeSheet.css";
-import { FaEye, FaDownload } from "react-icons/fa";
-import * as XLSX from "xlsx";
+import { FaEye } from "react-icons/fa";
 
 export default function UserRangeTimeSheet() {
   const [startDate, setStartDate] = useState("");
@@ -83,53 +82,6 @@ const formatHours = (entry) => {
 
     return `${hoursPart}h ${String(minutesPart).padStart(2, "0")}m`;
   };
-  const downloadExcel = () => {
-    if (!selectedDate) {
-      if (entries.length === 0) {
-        alert("No summary data to download.");
-        return;
-      }
-      const data = entries.map(entry => {
-        const weekend = isWeekend(entry.date);
-        const holiday = isHoliday(entry.date);
-        let statusText = entry.status;
-        if (holiday && entry.totalHours === 0) {
-          statusText = "Holiday";
-        } else if (weekend && entry.totalHours === 0) {
-          statusText = "Weekend";
-        } else if (entry.status === "Leave") {
-          statusText = "Leave";
-        } else if (entry.status === "Worked") {
-          statusText = "Worked";
-        }
-        return {
-          Date: entry.date,
-          "Total Hours": formatHours(entry),
-          Status: statusText
-        };
-      });
-      const worksheet = XLSX.utils.json_to_sheet(data);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Timesheet Summary");
-      XLSX.writeFile(workbook, `Timesheet_Summary_${startDate}_to_${endDate}.xlsx`);
-    } else {
-      if (dailyDetails.length === 0) {
-        alert("No daily entries to download.");
-        return;
-      }
-      const data = dailyDetails.map(entry => ({
-        Start: entry.start_time || "-",
-        End: entry.end_time || "-",
-        Task: entry.task?.userstory || "-",
-        "Work Type": entry.workType?.description || "-",
-        Description: entry.description || "-"
-      }));
-      const worksheet = XLSX.utils.json_to_sheet(data);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, `Details_${selectedDate}`);
-      XLSX.writeFile(workbook, `Timesheet_Details_${selectedDate}.xlsx`);
-    }
-  };
 
   return (
     <div className="timesheet-container">
@@ -165,9 +117,7 @@ const formatHours = (entry) => {
             <button className="btn-global btn-secondary" onClick={() => setSelectedDate(null)} style={{ padding: '6px 12px' }}>Back</button>
           )}
 
-          <button className="icon-download-btn" onClick={downloadExcel} title="Download Excel" style={{ padding: '6px 10px' }}>
-            <FaDownload />
-          </button>
+
         </div>
       </div>
 

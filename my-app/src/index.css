@@ -176,3 +176,72 @@ td, th, h1, h2, h3, h4, h5, h6, p, span, div, strong, a {
   word-wrap: break-word;
   overflow-wrap: anywhere;
 }
+
+/* ===== TABLE AUTO-FIT SYSTEM WITH ELLIPSIS FOR DESCRIPTION/NAME ===== */
+.task-table,
+.bug-table,
+.story-table,
+.sprint-table,
+.features-table,
+.projects-table {
+  width: 100% !important;
+  table-layout: fixed !important;
+}
+
+.task-table th,
+.bug-table th,
+.story-table th,
+.sprint-table th,
+.features-table th,
+.projects-table th {
+  white-space: nowrap !important;
+  word-break: normal !important;
+  overflow-wrap: normal !important;
+}
+
+.task-table td,
+.bug-table td,
+.story-table td,
+.sprint-table td,
+.features-table td,
+.projects-table td {
+  white-space: normal !important;
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
+}
+
+.task-table td.ellipsis-cell,
+.bug-table td.ellipsis-cell,
+.story-table td.ellipsis-cell,
+.sprint-table td.ellipsis-cell,
+.features-table td.ellipsis-cell,
+.projects-table td.ellipsis-cell,
+.ellipsis-cell {
+  max-width: 180px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  word-break: normal !important;
+  overflow-wrap: normal !important;
+}
+
+table select,
+.task-table select,
+.bug-table select,
+.sprint-table select,
+.features-table select,
+.projects-table select {
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.task-list-page,
+.features-list-page,
+.manage-sprints-page,
+.manage-projects-page,
+.assigned-tasks-page,
+.sprints-page,
+.user-stories-page {
+  max-width: 96% !important;
+  width: 96% !important;
+}

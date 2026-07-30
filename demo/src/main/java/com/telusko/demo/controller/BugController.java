@@ -147,6 +147,12 @@ public class BugController {
         int userId = userDetails.getUser().getId();
         return bugService.viewbugsByUserId(userId);
     }
+
+    @GetMapping("/user/{userId}/bugs")
+    public List<Bug> viewUserBugs(@PathVariable int userId) {
+        return bugService.viewbugsByUserId(userId);
+    }
+
     @GetMapping("view-bug/{id}")
     public ResponseEntity<BugDTO> getBug(@PathVariable Integer id) {
         return ResponseEntity.ok(bugService.getBugById(id));
@@ -154,11 +160,12 @@ public class BugController {
 
     @GetMapping("/attachments/{attachmentId}/download")
     public ResponseEntity<byte[]> downloadAttachment(@PathVariable Integer attachmentId) {
-        byte[] fileData = bugService.downloadAttachment(attachmentId);
+        BugAttachment att = bugAttachmentRepo.findById(attachmentId)
+                .orElseThrow(() -> new RuntimeException("Attachment not found"));
 
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"attachment-" + attachmentId + "\"")
-                .body(fileData);
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + att.getFileName() + "\"")
+                .body(att.getFileData());
     }
 
     @PutMapping(value = "/bugs/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -169,6 +176,8 @@ public class BugController {
             @RequestParam int priorityId,
             @RequestParam(required = false) Integer statusId,
             @RequestParam int assignedToId,
+            @RequestParam(required = false) Integer sprintId,
+            @RequestParam(required = false) Integer taskId,
             @RequestParam(value = "attachments", required = false) List<MultipartFile> attachments,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
@@ -180,10 +189,17 @@ public class BugController {
                 priorityId,
                 statusId,
                 assignedToId,
+                sprintId,
+                taskId,
                 attachments,
                 reporterId
         );
         return ResponseEntity.ok("Bug updated successfully");
     }
 
+    @PutMapping("/bugs/{bugId}/move/{sprintId}")
+    public ResponseEntity<String> moveBugToSprint(@PathVariable int bugId, @PathVariable int sprintId) {
+        bugService.moveBugToSprint(bugId, sprintId);
+        return ResponseEntity.ok("Bug moved successfully");
+    }
 }

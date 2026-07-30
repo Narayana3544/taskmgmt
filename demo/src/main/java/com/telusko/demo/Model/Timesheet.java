@@ -43,6 +43,10 @@ public class Timesheet {
     @JoinColumn(name = "task_id")
     private task Task;
 
+    @ManyToOne
+    @JoinColumn(name = "bug_id")
+    private Bug bug;
+
     private String description;
 
     private boolean permission_granted;
@@ -133,5 +137,13 @@ public class Timesheet {
 
     public void setPermission_granted(boolean permission_granted) {
         this.permission_granted = permission_granted;
+    }
+
+    public Bug getBug() {
+        return bug;
+    }
+
+    public void setBug(Bug bug) {
+        this.bug = bug;
     }
 }

@@ -60,6 +60,14 @@ const Logout = ({ onLogout }) => {
   return null; // nothing to render
 };
 
+const getBasename = () => {
+  const pathSegments = window.location.pathname.split('/');
+  if (pathSegments[1] === 'task-mgmt' || pathSegments[1] === 'taskmgmt') {
+    return `/${pathSegments[1]}`;
+  }
+  return '';
+};
+
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(() => {
     return localStorage.getItem("user") ? true : false;
@@ -72,7 +80,7 @@ function App() {
   };
 
   return (
-    <Router>
+    <Router basename={getBasename()}>
       {isLoggedIn ? (
         <>
           <Navbar collapsed={sidebarCollapsed} />

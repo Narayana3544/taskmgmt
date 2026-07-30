@@ -30,6 +30,7 @@
 .sprint-table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
 }
 
 .sprint-table th,
@@ -37,16 +38,38 @@
   padding: 10px;
   border: 1px solid #ddd;
   text-align: left;
+  word-wrap: break-word;
+  word-break: break-word;
+  white-space: normal;
 }
 
 .sprint-table th {
   background-color: #2875e7;
   color: white;
+  white-space: nowrap !important;
 }
 
-/* Align last column to the right */
-td:last-child {
-  text-align: left;
+/* Sprint ID Column */
+.sprint-table th:first-child,
+.sprint-table td:first-child {
+  width: 80px !important;
+  white-space: nowrap !important;
+}
+
+/* Dates Columns (Start Date and End Date) */
+.sprint-table th:nth-child(3),
+.sprint-table td:nth-child(3),
+.sprint-table th:nth-child(4),
+.sprint-table td:nth-child(4) {
+  width: 110px !important;
+  white-space: nowrap !important;
+}
+
+/* Actions Column */
+.sprint-table th:last-child,
+.sprint-table td:last-child {
+  width: 130px !important;
+  white-space: nowrap !important;
 }
 
 /* --- Buttons --- */

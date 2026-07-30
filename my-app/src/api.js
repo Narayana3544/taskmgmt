@@ -3,8 +3,8 @@ import axios from "axios";
 // const baseURL = "http://192.168.14.191:8081/task-mgmt";
 // const baseURL = "http://192.168.14.191:8081";
 
-const baseURL = "http://192.168.14.109:8080/task-mgmt";
-// const baseURL="http://localhost:8080";
+// const baseURL = "http://192.168.14.109:8080/task-mgmt";
+const baseURL="http://localhost:8080";
 
 // const api = axios.create({
 //   baseURL: baseURL,  // include the context path
@@ -21,12 +21,10 @@ const api = axios.create({
   },
   withCredentials: true, // important if you're using session cookies
 });
-
 // Create a small popup dynamically when session expires
 function showSessionPopup() {
   // Prevent showing multiple times
   if (document.getElementById("session-expired-popup")) return;
-
   const overlay = document.createElement("div");
   overlay.id = "session-expired-popup";
   overlay.style = `
@@ -39,7 +37,6 @@ function showSessionPopup() {
     justify-content: center;
     z-index: 9999;
   `;
-
   const box = document.createElement("div");
   box.style = `
     background: white;
@@ -85,7 +82,6 @@ api.interceptors.response.use(
 
     if (error.response) {
       const status = error.response.status;
-
       if (!isAuthEndpoint && (status === 401 || (status === 403 && url.includes("/user/profile")))) {
         // Trigger popup for session expiry on 401 Unauthorized or 403 on profile load
         showSessionPopup();

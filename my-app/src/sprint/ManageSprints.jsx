@@ -150,7 +150,11 @@ const ManageSprints = () => {
             onChange={handleProjectChange}
             isClearable
             placeholder="-- Select Project --"
-            styles={{ container: (base) => ({ ...base, minWidth: '200px' }) }}
+            menuPortalTarget={document.body}
+            styles={{ 
+              container: (base) => ({ ...base, minWidth: '200px' }),
+              menuPortal: base => ({ ...base, zIndex: 9999 })
+            }}
           />
 
           <StatusSummary 
@@ -210,7 +214,7 @@ const ManageSprints = () => {
                 <td>{sprint.startDate}</td>
                 <td>{sprint.endDate}</td>
                 <td>{sprint.feature?.name || "-"}</td>
-                <td title={sprint.sprintGoals}>{shortGoal}</td>
+                <td className="ellipsis-cell" title={sprint.sprintGoals}>{sprint.sprintGoals || "-"}</td>
 
                 <td>
                   <div className="action-buttons">

@@ -152,7 +152,8 @@ export default function BugForm() {
     }
 
     const formData = new FormData();
-    if (id) formData.append("taskId", id);
+    const taskToLink = id || selectedTaskId;
+    if (taskToLink) formData.append("taskId", taskToLink);
     if (selectedProject) formData.append("projectId", selectedProject);
     if (selectedFeature) formData.append("featureId", selectedFeature);
     
@@ -393,7 +394,7 @@ export default function BugForm() {
         <label>Attachments</label>
         <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
           <div style={{ flex: 1 }}>
-            <input type="file" multiple onChange={handleFileChange} style={{ padding: '4px' }} />
+            <input type="file" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv" onChange={handleFileChange} style={{ padding: '4px' }} />
           </div>
           <div style={{ flex: 1 }}>
             {files.length > 0 && (

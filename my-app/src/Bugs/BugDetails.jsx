@@ -29,7 +29,21 @@ export default function BugDetails() {
   return (
     <div className="task-form" style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '15px' }}>
 
-      {/* Row 1: Title · Status · Priority · Assigned To */}
+      {/* Row 1: Project · Feature · Sprint */}
+      <div className="form-group" style={{ gridColumn: 'span 4', marginBottom: 0 }}>
+        <label>Project Name</label>
+        <input type="text" readOnly value={bug.projectName || "-"} />
+      </div>
+      <div className="form-group" style={{ gridColumn: 'span 4', marginBottom: 0 }}>
+        <label>Feature Name</label>
+        <input type="text" readOnly value={bug.featureName || "-"} />
+      </div>
+      <div className="form-group" style={{ gridColumn: 'span 4', marginBottom: 0 }}>
+        <label>Sprint Name</label>
+        <input type="text" readOnly value={bug.sprintName || "-"} />
+      </div>
+
+      {/* Row 2: Bug Title · Status · Priority · Assigned To */}
       <div className="form-group" style={{ gridColumn: 'span 6', marginBottom: 0 }}>
         <label>Bug Title</label>
         <input type="text" readOnly value={`#${bug.id} - ${bug.title}`} style={{ fontWeight: 600 }} />
@@ -47,19 +61,19 @@ export default function BugDetails() {
         <input type="text" readOnly value={bug.assignee || bug.assignedUser || "-"} />
       </div>
 
-      {/* Row 2: Reporter */}
+      {/* Row 3: Reporter */}
       <div className="form-group" style={{ gridColumn: 'span 12', marginBottom: 0 }}>
-        <label>Reporter</label>
+        <label>Reported To (Optional)</label>
         <input type="text" readOnly value={bug.reporter || "-"} />
       </div>
 
-      {/* Row 3: Description */}
+      {/* Row 4: Description */}
       <div className="form-group" style={{ gridColumn: 'span 12', marginBottom: 0 }}>
         <label>Description</label>
         <textarea readOnly rows={3} style={{ padding: '8px', resize: 'none' }} value={bug.description || "-"} />
       </div>
 
-      {/* Row 4: Attachments */}
+      {/* Row 5: Attachments */}
       <div className="form-group" style={{ gridColumn: 'span 12', marginBottom: 0 }}>
         <label>Attachments</label>
         {bug.attachments && bug.attachments.length > 0 ? (
@@ -75,6 +89,26 @@ export default function BugDetails() {
           </div>
         ) : (
           <input type="text" readOnly value="No attachments" />
+        )}
+      </div>
+
+      {/* Row 6: Linked Task */}
+      <div className="form-group" style={{ gridColumn: 'span 12', marginBottom: 0 }}>
+        <label>Linked Task</label>
+        {bug.taskId ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <input type="text" readOnly value={`#${bug.taskId} - ${bug.taskTitle}`} style={{ flex: 1 }} />
+            <button
+              type="button"
+              className="btn-global btn-primary"
+              onClick={() => navigate(`/task/${bug.taskId}`)}
+              style={{ whiteSpace: 'nowrap' }}
+            >
+              View Task
+            </button>
+          </div>
+        ) : (
+          <input type="text" readOnly value="Not linked to any task" />
         )}
       </div>
 

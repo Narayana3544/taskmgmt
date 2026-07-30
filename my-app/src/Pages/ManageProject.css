@@ -84,3 +84,9 @@
   padding-left: 10px; /* small left padding for balance */
   float: left;
 }
+
+/* Ensure status name doesn't wrap in project view */
+.projects-table td .status,
+.projects-table td span {
+  white-space: nowrap !important;
+}

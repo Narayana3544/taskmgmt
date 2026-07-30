@@ -63,7 +63,7 @@ export default function ManageProjects() {
                 <tr key={project.id}>
                   <td>{project.id}</td>
                   <td>{project.name}</td>
-                  <td>{project.description}</td>
+                  <td className="ellipsis-cell" title={project.description}>{project.description}</td>
                   <td>
                     <span
                       className={`status ${

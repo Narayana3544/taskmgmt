@@ -41,12 +41,12 @@ const ViewSprintsByFeatureid = () => {
       <table className="sprint-table">
         <thead>
           <tr>
-            <th>Sprint ID</th>
-            <th>Name</th>
-            <th>Start Date</th>
-            <th>End Date</th>
-            <th>Feature Name</th>
-            <th>Actions</th>
+            <th style={{ width: '100px', whiteSpace: 'nowrap' }}>Sprint ID</th>
+            <th style={{ minWidth: '150px' }}>Name</th>
+            <th style={{ width: '110px', whiteSpace: 'nowrap' }}>Start Date</th>
+            <th style={{ width: '110px', whiteSpace: 'nowrap' }}>End Date</th>
+            <th style={{ minWidth: '150px' }}>Feature Name</th>
+            <th style={{ width: '90px', whiteSpace: 'nowrap' }}>Actions</th>
           </tr>
         </thead>
         <tbody>

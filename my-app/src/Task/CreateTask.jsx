@@ -412,7 +412,7 @@ export default function CreateTask() {
         <label>Attachments:</label>
         <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
           <div style={{ flex: 1 }}>
-            <input type="file" multiple onChange={e => {
+            <input type="file" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv" onChange={e => {
               const files = Array.from(e.target.files);
               setAttachmentFiles(prev => [...prev, ...files]);
               e.target.value = null; // reset input

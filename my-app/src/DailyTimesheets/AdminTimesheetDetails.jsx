@@ -118,6 +118,16 @@ export default function AdminTimesheetDetails() {
     }
   };
 
+  const isWeekend = (dateStr) => {
+    const day = new Date(dateStr).getDay();
+    return day === 0 || day === 6;
+  };
+
+  const isHoliday = (dateStr) => {
+    const holidays = ["2025-09-25", "2025-10-02"];
+    return holidays.includes(dateStr);
+  };
+
   const downloadExcel = () => {
     if (selectedDate) {
       if (dailyDetails.length === 0) {
@@ -159,10 +169,20 @@ export default function AdminTimesheetDetails() {
           alert("No data to download.");
           return;
         }
-        const data = entries.map(e => ({
-          Date: e.date,
-          "Total Hours": formatHours(e)
-        }));
+        const data = entries.map(e => {
+          const weekend = isWeekend(e.date);
+          const holiday = isHoliday(e.date);
+          let statusText = e.status || "-";
+          if (holiday && e.totalHours === 0) statusText = "Holiday";
+          else if (weekend && e.totalHours === 0) statusText = "Weekend";
+          else if (e.status === "Leave") statusText = "Leave";
+          else if (e.status === "Worked") statusText = "Worked";
+          return {
+            Date: e.date,
+            "Total Hours": formatHours(e),
+            Status: statusText
+          };
+        });
         const worksheet = XLSX.utils.json_to_sheet(data);
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "By Date");
@@ -224,34 +244,57 @@ export default function AdminTimesheetDetails() {
               <tr>
                 <th>Date</th>
                 <th>Total Hours</th>
+                <th>Status</th>
                 <th>Action</th>
               </tr>
             </thead>
             <tbody>
-              {entries.map((e, idx) => (
-                <tr key={idx}>
-                  <td>{e.date}</td>
-                  <td>{formatHours(e)}</td>
-                  <td>
-                    <div className="action-buttons">
-                      <div className="tooltip">
-                        <FaEye
-                          className="icon-btn view-icon"
-                          onClick={() => handleViewDay(e.date)}
-                        />
-                        <span className="tooltip-text">View</span>
+              {entries.map((e, idx) => {
+                const weekend = isWeekend(e.date);
+                const holiday = isHoliday(e.date);
+                let rowClass = "";
+                let statusText = e.status || "-";
+                
+                if (holiday && e.totalHours === 0) {
+                  rowClass = "holiday-row";
+                  statusText = "Holiday";
+                } else if (weekend && e.totalHours === 0) {
+                  rowClass = "weekend-row";
+                  statusText = "Weekend";
+                } else if (e.status === "Leave") {
+                  rowClass = "leave-row";
+                  statusText = "Leave";
+                } else if (e.status === "Worked") {
+                  rowClass = "worked-row";
+                  statusText = "Worked";
+                }
+
+                return (
+                  <tr key={idx} className={rowClass}>
+                    <td>{e.date}</td>
+                    <td>{formatHours(e)}</td>
+                    <td>{statusText}</td>
+                    <td>
+                      <div className="action-buttons">
+                        <div className="tooltip">
+                          <FaEye
+                            className="icon-btn view-icon"
+                            onClick={() => handleViewDay(e.date)}
+                          />
+                          <span className="tooltip-text">View</span>
+                        </div>
+                        <div className="tooltip">
+                          <FaEdit
+                            className="icon-btn edit-icon"
+                            onClick={() => navigate(`/timesheet/edit/${userId}/${e.date}?name=${encodeURIComponent(userName)}`)}
+                          />
+                          <span className="tooltip-text">Edit</span>
+                        </div>
                       </div>
-                      <div className="tooltip">
-                        <FaEdit
-                          className="icon-btn edit-icon"
-                          onClick={() => navigate(`/timesheet/edit/${userId}/${e.date}?name=${encodeURIComponent(userName)}`)}
-                        />
-                        <span className="tooltip-text">Edit</span>
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         ) : (
@@ -266,7 +309,7 @@ export default function AdminTimesheetDetails() {
             <tbody>
               {taskSummary.map((t, idx) => (
                 <tr key={idx}>
-                  <td style={{ maxWidth: '300px', whiteSpace: 'normal', wordWrap: 'break-word', overflowWrap: 'anywhere' }}>
+                  <td className="task-cell" style={{ maxWidth: '300px', whiteSpace: 'normal', wordWrap: 'break-word', overflowWrap: 'anywhere' }}>
                     {t.task ? `#${t.task.id} - ${t.task.userstory}` : "Unknown Task"}
                   </td>
                   <td>{formatMinutes(t.totalMinutes)}</td>
@@ -320,11 +363,11 @@ export default function AdminTimesheetDetails() {
                   <tr key={i}>
                     <td>{d.start_time || "-"}</td>
                     <td>{d.end_time || "-"}</td>
-                    <td style={{ maxWidth: '300px', whiteSpace: 'normal', wordWrap: 'break-word', overflowWrap: 'anywhere' }}>
+                    <td className="task-cell" style={{ maxWidth: '300px', whiteSpace: 'normal', wordWrap: 'break-word', overflowWrap: 'anywhere' }}>
                       {d.task?.userstory || "-"}
                     </td>
                     <td>{d.workType?.description || "-"}</td>
-                    <td>{d.description}</td>
+                    <td className="description-cell">{d.description}</td>
                     <td>
                       {["Official", "Time Off"].includes(d.workType?.description)
                         ? d.permissionGranted ? "Yes" : "No"
@@ -368,7 +411,7 @@ export default function AdminTimesheetDetails() {
                   <td>{d.start_time || "-"}</td>
                   <td>{d.end_time || "-"}</td>
                   <td>{d.workType?.description || "-"}</td>
-                  <td>{d.description}</td>
+                  <td className="description-cell">{d.description}</td>
                   <td>
                     {["Official", "Time Off"].includes(d.workType?.description)
                       ? d.permissionGranted ? "Yes" : "No"

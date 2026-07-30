@@ -33,3 +33,18 @@ export const sortAlphabetically = (users) => {
     return nameA.localeCompare(nameB, undefined, { sensitivity: "base" });
   });
 };
+
+const STATUS_ORDER = ["backlog", "to do", "to-do", "todo", "in progress", "inprogress", "progress", "fixed", "done", "completed", "closed", "resolved"];
+
+export const sortStatuses = (statusList) => {
+  if (!Array.isArray(statusList)) return [];
+  return [...statusList].sort((a, b) => {
+    const descA = (a.decription || a.description || a.name || '').trim().toLowerCase();
+    const descB = (b.decription || b.description || b.name || '').trim().toLowerCase();
+    let indexA = STATUS_ORDER.findIndex(o => descA.includes(o) || o.includes(descA));
+    let indexB = STATUS_ORDER.findIndex(o => descB.includes(o) || o.includes(descB));
+    if (indexA === -1) indexA = 99;
+    if (indexB === -1) indexB = 99;
+    return indexA - indexB;
+  });
+};

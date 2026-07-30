@@ -3,6 +3,7 @@ import api from '../api';
 import { useNavigate, useParams } from 'react-router-dom';
 import { FaEdit } from "react-icons/fa";
 import { sortLatestFirst } from "../utils/sortUtils";
+import "./FeatureList.css";
 
 const ViewFeaturesByProjectId = () => {
   const [features, setFeatures] = useState([]);
@@ -63,12 +64,10 @@ const ViewFeaturesByProjectId = () => {
         <table className="features-table">
           <thead>
             <tr>
-              <th>Feature ID</th>
-              {/* <th>Project Name</th> */}
-              <th>Feature Name</th>
+              <th style={{ width: '110px', whiteSpace: 'nowrap' }}>Feature ID</th>
+              <th style={{ minWidth: '150px' }}>Feature Name</th>
               <th>Description</th>
-              <th>Status</th>
-              {/* <th>Actions</th> */}
+              <th style={{ width: '130px', whiteSpace: 'nowrap' }}>Status</th>
             </tr>
           </thead>
           <tbody>

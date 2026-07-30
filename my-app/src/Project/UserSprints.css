@@ -40,7 +40,7 @@
 }
 
 .task-table th, .task-table td {
- padding: 10px;
+ padding: 8px 6px;
   border: 1px solid #ddd;
   text-align: left;
 }
@@ -48,6 +48,8 @@
 .task-table th {
   background-color: #2875e7;
   color: white;
+  white-space: nowrap;
+  font-size: 13px;
 }
 
 .btn {
@@ -150,12 +152,12 @@ padding: 6px 10px;
 
 .task-table th,
 .task-table td {
-  padding: 12px 10px;
+  padding: 8px 6px;
   text-align: left;
   border-bottom: 1px solid #eee;
 }
 .task-table td{
-  font-size: 14px;
+  font-size: 13px;
 }
 .pagination {
   display: flex;

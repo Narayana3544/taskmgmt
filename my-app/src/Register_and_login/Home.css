@@ -45,6 +45,11 @@
   margin-bottom: var(--spacing-md);
   border-bottom: 2px solid var(--border-color);
   padding-bottom: var(--spacing-sm);
+  position: sticky;
+  top: 0;
+  background-color: var(--bg-secondary);
+  z-index: 5;
+  margin-top: 0;
 }
 
 

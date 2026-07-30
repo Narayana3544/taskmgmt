@@ -152,15 +152,58 @@ public class BugService {
                 ))
                 .toList();
 
+        // Resolve Project, Feature, Sprint names
+        String projectName = null;
+        String featureName = null;
+        String sprintName = null;
+        createsprint sprint = null;
+        if (bug.getTask() != null && bug.getTask().getSprint() != null) {
+            sprint = bug.getTask().getSprint();
+        } else if (bug.getSprint() != null) {
+            sprint = bug.getSprint();
+        }
+        
+        if (sprint != null) {
+            sprintName = sprint.getName();
+            if (sprint.getFeature() != null) {
+                featureName = sprint.getFeature().getName();
+                if (sprint.getFeature().getProject() != null) {
+                    projectName = sprint.getFeature().getProject().getName();
+                }
+            }
+        }
+        
+        if (projectName == null && bug.getTask() != null && bug.getTask().getFeature() != null) {
+            featureName = bug.getTask().getFeature().getName();
+            if (bug.getTask().getFeature().getProject() != null) {
+                projectName = bug.getTask().getFeature().getProject().getName();
+            }
+        }
+
+        Integer taskId = null;
+        String taskTitle = null;
+        if (bug.getTask() != null) {
+            taskId = bug.getTask().getId();
+            taskTitle = bug.getTask().getUserstory();
+        }
+
         return new BugDTO(
                 bug.getId(),
                 bug.getTitle(),
                 bug.getDescription(),
-                bug.getStatus().getDecription(),
+                bug.getStatus() != null ? bug.getStatus().getDecription() : null,
                 bug.getReportedUser() != null ? bug.getReportedUser().getFirst_name() : "-",
                 bug.getAssignedUser() != null ? bug.getAssignedUser().getFirst_name() : "-",
-                bug.getPriority().getDescription(),
-                attachments
+                bug.getPriority() != null ? bug.getPriority().getDescription() : "-",
+                attachments,
+                projectName,
+                featureName,
+                sprintName,
+                taskId,
+                taskTitle,
+                bug.getStatus() != null ? bug.getStatus().getId() : null,
+                bug.getAssignedUser() != null ? bug.getAssignedUser().getId() : null,
+                bug.getPriority() != null ? bug.getPriority().getId() : null
         );
     }
 
@@ -180,6 +223,8 @@ public class BugService {
             int priorityId,
             Integer statusId,
             int assignedToId,
+            Integer sprintId,
+            Integer taskId,
             List<MultipartFile> attachments,
             int reporterId
     ) {
@@ -198,11 +243,23 @@ public class BugService {
         User reportedUser = userdetails.findById(reporterId)
                 .orElseThrow(() -> new RuntimeException("Reporter not found"));
 
+        createsprint sprintEntity = null;
+        if (sprintId != null) {
+            sprintEntity = sprintRepo.findById(sprintId).orElse(null);
+        }
+
+        task taskEntity = null;
+        if (taskId != null) {
+            taskEntity = taskRepository.findById(taskId).orElse(null);
+        }
+
         bug.setTitle(title);
         bug.setDescription(description);
         bug.setPriority(priority);
         bug.setStatus(status);
         bug.setAssignedUser(assignedUser);
+        bug.setSprint(sprintEntity);
+        bug.setTask(taskEntity);
 
         Bug updatedBug = repo.save(bug);
 
@@ -221,5 +278,12 @@ public class BugService {
             }
         }
         return updatedBug;
+    }
+
+    public Bug moveBugToSprint(int bugId, int sprintId) {
+        Bug bug = repo.findById(bugId).orElseThrow(() -> new RuntimeException("Bug not found"));
+        createsprint sprint = sprintRepo.findById(sprintId).orElseThrow(() -> new RuntimeException("Sprint not found"));
+        bug.setSprint(sprint);
+        return repo.save(bug);
     }
 }

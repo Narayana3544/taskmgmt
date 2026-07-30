@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
 import "./AdminRangeTimeSheet.css";
-import { FaEye, FaDownload } from "react-icons/fa";
+import { FaEye } from "react-icons/fa";
 
 export default function AdminRangeTimeSheet() {
   const [users, setUsers] = useState([]);
@@ -149,22 +149,7 @@ const formatHours = (entry) => {
             Fetch
           </button>
 
-          <button
-            className="icon-download-btn"
-            title="Download Excel"
-            style={{ padding: '6px 10px', marginLeft: '10px' }}
-            onClick={() => {
-              if (!selectedUser) {
-                alert("Please select a user to export data.");
-                return;
-              }
-              navigate("/timesheet-export", {
-                state: { userId: selectedUser, startDate, endDate },
-              });
-            }}
-          >
-            <FaDownload />
-          </button>
+
         </div>
       </div>
 

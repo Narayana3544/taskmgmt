@@ -64,6 +64,9 @@ const Home = () => {
         const myBugsRes = await api.get("/user/bugs", { withCredentials: true });
 
         let myTasks = myTasksRes.data || [];
+        if (!isAdmin && user) {
+          myTasks = myTasks.filter(t => t.user?.id === user.id);
+        }
         let myBugs = (myBugsRes.data || []).map((bug) => ({
           ...bug,
           type: "bug",
@@ -95,7 +98,7 @@ const Home = () => {
           if (statusStr.includes('backlog')) {
             // Tasks with 'Backlog' status belong in the Backlog column
             grouped.backlog.push(task);
-          } else if (statusStr.includes('todo') || statusStr.includes('open') || statusStr.includes('new') || statusStr.includes('assigned') || statusStr === '') {
+          } else if (statusStr.includes('todo') || statusStr.includes('to do') || statusStr.includes('to-do') || statusStr.includes('open') || statusStr.includes('new') || statusStr.includes('assigned') || statusStr === '') {
             grouped.todo.push(task);
           } else if (statusStr.includes('progress') || statusStr.includes('working') || statusStr === 'active') {
             grouped.inprogress.push(task);
@@ -164,22 +167,21 @@ const Home = () => {
   // ✅ Move to sprint
   const handleMoveSprint = (taskId, sprintId) => {
     if (!selectedTask) return;
-    if (selectedTask.type === "bug") {
-      alert("Bugs cannot be moved to another sprint directly via this menu currently.");
-      return;
-    }
+    const isBug = selectedTask.type === "bug";
+    const typeLabel = isBug ? "bug" : "task";
+    const url = isBug ? `/bugs/${taskId}/move/${sprintId}` : `/tasks/${taskId}/move/${sprintId}`;
 
-    if (!window.confirm("Are you sure you want to move this task to another sprint?")) return;
+    if (!window.confirm(`Are you sure you want to move this ${typeLabel} to another sprint?`)) return;
 
     api
-      .put(`/tasks/${taskId}/move/${sprintId}`, {}, { withCredentials: true })
+      .put(url, {}, { withCredentials: true })
       .then(() => {
-        alert("Task moved successfully!");
+        alert(`${isBug ? "Bug" : "Task"} moved successfully!`);
         window.location.reload();
       })
       .catch((err) => {
-        console.error("Error moving task:", err);
-        alert("Failed to move task.");
+        console.error(`Error moving ${typeLabel}:`, err);
+        alert(`Failed to move ${typeLabel}.`);
       });
   };
 
@@ -231,7 +233,7 @@ const Home = () => {
                     key={task.id}
                     style={{ minHeight: 'auto', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}
                   >
-                    <strong style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', margin: 0, fontSize: '13px' }}>
+                    <strong style={{ flex: 1, whiteSpace: 'normal', wordBreak: 'break-word', margin: 0, fontSize: '13px', lineHeight: '1.2' }}>
                       {task.type === "bug" && "🐞 "}#{task.id} - {task.userstory || task.title}
                     </strong>
 
@@ -314,36 +316,46 @@ const Home = () => {
               </button>
             </div>
 
-            {/* Move Sprint (Tasks Only) */}
-            {selectedTask.type !== "bug" && (
-              <div className="popup-section" style={{ marginTop: '20px', paddingTop: '15px', borderTop: '1px solid #eee' }}>
-                <label>Move to Sprint:</label>
-                <select
-                  value={selectedMoveSprintId}
-                  onChange={(e) => setSelectedMoveSprintId(e.target.value)}
-                >
-                  <option value="">-- Select Sprint --</option>
-                  {sprints
-                    .filter(s => s.id !== selectedTask.sprint?.id) // exclude current sprint
-                    .map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name} ({s.status || 'No status'})
-                    </option>
-                  ))}
-                </select>
-                <button
-                  className="status-btn"
-                  style={{ background: '#f59e0b', marginTop: '10px' }}
-                  disabled={!selectedMoveSprintId}
-                  onClick={() =>
-                    selectedMoveSprintId &&
-                    handleMoveSprint(selectedTask.id, selectedMoveSprintId)
-                  }
-                >
-                  Move Task
-                </button>
-              </div>
-            )}
+            {/* Move Sprint (Tasks and Bugs) */}
+            <div className="popup-section" style={{ marginTop: '20px', paddingTop: '15px', borderTop: '1px solid #eee' }}>
+              <label>Move to Sprint:</label>
+              <select
+                value={selectedMoveSprintId}
+                onChange={(e) => setSelectedMoveSprintId(e.target.value)}
+              >
+                <option value="">-- Select Sprint --</option>
+                {sprints
+                  .filter(s => s.id !== selectedTask.sprint?.id) // exclude current sprint
+                  .filter(s => {
+                    const status = (s.status || '').toLowerCase();
+                    return status !== 'completed' && status !== 'closed';
+                  })
+                  .filter(s => {
+                    const taskProjId = selectedTask.feature?.project?.id || selectedTask.task?.feature?.project?.id || selectedTask.sprint?.feature?.project?.id;
+                    const sprintProjId = s.feature?.project?.id;
+                    if (taskProjId && sprintProjId) {
+                      return taskProjId === sprintProjId;
+                    }
+                    return true;
+                  })
+                  .map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name} ({s.status || 'No status'})
+                  </option>
+                ))}
+              </select>
+              <button
+                className="status-btn"
+                style={{ background: '#f59e0b', marginTop: '10px' }}
+                disabled={!selectedMoveSprintId}
+                onClick={() =>
+                  selectedMoveSprintId &&
+                  handleMoveSprint(selectedTask.id, selectedMoveSprintId)
+                }
+              >
+                Move {selectedTask.type === "bug" ? "Bug" : "Task"}
+              </button>
+            </div>
           </div>
         </div>
       )}

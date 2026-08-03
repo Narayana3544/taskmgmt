@@ -53,8 +53,7 @@ public class TimeSheetService {
        }
        return false;
     }
-
-
+    
     public Timesheet saveEntry(Timesheet entry,Authentication authentication) {
 //        entry.setPermission_granted(true);
         LocalDate today = LocalDate.now();

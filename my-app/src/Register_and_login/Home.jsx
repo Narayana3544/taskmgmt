@@ -7,7 +7,7 @@ import { sortAlphabetically, sortLatestFirst } from "../utils/sortUtils";
 import { isTaskLocked, getLockedReason } from "../utils/lockUtils";
 
 const Home = () => {
-  const [tasks, setTasks] = useState({ backlog: [], todo: [], inprogress: [], done: [] });
+  const [tasks, setTasks] = useState({ backlog: [], todo: [], inprogress: [], reopen: [], fixed: [], done: [] });
   const [selectedTask, setSelectedTask] = useState(null);
   const [statuses, setStatuses] = useState([]);
   const [users, setUsers] = useState([]);
@@ -38,10 +38,9 @@ const Home = () => {
         setUserProfile(user);
         const isAdmin = user?.role?.description === "Admin";
 
-        // 1️⃣ Fetch Backlog Tasks (Only for Admin: Unassigned tasks from entire system)
+        // 1️⃣ Fetch Backlog Tasks (For all users: Unassigned tasks from entire system)
         let backlogItems = [];
-        if (isAdmin) {
-          try {
+        try {
             const [allTasksRes, allBugsRes] = await Promise.all([
               api.get("/view-tasks", { withCredentials: true }),
               api.get("/view-bugs", { withCredentials: true })
@@ -54,9 +53,8 @@ const Home = () => {
               const assigneeId = t.user?.id || t.assignedUser?.id;
               return !assigneeId; // Only unassigned tasks
             });
-          } catch (e) {
-            console.error("Error fetching backlog data:", e);
-          }
+        } catch (e) {
+          console.error("Error fetching backlog data:", e);
         }
 
         // 2️⃣ Fetch CURRENT USER'S tasks & bugs
@@ -80,7 +78,7 @@ const Home = () => {
         const myAllTasks = sortLatestFirst([...myTasks, ...myBugs]);
 
         // 4️⃣ Group by status
-        const grouped = { backlog: backlogItems, todo: [], inprogress: [], done: [] };
+        const grouped = { backlog: backlogItems, todo: [], inprogress: [], reopen: [], fixed: [], done: [] };
         
         myAllTasks.forEach((task) => {
           let statusStr = '';
@@ -98,10 +96,14 @@ const Home = () => {
           if (statusStr.includes('backlog')) {
             // Tasks with 'Backlog' status belong in the Backlog column
             grouped.backlog.push(task);
+          } else if (statusStr.includes('re open') || statusStr.includes('reopen') || statusStr.includes('re-open')) {
+            grouped.reopen.push(task);
           } else if (statusStr.includes('todo') || statusStr.includes('to do') || statusStr.includes('to-do') || statusStr.includes('open') || statusStr.includes('new') || statusStr.includes('assigned') || statusStr === '') {
             grouped.todo.push(task);
           } else if (statusStr.includes('progress') || statusStr.includes('working') || statusStr === 'active') {
             grouped.inprogress.push(task);
+          } else if (statusStr.includes('fixed')) {
+            grouped.fixed.push(task);
           } else if (statusStr.includes('done') || statusStr.includes('completed') || statusStr.includes('closed') || statusStr.includes('resolved')) {
             // ✅ Done: ONLY tasks from an Active Sprint (per role rules)
             if (isActiveSprint) {
@@ -119,7 +121,19 @@ const Home = () => {
           api.get("/users", { withCredentials: true }),
           api.get("/sprints", { withCredentials: true }) // fetch sprints for moving
         ]);
-        setStatuses(statusRes.data);
+        const getStatusOrderIndex = (s) => {
+          let statusStr = (s.decription || s.description || s.name || "").toLowerCase().trim();
+          if (statusStr.includes('re open') || statusStr.includes('reopen') || statusStr.includes('re-open')) return 4;
+          if (statusStr.includes('backlog')) return 0;
+          if (statusStr.includes('todo') || statusStr.includes('to do') || statusStr.includes('open') || statusStr.includes('new') || statusStr.includes('assigned')) return 1;
+          if (statusStr.includes('progress') || statusStr.includes('working') || statusStr === 'active') return 2;
+          if (statusStr.includes('fixed')) return 3;
+          if (statusStr.includes('done') || statusStr.includes('completed') || statusStr.includes('closed') || statusStr.includes('resolved')) return 5;
+          return 99;
+        };
+
+        const sortedStatuses = statusRes.data.sort((a, b) => getStatusOrderIndex(a) - getStatusOrderIndex(b));
+        setStatuses(sortedStatuses);
         setUsers(sortAlphabetically(usersRes.data));
         setSprints(sortLatestFirst(sprintsRes.data || []));
 
@@ -134,14 +148,16 @@ const Home = () => {
 
   const toColKey = (label) => {
     const key = (label || "").toLowerCase().replace(/\s/g, "");
-    return ["backlog", "todo", "inprogress", "done"].includes(key) ? key : "todo";
+    return ["backlog", "todo", "inprogress", "reopen", "fixed", "done"].includes(key) ? key : "todo";
   };
 
   // ✅ Popup open/close
   const openPopup = (task) => {
     setSelectedTask(task);
     setSelectedUserId(task.user?.id || task.assignedUser?.id || "");
-    setSelectedStatusId(task.taskStatus?.id || "");
+    // Pre-select the task's actual current status
+    const currentStatusId = task.taskStatus?.id || task.status?.id || "";
+    setSelectedStatusId(String(currentStatusId));
     setSelectedMoveSprintId("");
   };
 
@@ -186,7 +202,22 @@ const Home = () => {
   };
 
   const isAdmin = userProfile?.role?.description === "Admin";
-  const columnsToRender = isAdmin ? ["backlog", "todo", "inprogress", "done"] : ["todo", "inprogress", "done"];
+  const isDeveloper = userProfile?.role?.description === "Developer";
+  const columnsToRender = ["backlog", "todo", "inprogress", "fixed", "reopen", "done"];
+
+  // Filter statuses: Developers cannot see Re-Open or Done
+  const filteredStatuses = statuses.filter(s => {
+    // Always include the selected task's current status so it displays correctly
+    if (selectedTask && (s.id === selectedTask.taskStatus?.id || s.id === selectedTask.statusId || s.id === selectedTask.status?.id)) {
+      return true;
+    }
+    const name = (s.decription || s.description || s.name || '').toLowerCase().trim();
+    if (isDeveloper) {
+      if (name.includes('re open') || name.includes('reopen') || name.includes('re-open')) return false;
+      if (name.includes('done') || name.includes('completed') || name.includes('closed') || name.includes('resolved')) return false;
+    }
+    return true;
+  });
 
   // Helper to check if task is locked
   const isContainerClosed = selectedTask ? isTaskLocked(selectedTask) : false;
@@ -214,14 +245,16 @@ const Home = () => {
       <h2 className="board-title">Dashboard</h2>
 
       {/* ✅ Task Columns */}
-      <div className="columns" style={{ display: 'flex', gap: '15px' }}>
+      <div className="columns" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '15px' }}>
         {columnsToRender.map((colKey) => (
           <div className="column" key={colKey} style={{ flex: 1, minWidth: '250px' }}>
             <h3>
               {colKey === "backlog" && "📋 Backlog"}
               {colKey === "todo" && "📝 To Do"}
               {colKey === "inprogress" && "⏳ In Progress"}
-              {colKey === "done" && "✅ Done"}
+              {colKey === "reopen" && "🔄 Re-Open"}
+              {colKey === "fixed" && "✅ Fixed"}
+              {colKey === "done" && "🎉 Done"}
             </h3>
 
             {/* 🌀 Scrollable content container */}
@@ -231,23 +264,23 @@ const Home = () => {
                   <div
                     className={`task-card ${task.type === "bug" ? "bug-card" : ""}`}
                     key={task.id}
-                    style={{ minHeight: 'auto', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}
+                    style={{ justifyContent: 'space-between', gap: '4px' }}
                   >
-                    <strong style={{ flex: 1, whiteSpace: 'normal', wordBreak: 'break-word', margin: 0, fontSize: '13px', lineHeight: '1.2' }}>
+                    <strong style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', margin: 0, fontSize: '11px', lineHeight: '1.2' }}>
                       {task.type === "bug" && "🐞 "}#{task.id} - {task.userstory || task.title}
                     </strong>
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <div className="task-actions" style={{ display: 'flex', alignItems: 'center' }}>
+                      <div className="task-actions" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <button
                           className="arrow-btn"
                           onClick={() => navigate(task.type === "bug" ? `/bug/${task.id}` : `/task/${task.id}`)}
                           title="View"
                         >
-                          <FaEye size={16} />
+                          <FaEye size={20} />
                         </button>
                         <button
-                          className="arrow-btn"
+                          className="arrow-btn arrow-move-btn"
                           onClick={() => openPopup(task)}
                           title="Move or Update"
                         >
@@ -258,7 +291,7 @@ const Home = () => {
                   </div>
                 ))
               ) : (
-                <p style={{ color: "#aaa", fontSize: "0.9rem", textAlign: "center", marginTop: "20px" }}>
+                <p style={{ color: "#aaa", fontSize: "10px", textAlign: "center", margin: "4px 0" }}>
                   No tasks here
                 </p>
               )}
@@ -278,8 +311,8 @@ const Home = () => {
             
             {/* Status alerts */}
             {selectedTask.sprint?.status && (
-              <p style={{ fontSize: '12px', color: '#555', margin: '0 0 15px 0' }}>
-                Sprint: <strong>{selectedTask.sprint.name} ({selectedTask.sprint.status})</strong>
+              <p style={{ fontSize: '12px', color: '#fff', margin: '0 0 15px 0' }}>
+                Sprint: {selectedTask.sprint.name} ({selectedTask.sprint.status})
               </p>
             )}
 
@@ -296,24 +329,27 @@ const Home = () => {
                 value={selectedStatusId}
                 onChange={(e) => setSelectedStatusId(e.target.value)}
               >
-                <option value="">-- Select Status --</option>
-                {statuses.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.decription}
+                {filteredStatuses.map((s) => (
+                  <option key={s.id} value={String(s.id)}>
+                    {s.decription || s.description || s.name}
                   </option>
                 ))}
               </select>
-              <button
-                className="status-btn"
-                disabled={!selectedStatusId}
-                style={{ cursor: !selectedStatusId ? 'not-allowed' : 'pointer' }}
-                onClick={() =>
-                  selectedStatusId &&
-                  handleStatusChange(selectedTask.id, selectedStatusId)
-                }
-              >
-                Change Status
-              </button>
+              {/* Enable only when a DIFFERENT status has been chosen */}
+              {(() => {
+                const originalStatusId = String(selectedTask.taskStatus?.id || selectedTask.status?.id || "");
+                const isDifferent = selectedStatusId && selectedStatusId !== originalStatusId;
+                return (
+                  <button
+                    className="status-btn"
+                    disabled={!isDifferent}
+                    style={{ cursor: !isDifferent ? 'not-allowed' : 'pointer', opacity: !isDifferent ? 0.5 : 1 }}
+                    onClick={() => isDifferent && handleStatusChange(selectedTask.id, selectedStatusId)}
+                  >
+                    Change Status
+                  </button>
+                );
+              })()}
             </div>
 
             {/* Move Sprint (Tasks and Bugs) */}
@@ -355,6 +391,15 @@ const Home = () => {
               >
                 Move {selectedTask.type === "bug" ? "Bug" : "Task"}
               </button>
+              {/* Show selected sprint name below the button */}
+              {selectedMoveSprintId && (() => {
+                const chosen = sprints.find(s => String(s.id) === String(selectedMoveSprintId));
+                return chosen ? (
+                  <p style={{ margin: '8px 0 0 0', fontSize: '12px', color: '#fff' }}>
+                    Moving to: {chosen.name} ({chosen.status || 'No status'})
+                  </p>
+                ) : null;
+              })()}
             </div>
           </div>
         </div>

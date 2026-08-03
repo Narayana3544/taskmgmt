@@ -38,7 +38,14 @@ const STATUS_ORDER = ["backlog", "to do", "to-do", "todo", "in progress", "inpro
 
 export const sortStatuses = (statusList) => {
   if (!Array.isArray(statusList)) return [];
-  return [...statusList].sort((a, b) => {
+  
+  // Filter out non-task statuses like "Enable" or "Disable"
+  const filteredList = statusList.filter(status => {
+    const desc = (status.decription || status.description || status.name || '').trim().toLowerCase();
+    return desc !== 'enable' && desc !== 'disable';
+  });
+
+  return filteredList.sort((a, b) => {
     const descA = (a.decription || a.description || a.name || '').trim().toLowerCase();
     const descB = (b.decription || b.description || b.name || '').trim().toLowerCase();
     let indexA = STATUS_ORDER.findIndex(o => descA.includes(o) || o.includes(descA));

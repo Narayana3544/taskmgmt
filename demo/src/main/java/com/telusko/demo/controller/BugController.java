@@ -49,11 +49,12 @@ public class BugController {
             @RequestParam(required = false) Integer complexity,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate targetDate,
             @RequestParam(value = "attachments", required = false) List<MultipartFile> attachments,
+            @RequestParam(value = "reporterId", required = false) Integer reporterIdReq,
             @AuthenticationPrincipal CustomUserDetails userDetails
     )
 
     {
-        int reporterId = userDetails.getUser().getId();
+        int reporterId = (reporterIdReq != null) ? reporterIdReq : userDetails.getUser().getId();
         Bug createdBug = bugService.createBug(
                 taskId,
                 title,
@@ -179,9 +180,10 @@ public class BugController {
             @RequestParam(required = false) Integer sprintId,
             @RequestParam(required = false) Integer taskId,
             @RequestParam(value = "attachments", required = false) List<MultipartFile> attachments,
+            @RequestParam(value = "reporterId", required = false) Integer reporterIdReq,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        int reporterId = userDetails.getUser().getId();
+        int reporterId = (reporterIdReq != null) ? reporterIdReq : userDetails.getUser().getId();
         Bug updatedBug = bugService.updateBug(
                 id,
                 title,

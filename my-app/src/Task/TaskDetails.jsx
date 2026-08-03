@@ -209,17 +209,17 @@ export default function TaskDetails() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
             {task.attachments && task.attachments.length > 0 ? (
               task.attachments.map((att) => (
-                <div key={att.id} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: '13px' }}>📎 {att.attachmentName}</span>
-                  <button onClick={() => downloadFile(task.id, att.id, att.attachmentName, att.attachmentType)} className="btn-global btn-primary" style={{ padding: '3px 10px', fontSize: '12px' }}>
+                <div key={att.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+                  <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '13px' }}>📎 {att.attachmentName}</span>
+                  <button onClick={() => downloadFile(task.id, att.id, att.attachmentName, att.attachmentType)} className="btn-global btn-primary" style={{ flexShrink: 0, padding: '3px 10px', fontSize: '12px', whiteSpace: 'nowrap' }}>
                     Download
                   </button>
                 </div>
               ))
             ) : (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '13px' }}>📎 {task.attachmentName || task.attachment_name || "Attached File"}</span>
-                <button onClick={() => downloadFile(task.id)} className="btn-global btn-primary" style={{ padding: '3px 10px', fontSize: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+                <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '13px' }}>📎 {task.attachmentName || task.attachment_name || "Attached File"}</span>
+                <button onClick={() => downloadFile(task.id)} className="btn-global btn-primary" style={{ flexShrink: 0, padding: '3px 10px', fontSize: '12px', whiteSpace: 'nowrap' }}>
                   Download
                 </button>
               </div>

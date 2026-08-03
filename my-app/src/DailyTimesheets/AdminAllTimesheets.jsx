@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import api from "../api";
-import { FaEye } from "react-icons/fa";
+import { FaEye, FaDownload } from "react-icons/fa";
+import * as XLSX from "xlsx";
 import "./AdminAllTimesheet.css";
 
 export default function AdminAllTimesheets() {
@@ -47,30 +48,36 @@ export default function AdminAllTimesheets() {
   const handleViewUser = (userId, username) => {
     navigate(`/admin/timesheet-details/${userId}?start=${start}&end=${end}&name=${encodeURIComponent(username || '')}`);
   };
-
-
   const formatHours = (entry) => {
-
     if (entry?.totalHoursAndMinutes) return entry.totalHoursAndMinutes;
-
     const th = entry?.totalHours;
-
     if (th === null || th === undefined || Number.isNaN(Number(th))) return "-";
-
-    const totalMinutes = Math.round(Number(th) * 60);
-
+   const totalMinutes = Math.round(Number(th) * 60);
     const hoursPart = Math.floor(totalMinutes / 60);
     const minutesPart = Math.abs(totalMinutes % 60);
-
     return `${hoursPart}h ${String(minutesPart).padStart(2, "0")}m`;
 
+  };
+
+  const downloadExcel = () => {
+    if (summaries.length === 0) {
+      alert("No data to download.");
+      return;
+    }
+    const data = summaries.map((s) => ({
+      User: s.username,
+      "Days Filled": s.daysFilled
+    }));
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Overview");
+    XLSX.writeFile(workbook, `Timesheet_Overview_${start}_to_${end}.xlsx`);
   };
 
   return (
     <div className="admin-all-container">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-        <h2 style={{ margin: 0 }}>Admin Timesheet Overview</h2>
-        
+        <h2 style={{ margin: 0 }}>Admin Timesheet Overview</h2>     
         <div style={{ display: 'flex', gap: '15px', alignItems: 'center', flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
             <label style={{ margin: 0, fontWeight: 'bold' }}>Start:</label>
@@ -81,7 +88,6 @@ export default function AdminAllTimesheets() {
               style={{ padding: '6px', borderRadius: '4px', border: '1px solid #ccc' }}
             />
           </div>
-
           <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
             <label style={{ margin: 0, fontWeight: 'bold' }}>End:</label>
             <input
@@ -92,63 +98,41 @@ export default function AdminAllTimesheets() {
               style={{ padding: '6px', borderRadius: '4px', border: '1px solid #ccc' }}
             />
           </div>
-
           <button className="btn-global btn-primary" onClick={() => fetchSummary(start, end)} style={{ padding: '6px 12px' }}>Search</button>
+          <button className="icon-download-btn" onClick={downloadExcel} title="Download Excel" style={{ padding: '6px 10px' }}>
+            <FaDownload />
+          </button>
         </div>
       </div>
-
       {loading ? (
-
         <p>Loading...</p>
 
       ) : (
-
         <table className="summary-table">
-
           <thead>
-
             <tr>
               <th>User</th>
               <th>Days Filled</th>
               <th>Actions</th>
             </tr>
-
           </thead>
-
           <tbody>
-
             {summaries.map((s) => (
-
               <tr key={s.userId}>
-
                 <td>{s.username}</td>
-
                 <td>{s.daysFilled}</td>
-
                 <td className="actions-cell">
-
                   <FaEye
                     title="View Range Summary"
                     className="view-icon"
                     onClick={() => handleViewUser(s.userId, s.username)}
                   />
-
-
-
                 </td>
-
               </tr>
-
             ))}
-
           </tbody>
-
         </table>
-
       )}
-
     </div>
-
   );
-
 }

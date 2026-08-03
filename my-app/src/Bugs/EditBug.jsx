@@ -21,7 +21,7 @@ export default function BugForm() {
   const [sprintName, setSprintName] = useState("");
   const [taskId, setTaskId] = useState(null);
   const [taskTitle, setTaskTitle] = useState("");
-  const [reporterName, setReporterName] = useState("");
+  const [reporterId, setReporterId] = useState("");
 
   const [projects, setProjects] = useState([]);
   const [selectedProject, setSelectedProject] = useState("");
@@ -37,7 +37,7 @@ export default function BugForm() {
   const [statuses, setStatuses] = useState([]);
 
   const [files, setFiles] = useState([]);
-  const [uploadProgress, setUploadProgress] = useState({}); 
+  const [uploadProgress, setUploadProgress] = useState({});
 
   // Fetch dropdowns
   useEffect(() => {
@@ -80,7 +80,9 @@ export default function BugForm() {
         setSprintName(bug.sprintName || "");
         setTaskId(bug.taskId || null);
         setTaskTitle(bug.taskTitle || "");
-        setReporterName(bug.reporter || "");
+        // Use the already fetched devs to find the reporter ID
+        const matchedReporter = devs.find(d => (d.first_name || d.name || d.username) === bug.reporter);
+        setReporterId(matchedReporter ? matchedReporter.id : "");
 
         // Load projects first
         const projRes = await api.get("/projects", { withCredentials: true });
@@ -108,10 +110,10 @@ export default function BugForm() {
           setSelectedFeature(featId);
         }
 
-        // Fetch sprints if project is known
+        // Fetch sprints if feature is known
         let spId = "";
-        if (projId) {
-          const sprintRes = await api.get(`/project/activeSprints/${projId}`, { withCredentials: true });
+        if (featId) {
+          const sprintRes = await api.get(`/features/${featId}/sprints`, { withCredentials: true });
           const allSprints = sprintRes.data || [];
           setSprints(allSprints);
           if (bug.sprintName) {
@@ -138,7 +140,8 @@ export default function BugForm() {
           selectedProject: projId || "",
           selectedFeature: featId || "",
           sprintId: spId || "",
-          selectedTaskId: bugTaskId || ""
+          selectedTaskId: bugTaskId || "",
+          reporterId: matchedReporter ? matchedReporter.id : ""
         });
 
         if (bug.attachments && bug.attachments.length > 0) {
@@ -161,7 +164,8 @@ export default function BugForm() {
           const activeFeatures = res.data.filter(f => 
             f.status?.decription !== "Completed" && 
             f.status?.decription !== "DONE" &&
-            f.status?.decription !== "Completed "
+            f.status?.decription !== "Completed " ||
+            (initialData.selectedFeature && f.id === parseInt(initialData.selectedFeature))
           );
           setFeatures(activeFeatures);
         })
@@ -171,28 +175,32 @@ export default function BugForm() {
     }
   }, [selectedProject, initialData]);
 
-  // Fetch active sprints based on project and feature
+  // Fetch sprints when feature changes
   useEffect(() => {
-    if (initialData && selectedProject) {
-      api.get(`/project/activeSprints/${selectedProject}`, { withCredentials: true })
+    if (initialData && selectedFeature) {
+      api.get(`/features/${selectedFeature}/sprints`, { withCredentials: true })
         .then(res => {
-          let activeSprints = res.data || [];
-          if (selectedFeature) {
-             activeSprints = activeSprints.filter(s => s.feature?.id === parseInt(selectedFeature));
-          }
-          setSprints(activeSprints);
+          setSprints(res.data || []);
         })
         .catch(err => console.error("Error fetching sprints:", err));
-    } else if (initialData && !selectedProject) {
+    } else if (initialData && !selectedFeature) {
       setSprints([]);
     }
-  }, [selectedProject, selectedFeature, initialData]);
+  }, [selectedFeature, initialData]);
 
   // File handlers
+  const MAX_FILE_SIZE_MB = 50;
   const handleFileChange = (e) => {
     const selected = Array.from(e.target.files);
-    setFiles((prev) => [...prev, ...selected]);
-    setUploadProgress({});
+    const oversized = selected.filter(f => f.size > MAX_FILE_SIZE_MB * 1024 * 1024);
+    const valid = selected.filter(f => f.size <= MAX_FILE_SIZE_MB * 1024 * 1024);
+    if (oversized.length > 0) {
+      alert(`The following file(s) exceed the ${MAX_FILE_SIZE_MB}MB limit and were not added:\n${oversized.map(f => f.name).join("\n")}`);
+    }
+    if (valid.length > 0) {
+      setFiles((prev) => [...prev, ...valid]);
+      setUploadProgress({});
+    }
   };
 
   const handleRemoveFile = (index) => {
@@ -218,6 +226,10 @@ export default function BugForm() {
       return alert("Please fill all required fields (Title, Description).");
     }
 
+    if (assignedTo && reporterId && String(assignedTo) === String(reporterId)) {
+      return alert("Assign To and Reported To must be different users.");
+    }
+
     const formData = new FormData();
     formData.append("title", title);
     formData.append("description", description);
@@ -229,6 +241,9 @@ export default function BugForm() {
     }
     if (selectedTaskId) {
       formData.append("taskId", selectedTaskId);
+    }
+    if (reporterId) {
+      formData.append("reporterId", reporterId);
     }
 
     files.forEach((file) => {
@@ -270,6 +285,7 @@ export default function BugForm() {
     String(selectedFeature) !== String(initialData.selectedFeature) ||
     String(sprintId) !== String(initialData.sprintId) ||
     String(selectedTaskId) !== String(initialData.selectedTaskId) ||
+    String(reporterId) !== String(initialData.reporterId) ||
     files.length > 0
   );
 
@@ -279,21 +295,25 @@ export default function BugForm() {
       {/* Project · Feature · Sprint */}
       <div className="form-group" style={{ gridColumn: 'span 4', marginBottom: 0 }}>
         <label>Project Name</label>
-        <select value={selectedProject} onChange={(e) => { setSelectedProject(e.target.value); setSelectedFeature(""); setSprintId(""); setSelectedTaskId(""); }}>
+        <select 
+          value={selectedProject} 
+          disabled
+          style={{ background: '#f5f5f5', cursor: 'not-allowed' }}
+        >
           <option value="">-- Select Project --</option>
           {projects.map((p) => (<option key={p.id} value={p.id}>{p.name}</option>))}
         </select>
       </div>
       <div className="form-group" style={{ gridColumn: 'span 4', marginBottom: 0 }}>
-        <label>Feature Name</label>
-        <select value={selectedFeature} onChange={(e) => { setSelectedFeature(e.target.value); setSprintId(""); setSelectedTaskId(""); }}>
+        <label>Feature Name<sup style={{color:'red'}}>*</sup></label>
+        <select value={selectedFeature} onChange={(e) => { setSelectedFeature(e.target.value); setSprintId(""); setSelectedTaskId(""); }} required>
           <option value="">-- Select Feature --</option>
           {features.map((f) => (<option key={f.id} value={f.id}>{f.name}</option>))}
         </select>
       </div>
       <div className="form-group" style={{ gridColumn: 'span 4', marginBottom: 0 }}>
-        <label>Sprint Name</label>
-        <select value={sprintId} onChange={(e) => { setSprintId(e.target.value); setSelectedTaskId(""); }}>
+        <label>Sprint Name<sup style={{color:'red'}}>*</sup></label>
+        <select value={sprintId} onChange={(e) => { setSprintId(e.target.value); setSelectedTaskId(""); }} required>
           <option value="">-- Select Sprint --</option>
           {sprints.map((s) => (<option key={s.id} value={s.id}>{s.name}</option>))}
         </select>
@@ -325,17 +345,24 @@ export default function BugForm() {
 
       {/* Assigned To */}
       <div className="form-group" style={{ gridColumn: 'span 6', marginBottom: 0 }}>
-        <label>Assign To</label>
-        <select value={assignedTo} onChange={(e) => setAssignedTo(e.target.value)}>
+        <label>Assign To<sup style={{color:'red'}}>*</sup></label>
+        <select value={assignedTo} onChange={(e) => setAssignedTo(e.target.value)} required>
           <option value="">-- Select Developer --</option>
-          {developers.map((d) => (<option key={d.id} value={d.id}>{d.first_name || d.name || d.username}</option>))}
+          {developers.map((d) => (<option key={d.id} value={d.id} disabled={String(d.id) === String(reporterId)}>{d.first_name || d.name || d.username}</option>))}
         </select>
       </div>
 
-      {/* Reported To (Optional) */}
+      {/* Reported To*/}
       <div className="form-group" style={{ gridColumn: 'span 6', marginBottom: 0 }}>
-        <label>Reported To (Optional)</label>
-        <input type="text" readOnly value={reporterName || "-"} style={{ background: '#f5f5f5', cursor: 'not-allowed' }} />
+        <label>Reported To </label>
+        <select value={reporterId} onChange={(e) => setReporterId(e.target.value)}>
+          <option value="">-- Select User --</option>
+          {developers.map((d) => (
+            <option key={d.id} value={d.id} disabled={String(d.id) === String(assignedTo)}>
+              {d.first_name || d.name || d.username}
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* Description */}
@@ -399,7 +426,7 @@ export default function BugForm() {
             <input type="text" readOnly value={`#${selectedTaskId} - ${tasks.find(t => t.id === parseInt(selectedTaskId))?.userstory || taskTitle}`} style={{ flex: 1, background: '#f5f5f5', cursor: 'not-allowed' }} />
             <button
               type="button"
-              onClick={() => { setSelectedTaskId(""); setTaskTitle(""); }}
+              onClick={() => { if (window.confirm("Are you sure you want to remove this task?")) { setSelectedTaskId(""); setTaskTitle(""); } }}
               style={{
                 border: "none",
                 background: "#fee2e2",
@@ -446,7 +473,7 @@ export default function BugForm() {
                 return true;
               })
               .map(t => (
-                <option key={t.id} value={t.id}>#{t.id} - {t.userstory || "Untitled Task"}</option>
+                <option key={t.id} value={t.id}>#{t.id} - {t.userstory || "Untitled Task"} ({t.taskStatus?.decription || t.taskStatus?.description || t.taskStatus?.name || "No Status"})</option>
               ))
             }
           </select>
@@ -458,6 +485,8 @@ export default function BugForm() {
         <button type="submit" className="btn-global btn-primary" disabled={!hasChanges} style={{ opacity: !hasChanges ? 0.6 : 1, cursor: !hasChanges ? 'not-allowed' : 'pointer' }}>Update Bug</button>
       </div>
       </form>
+
+
     </div>
   );
 }

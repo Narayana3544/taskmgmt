@@ -82,13 +82,17 @@ const getTaskBucket = (task) => {
   // Unassigned tasks (without an explicit non-backlog status) also go to backlog
   if (isUnassigned) return 'backlog';
 
+  if (s.includes('re open') || s.includes('reopen') || s.includes('re-open')) return 'reopen';
+
   if (s === '' || s.includes('todo') || s.includes('to do') || s.includes('open') ||
       s.includes('new') || s.includes('assigned')) return 'todo';
   if (s.includes('in progress') || s.includes('inprogress') || s.includes('progress') ||
       s.includes('working') || s.includes('started')) return 'inProgress';
   if (s.includes('done') || s.includes('completed') || s.includes('closed') ||
-      s.includes('resolved') || s.includes('fixed'))
+      s.includes('resolved'))
     return isActiveSprint(task) ? 'done' : null;
+  if (s.includes('fixed'))
+    return 'fixed';
   return null;
 };
 
@@ -218,15 +222,17 @@ const Dashboard = () => {
   }, [sprints, selectedProject]);
 
   const taskBuckets = React.useMemo(() => {
-    let backlog = 0, todo = 0, inProgress = 0, done = 0;
+    let backlog = 0, todo = 0, inProgress = 0, reopen = 0, fixed = 0, done = 0;
     filteredTasks.forEach(task => {
       const bucket = getTaskBucket(task);
       if (bucket === 'backlog')         backlog++;
       else if (bucket === 'todo')       todo++;
       else if (bucket === 'inProgress') inProgress++;
+      else if (bucket === 'reopen')     reopen++;
+      else if (bucket === 'fixed')      fixed++;
       else if (bucket === 'done')       done++;
     });
-    return { backlog, todo, inProgress, done };
+    return { backlog, todo, inProgress, reopen, fixed, done };
   }, [filteredTasks]);
 
   const pieData = React.useMemo(() => {
@@ -243,7 +249,9 @@ const Dashboard = () => {
       { name: 'Backlog',     count: taskBuckets.backlog,    fill: '#7c3aed' },
       { name: 'To Do',       count: taskBuckets.todo,       fill: '#ea580c' },
       { name: 'In Progress', count: taskBuckets.inProgress, fill: '#0055ff' },
-      { name: 'Done',        count: taskBuckets.done,       fill: '#16a34a' },
+      { name: 'Re-Open',     count: taskBuckets.reopen,     fill: '#f59e0b' },
+      { name: 'Fixed',       count: taskBuckets.fixed,      fill: '#16a34a' },
+      { name: 'Done',        count: taskBuckets.done,       fill: '#059669' },
     ];
   }, [taskBuckets]);
 
@@ -333,38 +341,7 @@ const Dashboard = () => {
         </select>
       </div>
 
-      {/* Active Sprints of Selected Project */}
-      <div className="dash-section-label">Active Sprints</div>
-      <div className="dash-active-sprints-row" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '15px', marginBottom: '20px' }}>
-        {activeSprints.length === 0 ? (
-          <div style={{ gridColumn: '1 / -1', background: '#1e293b', border: '1px dashed #334155', color: '#94a3b8', padding: '16px', borderRadius: '8px', textAlign: 'center', fontSize: '0.9rem' }}>
-            No active sprints found for the selected project filter.
-          </div>
-        ) : (
-          activeSprints.map(sprint => (
-            <div key={sprint.id} className="dash-stat-card" style={{
-              background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
-              border: '2px solid #16a34a',
-              boxShadow: '0 0 15px rgba(22, 163, 74, 0.25)',
-              padding: '15px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '5px'
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ color: '#fff', fontWeight: 700, fontSize: '0.95rem' }}>{sprint.name}</span>
-                <span className="dash-badge dash-badge-inprogress">Active</span>
-              </div>
-              <div style={{ color: '#94a3b8', fontSize: '0.82rem' }}>
-                Feature: <strong style={{ color: '#e2e8f0' }}>{sprint.feature?.name || '—'}</strong>
-              </div>
-              <div style={{ color: '#94a3b8', fontSize: '0.82rem' }}>
-                Dates: <strong style={{ color: '#e2e8f0' }}>{sprint.startDate || '—'}</strong> to <strong style={{ color: '#e2e8f0' }}>{sprint.endDate || '—'}</strong>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
+
 
       {/* ── Overview Cards ─────────────────────────────────── */}
       <div className="dash-section-label">Overview</div>
@@ -381,17 +358,18 @@ const Dashboard = () => {
 
       {/* ── Task Status Cards ───────────────────────────────── */}
       <div className="dash-section-label">Task Status Breakdown</div>
-      <div className="dash-stats-row">
+      <div className="dash-stats-row task-status-row">
         <StatCard cardKey="backlog"    label="Backlog"     value={taskBuckets.backlog}    sublabel="Unassigned tasks" />
         <StatCard cardKey="todo"       label="To Do"       value={taskBuckets.todo}       sublabel="Assigned, not started" />
         <StatCard cardKey="inProgress" label="In Progress" value={taskBuckets.inProgress} sublabel="Currently active" />
+        <StatCard cardKey="reopen"     label="Re-Open"     value={taskBuckets.reopen}     sublabel="Reopened tasks" />
+        <StatCard cardKey="fixed"      label="Fixed"       value={taskBuckets.fixed}      sublabel="Completed tasks" />
         <StatCard cardKey="done"       label="Done"        value={taskBuckets.done}       sublabel="Active sprint only" />
       </div>
 
       {/* ── Charts ─────────────────────────────────────────── */}
       <div className="dash-section-label dark-label">Analytics</div>
       <div className="dash-charts-row">
-
         <div className="dash-chart-box">
           <h4 className="dash-chart-title">Task Count by Status</h4>
           <ResponsiveContainer width="100%" height={240}>
@@ -408,7 +386,6 @@ const Dashboard = () => {
             </BarChart>
           </ResponsiveContainer>
         </div>
-
         <div className="dash-chart-box">
           <h4 className="dash-chart-title">Tasks by Status (All)</h4>
           {pieData.length === 0 ? (
@@ -447,9 +424,8 @@ const Dashboard = () => {
             </ResponsiveContainer>
           )}
         </div>
-
-      </div>
-
+      </div>  
+         
       {/* ── Recent Tasks Table ──────────────────────────────── */}
       {recentTasks.length > 0 && (
         <>

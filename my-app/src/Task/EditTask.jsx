@@ -159,8 +159,12 @@ export default function EditTask() {
   };
 
   // Handle update
-const handleSubmit = async (e) => {
+  const handleSubmit = async (e) => {
   e.preventDefault();
+
+  if (selectedUser && reportedTo && String(selectedUser) === String(reportedTo)) {
+    return alert("Assign To and Reported To must be different users.");
+  }
 
   // Construct the task object as your backend entity expects
   const taskData = {
@@ -446,7 +450,7 @@ const handleSubmit = async (e) => {
         >
           <option value="">-- Select User --</option>
           {users.map((u) => (
-            <option key={u.id} value={u.id}>
+            <option key={u.id} value={u.id} disabled={String(u.id) === String(reportedTo)}>
               {u.first_name}
             </option>
           ))}
@@ -461,7 +465,7 @@ const handleSubmit = async (e) => {
         >
           <option value="">-- Select Manager --</option>
           {managers.map((m) => (
-            <option key={m.id} value={m.id}>
+            <option key={m.id} value={m.id} disabled={String(m.id) === String(selectedUser)}>
               {m.preffered_name}
             </option>
           ))}
@@ -483,17 +487,17 @@ const handleSubmit = async (e) => {
       {attachmentFlag === "Yes" && existingAttachments.length > 0 ? (
         <div className="form-group" style={{ gridColumn: 'span 4', marginBottom: 0 }}>
           <label>Existing Attachments</label>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             {existingAttachments.map((att, index) => (
-              <div key={index} className="attachment-file" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'white', padding: '4px 10px', borderRadius: '4px', border: '1px solid #ccc' }}>
-                <span>📎 {att.attachmentName || att.attachment_name}</span>
+              <div key={index} className="attachment-file" style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'white', padding: '4px 8px', borderRadius: '4px', border: '1px solid #ccc', minWidth: 0 }}>
+                <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '13px' }}>📎 {att.attachmentName || att.attachment_name}</span>
                 <button
                   type="button"
                   onClick={() => handleDeleteExistingAttachment(att.id)}
-                  style={{ background: 'none', border: 'none', color: 'red', cursor: 'pointer', fontWeight: 'bold', marginLeft: '5px' }}
+                  style={{ flexShrink: 0, background: 'none', border: 'none', color: 'red', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px', lineHeight: 1, padding: '0 2px' }}
                   title="Delete attachment"
                 >
-                  X
+                  ✕
                 </button>
               </div>
             ))}

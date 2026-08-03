@@ -43,30 +43,31 @@ export default function BugDetails() {
         <input type="text" readOnly value={bug.sprintName || "-"} />
       </div>
 
-      {/* Row 2: Bug Title · Status · Priority · Assigned To */}
+      {/* Row 2: Bug Title · Status · Priority  */}
       <div className="form-group" style={{ gridColumn: 'span 6', marginBottom: 0 }}>
         <label>Bug Title</label>
         <input type="text" readOnly value={`#${bug.id} - ${bug.title}`} style={{ fontWeight: 600 }} />
       </div>
-      <div className="form-group" style={{ gridColumn: 'span 2', marginBottom: 0 }}>
+      <div className="form-group" style={{ gridColumn: 'span 3', marginBottom: 0 }}>
         <label>Status</label>
         <input type="text" readOnly value={bug.status || "-"} style={{ fontWeight: 600, color: '#1a71e2' }} />
       </div>
-      <div className="form-group" style={{ gridColumn: 'span 2', marginBottom: 0 }}>
+      <div className="form-group" style={{ gridColumn: 'span 3', marginBottom: 0 }}>
         <label>Priority</label>
         <input type="text" readOnly value={bug.priority || "-"} />
       </div>
-      <div className="form-group" style={{ gridColumn: 'span 2', marginBottom: 0 }}>
+
+
+      {/* Row 3: Reporter· Assigned To */}
+      <div className="form-group" style={{ gridColumn: 'span 6', marginBottom: 0 }}>
         <label>Assigned To</label>
         <input type="text" readOnly value={bug.assignee || bug.assignedUser || "-"} />
       </div>
-
-      {/* Row 3: Reporter */}
-      <div className="form-group" style={{ gridColumn: 'span 12', marginBottom: 0 }}>
-        <label>Reported To (Optional)</label>
+      <div className="form-group" style={{ gridColumn: 'span 6', marginBottom: 0 }}>
+        <label>Reported</label>
         <input type="text" readOnly value={bug.reporter || "-"} />
       </div>
-
+ 
       {/* Row 4: Description */}
       <div className="form-group" style={{ gridColumn: 'span 12', marginBottom: 0 }}>
         <label>Description</label>

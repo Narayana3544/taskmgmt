@@ -262,6 +262,11 @@ export default function CreateTask() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (selectedUser && reportedTo && String(selectedUser) === String(reportedTo)) {
+      return alert("Assign To and Reported To must be different users.");
+    }
+
     const formData = new FormData();
 
     formData.append("userstory", userstory);
@@ -358,7 +363,7 @@ export default function CreateTask() {
         <label>User</label>
         <select value={selectedUser} onChange={e => setSelectedUser(e.target.value)}>
           <option value="">-- Select User --</option>
-          {users.map(u => <option key={u.id} value={u.id}>{u.first_name}</option>)}
+          {users.map(u => <option key={u.id} value={u.id} disabled={String(u.id) === String(reportedTo)}>{u.first_name}</option>)}
         </select>
       </div>
 
@@ -366,7 +371,7 @@ export default function CreateTask() {
         <label>Reported To</label>
         <select value={reportedTo} onChange={e => setReportedTo(e.target.value)}>
           <option value="">-- Select Manager --</option>
-          {managers.map(m => <option key={m.id} value={m.id}>{m.preffered_name}</option>)}
+          {managers.map(m => <option key={m.id} value={m.id} disabled={String(m.id) === String(selectedUser)}>{m.preffered_name}</option>)}
         </select>
       </div>
 

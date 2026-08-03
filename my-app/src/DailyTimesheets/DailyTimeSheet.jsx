@@ -66,17 +66,56 @@ export default function DailyTimesheet() {
 
   const fetchTasks = async () => {
     try {
-      const [tasksRes, bugsRes] = await Promise.all([
-        api.get(`/user/active/tasks`, { withCredentials: true }),
-        api.get(`/user/bugs`, { withCredentials: true })
+      const [tasksRes, bugsRes, profileRes] = await Promise.all([
+        api.get(`/user/tasks`, { withCredentials: true }),
+        api.get(`/user/bugs`, { withCredentials: true }),
+        api.get(`/user/profile`, { withCredentials: true })
       ]);
-      
-      const formattedTasks = (tasksRes.data || []).map(t => ({
+      const userRole = profileRes.data?.role?.description || '';
+      const loggedInUserId = profileRes.data?.id;
+
+      const isAssignedToMe = (t) => {
+        const assignedId = t.user?.id || t.assignedUser?.id;
+        if (!loggedInUserId) return true; // fallback: show all if we can't determine user
+        return assignedId === loggedInUserId;
+      };
+
+      const shouldShowTask = (t) => {
+        // Only show tasks assigned to the logged-in user
+        if (!isAssignedToMe(t)) return false;
+
+        let statusStr = '';
+        const statusObj = t.taskStatus || t.status;
+        if (typeof statusObj === 'string') {
+          statusStr = statusObj;
+        } else if (statusObj) {
+          statusStr = statusObj.decription || statusObj.description || statusObj.name || '';
+        }
+        statusStr = statusStr.trim().toLowerCase();
+
+        const sprintStatus = (t.sprint?.status || '').toLowerCase();
+        const isActiveSprint = sprintStatus === 'active';
+
+        // "Done" status - only show if active sprint AND not Developer
+        if (statusStr.includes('done') || statusStr.includes('completed') || statusStr.includes('closed') || statusStr.includes('resolved')) {
+          if (!isActiveSprint) return false;
+          if (userRole === 'Developer') return false;
+          return true;
+        }
+
+        // All other statuses (To Do, In Progress, Fixed, Re-Open, Backlog) - always show
+        return true;
+      };
+
+      const filteredTasks = (tasksRes.data || []).filter(shouldShowTask);
+      const filteredBugs = (bugsRes.data || []).filter(shouldShowTask);
+
+      const formattedTasks = filteredTasks.map(t => ({
         id: `task-${t.id}`,
         userstory: `Task: #${t.id} - ${t.userstory || "Untitled Task"}`
       }));
       
-      const formattedBugs = (bugsRes.data || []).map(b => ({
+      const formattedBugs = filteredBugs.map(b => ({
         id: `bug-${b.id}`,
         userstory: `Bug: #${b.id} - ${b.title || "Untitled Bug"}`
       }));
@@ -305,11 +344,11 @@ export default function DailyTimesheet() {
             <tr key={idx} className={entry.isAutoMarkedLeave ? "auto-leave" : ""}>
               <td>{entry.start_time || "-"}</td>
               <td>{entry.end_time || "-"}</td>
-              <td style={{ maxWidth: '300px', whiteSpace: 'normal', wordWrap: 'break-word', overflowWrap: 'anywhere' }}>
-                {entry.task?.userstory || (entry.bug ? `Bug: #${entry.bug.id} - ${entry.bug.title}` : "-")}
+              <td className="task-cell" style={{ maxWidth: '300px', whiteSpace: 'normal', wordWrap: 'break-word', overflowWrap: 'anywhere' }}>
+                {entry.task ? `Task: #${entry.task.id} - ${entry.task.userstory}` : entry.bug ? `Bug: #${entry.bug.id} - ${entry.bug.title}` : "-"}
               </td>
               <td>{entry.workType?.description || "-"}</td>
-              <td>{entry.description}</td>
+              <td className="description-cell" style={{ whiteSpace: 'normal', wordWrap: 'break-word', overflowWrap: 'anywhere' }}>{entry.description}</td>
               <td>
                 {["Official", "Time Off"].includes(entry.workType?.description)
                   ? entry.permission_granted

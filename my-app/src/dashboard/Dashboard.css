@@ -157,6 +157,10 @@
   margin-bottom: 6px;
 }
 
+.task-status-row {
+  grid-template-columns: repeat(2, 1fr);
+}
+
 .dash-stat-card {
   background: rgba(255,255,255,0.97);
   border-radius: 16px;

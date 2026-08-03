@@ -12,12 +12,10 @@ public class TaskmgmtApplication  extends SpringBootServletInitializer {
 	protected SpringApplicationBuilder configure(SpringApplicationBuilder application) {
 		return application.sources(TaskmgmtApplication.class);
 	}
-
 	public static void main(String[] args) {
 		System.out.println("Starting TaskmgmtApplication...");
 		SpringApplication.run(TaskmgmtApplication.class, args);
 	}
-
 	@org.springframework.context.annotation.Bean
 	public org.springframework.boot.CommandLineRunner initData(org.springframework.jdbc.core.JdbcTemplate jdbcTemplate) {
 		return args -> {
@@ -35,5 +33,4 @@ public class TaskmgmtApplication  extends SpringBootServletInitializer {
 			}
 		};
 	}
-
 }

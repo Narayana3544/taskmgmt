@@ -8,6 +8,7 @@ import "../Task/TaskForm.css"; // Reuse Task Form styles
 export default function BugForm() {
   const { id } = useParams(); // taskId (optional)
   const navigate = useNavigate();
+  const initializedRef = React.useRef(false);
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -69,6 +70,8 @@ export default function BugForm() {
           setTaskObj(found || null);
         }
 
+        initializedRef.current = true;
+
       } catch (err) {
         console.error("Error fetching form data:", err);
       }
@@ -106,9 +109,9 @@ export default function BugForm() {
     }
   }, [selectedProject]);
 
-  // Reset selected task if feature or sprint changes
+  // Reset selected task if feature or sprint changes (only after initialization)
   useEffect(() => {
-    if (!id) {
+    if (!id && initializedRef.current) {
        setSelectedTaskId("");
        setTaskObj(null);
     }
@@ -134,10 +137,18 @@ export default function BugForm() {
     }
   }, [selectedProject, selectedFeature, taskObj, id]);
 
+  const MAX_FILE_SIZE_MB = 50;
   const handleFileChange = (e) => {
     const selected = Array.from(e.target.files);
-    setFiles((prev) => [...prev, ...selected]);
-    setUploadProgress({});
+    const oversized = selected.filter(f => f.size > MAX_FILE_SIZE_MB * 1024 * 1024);
+    const valid = selected.filter(f => f.size <= MAX_FILE_SIZE_MB * 1024 * 1024);
+    if (oversized.length > 0) {
+      alert(`The following file(s) exceed the ${MAX_FILE_SIZE_MB}MB limit and were not added:\n${oversized.map(f => f.name).join("\n")}`);
+    }
+    if (valid.length > 0) {
+      setFiles((prev) => [...prev, ...valid]);
+      setUploadProgress({});
+    }
   };
 
   const handleRemoveFile = (index) => {
@@ -149,6 +160,10 @@ export default function BugForm() {
 
     if (!title.trim() || !description.trim() || !storypoints || !complexity) {
       return alert("Please fill all required fields (Title, Description, Story Points, Complexity).");
+    }
+
+    if (assignedTo && reportedTo && String(assignedTo) === String(reportedTo)) {
+      return alert("Assign To and Reported To must be different users.");
     }
 
     const formData = new FormData();
@@ -167,6 +182,7 @@ export default function BugForm() {
     if (storypoints) formData.append("storypoints", storypoints);
     if (complexity) formData.append("complexity", complexity);
     if (targetDate) formData.append("targetDate", targetDate);
+    if (reportedTo) formData.append("reporterId", reportedTo);
     
     files.forEach((file) => {
       formData.append("attachments", file);
@@ -197,9 +213,8 @@ export default function BugForm() {
     }
   };
 
-  // Filter tasks to only show "In Progress" or "Done" tasks in the dropdown
+  // Filter tasks based on selected project, feature, sprint
   const filteredTasks = tasks.filter(t => {
-
     if (selectedFeature && t.feature?.id !== parseInt(selectedFeature)) {
       return false;
     }
@@ -217,7 +232,7 @@ export default function BugForm() {
 
   const taskOptions = filteredTasks.map(t => ({
     value: t.id,
-    label: `#${t.id} - ${t.userstory || "Untitled Task"}`
+    label: `#${t.id} - ${t.userstory || "Untitled Task"} (${t.taskStatus?.decription || t.taskStatus?.description || t.taskStatus?.name || "No Status"})`
   }));
 
   return (
@@ -335,7 +350,7 @@ export default function BugForm() {
         <select value={assignedTo} onChange={(e) => setAssignedTo(e.target.value)}>
           <option value="">-- Select Developer --</option>
           {developers.map((d) => (
-            <option key={d.id} value={d.id}>
+            <option key={d.id} value={d.id} disabled={String(d.id) === String(reportedTo)}>
               {d.first_name || d.name || d.username}
             </option>
           ))}
@@ -344,11 +359,11 @@ export default function BugForm() {
 
       <div style={{ gridColumn: 'span 6', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '15px' }}>
         <div className="form-group" style={{ marginBottom: 0 }}>
-          <label>Reported To (Optional)</label>
+          <label>Reported To </label>
           <select value={reportedTo} onChange={(e) => setReportedTo(e.target.value)}>
             <option value="">-- Select User --</option>
             {developers.map((d) => (
-              <option key={d.id} value={d.id}>
+              <option key={d.id} value={d.id} disabled={String(d.id) === String(assignedTo)}>
                 {d.first_name || d.name || d.username}
               </option>
             ))}

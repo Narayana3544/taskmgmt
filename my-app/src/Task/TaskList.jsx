@@ -23,6 +23,7 @@ export default function TaskList() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [lockedMsg, setLockedMsg] = useState(""); // popup message for locked tasks
+  const [userRole, setUserRole] = useState("");
 
   // Filters
   const [selectedFeature, setSelectedFeature] = useState("");
@@ -51,19 +52,53 @@ export default function TaskList() {
   useEffect(() => {
 
     let project = searchParams.get("project");
-    if (!project) {
-      project = localStorage.getItem("selectedProjectId") || "";
-      if (project) {
-        updateURL("project", project);
-      }
+    if (project === null) {
+      project = localStorage.getItem("TaskList_project") || localStorage.getItem("selectedProjectId") || "";
+      if (project) updateURL("project", project);
     } else {
-      localStorage.setItem("selectedProjectId", project);
+      localStorage.setItem("TaskList_project", project);
+      localStorage.setItem("selectedProjectId", project); // Keep for legacy/other components
     }
-    const feature = searchParams.get("feature") || "";
-    const sprint = searchParams.get("sprint") || "";
-    const user = searchParams.get("user") || "";
-    const status = searchParams.get("status") || "";
-    const story = searchParams.get("story") || "";
+
+    let feature = searchParams.get("feature");
+    if (feature === null) {
+      feature = localStorage.getItem("TaskList_feature") || "";
+      if (feature) updateURL("feature", feature);
+    } else {
+      localStorage.setItem("TaskList_feature", feature);
+    }
+
+    let sprint = searchParams.get("sprint");
+    if (sprint === null) {
+      sprint = localStorage.getItem("TaskList_sprint") || "";
+      if (sprint) updateURL("sprint", sprint);
+    } else {
+      localStorage.setItem("TaskList_sprint", sprint);
+    }
+
+    let user = searchParams.get("user");
+    if (user === null) {
+      user = localStorage.getItem("TaskList_user") || "";
+      if (user) updateURL("user", user);
+    } else {
+      localStorage.setItem("TaskList_user", user);
+    }
+
+    let status = searchParams.get("status");
+    if (status === null) {
+      status = localStorage.getItem("TaskList_status") || "";
+      if (status) updateURL("status", status);
+    } else {
+      localStorage.setItem("TaskList_status", status);
+    }
+
+    let story = searchParams.get("story");
+    if (story === null) {
+      story = localStorage.getItem("TaskList_story") || "";
+      if (story) updateURL("story", story);
+    } else {
+      localStorage.setItem("TaskList_story", story);
+    }
 
     setSelectedProject(project);
     setSelectedFeature(feature);
@@ -74,6 +109,10 @@ export default function TaskList() {
 
     fetchProjects();
     fetchStatuses();
+    // Fetch user profile to get role
+    api.get('/user/profile', { withCredentials: true })
+      .then(res => setUserRole(res.data?.role?.description || ''))
+      .catch(() => {});
 
     if (project) {
       Promise.all([
@@ -164,10 +203,26 @@ export default function TaskList() {
 
     setSelectedProject(projectId);
     updateURL("project", projectId);
+    
+    // Clear other filters when project changes
+    setSelectedFeature("");
+    updateURL("feature", "");
+    localStorage.removeItem("TaskList_feature");
+    
+    setSelectedSprint("");
+    updateURL("sprint", "");
+    localStorage.removeItem("TaskList_sprint");
+    
+    setSelectedUser("");
+    updateURL("user", "");
+    localStorage.removeItem("TaskList_user");
+
     if (projectId) {
       localStorage.setItem("selectedProjectId", projectId);
+      localStorage.setItem("TaskList_project", projectId);
     } else {
       localStorage.removeItem("selectedProjectId");
+      localStorage.removeItem("TaskList_project");
     }
 
     if (projectId) {
@@ -227,30 +282,21 @@ export default function TaskList() {
 
   // Download Excel
   const downloadExcel = () => {
-
-    if (!selectedUser) {
-      alert("Please select a user to download tasks");
+    if (filteredTasks.length === 0) {
+      alert("No tasks found to download");
       return;
     }
 
-    const userTasks = filteredTasks.filter(
-      (task) => task.user?.id === parseInt(selectedUser)
-    );
-
-    if (userTasks.length === 0) {
-      alert("No tasks found for selected user");
-      return;
-    }
-
-    const data = userTasks.map((task) => ({
-      Story: task.userstory || "-",
-      StoryPoints: task.storypoints || "-",
-      Sprint: task.sprint?.name || "-",
-      Feature: task.feature?.name || "-",
-      AssignedTo: task.user?.first_name || "-",
-      TaskType: task.taskType?.description || "-",
-      Status: task.taskStatus?.description || "-",
-      StartDate: task.start_date
+    const projectName = projects.find((p) => p.id === parseInt(selectedProject))?.name || "-";
+    const data = filteredTasks.map((task) => ({
+      "Project Name": projectName,
+      "Feature Name": task.feature?.name || "-",
+      "Sprint": task.sprint?.name || "-",
+      "ID": task.id,
+      "Task Name": task.userstory || "-",
+      "Status": task.taskStatus?.decription || task.taskStatus?.description || task.taskStatus?.name || "-",
+      "User": task.user?.first_name || task.user?.preferredName || task.user?.username || "-",
+      "Start Date": task.start_date
         ? new Date(task.start_date).toLocaleDateString()
         : "-"
     }));
@@ -258,9 +304,9 @@ export default function TaskList() {
     const worksheet = XLSX.utils.json_to_sheet(data);
     const workbook = XLSX.utils.book_new();
 
-    XLSX.utils.book_append_sheet(workbook, worksheet, "UserTasks");
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Tasks");
 
-    XLSX.writeFile(workbook, "User_Tasks.xlsx");
+    XLSX.writeFile(workbook, "Tasks.xlsx");
 
   };
 
@@ -320,6 +366,7 @@ export default function TaskList() {
                   onChange={(e) => {
                     setSelectedFeature(e.target.value);
                     updateURL("feature", e.target.value);
+                    localStorage.setItem("TaskList_feature", e.target.value);
                     setCurrentPage(1);
                   }}
                   style={{
@@ -343,6 +390,7 @@ export default function TaskList() {
                   onChange={(e) => {
                     setSelectedSprint(e.target.value);
                     updateURL("sprint", e.target.value);
+                    localStorage.setItem("TaskList_sprint", e.target.value);
                     setCurrentPage(1);
                   }}
                   style={{
@@ -368,6 +416,7 @@ export default function TaskList() {
                   onChange={(e) => {
                     setSelectedStatus(e.target.value);
                     updateURL("status", e.target.value);
+                    localStorage.setItem("TaskList_status", e.target.value);
                     setCurrentPage(1);
                   }}
                   style={{
@@ -391,6 +440,7 @@ export default function TaskList() {
                   onChange={(e) => {
                     setSelectedUser(e.target.value);
                     updateURL("user", e.target.value);
+                    localStorage.setItem("TaskList_user", e.target.value);
                     setCurrentPage(1);
                   }}
                   style={{
@@ -441,7 +491,18 @@ export default function TaskList() {
                       onChange={(e) => handleStatusChange(task, e.target.value)}
                       style={{ padding: "4px 8px", borderRadius: "4px", border: "1px solid #ccc" }}
                     >
-                      {statuses.map((s) => (
+                      {statuses
+                        .filter(s => {
+                          // Always include the task's current status so it displays correctly
+                          if (s.id === task.taskStatus?.id) return true;
+                          const name = (s.decription || s.description || s.name || '').toLowerCase().trim();
+                          if (userRole === 'Developer') {
+                            if (name.includes('re open') || name.includes('reopen') || name.includes('re-open')) return false;
+                            if (name.includes('done') || name.includes('completed') || name.includes('closed') || name.includes('resolved')) return false;
+                          }
+                          return true;
+                        })
+                        .map((s) => (
                         <option key={s.id} value={s.id}>
                           {s.decription || s.description || s.name}
                         </option>

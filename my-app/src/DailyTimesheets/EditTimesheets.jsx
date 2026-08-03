@@ -62,17 +62,55 @@ export default function EditAnyTimesheet() {
 
   const fetchTasks = async () => {
     try {
-      const [tasksRes, bugsRes] = await Promise.all([
+      const [tasksRes, bugsRes, profileRes] = await Promise.all([
         api.get(`/user/${userId}/tasks`, { withCredentials: true }),
-        api.get(`/user/${userId}/bugs`, { withCredentials: true })
+        api.get(`/user/${userId}/bugs`, { withCredentials: true }),
+        api.get(`/user/profile`, { withCredentials: true })
       ]);
-      
-      const formattedTasks = (tasksRes.data || []).map(t => ({
+      const loggedInRole = profileRes.data?.role?.description || '';
+      const isAdminEditor = loggedInRole === 'Admin';
+      // The target userId whose tasks we're editing
+      const targetUserId = parseInt(userId);
+
+      const shouldShowTask = (t) => {
+        // Only show tasks assigned to the target user
+        const assignedId = t.user?.id || t.assignedUser?.id;
+        if (targetUserId && assignedId && assignedId !== targetUserId) return false;
+
+        let statusStr = '';
+        const statusObj = t.taskStatus || t.status;
+        if (typeof statusObj === 'string') {
+          statusStr = statusObj;
+        } else if (statusObj) {
+          statusStr = statusObj.decription || statusObj.description || statusObj.name || '';
+        }
+        statusStr = statusStr.trim().toLowerCase();
+
+        const sprintStatus = (t.sprint?.status || '').toLowerCase();
+        const isActiveSprint = sprintStatus === 'active';
+
+        // "Done" status handling
+        if (statusStr.includes('done') || statusStr.includes('completed') || statusStr.includes('closed') || statusStr.includes('resolved')) {
+          // Admin editing another user's timesheet: show all done tasks
+          if (isAdminEditor) return true;
+          // Others: only active sprint done tasks
+          if (!isActiveSprint) return false;
+          return true;
+        }
+
+        // All other statuses - always show
+        return true;
+      };
+
+      const filteredTasks = (tasksRes.data || []).filter(shouldShowTask);
+      const filteredBugs = (bugsRes.data || []).filter(shouldShowTask);
+
+      const formattedTasks = filteredTasks.map(t => ({
         id: `task-${t.id}`,
         userstory: `Task: #${t.id} - ${t.userstory || "Untitled Task"}`
       }));
       
-      const formattedBugs = (bugsRes.data || []).map(b => ({
+      const formattedBugs = filteredBugs.map(b => ({
         id: `bug-${b.id}`,
         userstory: `Bug: #${b.id} - ${b.title || "Untitled Bug"}`
       }));
@@ -222,7 +260,7 @@ const handleEdit = (entry) => {
         <input type="time" name="startTime" value={form.startTime} onChange={handleChange} />
         <input type="time" name="endTime" value={form.endTime} onChange={handleChange} />
 
-        <select name="taskId" value={form.taskId} onChange={handleChange}>
+        <select name="taskId" value={form.taskId} onChange={handleChange} style={{ maxWidth: '100%' }}>
           <option value="">Select Task</option>
           {tasks.map(t => (
             <option key={t.id} value={t.id}>{t.userstory}</option>
@@ -283,11 +321,11 @@ const handleEdit = (entry) => {
             <tr key={e.id}>
               <td>{e.start_time || "-"}</td>
               <td>{e.end_time || "-"}</td>
-              <td style={{ maxWidth: '300px', whiteSpace: 'normal', wordWrap: 'break-word', overflowWrap: 'anywhere' }}>
-                {e.task?.userstory || (e.bug ? `Bug: #${e.bug.id} - ${e.bug.title}` : "-")}
+              <td className="task-cell" style={{ maxWidth: '300px', whiteSpace: 'normal', wordWrap: 'break-word', overflowWrap: 'anywhere' }}>
+                {e.task ? `Task: #${e.task.id} - ${e.task.userstory}` : e.bug ? `Bug: #${e.bug.id} - ${e.bug.title}` : "-"}
               </td>
               <td>{e.workType?.description || "-"}</td>
-              <td>{e.description}</td>
+              <td className="description-cell" style={{ whiteSpace: 'normal', wordWrap: 'break-word', overflowWrap: 'anywhere' }}>{e.description}</td>
               <td>
                 {["Official", "Time Off"].includes(e.workType?.description)
                   ? e.permission_granted ? "Yes" : "No"

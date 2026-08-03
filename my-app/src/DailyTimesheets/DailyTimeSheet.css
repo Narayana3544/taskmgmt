@@ -1,6 +1,6 @@
 .timesheet-container {
   color: var(--text-primary);
-  max-width: 500px;
+  width: 100%;
   margin: 20px auto;
   padding: var(--spacing-md);
   border: 1px solid var(--border-color);

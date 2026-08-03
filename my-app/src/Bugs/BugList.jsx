@@ -15,12 +15,13 @@ export default function BugList() {
   const [bugs, setBugs] = useState([]);
   const [statuses, setStatuses] = useState([]);
   const [projects, setProjects] = useState([]);
-  const [selectedProject, setSelectedProject] = useState(localStorage.getItem("selectedProjectId") || "");
+  const [selectedProject, setSelectedProject] = useState(() => localStorage.getItem("BugList_project") || localStorage.getItem("selectedProjectId") || "");
   const [searchTitle, setSearchTitle] = useState("");
-  const [selectedFeature, setSelectedFeature] = useState("");
-  const [selectedSprint, setSelectedSprint] = useState("");
-  const [selectedUser, setSelectedUser] = useState("");
-  const [selectedStatus, setSelectedStatus] = useState("");
+  const [selectedFeature, setSelectedFeature] = useState(() => localStorage.getItem("BugList_feature") || "");
+  const [selectedSprint, setSelectedSprint] = useState(() => localStorage.getItem("BugList_sprint") || "");
+  const [selectedUser, setSelectedUser] = useState(() => localStorage.getItem("BugList_user") || "");
+  const [selectedStatus, setSelectedStatus] = useState(() => localStorage.getItem("BugList_status") || "");
+  const [userRole, setUserRole] = useState("");
 
   const [currentPage, setCurrentPage] = useState(() => {
     const saved = sessionStorage.getItem("BugList_currentPage");
@@ -66,6 +67,9 @@ export default function BugList() {
     fetchBugs();
     fetchStatuses();
     fetchProjects();
+    api.get('/user/profile', { withCredentials: true })
+      .then(res => setUserRole(res.data?.role?.description || ''))
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -142,11 +146,22 @@ export default function BugList() {
                     onChange={(option) => {
                       const val = option ? option.value : "";
                       setSelectedProject(val);
+                      localStorage.setItem("BugList_project", val);
                       if (val) {
                         localStorage.setItem("selectedProjectId", val);
                       } else {
                         localStorage.removeItem("selectedProjectId");
+                        localStorage.removeItem("BugList_project");
                       }
+                      
+                      // Clear others
+                      setSelectedFeature("");
+                      localStorage.removeItem("BugList_feature");
+                      setSelectedSprint("");
+                      localStorage.removeItem("BugList_sprint");
+                      setSelectedUser("");
+                      localStorage.removeItem("BugList_user");
+                      
                       setCurrentPage(1);
                     }}
                     isClearable
@@ -175,7 +190,11 @@ export default function BugList() {
                   <br />
                   <select
                     value={selectedFeature}
-                    onChange={(e) => { setSelectedFeature(e.target.value); setCurrentPage(1); }}
+                    onChange={(e) => {
+                      setSelectedFeature(e.target.value);
+                      localStorage.setItem("BugList_feature", e.target.value);
+                      setCurrentPage(1);
+                    }}
                     style={{
                       backgroundColor: selectedFeature ? '#16a34a' : '#fff',
                       color: selectedFeature ? '#fff' : '#333',
@@ -194,7 +213,11 @@ export default function BugList() {
                   <br />
                   <select
                     value={selectedSprint}
-                    onChange={(e) => { setSelectedSprint(e.target.value); setCurrentPage(1); }}
+                    onChange={(e) => {
+                      setSelectedSprint(e.target.value);
+                      localStorage.setItem("BugList_sprint", e.target.value);
+                      setCurrentPage(1);
+                    }}
                     style={{
                       backgroundColor: selectedSprint ? '#16a34a' : '#fff',
                       color: selectedSprint ? '#fff' : '#333',
@@ -215,7 +238,11 @@ export default function BugList() {
                   <br />
                   <select
                     value={selectedStatus}
-                    onChange={(e) => { setSelectedStatus(e.target.value); setCurrentPage(1); }}
+                    onChange={(e) => {
+                      setSelectedStatus(e.target.value);
+                      localStorage.setItem("BugList_status", e.target.value);
+                      setCurrentPage(1);
+                    }}
                     style={{
                       backgroundColor: selectedStatus ? '#16a34a' : '#fff',
                       color: selectedStatus ? '#fff' : '#333',
@@ -234,7 +261,11 @@ export default function BugList() {
                   <br />
                   <select
                     value={selectedUser}
-                    onChange={(e) => { setSelectedUser(e.target.value); setCurrentPage(1); }}
+                    onChange={(e) => {
+                      setSelectedUser(e.target.value);
+                      localStorage.setItem("BugList_user", e.target.value);
+                      setCurrentPage(1);
+                    }}
                     style={{
                       backgroundColor: selectedUser ? '#16a34a' : '#fff',
                       color: selectedUser ? '#fff' : '#333',
@@ -268,7 +299,18 @@ export default function BugList() {
                       onChange={(e) => handleStatusChange(bug.id, e.target.value)}
                       style={{ padding: "4px 8px", borderRadius: "4px", border: "1px solid #ccc" }}
                     >
-                      {statuses.map((s) => (
+                      {statuses
+                        .filter(s => {
+                          // Always include the bug's current status so it displays correctly
+                          if (s.id === bug.statusId) return true;
+                          const name = (s.decription || s.description || s.name || '').toLowerCase().trim();
+                          if (userRole === 'Developer') {
+                            if (name.includes('re open') || name.includes('reopen') || name.includes('re-open')) return false;
+                            if (name.includes('done') || name.includes('completed') || name.includes('closed') || name.includes('resolved')) return false;
+                          }
+                          return true;
+                        })
+                        .map((s) => (
                         <option key={s.id} value={s.id}>{s.decription}</option>
                       ))}
                     </select>

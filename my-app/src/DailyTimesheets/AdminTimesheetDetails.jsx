@@ -51,9 +51,9 @@ export default function AdminTimesheetDetails() {
       logRes.data.forEach(day => {
         if (day.logs) {
           day.logs.forEach(log => {
-            const tId = log.task?.id || 'unknown';
+            const tId = log.task ? `task-${log.task.id}` : log.bug ? `bug-${log.bug.id}` : 'unknown';
             if (!tMap[tId]) {
-              tMap[tId] = { task: log.task, totalMinutes: 0, logs: [] };
+              tMap[tId] = { task: log.task, bug: log.bug, totalMinutes: 0, logs: [] };
             }
             tMap[tId].logs.push({...log, date: day.date});
             
@@ -137,7 +137,7 @@ export default function AdminTimesheetDetails() {
       const data = dailyDetails.map(d => ({
         Start: d.start_time || "-",
         End: d.end_time || "-",
-        Task: d.task?.userstory || "-",
+        Task: d.task ? `Task #${d.task.id} - ${d.task.userstory}` : d.bug ? `Bug #${d.bug.id} - ${d.bug.title}` : "-",
         "Work Type": d.workType?.description || "-",
         Description: d.description || "-",
         Permission: ["Official", "Time Off"].includes(d.workType?.description) ? (d.permissionGranted ? "Yes" : "No") : "-"
@@ -310,7 +310,7 @@ export default function AdminTimesheetDetails() {
               {taskSummary.map((t, idx) => (
                 <tr key={idx}>
                   <td className="task-cell" style={{ maxWidth: '300px', whiteSpace: 'normal', wordWrap: 'break-word', overflowWrap: 'anywhere' }}>
-                    {t.task ? `#${t.task.id} - ${t.task.userstory}` : "Unknown Task"}
+                    {t.task ? `Task #${t.task.id} - ${t.task.userstory}` : t.bug ? `Bug #${t.bug.id} - ${t.bug.title}` : "Unknown Task"}
                   </td>
                   <td>{formatMinutes(t.totalMinutes)}</td>
                   <td>
@@ -319,7 +319,7 @@ export default function AdminTimesheetDetails() {
                         <FaEye
                           className="icon-btn view-icon"
                           onClick={() => {
-                            setSelectedTaskObj(t.task);
+                            setSelectedTaskObj(t.task || t.bug || { isUnknown: true });
                             setTaskLogs(t.logs.sort((a, b) => a.date.localeCompare(b.date) || a.start_time?.localeCompare(b.start_time)));
                           }}
                         />
@@ -335,15 +335,29 @@ export default function AdminTimesheetDetails() {
       </div>
       ) : selectedDate ? (
         <div className="daily-section">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px', gap: '15px' }}>
+          {/* <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px', gap: '15px' }}>
             <h3 style={{ margin: 0, flex: 1, wordWrap: 'break-word', overflowWrap: 'anywhere' }}>Logs for {selectedDate}</h3>
             <div style={{ display: 'flex', gap: '10px' }}>
+              <button className="btn-global btn-secondary" onClick={handleBack} style={{ flexShrink: 0, whiteSpace: 'nowrap' }}>Back</button>
               <button className="icon-download-btn" onClick={downloadExcel} title="Download Excel" style={{ padding: '6px 10px' }}>
                 <FaDownload />
               </button>
-              <button className="btn-global btn-secondary" onClick={handleBack} style={{ flexShrink: 0, whiteSpace: 'nowrap' }}>Back</button>
             </div>
-          </div>
+          </div> */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px', gap: '15px' }}>
+  <h3 style={{ margin: 0, flex: 1, wordWrap: 'break-word', overflowWrap: 'anywhere' }}>
+    Logs for {selectedDate}
+  </h3>
+  <div style={{ display: 'flex', gap: '10px' }}>
+    <button
+      className="btn-global btn-secondary"
+      onClick={handleBack}
+      style={{ flexShrink: 0, whiteSpace: 'nowrap' }}
+    >
+      Back
+    </button>
+    </div>
+  </div>
           {loadingDaily ? (
             <p>Loading...</p>
           ) : dailyDetails.length > 0 ? (
@@ -364,7 +378,7 @@ export default function AdminTimesheetDetails() {
                     <td>{d.start_time || "-"}</td>
                     <td>{d.end_time || "-"}</td>
                     <td className="task-cell" style={{ maxWidth: '300px', whiteSpace: 'normal', wordWrap: 'break-word', overflowWrap: 'anywhere' }}>
-                      {d.task?.userstory || "-"}
+                      {d.task ? `Task: #${d.task.id} - ${d.task.userstory}` : d.bug ? `Bug: #${d.bug.id} - ${d.bug.title}` : "-"}
                     </td>
                     <td>{d.workType?.description || "-"}</td>
                     <td className="description-cell">{d.description}</td>
@@ -383,15 +397,33 @@ export default function AdminTimesheetDetails() {
         </div>
       ) : (
         <div className="daily-section">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px', gap: '15px' }}>
-            <h3 style={{ margin: 0, flex: 1, wordWrap: 'break-word', overflowWrap: 'anywhere' }}>Logs for Task: {selectedTaskObj ? `#${selectedTaskObj.id} - ${selectedTaskObj.userstory}` : "Unknown"}</h3>
+          {/* <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px', gap: '15px' }}>
+            <h3 style={{ margin: 0, flex: 1, wordWrap: 'break-word', overflowWrap: 'anywhere' }}>Logs for {selectedTaskObj?.userstory ? `Task #${selectedTaskObj.id} - ${selectedTaskObj.userstory}` : selectedTaskObj?.title ? `Bug #${selectedTaskObj.id} - ${selectedTaskObj.title}` : "Unknown Task"}</h3>
             <div style={{ display: 'flex', gap: '10px' }}>
+              <button className="btn-global btn-secondary" onClick={handleBack} style={{ flexShrink: 0, whiteSpace: 'nowrap' }}>Back</button>
               <button className="icon-download-btn" onClick={downloadExcel} title="Download Excel" style={{ padding: '6px 10px' }}>
                 <FaDownload />
               </button>
-              <button className="btn-global btn-secondary" onClick={handleBack} style={{ flexShrink: 0, whiteSpace: 'nowrap' }}>Back</button>
             </div>
-          </div>
+          </div> */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px', gap: '15px' }}>
+  <h3 style={{ margin: 0, flex: 1, wordWrap: 'break-word', overflowWrap: 'anywhere' }}>
+    Logs for {selectedTaskObj?.userstory
+      ? `Task #${selectedTaskObj.id} - ${selectedTaskObj.userstory}`
+      : selectedTaskObj?.title
+      ? `Bug #${selectedTaskObj.id} - ${selectedTaskObj.title}`
+      : "Unknown Task"}
+  </h3>
+  <div style={{ display: 'flex', gap: '10px' }}>
+    <button
+      className="btn-global btn-secondary"
+      onClick={handleBack}
+      style={{ flexShrink: 0, whiteSpace: 'nowrap' }}
+    >
+      Back
+    </button>
+   </div>
+  </div>
           <table className="timesheet-table">
             <thead>
               <tr>

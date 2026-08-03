@@ -258,6 +258,7 @@ public class BugService {
         bug.setPriority(priority);
         bug.setStatus(status);
         bug.setAssignedUser(assignedUser);
+        bug.setReportedUser(reportedUser);
         bug.setSprint(sprintEntity);
         bug.setTask(taskEntity);
 

@@ -274,7 +274,19 @@ export default function AssignedTasks() {
                       onChange={(e) => handleStatusChange(task, e.target.value)}
                       style={{ padding: "4px 8px", borderRadius: "4px", border: "1px solid #ccc" }}
                     >
-                      {statuses.map(status => (
+                      {statuses
+                        .filter(status => {
+                          // Always include the task's current status so it displays correctly
+                          if (status.id === task.taskStatus?.id) return true;
+                          const name = (status.decription || status.description || status.name || '').toLowerCase().trim();
+                          const userRole = userProfile?.role?.description;
+                          if (userRole === 'Developer') {
+                            if (name.includes('re open') || name.includes('reopen') || name.includes('re-open')) return false;
+                            if (name.includes('done') || name.includes('completed') || name.includes('closed') || name.includes('resolved')) return false;
+                          }
+                          return true;
+                        })
+                        .map(status => (
                         <option key={status.id} value={status.id}>
                           {status.decription || status.description || status.name}
                         </option>

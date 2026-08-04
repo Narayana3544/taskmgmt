@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../api";
-import { sortAlphabetically, sortLatestFirst, sortStatuses } from "../utils/sortUtils";
+import { sortAlphabetically, sortLatestFirst, sortStatuses, filterStatusesByRole } from "../utils/sortUtils";
 import { isTaskLocked, getLockedReason } from "../utils/lockUtils";
 import { FaLock } from 'react-icons/fa';
 import "./TaskForm.css";
@@ -40,6 +40,7 @@ export default function EditTask() {
   const [initialData, setInitialData] = useState(null);
   const [isLocked, setIsLocked] = useState(false);
   const [lockedMsg, setLockedMsg] = useState("");
+  const [userRole, setUserRole] = useState("");
 
   // Fetch dropdown data
   useEffect(() => {
@@ -47,6 +48,11 @@ export default function EditTask() {
     api.get("/users", { withCredentials: true }).then((res) => setManagers(sortAlphabetically(res.data)));
     api.get("/gettype", { withCredentials: true }).then((res) => setTaskTypes(res.data));
     api.get("/getstatusForTask", { withCredentials: true }).then((res) => setTaskStatuses(sortStatuses(res.data)));
+    
+    // Fetch user role for status filtering
+    api.get("/user/profile", { withCredentials: true })
+      .then(res => setUserRole(res.data?.role?.description || ''))
+      .catch(() => {});
   }, []);
 
   // Fetch existing task details
@@ -329,7 +335,7 @@ export default function EditTask() {
           required
         >
           <option value="">-- Select Task Status --</option>
-          {taskStatuses.map((ts) => (
+          {filterStatusesByRole(taskStatuses, userRole, selectedTaskStatus).map((ts) => (
             <option key={ts.id} value={ts.id}>
               {ts.decription}
             </option>
@@ -464,7 +470,7 @@ export default function EditTask() {
           onChange={(e) => setReportedTo(e.target.value)}
         >
           <option value="">-- Select Manager --</option>
-          {managers.map((m) => (
+          {managers.filter(m => m.role?.description?.toLowerCase() === 'admin').map((m) => (
             <option key={m.id} value={m.id} disabled={String(m.id) === String(selectedUser)}>
               {m.preffered_name}
             </option>

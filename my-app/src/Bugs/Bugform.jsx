@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Select from "react-select";
 import api from "../api";
-import { sortLatestFirst, sortStatuses } from "../utils/sortUtils";
+import { sortLatestFirst, sortStatuses, filterStatusesByRole } from "../utils/sortUtils";
 import "../Task/TaskForm.css"; // Reuse Task Form styles
 
 export default function BugForm() {
@@ -41,6 +41,7 @@ export default function BugForm() {
 
   const [files, setFiles] = useState([]);
   const [uploadProgress, setUploadProgress] = useState({});
+  const [userRole, setUserRole] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -71,6 +72,11 @@ export default function BugForm() {
         }
 
         initializedRef.current = true;
+
+        // Fetch current user's role for status filtering
+        api.get("/user/profile", { withCredentials: true })
+          .then(res => setUserRole(res.data?.role?.description || ''))
+          .catch(() => {});
 
       } catch (err) {
         console.error("Error fetching form data:", err);
@@ -337,7 +343,7 @@ export default function BugForm() {
         <label>Status</label>
         <select value={status} onChange={(e) => setStatus(e.target.value)}>
           <option value="">-- Select Status --</option>
-          {statuses.map((s) => (
+          {filterStatusesByRole(statuses, userRole).map((s) => (
             <option key={s.id} value={s.id}>
               {s.decription || s.description || s.name}
             </option>
@@ -362,7 +368,7 @@ export default function BugForm() {
           <label>Reported To </label>
           <select value={reportedTo} onChange={(e) => setReportedTo(e.target.value)}>
             <option value="">-- Select User --</option>
-            {developers.map((d) => (
+            {developers.filter(d => d.role?.description?.toLowerCase() === 'admin').map((d) => (
               <option key={d.id} value={d.id} disabled={String(d.id) === String(assignedTo)}>
                 {d.first_name || d.name || d.username}
               </option>

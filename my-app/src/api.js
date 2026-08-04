@@ -62,7 +62,6 @@ function showSessionPopup() {
 
   overlay.appendChild(box);
   document.body.appendChild(overlay);
-
   document.getElementById("go-login-btn").onclick = () => {
     localStorage.clear();
     sessionStorage.clear();

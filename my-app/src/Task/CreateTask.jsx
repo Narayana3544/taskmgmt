@@ -180,7 +180,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
-import { sortAlphabetically, sortLatestFirst, sortStatuses } from "../utils/sortUtils";
+import { sortAlphabetically, sortLatestFirst, sortStatuses, filterStatusesByRole } from "../utils/sortUtils";
 import "./TaskForm.css";
 
 export default function CreateTask() {
@@ -212,6 +212,7 @@ export default function CreateTask() {
   const [attachmentFiles, setAttachmentFiles] = useState([]);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [userRole, setUserRole] = useState("");
 
   // Fetch dropdown data
   useEffect(() => {
@@ -219,6 +220,11 @@ export default function CreateTask() {
     api.get("/users", { withCredentials: true }).then(res => setManagers(sortAlphabetically(res.data)));
     api.get("/gettype", { withCredentials: true }).then(res => setTaskTypes(res.data));
     api.get("/getstatusForTask", { withCredentials: true }).then(res => setTaskStatuses(sortStatuses(res.data)));
+    
+    // Fetch user role for status filtering
+    api.get("/user/profile", { withCredentials: true })
+      .then(res => setUserRole(res.data?.role?.description || ''))
+      .catch(() => {});
   }, []);
 
   // Fetch features when project changes
@@ -338,10 +344,9 @@ export default function CreateTask() {
         <label>Task Status<sup style={{color: "red"}}>*</sup></label>
         <select value={selectedTaskStatus} onChange={e => setSelectedTaskStatus(e.target.value)} required>
           <option value="">-- Select Task Status --</option>
-          {taskStatuses.map(ts => <option key={ts.id} value={ts.id}>{ts.decription}</option>)}
+          {filterStatusesByRole(taskStatuses, userRole).map(ts => <option key={ts.id} value={ts.id}>{ts.decription}</option>)}
         </select>
       </div>
-
       {/* Text Areas */}
       <div className="form-group" style={{ gridColumn: 'span 6', marginBottom: 0 }}>
         <label>User Story<sup style={{color: "red"}}>*</sup></label>
@@ -371,7 +376,7 @@ export default function CreateTask() {
         <label>Reported To</label>
         <select value={reportedTo} onChange={e => setReportedTo(e.target.value)}>
           <option value="">-- Select Manager --</option>
-          {managers.map(m => <option key={m.id} value={m.id} disabled={String(m.id) === String(selectedUser)}>{m.preffered_name}</option>)}
+          {managers.filter(m => m.role?.description?.toLowerCase() === 'admin').map(m => <option key={m.id} value={m.id} disabled={String(m.id) === String(selectedUser)}>{m.preffered_name}</option>)}
         </select>
       </div>
 

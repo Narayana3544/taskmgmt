@@ -6,7 +6,7 @@ import "./TaskList.css";
 import { FaEdit, FaPlus, FaEye, FaDownload, FaLock } from "react-icons/fa";
 import { useDebounce } from "use-debounce";
 import * as XLSX from "xlsx";
-import { sortLatestFirst, sortAlphabetically, sortStatuses } from "../utils/sortUtils";
+import { sortLatestFirst, sortAlphabetically, sortStatuses, filterStatusesByRole } from "../utils/sortUtils";
 import StatusSummary from "../components/StatusSummary";
 import { isTaskLocked, getLockedReason } from "../utils/lockUtils";
 import Pagination from "../components/Pagination";
@@ -491,18 +491,7 @@ export default function TaskList() {
                       onChange={(e) => handleStatusChange(task, e.target.value)}
                       style={{ padding: "4px 8px", borderRadius: "4px", border: "1px solid #ccc" }}
                     >
-                      {statuses
-                        .filter(s => {
-                          // Always include the task's current status so it displays correctly
-                          if (s.id === task.taskStatus?.id) return true;
-                          const name = (s.decription || s.description || s.name || '').toLowerCase().trim();
-                          if (userRole === 'Developer') {
-                            if (name.includes('re open') || name.includes('reopen') || name.includes('re-open')) return false;
-                            if (name.includes('done') || name.includes('completed') || name.includes('closed') || name.includes('resolved')) return false;
-                          }
-                          return true;
-                        })
-                        .map((s) => (
+                      {filterStatusesByRole(statuses, userRole, task.taskStatus?.id).map((s) => (
                         <option key={s.id} value={s.id}>
                           {s.decription || s.description || s.name}
                         </option>

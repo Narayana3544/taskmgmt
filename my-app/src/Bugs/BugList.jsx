@@ -4,7 +4,7 @@ import { FaEye, FaEdit, FaPlus } from "react-icons/fa";
 import api from "../api";
 import { ToastContainer, toast } from "react-toastify";
 import Select from "react-select";
-import { sortLatestFirst, sortStatuses } from "../utils/sortUtils";
+import { sortLatestFirst, sortStatuses, filterStatusesByRole } from "../utils/sortUtils";
 import "react-toastify/dist/ReactToastify.css";
 import "./BugList.css";
 import StatusSummary from '../components/StatusSummary';
@@ -299,18 +299,7 @@ export default function BugList() {
                       onChange={(e) => handleStatusChange(bug.id, e.target.value)}
                       style={{ padding: "4px 8px", borderRadius: "4px", border: "1px solid #ccc" }}
                     >
-                      {statuses
-                        .filter(s => {
-                          // Always include the bug's current status so it displays correctly
-                          if (s.id === bug.statusId) return true;
-                          const name = (s.decription || s.description || s.name || '').toLowerCase().trim();
-                          if (userRole === 'Developer') {
-                            if (name.includes('re open') || name.includes('reopen') || name.includes('re-open')) return false;
-                            if (name.includes('done') || name.includes('completed') || name.includes('closed') || name.includes('resolved')) return false;
-                          }
-                          return true;
-                        })
-                        .map((s) => (
+                      {filterStatusesByRole(statuses, userRole, bug.statusId).map((s) => (
                         <option key={s.id} value={s.id}>{s.decription}</option>
                       ))}
                     </select>

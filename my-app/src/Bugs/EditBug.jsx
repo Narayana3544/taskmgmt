@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import api from "../api";
 import "./Bugform.css";
 import "../Task/TaskForm.css";
-import { sortStatuses } from "../utils/sortUtils";
+import { sortStatuses, filterStatusesByRole } from "../utils/sortUtils";
 
 export default function BugForm() {
   const { id } = useParams(); // bugId for edit
@@ -38,6 +38,7 @@ export default function BugForm() {
 
   const [files, setFiles] = useState([]);
   const [uploadProgress, setUploadProgress] = useState({});
+  const [userRole, setUserRole] = useState("");
 
   // Fetch dropdowns
   useEffect(() => {
@@ -147,6 +148,11 @@ export default function BugForm() {
         if (bug.attachments && bug.attachments.length > 0) {
           setExistingAttachments(bug.attachments);
         }
+
+        // Fetch current user's role for status filtering
+        api.get("/user/profile", { withCredentials: true })
+          .then(res => setUserRole(res.data?.role?.description || ''))
+          .catch(() => {});
 
       } catch (err) {
         console.error("Error fetching data:", err);
@@ -330,7 +336,7 @@ export default function BugForm() {
         <label>Status</label>
         <select value={status} onChange={(e) => setStatus(e.target.value)}>
           <option value="">-- Select Status --</option>
-          {statuses.map((s) => (<option key={s.id} value={s.id}>{s.decription || s.description || s.name}</option>))}
+          {filterStatusesByRole(statuses, userRole, status).map((s) => (<option key={s.id} value={s.id}>{s.decription || s.description || s.name}</option>))}
         </select>
       </div>
 
@@ -357,7 +363,7 @@ export default function BugForm() {
         <label>Reported To </label>
         <select value={reporterId} onChange={(e) => setReporterId(e.target.value)}>
           <option value="">-- Select User --</option>
-          {developers.map((d) => (
+          {developers.filter(d => d.role?.description?.toLowerCase() === 'admin').map((d) => (
             <option key={d.id} value={d.id} disabled={String(d.id) === String(assignedTo)}>
               {d.first_name || d.name || d.username}
             </option>

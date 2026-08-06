@@ -1,22 +1,119 @@
-this is a task management project done with the java sprng boot and react
+# TaskMgmt
 
---overview of the project
-1:This project is of to create a project and it's feature points and user stories of that feature points 
+A lightweight task and sprint management tool for small teams — built to track projects, break features into user stories, and run sprint planning the way a scrum team actually works.
 
-2:In Features there will feature_id and project_id
+Built with **Java Spring Boot** (backend), **React** (frontend), and **PostgreSQL** (database).
 
+## Overview
 
-3:user stories are nothing but the feature can be divided into several sub-tasks these are called story points 
+TaskMgmt lets a team:
 
-user story consists of the -detailed description of that user story ,Acceptance criteria,Story points(how many days required to complete tat particular task) ,Reported to and Assigned to ,Status of the user story 
+- Create **Projects**, each with its own set of **Features**
+- Break each Feature into **User Stories** (sub-tasks), where every story has:
+  - A detailed description
+  - Acceptance criteria
+  - Story points (estimated effort in days)
+  - Reported-to and Assigned-to users
+  - A status (e.g. backlog, in progress, done)
+- Plan and run **Sprints** for structured delivery
 
+### How sprint planning works
 
---------------------------------------------------------------------------------------
+1. A product owner creates a project, defines its features, and breaks them into user stories with story points.
+2. A scrum master creates a sprint (typically a 10-working-day cycle) for a given feature.
+3. Backlog stories are pulled into the sprint. Since story users are already tied to the project, sprint overview automatically reflects who's available.
+4. Stories are assigned to users — either self-assigned or assigned by a manager — and tracked to completion.
 
-This project is done for maintaining all the tasks and keeping the records of the projects,tasks for a small organization.it was done by using Java springboot asa backend and React js a frontend.
+## Tech Stack
 
-Mainly this project consists of creation of any project and its feautures and sprint planning and progress.
+| Layer      | Technology              |
+|------------|--------------------------|
+| Backend    | Java, Spring Boot        |
+| Frontend   | React                    |
+| Database   | PostgreSQL               |
+| Container  | Docker / Docker Compose  |
 
-HOW SPRINT PLANNING WORKS
+## Project Structure
 
-Imagine you're a product owner ,you creates the tasks with the skilled people with the story points and give that tasks to the organization.in the organization the sprint planners called scrum masters creates a sprint of the feature which is described by the product owner. Actually sprint has the duration of 10 working days.After the creation of the sprints we need to add the tasks that need to be completed or that has the status of backlog .After the adding of tasks to the sprint in the sprint overview there will be the project assigned users that will be reflected here also ,so no problem with the assigning of users.After the adding of tasks to the sprint the next step is to assignment of tasks to the users (this can be done by the user itself or by the manager)
+```
+taskmgmt/
+├── demo/                 # Spring Boot backend
+├── my-app/                # React frontend
+├── Master_Data.sql        # Seed / reference data
+├── docker-compose.yml     # Multi-container setup (db + backend + frontend)
+└── LICENSE
+```
+
+## Getting Started
+
+### Prerequisites
+
+- Docker & Docker Compose
+- (For local, non-Docker dev) Java 17+, Maven, Node.js & npm
+
+### Run with Docker Compose (recommended)
+
+```bash
+git clone https://github.com/Narayana3544/taskmgmt.git
+cd taskmgmt
+docker-compose up --build
+```
+
+This spins up three services:
+
+| Service   | Description                  | Port                    |
+|-----------|-------------------------------|--------------------------|
+| postgres  | PostgreSQL 15 database        | `5432`                   |
+| backend   | Spring Boot API                | `8080`                   |
+| frontend  | React app (served on nginx)    | `3000` → container `80`  |
+
+Once running:
+- Frontend: [http://localhost:3000](http://localhost:3000)
+- Backend API: [http://localhost:8080](http://localhost:8080)
+
+### Run locally without Docker
+
+**Backend**
+```bash
+cd demo
+./mvnw spring-boot:run
+```
+Set the following environment variables (or edit `application.properties`) to point at your local Postgres instance:
+```
+SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/task_mgmt
+SPRING_DATASOURCE_USERNAME=postgres
+SPRING_DATASOURCE_PASSWORD=<your_password>
+```
+
+**Frontend**
+```bash
+cd my-app
+npm install
+npm start
+```
+
+**Database**
+
+Create a Postgres database named `task_mgmt`, then load the seed data:
+```bash
+psql -U postgres -d task_mgmt -f Master_Data.sql
+```
+
+## Core Concepts
+
+| Concept      | Description                                                            |
+|--------------|--------------------------------------------------------------------------|
+| Project      | Top-level container for a body of work                                  |
+| Feature      | A capability within a project (`feature_id`, `project_id`)              |
+| User Story   | A sub-task of a feature, with description, acceptance criteria, story points, assignee, and status |
+| Sprint       | A fixed-duration (default 10 working day) cycle where backlog stories are pulled in and assigned |
+
+## Roadmap / Ideas
+
+- [ ] Sprint burndown charts
+- [ ] Role-based access (product owner / scrum master / developer)
+- [ ] Notifications on story assignment or status change
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).

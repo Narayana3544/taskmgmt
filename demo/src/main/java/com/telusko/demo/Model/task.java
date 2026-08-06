@@ -1,12 +1,16 @@
 package com.telusko.demo.Model;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.List;
+import java.util.ArrayList;
 
 @Entity
 @Data
@@ -17,24 +21,29 @@ public class task {
     @GeneratedValue
     private int id;
     private String acceptance_criteria;
-   private String attachment_flag;
-   @ManyToOne
-   @JoinColumn(name = "Sprint_id")
-   private createsprint sprint;
+    private String attachment_flag;
+    @ManyToOne
+    @JoinColumn(name = "Sprint_id")
+    private createsprint sprint;
 
-   private Integer storypoints;
-   private String userstory;
-   private String description;
+    private Integer storypoints;
+    private Integer complexity;
+    private String userstory;
+    private String description;
 
-   @ManyToOne
-   @JoinColumn(name = "feature_id")
-   private Feature feature;
+    @ManyToOne
+    @JoinColumn(name = "feature_id")
+    private Feature feature;
 
-    @Lob
+
     @Column(name = "attachment")
-    private byte[] attachmentData;
+    private String attachmentPath;
 
     private String attachmentName;
+    private String attachmentType; // To store file MIME type
+
+    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    private List<TaskAttachment> attachments = new ArrayList<>();
 
     @ManyToOne
     @JoinColumn(name = "user_id")
@@ -82,14 +91,12 @@ public class task {
         this.attachmentName = attachmentName;
     }
 
-    private String attachmentType; // To store file MIME type
-
-    public byte[] getAttachment() {
-        return attachmentData;
+    public List<TaskAttachment> getAttachments() {
+        return attachments;
     }
 
-    public void setAttachment(byte[] attachment) {
-        this.attachmentData = attachment;
+    public void setAttachments(List<TaskAttachment> attachments) {
+        this.attachments = attachments;
     }
 
     public User getReportedTo() {
@@ -218,16 +225,6 @@ public class task {
         this.createdDate = createdDate;
     }
 
-
-    public byte[] getAttachmentData() {
-        return attachmentData;
-    }
-
-    public void setAttachmentData(byte[] attachmentData) {
-        this.attachmentData = attachmentData;
-    }
-
-
     public LocalDateTime getStart_date() {
         return start_date;
     }
@@ -238,6 +235,14 @@ public class task {
 
     public LocalDateTime getEnd_date() {
         return end_date;
+    }
+
+    public String getAttachmentPath() {
+        return attachmentPath;
+    }
+
+    public void setAttachmentPath(String attachmentPath) {
+        this.attachmentPath = attachmentPath;
     }
 
     public void setEnd_date(LocalDateTime end_date) {

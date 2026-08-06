@@ -1,6 +1,7 @@
 package com.telusko.demo.service;
 
 import com.telusko.demo.Model.User;
+import com.telusko.demo.dto.UserDTO;
 import com.telusko.demo.repo.Rolerepo;
 import com.telusko.demo.repo.userrepo;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,8 +40,8 @@ public class loginservice {
 //    }
 
     public boolean deleteUserById(int id) {
-        if (repo.existsById((long) id)) {
-            repo.deleteById((long) id);
+        if (repo.existsById(id)) {
+            repo.deleteById(id);
             return true;
         }
         return false;
@@ -63,11 +64,17 @@ public class loginservice {
 
 
 
-    public User getUserById(Long id) {
-        return repo.findById(id).orElse(null);
+    public User getUserById(int id) {
+        return repo.findById(id);
     }
 
     public List<User> getManagers() {
         return repo.findByRoleDescription("Project Manager");
+    }
+
+    public UserDTO getUser(int userId) {
+        User user = repo.findById(userId);
+
+        return new UserDTO(user.getId(), user.getFirst_name(), user.getEmail());
     }
 }

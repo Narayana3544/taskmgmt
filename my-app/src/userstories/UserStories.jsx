@@ -118,7 +118,7 @@ then(() => {
             </select>
           </div>
 
-          <button type="submit" className="submit-btn">Add Story</button>
+          <button type="submit" className="btn-global btn-primary">Add Story</button>
         </form>
       )}
     </div>

@@ -48,18 +48,12 @@
   background-color: #f9fafb;
 }
 
-/* Buttons container */
-.btn-container {
-  margin-top: 20px;
-  display: flex;
-  gap: 10px;
-}
 
 /* Buttons */
 .assign-btn,
 .back-btn,
 .btn-submit,
-.remove-btn {
+.removee-btn {
   padding: 8px 15px;
   border: none;
   cursor: pointer;
@@ -67,25 +61,30 @@
   font-size: 0.95rem;
 }
 
+
 /* Specific button styles */
 
 .assign-btn,
-.remove-btn {
-  background-color: #4caf50;
+.removee-btn {
+  background-color: #007bff;
   color: white;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 8px;
 }
 
 .assign-btn:hover {
-  background-color: #059669;
+  background-color: #007bff;
 }
 
 .back-btn {
-  background-color:  #4caf50;
+  background-color:  #007bff;
   color: white;
 }
 
 .back-btn:hover {
-  background-color:#059669;
+  background-color:#007bff;
 }
 
 .btn-submit {
@@ -220,11 +219,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 999;
+  z-index: 10000;
 }
 
 /* Popup Box */
-.popup {
+.confirm-modal-box {
+  position: relative;
   background: #fff;
   padding: 20px 25px;
   border-radius: 12px;
@@ -233,7 +233,7 @@
   box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
 }
 
-.popup p {
+.confirm-modal-box p {
   font-size: 15px;
   margin-bottom: 20px;
   color: #333;
@@ -246,7 +246,7 @@
 }
 
 .confirm-btn {
-  background: #4caf50;
+  background: #007bff;
   color: white;
   padding: 6px 14px;
   border: none;
@@ -264,7 +264,7 @@
 }
 
 .confirm-btn:hover {
-  background: #43a047;
+  background: #007bff;
 }
 
 .cancel-btn:hover {

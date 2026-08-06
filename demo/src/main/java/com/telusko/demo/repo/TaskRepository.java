@@ -18,6 +18,8 @@ public interface TaskRepository  extends JpaRepository<task,Integer> {
 
     List<task> findByUser_Id(int userId);
 
+    List<task> findByUser_IdOrUserIsNull(int userId);
+
     List<task> findBySprint_id(int sprintId);
 
     List<task> findByFeature_id(int featureId);
@@ -27,6 +29,7 @@ public interface TaskRepository  extends JpaRepository<task,Integer> {
     List<task> findAllBySprint_id(int sprintId);
 
 
+    List<task> findByFeature_Project_Id(Integer projectId);
 
-
+    List<task> findBySprintId(int id);
 }

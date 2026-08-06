@@ -5,14 +5,20 @@ import com.telusko.demo.Model.Team;
 import com.telusko.demo.Model.User;
 import com.telusko.demo.Model.createsprint;
 import com.telusko.demo.Model.task;
+import com.telusko.demo.Model.TaskAttachment;
 import com.telusko.demo.config.CustomUserDetails;
 import com.telusko.demo.repo.TaskRepository;
+import com.telusko.demo.repo.TaskAttachmentRepository;
 import com.telusko.demo.service.TaskSprintTrackService;
 import com.telusko.demo.service.TaskTrackService;
 import com.telusko.demo.service.Taskservice;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -20,7 +26,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.bind.annotation.DeleteMapping;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -31,6 +44,9 @@ public class TaskController {
 
     @Autowired
     public TaskRepository repo;
+
+    @Autowired
+    public TaskAttachmentRepository taskAttachmentRepository;
 
     @Autowired
     public Taskservice service;
@@ -65,7 +81,7 @@ public class TaskController {
         return service.getAllTasks(PageRequest.of(page, size));
     }
 
-//    @PutMapping("/task/{id}")
+    //    @PutMapping("/task/{id}")
 //    public task updatetask(@PathVariable int id,@RequestBody task Task){
 //        return service.updateTask(id,Task);
 //    }
@@ -75,40 +91,65 @@ public class TaskController {
     }
 
 
-    @PostMapping("/create-task-attach")
-    public ResponseEntity<?> createTask(
-            @RequestPart("task") task Task,
-            @RequestPart(value = "attachment", required = false) MultipartFile attachment) {
-        try {
-            task savedTask = service.saveTask(Task, attachment);
-            return ResponseEntity.ok(savedTask);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        }
-    }
+    //    @PostMapping("/create-task-attach")
+//    public ResponseEntity<?> createTask(
+//            @RequestPart("task") task Task,
+//            @RequestPart(value = "attachment", required = false) MultipartFile attachment) {
+//        try {
+//            task savedTask = service.saveTask(Task, attachment);
+//            return ResponseEntity.ok(savedTask);
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+//        }
+//    }
     @GetMapping("/{id}/attachment")
-    public ResponseEntity<byte[]> getAttachment(@PathVariable int id) {
-        task Task = service.getTaskById(id);
-        if (Task != null && Task.getAttachment() != null) {
-            return ResponseEntity.ok()
-                    .header("Content-Disposition", "attachment; filename=\"" + Task.getAttachmentName() + "\"")
-                    .header("Content-Type", Task.getAttachmentType())
-                    .body(Task.getAttachment());
+    public ResponseEntity<?> getAttachment(@PathVariable int id) {
+        task taskObj = service.getTaskById(id);
+        if (taskObj == null || taskObj.getAttachmentPath() == null) {
+            return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.notFound().build();
+
+        File file = new File(taskObj.getAttachmentPath());
+        if (!file.exists()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        try {
+            Path path = file.toPath();
+            byte[] data = Files.readAllBytes(path);
+            String mimeType = Files.probeContentType(path);
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + taskObj.getAttachmentName() + "\"")
+                    .contentType(mimeType != null ? MediaType.parseMediaType(mimeType) : MediaType.APPLICATION_OCTET_STREAM)
+                    .body(data);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to read attachment"));
+        }
     }
+
 
     @PostMapping("/create")
     public ResponseEntity<?> createTask(
             @RequestParam("userstory") String userstory,
             @RequestParam("description") String description,
             @RequestParam("acceptance_criteria") String acceptanceCriteria,
-            @RequestParam("storypoints") Integer storypoints,
+            @RequestParam(value = "storypoints", required = false) Integer storypoints,
+            @RequestParam(value = "complexity", required = false) Integer complexity,
             @RequestParam("attachment_flag") String attachmentFlag,
-            @RequestParam(value = "attachment", required = false) MultipartFile attachment,
+            @RequestParam(value = "attachment", required = false) List<MultipartFile> attachments,
             @RequestParam("feature_id") Long featureId,
-            @RequestParam("sprint_id") Long sprintId
+            @RequestParam(value = "sprint_id", required = false) Long sprintId,
+            @RequestParam(value = "user_id", required = false) Long userId,
+            @RequestParam(value = "reportedTo", required = false) Long reportedToId,
+            @RequestParam(value = "taskType_id", required = false) Long taskTypeId,
+            @RequestParam(value = "taskStatus_id", required = false) Long taskStatusId,
+            @RequestParam(value = "start_date", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
+            @RequestParam(value = "end_date", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate
     ) {
         try {
             task savedTask = service.createTask(
@@ -116,10 +157,17 @@ public class TaskController {
                     description,
                     acceptanceCriteria,
                     storypoints,
+                    complexity,
                     attachmentFlag,
-                    attachment,
+                    attachments,
                     featureId,
-                    sprintId
+                    sprintId,
+                    userId,
+                    reportedToId,
+                    taskTypeId,
+                    taskStatusId,
+                    startDate,
+                    endDate
             );
             return ResponseEntity.ok(savedTask);
         } catch (Exception e) {
@@ -128,46 +176,120 @@ public class TaskController {
         }
     }
 
-    @GetMapping("/tasks/{id}/download")
-    public ResponseEntity<byte[]> downloadAttachment(@PathVariable int id) {
-        Optional<task> taskOptional = repo.findById(id);
 
-        if (taskOptional.isEmpty() || taskOptional.get().getAttachment() == null) {
+
+    @GetMapping("/tasks/{id}/download")
+    public ResponseEntity<Resource> downloadAttachment(@PathVariable int id) throws IOException {
+        Optional<task> taskOptional = repo.findById(id);
+        if (taskOptional.isEmpty() || taskOptional.get().getAttachmentPath() == null) {
             return ResponseEntity.notFound().build();
         }
 
         task Task = taskOptional.get();
 
+        // Convert relative path to absolute
+        Path filePath = Paths.get("").toAbsolutePath().resolve(Task.getAttachmentPath()).normalize();
+        File file = filePath.toFile();
+
+        if (!file.exists()) return ResponseEntity.notFound().build();
+
+        Resource resource = new org.springframework.core.io.UrlResource(file.toPath().toUri());
+
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + Task.getAttachmentName() + "\"")
                 .contentType(MediaType.parseMediaType(Task.getAttachmentType()))
-                .body(Task.getAttachment());
+                .body(resource);
     }
+
+    @GetMapping("/tasks/attachment/{attachmentId}/download")
+    public ResponseEntity<Resource> downloadSingleAttachment(@PathVariable int attachmentId) throws IOException {
+        Optional<TaskAttachment> attachmentOptional = taskAttachmentRepository.findById(attachmentId);
+        if (attachmentOptional.isEmpty()) return ResponseEntity.notFound().build();
+        TaskAttachment attachment = attachmentOptional.get();
+
+        Path filePath = Paths.get("").toAbsolutePath().resolve(attachment.getAttachmentPath()).normalize();
+        File file = filePath.toFile();
+
+        if (!file.exists()) return ResponseEntity.notFound().build();
+
+        Resource resource = new org.springframework.core.io.UrlResource(file.toPath().toUri());
+        
+        String mimeType = attachment.getAttachmentType();
+        if (mimeType == null || mimeType.isEmpty()) mimeType = MediaType.APPLICATION_OCTET_STREAM_VALUE;
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + attachment.getAttachmentName() + "\"")
+                .contentType(MediaType.parseMediaType(mimeType))
+                .body(resource);
+    }
+
+
+
     @PutMapping("/task/{id}")
-    public ResponseEntity<task> updateTask(
+    public ResponseEntity<String> updateTask(
             @PathVariable int id,
             @RequestPart("task") task Task,   // JSON part
-            @RequestPart(value = "attachment", required = false) MultipartFile attachment // File part
+            @RequestPart(value = "attachment", required = false) List<MultipartFile> attachments // File part
     ) {
         try {
-            task updatedTask = service.updateTask(id, Task, attachment);
-            return ResponseEntity.ok(updatedTask);
-
+            // attachmentFlag is not needed here because we just check if attachment exists
+            task updatedTask = service.updateTask(id, Task, attachments, null);
+            return ResponseEntity.ok("Task updated successfully");
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to update task");
         }
     }
 
+    @Autowired
+    private com.telusko.demo.repo.TaskAttachmentRepository taskAttachmentRepo;
+
+    @DeleteMapping("/tasks/attachments/{id}")
+    public ResponseEntity<String> deleteTaskAttachment(@PathVariable Integer id) {
+        com.telusko.demo.Model.TaskAttachment attachment = taskAttachmentRepo.findById(id).orElse(null);
+        if (attachment != null) {
+            task Task = attachment.getTask();
+            if (Task != null) {
+                Task.getAttachments().remove(attachment);
+                if (Task.getAttachments().isEmpty() && Task.getAttachmentName() == null) {
+                    Task.setAttachment_flag("No");
+                }
+                repo.save(Task);
+            } else {
+                taskAttachmentRepo.deleteById(id);
+            }
+        }
+        return ResponseEntity.ok("Attachment deleted successfully");
+    }
+
+    @DeleteMapping("/tasks/{taskId}/legacy-attachment")
+    public ResponseEntity<String> deleteLegacyTaskAttachment(@PathVariable Integer taskId) {
+        task Task = service.getTaskById(taskId);
+        if(Task != null) {
+            Task.setAttachmentName(null);
+            Task.setAttachmentPath(null);
+            if (Task.getAttachments() == null || Task.getAttachments().isEmpty()) {
+                Task.setAttachment_flag("No");
+            }
+            repo.save(Task);
+        }
+        return ResponseEntity.ok("Legacy attachment deleted successfully");
+    }
+
+
+
+
     @GetMapping("/user/tasks")
-    public List<task> viewMyTasks(Authentication authentication) {
-        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-        int userId = userDetails.getUser().getId();
-        return service.viewTasksByUserId(userId);
+    public List<task> getTasksForUser(
+            Authentication authentication,
+            @RequestParam(required = false) Integer sprintId,
+            @RequestParam(required = false) Integer statusId) {
+        return service.getTasksForUser(authentication, sprintId, statusId);
     }
 
     @PutMapping("/tasks/{taskId}/status/{statusId}")
     public ResponseEntity<String> updateTaskStatus(@PathVariable int taskId, @PathVariable int statusId) {
-      service.updateTaskStatus(taskId, statusId);
+        service.updateTaskStatus(taskId, statusId);
         return ResponseEntity.ok("Task status updated successfully");
     }
 
@@ -239,15 +361,19 @@ public class TaskController {
         return service.viewSprintsByTaskId(taskId);
     }
 
-    @GetMapping("/viewTaskByProjectId/{ProjectId}")
-    public List<task> ViewTasksByProjectId(@PathVariable int ProjectId){
-        return service.viewTasksBYProjectId(ProjectId);
+    @GetMapping("/viewTaskByProjectId/{projectId}")
+    public List<task> getTasksByProjectId(
+            @PathVariable Integer projectId,
+            @RequestParam(required = false) String searchStory,
+            @RequestParam(required = false) String searchUser,
+            @RequestParam(required = false) String searchStatus
+    ) {
+        return service.filterTasks(projectId, searchStory, searchUser, searchStatus);
     }
 
     @PutMapping("/tasks/{taskId}/move/{SprintId}")
     public ResponseEntity<String> moveTaskToNextSprint(@PathVariable int taskId, @PathVariable int SprintId) {
         try {
-//          service.moveTaskToNextSprint(taskId,SprintId);
             taskSprintTrackService.MoveTaskToAnySprint(taskId,SprintId);
             return ResponseEntity.ok("Task Assigned successfully");
         } catch (Exception e) {
@@ -256,4 +382,42 @@ public class TaskController {
                     .body("Error moving task to next sprint: " + e.getMessage());
         }
     }
+
+    @GetMapping("/user/active/tasks")
+    public List<task> viewMyActiveTasks(Authentication authentication) {
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        int userId = userDetails.getUser().getId();
+        return service.viewActiveTasksByUserId(userId);
+    }
+
+    @GetMapping("/user/{userId}/tasks")
+    public List<task> viewTasksByUserId(@PathVariable int userId) {
+        return service.viewActiveTasksByUserId(userId);
+    }
+
+
+    //this is for dashboard for returning the current active sprint tasks only
+    @GetMapping("/user/Sprintactive/tasks")
+    public List<task> viewMyActiveSprintTasks(Authentication authentication) {
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        int userId = userDetails.getUser().getId();
+        return service.viewActiveSprintTasksByUserId(userId);
+    }
+
+    @PostMapping("/tasks/{taskId}/clone")
+    public ResponseEntity<?> cloneTask(@PathVariable int taskId, Authentication authentication) {
+        try {
+            CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+            int userId = userDetails.getUser().getId();
+
+            task clonedTask = service.cloneTask(taskId);
+            return ResponseEntity.ok(clonedTask);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Error cloning task: " + e.getMessage()));
+        }
+    }
+
 }

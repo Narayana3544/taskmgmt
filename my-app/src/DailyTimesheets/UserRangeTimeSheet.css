@@ -1,0 +1,91 @@
+.timesheet-container {
+  width: 100%;
+  margin: 20px auto;
+  font-family: Arial, sans-serif;
+  background-color: #fff;
+  color: #000;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.range-picker {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.range-picker input[type="date"] {
+  padding: 5px;
+  font-size: 14px;
+}
+
+.range-picker button {
+  padding: 5px 10px;
+  font-size: 14px;
+  cursor: pointer;
+  background-color: #2875e7;
+  color: white;
+  border-radius: 4px;
+}
+
+.timesheet-table,
+.daily-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+.timesheet-table th,
+.timesheet-table td,
+.daily-table th,
+.daily-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: center;
+}
+
+.timesheet-table th,
+.daily-table th {
+  background-color: #f2f2f2;
+}
+
+.leave-row {
+  background-color: #ffebeb;
+  color: #a33;
+  font-weight: bold;
+}
+
+.weekend-row {
+  background-color: #f0f0f0;
+  color: #555;
+}
+
+.holiday-row {
+  background-color: #ffeebb;
+  color: #aa7700;
+  font-weight: bold;
+}
+
+.daily-details h3 {
+  margin-top: 20px;
+}
+
+.no-entries {
+  color: #888;
+  font-style: italic;
+}
+
+/* Fix wrapping rules for timesheet tables */
+.timesheet-table th,
+.timesheet-table td {
+  white-space: nowrap !important;
+}
+
+.timesheet-table td.description-cell,
+.timesheet-table td.task-cell,
+.timesheet-table td:nth-child(5) {
+  white-space: normal !important;
+  word-break: break-word !important;
+  overflow-wrap: anywhere !important;
+}

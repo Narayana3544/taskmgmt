@@ -18,13 +18,15 @@ export default function EditProject() {
   // Fetch project + statuses
   useEffect(() => {
     // Get statuses for dropdown
-    api.get('/getstatusForProject', { withCredentials: true })
-      .then(res => setStatuses(res.data))
-      .catch(err => console.error('Failed to load statuses:', err));
+       api
+      .get('/getstatusForProject', { withCredentials: true })
+      .then((res) => setStatuses(res.data))
+      .catch((err) => console.error('Failed to load statuses:', err));
 
     // Get project details
-    api.get(`/projects/${id}`, { withCredentials: true })
-      .then(res => {
+     api
+      .get(`/projects/${id}`, { withCredentials: true })
+      .then((res) => {
         const proj = res.data;
         setProject({
           name: proj.name,
@@ -32,7 +34,7 @@ export default function EditProject() {
           status: proj.status?.id || '' // store ID
         });
       })
-      .catch(err => console.error('Failed to load project:', err));
+      .catch((err) => console.error('Failed to load project:', err));
   }, [id]);
 
   const handleChange = (e) => {
@@ -43,8 +45,40 @@ export default function EditProject() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Check if user is trying to close the project
+    const selectedStatusObj = statuses.find(s => s.id === parseInt(project.status));
+    const isClosing = selectedStatusObj && 
+      (selectedStatusObj.decription.toLowerCase() === 'closed' || selectedStatusObj.decription.toLowerCase() === 'completed');
+
+    if (isClosing) {
+      try {
+        const featuresRes = await api.get(`/features/project/${id}`, { withCredentials: true });
+        const sprintsRes = await api.get(`/project/sprints/${id}`, { withCredentials: true });
+        
+        const hasOpenFeatures = featuresRes.data.some(f => {
+          const stat = f.status?.decription?.toLowerCase() || '';
+          return stat !== 'closed' && stat !== 'completed';
+        });
+
+        const hasOpenSprints = sprintsRes.data.some(s => {
+          const stat = s.status?.toLowerCase() || '';
+          return stat !== 'closed' && stat !== 'completed';
+        });
+
+        if (hasOpenFeatures || hasOpenSprints) {
+          alert("Please close tasks, features, sprints first.");
+          return; // Stop submission
+        }
+      } catch (err) {
+        console.error("Error validating project closure:", err);
+        alert("Failed to validate project closure requirements.");
+        return;
+      }
+    }
+
     const payload = {
       name: project.name,
       description: project.description,
@@ -56,7 +90,7 @@ export default function EditProject() {
         alert('Project updated successfully!');
         navigate('/manage-projects');
       })
-      .catch(err => console.error('Failed to update project:', err));
+     .catch((err) => console.error('Failed to update project:', err));
   };
 
   const handleDelete = () => {
@@ -64,12 +98,12 @@ export default function EditProject() {
       api
         .delete(`/projects/${id}`, { withCredentials: true })
         .then(() => {
-          alert("Project deleted successfully!");
-          navigate("/manage-projects");
+                 alert('Project deleted successfully!');
+          navigate('/manage-projects');
         })
         .catch((err) => {
-          console.error("Error deleting project:", err);
-          alert("It may be linked to other features");
+           console.error('Error deleting project:', err);
+          alert('It may be linked to other features');
         });
     }
   };
@@ -78,7 +112,7 @@ export default function EditProject() {
     <div className="edit-project-page">
       <div className="edit-main">
         <div className="edit-container">
-          <h1>Edit Project</h1>
+           <h3>Edit Project</h3>
           <form onSubmit={handleSubmit} className="edit-form">
             <label>Project Name</label>
             <input
@@ -109,23 +143,17 @@ export default function EditProject() {
               required
             >
               <option value="">Select a status</option>
-              {statuses.map(status => (
+                {statuses.map((status) => (
                 <option key={status.id} value={status.id}>
                   {status.decription}
                 </option>
               ))}
             </select>
 
-            <div className="button-group">
-              <button type="submit" className="save-btn">Save</button>
-              <button type="button" className="delete-btn" onClick={handleDelete}>Delete</button>
-              <button
-                type="button"
-                className="cancel-btn"
-                onClick={() => navigate("/manage-projects")}
-              >
-                Back
-              </button>
+            <div className="btn-container full-width">
+              <button type="button" className="btn-global btn-secondary" onClick={() => navigate(-1)}>Back</button>
+              <button type="button" className="btn-global btn-danger" onClick={handleDelete}>Delete</button>
+              <button type="submit" className="btn-global btn-primary">Save</button>
             </div>
           </form>
         </div>

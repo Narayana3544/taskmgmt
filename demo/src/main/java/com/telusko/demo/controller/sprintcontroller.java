@@ -18,6 +18,7 @@ import java.security.Principal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -49,9 +50,20 @@ public class sprintcontroller {
         return service.create(sprint);
     }
 
+    @PutMapping("/update/{id}")
+    public ResponseEntity<createsprint> updateSprint(@PathVariable int id,@RequestBody createsprint updatedSprint) {
+        createsprint sprint = service.updateSprint(id, updatedSprint);
+        return ResponseEntity.ok(sprint);
+    }
+
     @GetMapping("/sprints")
     public List<createsprint> viewsprints(){
         return service.view();
+    }
+
+    @GetMapping("/project/activeSprints/{ProjectId}")
+    public List<createsprint> findActiveSprintsByProjectId(@PathVariable int ProjectId){
+        return service.findActiveSprintsByProjectId(ProjectId);
     }
 
     @GetMapping("/sprints/{sprintId}")
@@ -60,13 +72,14 @@ public class sprintcontroller {
     }
 
     @PostMapping("/sprints/{sprintId}/assign-users")
-    public ResponseEntity<?> assignUsersToSprint(@PathVariable int sprintId, @RequestBody List<Long> userIds) {
+    public ResponseEntity<?> assignUsersToSprint(@PathVariable int sprintId, @RequestBody List<Integer> userIds) {
         Optional<createsprint> sprintOpt = sprintRepo.findById(sprintId);
         if (sprintOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Sprint not found");
         }
 
-        List<User> users = userRepo.findAllById(userIds);
+        List<User> users;
+        users = userRepo.findAllById(userIds);
         if (users.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("No valid users found");
         }
@@ -189,10 +202,39 @@ public class sprintcontroller {
 
         return allSprints;
     }
+    //this method is to override the getsprintbyid to mchange the status of sprint whether it is active or not
+//    @Override
+//    public createsprint getSprintById(int id) {
+//        createsprint s = sprintRepo.findById(id)
+//                .orElseThrow(() -> new RuntimeException("Sprint not found"));
+//
+//        LocalDate today = LocalDate.now();
+//        if (today.isBefore(s.getStartDate().toLocalDate())) {
+//            s.setStatus("Planned");
+//        } else if (!today.isAfter(s.getEndDate().toLocalDate())) {
+//            s.setStatus("Active");
+//        } else {
+//            s.setStatus("Completed");
+//        }
+//
+//        // Save back to DB so queries will see the updated status
+//        return sprintRepo.save(s);
+//    }
 
+    @GetMapping("/project/sprints/{ProjectId}")
+    public List<createsprint> getSprintsByProject(@PathVariable int ProjectId) {
+        return service.findByProjectId(ProjectId);
+    }
+
+    @GetMapping("/sprintsforUser")
+    public List<createsprint> getsprintsforUser(Authentication authentication){
+        return service.findSprintsforUsers(authentication);
+    }
+
+    @GetMapping("/user/sprint-progress")
+    public ResponseEntity<List<Map<String, Object>>> getAllSprintProgressByUser(Authentication authentication){
+        return ResponseEntity.ok(service.getSprintProgressForUser(authentication));
+    }
 
 
 }
-
-
-

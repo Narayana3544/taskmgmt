@@ -13,10 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.GetMapping;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -42,22 +39,25 @@ public class sprintservice {
     }
 
     public List<createsprint> view() {
-       List<createsprint> sprints=repo.findAll();
+        List<createsprint> sprints=repo.findAll();
         List<createsprint> allSprints = new ArrayList<>();
         LocalDate today = LocalDate.now();
         for (createsprint sprint : sprints) {
             // ✅ auto update status based on date
             if (today.isBefore(sprint.getStartDate().toLocalDate())) {
-                sprint.setStatus("UPCOMING");
+                sprint.setStatus("Upcoming");
             } else if (today.isAfter(sprint.getEndDate().toLocalDate())) {
-                sprint.setStatus("COMPLETED");
+                sprint.setStatus("Completed");
             } else {
-                sprint.setStatus("ACTIVE");
+                sprint.setStatus("Active");
             }
+//
+//            if ("Active".equals(sprint.getStatus())) {
+//                allSprints.add(sprint);
+//            }
+//            updateSprintStatus(sprint);
+            allSprints.add(sprint);
 
-            if ("ACTIVE".equals(sprint.getStatus())) {
-                allSprints.add(sprint);
-            }
         }
 
         return sprints.stream()
@@ -75,19 +75,49 @@ public class sprintservice {
                 .collect(Collectors.toList());
 
     }
+    public createsprint updateSprint(int id, createsprint updatedSprint) {
+        createsprint existingSprint = repo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Sprint not found with id " + id));
+
+        existingSprint.setName(updatedSprint.getName());
+        existingSprint.setStartDate(updatedSprint.getStartDate());
+        existingSprint.setEndDate(updatedSprint.getEndDate());
+        existingSprint.setSprintGoals(updatedSprint.getSprintGoals());
+        existingSprint.setFeature(updatedSprint.getFeature());
+
+        return repo.save(existingSprint);
+    }
+    public List<createsprint> findActiveSprintsByProjectId(int projectId) {
+        List<Feature> featureList=Featurerepo.findByProjectId(projectId);
+        List<Integer> featureids=new ArrayList<>();
+        List<createsprint> sprints=new ArrayList<>();
+        for(Feature f :featureList){
+            featureids.add(f.getId());
+        }
+        for(int i: featureids){
+            List<createsprint> allsprints=new ArrayList<>();
+            allsprints.addAll(repo.findByFeatureId(i));
+            for(createsprint s:allsprints){
+                if(s.getStatus().equalsIgnoreCase("Active")){
+                    sprints.add(s);
+                }
+            }
+        }
+        return sprints;
+    }
 
     public createsprint updateSprintStatus(createsprint sprint) {
         LocalDate today = LocalDate.now();
 
         if (today.isBefore(sprint.getStartDate().toLocalDate())) {
-            sprint.setStatus("PLANNED"); // not started yet
+            sprint.setStatus("Planned"); // not started yet
         } else if ((today.isEqual(sprint.getStartDate().toLocalDate()) || today.isAfter(sprint.getStartDate().toLocalDate()))
                 && (today.isEqual(sprint.getEndDate().toLocalDate()) || today.isBefore(sprint.getEndDate().toLocalDate()))) {
-            sprint.setStatus("ACTIVE");
+            sprint.setStatus("Active");
         } else if (today.isAfter(sprint.getEndDate().toLocalDate())) {
-            sprint.setStatus("COMPLETED");
+            sprint.setStatus("Completed");
         }
-
+        repo.save(sprint);
         return sprint;
     }
 
@@ -106,5 +136,77 @@ public class sprintservice {
         }
 //        sprint.setTargettedStoryPoints(TargettedStoryPoints);
 //        sprint.setAchievedStoryPoints(AcheivedStoryPoints);
+    }
+
+    public List<createsprint> findByProjectId(int projectId) {
+        List<Feature> featureList=Featurerepo.findByProjectId(projectId);
+        List<Integer> featureids=new ArrayList<>();
+        List<createsprint> sprints=new ArrayList<>();
+        for(Feature f :featureList){
+            featureids.add(f.getId());
+        }
+        for(int i: featureids){
+            sprints.addAll(repo.findByFeatureId(i));
+        }
+        return sprints;
+    }
+    public List<createsprint> findSprintsforUsers(Authentication authentication) {
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        int userId = userDetails.getUser().getId();
+
+        List<Feature> featureList=new ArrayList<>();
+        List<Team> new_team = teamrepo.findProjectsByUser_id(userId);
+        List<createsprint> usersprints=new ArrayList<>();
+        for (Team f : new_team) {
+            featureList.addAll(Featurerepo.findByProjectId(f.getProject().getId()));
+        }
+        for(Feature f:featureList){
+            usersprints.addAll(repo.findByFeatureId(f.getId()));
+        }
+        return usersprints;
+    }
+
+    public List<Map<String, Object>> getSprintProgressForUser(Authentication authentication) {
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        int userId = userDetails.getUser().getId();
+
+        List<createsprint> activeSprints =findSprintsforUsers(authentication);
+        List<Map<String, Object>> progressList = new ArrayList<>();
+        for (createsprint sprint : activeSprints) {
+            if (sprint.getStatus().equals("Active") || sprint.getStatus().equals("ACTIVE")) {
+                List<task> tasks = taskrepo.findBySprintId(sprint.getId());
+                int total = tasks.size();
+                int completed = (int) tasks.stream()
+                        .filter(t -> t != null && t.getTaskStatus() != null && t.getTaskStatus().getDecription() != null && t.getTaskStatus().getDecription().equalsIgnoreCase("Done"))
+                        .count();
+                int completedsp=0;
+                int targettedsp=0;
+                for(task t:tasks){
+                    if(t != null && t.getTaskStatus() != null && t.getTaskStatus().getDecription() != null && t.getTaskStatus().getDecription().equalsIgnoreCase("Done")){
+                        completedsp+=t.getStorypoints();
+                    }
+                    if(t != null) {
+                        targettedsp+=t.getStorypoints();
+                    }
+                }
+                Map<String, Object> map = new HashMap<>();
+                map.put("sprintId", sprint.getId());
+                map.put("sprintName", sprint.getName());
+                
+                String projectName = "Unknown Project";
+                if (sprint.getFeature() != null && sprint.getFeature().getProject() != null) {
+                    projectName = sprint.getFeature().getProject().getName();
+                }
+                map.put("projectName", projectName);
+                map.put("totalTasks", total);
+                map.put("completedTasks", completed);
+                map.put("completedStoryPoints",completedsp);
+                map.put("TargettedStoryPoints",targettedsp);
+                map.put("progress1", targettedsp == 0 ? 0 : (completedsp * 100) / targettedsp);
+                map.put("progress", total == 0 ? 0 : (completed * 100) / total);
+                progressList.add(map);
+            }
+        }
+        return progressList;
     }
 }

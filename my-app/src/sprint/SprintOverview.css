@@ -1,19 +1,20 @@
 .sprint-overview {
-     max-width: 900px;
+  max-width: 900px;
   margin: auto;
-  padding: 20px;
-  background: hsl(130, 13%, 91%);
-  color: black;
-  border-radius: 10px;
+  padding: var(--spacing-lg);
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--box-shadow-md);
 }
 
 .sprint-header {
- display: flex;
+  display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--spacing-sm);
   flex-wrap: wrap;
-  margin-bottom: 15px;
-   color: #1e293b;
+  margin-bottom: var(--spacing-md);
+  color: var(--text-primary);
 }
 
 .sprint-header h2 {
@@ -25,16 +26,16 @@
 }
 
 .sp-progress {
-  background-color: #ddd;
+  background-color: var(--bg-tertiary);
   height: 12px;
-  border-radius: 6px;
+  border-radius: var(--border-radius-md);
   margin-top: 10px;
   overflow: hidden;
 }
 
 .sp-progress-bar {
   height: 100%;
-  background-color: #4ade80; /* green */
+  background-color: var(--color-success);
 }
 
 .users-section, .tasks-section {
@@ -55,14 +56,14 @@
 .tasks-section th,
 .tasks-section td {
   padding: 10px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-color);
   text-align: left;
 }
 
 .users-section th,
 .tasks-section th {
-  background-color: #2875e7;
-  color: white;
+  background-color: var(--bg-tertiary);
+  color: var(--text-secondary);
 }
 
 .task-table {
@@ -73,4 +74,16 @@
   text-align: center;
   font-size: 18px;
   padding: 50px;
+}
+.sprint-goals-block {
+  background-color: var(--bg-tertiary);
+  border-left: 4px solid var(--color-primary);
+  padding: 12px 16px;
+  margin-top: 10px;
+  border-radius: var(--border-radius-sm);
+}
+
+.sprint-goals-block h4 {
+  margin: 0 0 4px;
+  color: var(--color-primary);
 }

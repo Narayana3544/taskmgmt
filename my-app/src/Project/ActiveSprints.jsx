@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { FaEye } from "react-icons/fa";
 import api from '../api';
+import { sortStatuses } from "../utils/sortUtils";
 import "./UserSprints.css";
 
 export default function UserSprints() {
@@ -60,7 +62,7 @@ export default function UserSprints() {
       const res = await api.get("/getstatusForTask", {
         withCredentials: true,
       });
-      setStatuses(res.data);
+      setStatuses(sortStatuses(res.data));
     } catch (err) {
       console.error("Error fetching statuses:", err);
     }
@@ -123,8 +125,7 @@ export default function UserSprints() {
 
   return (
     <div className="sprints-page">
-      <button onClick={() => navigate(-1)} className="back-btn">Back</button>
-      <h2 className="page-title">My Active Sprints</h2>
+      <h2 className="page-title">Active Sprint Tasks</h2>
 
       {sprints.length === 0 ? (
         <p className="no-sprints">No active sprints assigned.</p>
@@ -178,28 +179,29 @@ export default function UserSprints() {
                 <thead>
                   {activeTab[sprint.id] === "all" ? (
                     <tr>
+                      <th style={{ width: '80px', whiteSpace: 'nowrap' }}>ID</th>
                       <th>Task</th>
                       <th>Description</th>
-                      <th>Assigned User</th>
-                      <th>Action</th>
-                    </tr>
-                  ) : (
+                      <th style={{ width: '150px', whiteSpace: 'nowrap' }}>Assigned To</th>
+                      <th style={{ width: '120px', whiteSpace: 'nowrap' }}>Action</th>
+                    </tr>                  ) : (
                     <tr>
-                      <th>Story</th>
-                      <th>Story Points</th>
-                      <th>Sprint</th>
-                      <th>Feature</th>
-                      <th>Task Type</th>
-                      <th>Status</th>
-                      <th>Start Date</th>
-                      <th>Actions</th>
+                      <th style={{ width: '60px', whiteSpace: 'nowrap' }}>ID</th>
+                      <th style={{ minWidth: '150px' }}>Story</th>
+                      <th style={{ width: '90px', whiteSpace: 'nowrap' }}>Story Points</th>
+                      <th style={{ minWidth: '120px' }}>Sprint</th>
+                      <th style={{ minWidth: '120px' }}>Feature</th>
+                      <th style={{ width: '100px', whiteSpace: 'nowrap' }}>Task Type</th>
+                      <th style={{ width: '130px', whiteSpace: 'nowrap' }}>Status</th>
+                      <th style={{ width: '100px', whiteSpace: 'nowrap' }}>Start Date</th>
+                      <th style={{ width: '80px', whiteSpace: 'nowrap' }}>Actions</th>
                     </tr>
                   )}
                 </thead>
                 <tbody>
                   {currentTasks.length === 0 ? (
                     <tr>
-                      <td colSpan="8" style={{ textAlign: "center" }}>
+                      <td colSpan="9" style={{ textAlign: "center" }}>
                         No tasks found.
                       </td>
                     </tr>
@@ -207,10 +209,11 @@ export default function UserSprints() {
                     currentTasks.map((task) =>
                       activeTab[sprint.id] === "all" ? (
                         <tr key={task.id}>
+                          <td style={{ width: '80px', whiteSpace: 'nowrap' }}>{task.id}</td>
                           <td>{task.userstory}</td>
                           <td>{task.description}</td>
-                          <td>{task.user?.first_name || "-"}</td>
-                          <td>
+                          <td style={{ width: '150px', whiteSpace: 'nowrap' }}>{task.user?.first_name || "-"}</td>
+                          <td style={{ width: '120px', whiteSpace: 'nowrap' }}>
                             {task.user ? (
                               task.user.id === currentUser?.id ? (
                                 <button
@@ -229,24 +232,26 @@ export default function UserSprints() {
                                 className="link-btn primary"
                                 onClick={() => assignTask(task.id, sprint.id)}
                               >
-                                Assign Me
+                                  Assign Me
                               </button>
                             )}
                           </td>
                         </tr>
                       ) : (
                         <tr key={task.id}>
+                          <td style={{ width: '60px', whiteSpace: 'nowrap' }}>{task.id}</td>
                           <td>{task.userstory || "-"}</td>
-                          <td>{task.storypoints ?? "-"}</td>
+                          <td style={{ width: '90px', whiteSpace: 'nowrap' }}>{task.storypoints ?? "-"}</td>
                           <td>{task.sprint?.sprintName || task.sprint?.name || "-"}({task.sprint.status})</td>
                           <td>{task.feature?.name || "-"}</td>
-                          <td>{task.taskType?.description || "-"}</td>
-                          <td>
+                          <td style={{ width: '100px', whiteSpace: 'nowrap' }}>{task.taskType?.description || "-"}</td>
+                          <td style={{ width: '130px' }}>
                             <select
                               value={task.taskStatus?.id || ""}
                               onChange={(e) => handleStatusChange(task.id, e.target.value, sprint.id)}
+                              style={{ width: '100%', boxSizing: 'border-box' }}
                             >
-                              <option value="">-- Select Status --</option>
+                              <option value="">-- Status --</option>
                               {statuses.map((status) => (
                                 <option key={status.id} value={status.id}>
                                   {status.decription}
@@ -254,11 +259,13 @@ export default function UserSprints() {
                               ))}
                             </select>
                           </td>
-                          <td>{task.start_date ? new Date(task.start_date).toLocaleDateString() : "-"}</td>
-                          <td>
-                            <button className="view-btn" onClick={() => navigate(`/task/${task.id}`)}>
-                              View
-                            </button>
+                          <td style={{ width: '100px', whiteSpace: 'nowrap' }}>{task.start_date ? new Date(task.start_date).toLocaleDateString() : "-"}</td>
+                          <td style={{ width: '80px', whiteSpace: 'nowrap' }}>
+                            <div className="action-buttons">
+                              <button className="icon-btn" onClick={() => navigate(`/task/${task.id}`)} title="View">
+                                <FaEye />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       )

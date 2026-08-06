@@ -1,0 +1,76 @@
+.custom-pagination-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 20px;
+  padding: 10px 15px;
+  background-color: #f8f9fa;
+  border: 1px solid #ddd;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 14px;
+  color: #333;
+}
+
+.pagination-items-per-page {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pagination-label {
+  font-weight: 500;
+  color: #0b2239;
+}
+
+.pagination-select {
+  padding: 4px 24px 4px 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #fff;
+  cursor: pointer;
+  outline: none;
+  font-size: 14px;
+  color: #0b2239;
+}
+
+.pagination-info {
+  margin: 0 10px;
+  color: #0b2239;
+  font-weight: 500;
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pagination-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  color: #555;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background-color: #e9ecef;
+  color: #000;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: #f8f9fa;
+}
+
+.pagination-btn svg {
+  font-size: 12px;
+}

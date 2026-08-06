@@ -1,7 +1,7 @@
 .task-details-container {
-  max-width: 800px;
-  margin: 30px auto;
-  padding: 20px;
+  max-width: 95%;
+  margin: 10px auto;
+  padding: 10px;
   background: hsl(130, 13%, 91%);
   color: black;
   border-radius: 10px;
@@ -9,7 +9,7 @@
 }
 
 .back-btn {
- 
+  color: white;
   border: none;
   color: #9fa552;
   font-size: 14px;
@@ -66,9 +66,9 @@
 
 .task-info-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 8px 20px;
-  margin-bottom: 15px;
+  margin-bottom: 10px;
 }
 
 .task-section {
@@ -112,4 +112,71 @@
 }
 .button-container{
       background: rgb(93, 190, 228) !important;
+}
+/* Position container top-right */
+.bugs-dropdown {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  z-index: 10;
+}
+
+/* Dropdown container */
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+/* Dropdown button */
+.dropdown-btn {
+  background-color: #e74c3c;
+  color: white;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.dropdown-btn:hover {
+  background-color: #c0392b;
+}
+
+/* Dropdown content */
+.dropdown-content {
+  display: none;
+  position: absolute;
+  right: 0;   /* align right */
+  background-color: #2c2c3e;
+  min-width: 160px;
+  box-shadow: 0px 4px 8px rgba(0,0,0,0.3);
+  border-radius: 6px;
+  z-index: 20;
+  margin-top: 5px;
+}
+
+.dropdown-content button {
+  color: white;
+  padding: 10px;
+  text-align: left;
+  width: 100%;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.dropdown-content button:hover {
+  background-color: #444;
+}
+
+/* Show dropdown on click */
+.dropdown-content.show {
+  display: block;
+}
+
+.task-info-grid p {
+  margin: 0;
+  font-size: 13px;
 }

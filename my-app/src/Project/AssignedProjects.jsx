@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import api from '../api';
 import { useNavigate } from 'react-router-dom';
+import { FaEye, FaEdit, FaTrash, FaList } from 'react-icons/fa';
+import StatusSummary from '../components/StatusSummary';
+import '../Pages/ManageProject.css';
 
 export default function ViewProjectById() {
   const [projects, setProjects] = useState([]);
@@ -25,49 +28,23 @@ export default function ViewProjectById() {
     }
   };
 
-  const handleEdit = (id) => {
-    navigate(`/edit-project/${id}`);
-  };
-
-  const handleView = (project) => {
-    alert(`Viewing Project:\nID: ${project.id}\nName: ${project.name}\nDescription: ${project.description}`);
-  };
-
-  const handleStatusChange = (id, newStatus) => {
-    api.patch(`/projects/${id}`, { status: newStatus }, { withCredentials: true })
-      .then(() => fetchProjects())
-      .catch(err => console.error('Failed to update status:', err));
-  };
-
-const filteredProjects = Array.isArray(projects)
-  ? projects.filter(project => {
-      const search = searchTerm.toLowerCase();
-      return (
-        project.name?.toLowerCase().includes(search) ||
-        project.status?.decription?.toLowerCase().includes(search) || 
-        project.id?.toString() === searchTerm.trim()
-      );
-    })
-  : [];
-
+  const filteredProjects = Array.isArray(projects)
+    ? projects.filter(project => {
+        const search = searchTerm.toLowerCase();
+        return (
+          project.name?.toLowerCase().includes(search) ||
+          project.status?.decription?.toLowerCase().includes(search) || 
+          project.id?.toString() === searchTerm.trim()
+        );
+      })
+    : [];
 
   return (
     <div className="manage-projects-page">
       <div className="manage-main">
-        {/* <Navbar /> */}
         <div className="manage-container">
-          <div className="manage-header">
-            <h1 className="manage-title">Your Assigned Projects</h1>
-          </div>
-
-          <div className="search-bar">
-            <input
-               type="text"
-              placeholder="Search by name or ID"
-              className="search-input"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+          <div className="manage-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', gap: '15px', flexWrap: 'wrap' }}>
+            <h1 className="manage-title" style={{ margin: 0, whiteSpace: 'nowrap', fontSize: '1.2rem', fontWeight: 700 }}>Your Assigned Projects</h1>
           </div>
 
           <table className="projects-table">
@@ -77,13 +54,13 @@ const filteredProjects = Array.isArray(projects)
                 <th>Name</th>
                 <th>Description</th>
                 <th>Status</th>
-                {/* <th>Change Status</th> */}
                 <th>Actions</th>
               </tr>
             </thead>
+
             <tbody>
               {filteredProjects.length === 0 ? (
-                <tr><td colSpan="6">No projects found.</td></tr>
+                <tr><td colSpan="5">No projects found.</td></tr>
               ) : (
                 filteredProjects.map(project => (
                   <tr key={project.id}>
@@ -91,33 +68,52 @@ const filteredProjects = Array.isArray(projects)
                     <td>{project.name}</td>
                     <td>{project.description}</td>
                     <td>
-                      <span
-                        className={`status-tag ${
-                          project.status?.decription?.toLowerCase().replace(/\s+/g, '-') || ''
-                        }`}
-                      >
+                      <span className={`status-tag ${project.status?.decription?.toLowerCase().replace(/\s+/g, '-') || ''}`}>
                         {project.status?.decription || "No status"}
                       </span>
                     </td>
-                     <td>
-                        {/* <button 
-                        className="edit-btn" 
-                        onClick={() => navigate(`/edit-project/${project.id}`)}
-                      > 
-                      <FaEdit />
-                      </button> */}
+                    
+                    {/* ✅ ICON BUTTONS */}
+                    <td className="action-col">
                       <button 
-                    className="view-btn" 
-                    onClick={() => navigate(`/view-project/${project.id}`)}
-                  >
-                    View
-                  </button>
+                        className="icon-btn" 
+                        onClick={() => navigate(`/view-project/${project.id}`)}
+                        title="View Project"
+                        style={{
+                          background: "#007bff",
+                          border: "none",
+                          width: "28px",
+                          height: "28px",
+                          borderRadius: "50%",
+                          cursor: "pointer",
+                          color: "#fff",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center"
+                        }}
+                      >
+                        <FaEye />
+                      </button>
+
                       <button 
-                    className="view-btn" 
-                    onClick={() => navigate(`/view-featuresByprojectid/${project.id}`)}
-                  >
-                    View Features
-                  </button>
+                        className="icon-btn"
+                        onClick={() => navigate(`/view-featuresByprojectid/${project.id}`)}
+                        title="View Features"
+                        style={{
+                          background: "#007bff",
+                          border: "none",
+                          width: "28px",
+                          height: "28px",
+                          borderRadius: "50%",
+                          cursor: "pointer",
+                          color: "#fff",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center"
+                        }}
+                      >
+                        <FaEye />
+                      </button>
                     </td>
                   </tr>
                 ))

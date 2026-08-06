@@ -106,12 +106,12 @@ const CreateProject = () => {
           {/* <AssignUsers /> */}
 
           {/* Buttons */}
-          <div className="btn-container">
-            <button type="submit" className="submit-btn">
-              Create
-            </button>
-            <button type="button" className="back-btn" onClick={() => navigate(-1)}>
+          <div className="btn-container full-width">
+            <button type="button" className="btn-global btn-secondary" onClick={() => navigate(-1)}>
               Back
+            </button>
+            <button type="submit" className="btn-global btn-primary">
+              Create
             </button>
           </div>
         </form>

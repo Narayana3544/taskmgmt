@@ -1,186 +1,351 @@
 import React, { useEffect, useState } from "react";
 import api from '../api';
 import { useNavigate } from "react-router-dom";
+import { FaEye, FaLock, FaEdit } from "react-icons/fa";
+import StatusSummary from "../components/StatusSummary";
+import { isTaskLocked, getLockedReason } from "../utils/lockUtils";
+import Pagination from "../components/Pagination";
+import { sortStatuses, filterStatusesByRole } from "../utils/sortUtils";
 import "./AssignedTasks.css";
 
-export default function TaskList() {
+export default function AssignedTasks() {
   const [tasks, setTasks] = useState([]);
+  const [sprints, setSprints] = useState([]);
   const [statuses, setStatuses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [tasksPerPage] = useState(5); // 👈 change this to increase/decrease rows per page
+  const [lockedMsg, setLockedMsg] = useState(""); // popup message for locked tasks
+  const [userProfile, setUserProfile] = useState(null);
+
+  // Filters
+  const [searchTitle, setSearchTitle] = useState("");
+  const [selectedProject, setSelectedProject] = useState("");
+  const [selectedFeature, setSelectedFeature] = useState("");
+  const [selectedSprint, setSelectedSprint] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState("");
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(() => {
+    const saved = sessionStorage.getItem("AssignedTasks_currentPage");
+    return saved ? parseInt(saved) : 1;
+  });
+  const [itemsPerPage, setItemsPerPage] = useState(() => {
+    const saved = sessionStorage.getItem("AssignedTasks_itemsPerPage");
+    return saved ? parseInt(saved) : 5;
+  });
+
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Fetch tasks
-    api
-      .get(`/user/tasks`, { withCredentials: true })
-      .then((res) => {
-        setTasks(res.data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Error fetching tasks:", err);
-        setError("Failed to load tasks.");
-        setLoading(false);
-      });
-
-    // Fetch statuses
-    api
-      .get(`/getstatusForTask`, { withCredentials: true })
-      .then((res) => setStatuses(res.data))
-      .catch((err) => console.error("Error fetching statuses:", err));
+    fetchSprints();
+    fetchStatuses();
+    fetchUserProfile();
   }, []);
 
-  const handleStatusChange = (taskId, statusId) => {
-    api
-      .put(
-        `/tasks/${taskId}/status/${statusId}`,
-        {},
-        { withCredentials: true }
-      )
-      .then(() => {
-        setTasks((prev) =>
-          prev.map((task) =>
-            task.id === taskId
-              ? { ...task, taskStatus: statuses.find((s) => s.id === parseInt(statusId)) }
-              : task
-          )
-        );
-      })
-      .catch((err) => console.error("Error updating status:", err));
+  const fetchUserProfile = async () => {
+    try {
+      const res = await api.get('/user/profile', { withCredentials: true });
+      setUserProfile(res.data);
+    } catch (e) {
+      console.error(e);
+    }
   };
 
-  // Pagination logic
-  const indexOfLastTask = currentPage * tasksPerPage;
-  const indexOfFirstTask = indexOfLastTask - tasksPerPage;
-  const currentTasks = tasks.slice(indexOfFirstTask, indexOfLastTask);
-  const totalPages = Math.ceil(tasks.length / tasksPerPage);
+  const fetchSprints = async () => {
+    try {
+      const res = await api.get("/sprintsforUser", { withCredentials: true });
+      setSprints(res.data);
+    } catch (err) {
+      console.error("Error fetching sprints:", err);
+    }
+  };
 
-  const handlePageChange = (pageNumber) => setCurrentPage(pageNumber);
+  const fetchStatuses = async () => {
+    try {
+      const res = await api.get("/getstatusForTask", { withCredentials: true });
+      setStatuses(sortStatuses(res.data));
+    } catch (err) {
+      console.error("Error fetching statuses:", err);
+    }
+  };
 
-  if (loading) return <p>Loading tasks...</p>;
-  if (error) return <p>{error}</p>;
+  const fetchTasks = async () => {
+    setLoading(true);
+    try {
+      const res = await api.get("/user/tasks", { withCredentials: true });
+      setTasks(res.data);
+      setCurrentPage(1);
+    } catch (err) {
+      console.error("Error fetching tasks:", err);
+      setError("Failed to load tasks.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTasks();
+  }, []);
+
+  useEffect(() => {
+    sessionStorage.setItem("AssignedTasks_currentPage", currentPage);
+  }, [currentPage]);
+
+  useEffect(() => {
+    sessionStorage.setItem("AssignedTasks_itemsPerPage", itemsPerPage);
+  }, [itemsPerPage]);
+
+  const allowedTasks = React.useMemo(() => {
+    const isAdmin = userProfile?.role?.description === 'Admin';
+    if (isAdmin) return tasks;
+    return tasks.filter(t => {
+      const assignedUserId = t.user?.id || t.assignedUser?.id || t.assignedTo?.id;
+      return assignedUserId === userProfile?.id;
+    });
+  }, [tasks, userProfile]);
+
+  const uniqueProjects = Array.from(new Set(allowedTasks.map(t => t.feature?.project?.name))).filter(Boolean).sort();
+  const uniqueFeatures = Array.from(new Set(allowedTasks.map(t => t.feature?.name))).filter(Boolean).sort();
+
+  const filteredTasks = React.useMemo(() => {
+    return allowedTasks.filter((t) => {
+      if (selectedProject && t.feature?.project?.name !== selectedProject) return false;
+      if (selectedFeature && t.feature?.name !== selectedFeature) return false;
+      if (selectedSprint && String(t.sprint?.id) !== String(selectedSprint)) return false;
+      if (selectedStatus && String(t.taskStatus?.id) !== String(selectedStatus)) return false;
+      if (searchTitle && !t.userstory?.toLowerCase().includes(searchTitle.toLowerCase())) return false;
+      return true;
+    });
+  }, [allowedTasks, selectedProject, selectedFeature, selectedSprint, selectedStatus, searchTitle]);
+
+  const handleStatusChange = async (task, statusId) => {
+    if (!window.confirm("Are you sure you want to change the status?")) {
+      return;
+    }
+    try {
+      await api.put(`/tasks/${task.id}/status/${statusId}`, null, { withCredentials: true });
+      setTasks(prev =>
+        prev.map(t =>
+          t.id === task.id
+            ? { ...t, taskStatus: statuses.find(s => s.id === parseInt(statusId)) }
+            : t
+        )
+      );
+    } catch (err) {
+      console.error("Error updating status:", err);
+      alert("Failed to update status.");
+    }
+  };
+
+  // Pagination
+  const indexOfLastTask = currentPage * itemsPerPage;
+  const currentTasks = filteredTasks.slice(indexOfLastTask - itemsPerPage, indexOfLastTask);
 
   return (
-    <div className="features-list-page">
-      <div className="task-table-container">
-        <h2>Your Assigned Tasks</h2>
+    <div className="assigned-tasks-page">
 
-        <div className="table-wrapper">
-          <table className="task-table" style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
+      {/* ── HEADER BAR (same layout as TaskList) ── */}
+      <div className="header-bar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', gap: '15px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flexWrap: 'wrap', flex: 1 }}>
+          <h2 style={{ margin: 0, whiteSpace: 'nowrap' }}>My Tasks</h2>
+
+          <StatusSummary
+            data={filteredTasks}
+            statusExtractor={(task) => task.taskStatus?.decription || task.taskStatus?.description || task.status || ''}
+          />
+        </div>
+      </div>
+
+      {loading && <p>Loading tasks...</p>}
+      {error && <p>{error}</p>}
+
+      {/* ── TABLE (same structure as TaskList) ── */}
+      <div className="task-table-container">
+        <table className="task-table">
+
+          <thead>
+            <tr>
+              <th style={{ whiteSpace: 'nowrap' }}>
+                Project Name
+                <br />
+                <select
+                  value={selectedProject}
+                  onChange={(e) => { setSelectedProject(e.target.value); setCurrentPage(1); }}
+                  style={{
+                    backgroundColor: selectedProject ? '#16a34a' : '#fff',
+                    color: selectedProject ? '#fff' : '#333',
+                    borderColor: selectedProject ? '#16a34a' : '#ccc',
+                    fontWeight: selectedProject ? 'bold' : 'normal',
+                  }}
+                >
+                  <option value="">All</option>
+                  {uniqueProjects.map(p => (
+                    <option key={p} value={p}>{p}</option>
+                  ))}
+                </select>
+              </th>
+              <th style={{ whiteSpace: 'nowrap' }}>
+                Feature Name
+                <br />
+                <select
+                  value={selectedFeature}
+                  onChange={(e) => { setSelectedFeature(e.target.value); setCurrentPage(1); }}
+                  style={{
+                    backgroundColor: selectedFeature ? '#16a34a' : '#fff',
+                    color: selectedFeature ? '#fff' : '#333',
+                    borderColor: selectedFeature ? '#16a34a' : '#ccc',
+                    fontWeight: selectedFeature ? 'bold' : 'normal',
+                  }}
+                >
+                  <option value="">All</option>
+                  {uniqueFeatures.map(f => (
+                    <option key={f} value={f}>{f}</option>
+                  ))}
+                </select>
+              </th>
+              <th style={{ whiteSpace: 'nowrap' }}>
+                Sprint
+                <br />
+                <select
+                  value={selectedSprint}
+                  onChange={(e) => { setSelectedSprint(e.target.value); setCurrentPage(1); }}
+                  style={{
+                    backgroundColor: selectedSprint ? '#16a34a' : '#fff',
+                    color: selectedSprint ? '#fff' : '#333',
+                    borderColor: selectedSprint ? '#16a34a' : '#ccc',
+                    fontWeight: selectedSprint ? 'bold' : 'normal',
+                  }}
+                >
+                  <option value="">All</option>
+                  {sprints.map(s => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
+                </select>
+              </th>
+              <th style={{ whiteSpace: 'nowrap' }}>ID</th>
+              <th>Task Name</th>
+              <th style={{ whiteSpace: 'nowrap' }}>
+                Status
+                <br />
+                  <select
+                    value={selectedStatus}
+                    onChange={(e) => { setSelectedStatus(e.target.value); setCurrentPage(1); }}
+                    style={{
+                      backgroundColor: selectedStatus ? '#16a34a' : '#fff',
+                      color: selectedStatus ? '#fff' : '#333',
+                      borderColor: selectedStatus ? '#16a34a' : '#ccc',
+                      fontWeight: selectedStatus ? 'bold' : 'normal',
+                    }}
+                  >
+                  <option value="">All</option>
+                  {statuses.map(s => (
+                    <option key={s.id} value={s.id}>{s.decription}</option>
+                  ))}
+                </select>
+              </th>
+              <th style={{ whiteSpace: 'nowrap' }}>User</th>
+              <th style={{ whiteSpace: 'nowrap' }}>Start Date</th>
+              <th style={{ whiteSpace: 'nowrap' }}>Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {loading ? (
               <tr>
-                <th>Story</th>
-                <th>Story Points</th>
-                <th>Sprint</th>
-                <th>Feature</th>
-                <th>Task Type</th>
-                <th>Status</th>
-                <th>Start Date</th>
-                <th>Actions</th>
+                <td colSpan="9" className="no-data">Loading tasks...</td>
               </tr>
-            </thead>
-            <tbody>
-              {currentTasks.length === 0 && (
-                <tr>
-                  <td colSpan="11" style={{ textAlign: "center" }}>
-                    No tasks found.
-                  </td>
-                </tr>
-              )}
-              {currentTasks.map((task) => (
+            ) : currentTasks.length === 0 ? (
+              <tr>
+                <td colSpan="9" className="no-data">No tasks found.</td>
+              </tr>
+            ) : (
+              currentTasks.map(task => (
                 <tr key={task.id}>
-                  <td>{task.userstory || "-"}</td>
-                  <td>{task.storypoints ?? "-"}</td>
-                  <td>
-                    {task.sprint?.sprintName || task.sprint?.name || "-"} ({task.sprint?.status})
+                  <td className="ellipsis-cell" title={task.feature?.project?.name || "-"}>{task.feature?.project?.name || "-"}</td>
+                  <td className="ellipsis-cell" title={task.feature?.name || "-"}             >{task.feature?.name || "-"}</td>
+                  <td className="ellipsis-cell" title={task.sprint?.name || "-"}              >{task.sprint?.name || "-"}</td>
+                  <td style={{ whiteSpace: 'nowrap' }}>{task.id}</td>
+                  <td className="ellipsis-cell" title={task.userstory}>
+                    {task.userstory || "-"}
                   </td>
-                  <td>{task.feature?.name || "-"}</td>
-                  <td>{task.taskType?.description || "-"}</td>
-                  <td>
+                  <td style={{ whiteSpace: 'nowrap' }}>
                     <select
                       value={task.taskStatus?.id || ""}
-                      onChange={(e) => handleStatusChange(task.id, e.target.value)}
+                      onChange={(e) => handleStatusChange(task, e.target.value)}
+                      style={{ padding: "4px 8px", borderRadius: "4px", border: "1px solid #ccc" }}
                     >
-                      <option value="">-- Select Status --</option>
-                      {statuses.map((status) => (
-                        <option key={status.id} value={status.id}>
-                          {status.decription}
+                      {filterStatusesByRole(statuses, userProfile?.role?.description, task.taskStatus?.id).map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {s.decription || s.description || s.name}
                         </option>
                       ))}
                     </select>
                   </td>
-                  <td>
-                    {task.start_date ? new Date(task.start_date).toLocaleDateString() : "-"}
-                  </td>
-                  <td>
-                    <button className="view-btn" onClick={() => navigate(`/task/${task.id}`)}>
-                      View
-                    </button>
-                    {/* <button className="edit-btn" onClick={() => navigate(`/edit-task/${task.id}`)}>
-                      <FaEdit />
-                    </button> */}
+                  <td style={{ whiteSpace: 'nowrap' }}>{task.user?.first_name || task.user?.name || "-"}</td>
+                  <td style={{ whiteSpace: 'nowrap' }}>{task.start_date ? new Date(task.start_date).toLocaleDateString() : "-"}</td>
+                  <td style={{ whiteSpace: 'nowrap' }}>
+                    <div className="action-buttons">
+                      <div className="tooltip">
+                        <button className="icon-btn" onClick={() => navigate(`/task/${task.id}`)}>
+                          <FaEye />
+                        </button>
+                        <span className="tooltip-text">View Task</span>
+                      </div>
+                      <div className="tooltip">
+                        <button 
+                          className="icon-btn edit-btn" 
+                          onClick={() => {
+                            if (isTaskLocked(task)) { setLockedMsg(getLockedReason(task)); return; }
+                            navigate(`/edit-task/${task.id}`);
+                          }}
+                          style={isTaskLocked(task) ? { opacity: 0.4, cursor: 'not-allowed' } : {}}
+                        >
+                          {isTaskLocked(task) ? <FaLock /> : <FaEdit />}
+                        </button>
+                        <span className="tooltip-text">{isTaskLocked(task) ? 'Locked' : 'Edit Task'}</span>
+                      </div>
+                    </div>
                   </td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              ))
+            )}
+          </tbody>
 
-        {/* Pagination Controls */}
-        {tasks.length > tasksPerPage && (
-          <div className="pagination">
-  <button
-    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-    disabled={currentPage === 1}
-  >
-    Previous
-  </button>
+        </table>
 
-  {/* Show limited page numbers */}
-  {Array.from({ length: totalPages }, (_, idx) => idx + 1)
-    .filter(
-      (num) =>
-        num === 1 || // always show first
-        num === totalPages || // always show last
-        (num >= currentPage - 2 && num <= currentPage + 2) // show around current
-    )
-    .map((num, idx, arr) => {
-      // Add "..." where numbers are skipped
-      if (idx > 0 && arr[idx] - arr[idx - 1] > 1) {
-        return (
-          <span key={`dots-${num}`} className="dots">
-            ...
-          </span>
-        );
-      }
-      return (
-        <button
-          key={num}
-          onClick={() => setCurrentPage(num)}
-          className={currentPage === num ? "active" : ""}
-        >
-          {num}
-        </button>
-      );
-    })}
-
-  <button
-    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-    disabled={currentPage === totalPages}
-  >
-    Next
-  </button>
-
-  {/* Page info */}
-  <span className="page-info">
-    Page {currentPage} of {totalPages}
-  </span>
-</div>
+        {/* ── PAGINATION ── */}
+        {filteredTasks.length > 0 && (
+          <Pagination
+            totalItems={filteredTasks.length}
+            itemsPerPage={itemsPerPage}
+            currentPage={currentPage}
+            onPageChange={setCurrentPage}
+            onItemsPerPageChange={setItemsPerPage}
+          />
         )}
       </div>
+      
+      {/* 🔒 Locked Task Popup */}
+      {lockedMsg && (
+        <div className="popup-overlay" style={{ zIndex: 1000, position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="popup-card" style={{ background: '#fff', padding: '20px', borderRadius: '8px', maxWidth: '400px', width: '90%', textAlign: 'center', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+            <div style={{ color: '#dc2626', fontSize: '32px', marginBottom: '10px' }}>
+              <FaLock />
+            </div>
+            <h3 style={{ margin: '0 0 15px 0', color: '#1f2937' }}>Task Locked</h3>
+            <p style={{ color: '#4b5563', whiteSpace: 'pre-line', marginBottom: '20px', lineHeight: '1.5' }}>
+              {lockedMsg}
+            </p>
+            <button 
+              onClick={() => setLockedMsg("")} 
+              style={{ background: '#3b82f6', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

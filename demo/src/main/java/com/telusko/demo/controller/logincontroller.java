@@ -3,10 +3,11 @@ package com.telusko.demo.controller;
 
 import com.telusko.demo.Model.User;
 import com.telusko.demo.config.CustomUserDetails;
+import com.telusko.demo.dto.UserDTO;
 import com.telusko.demo.repo.userrepo;
 import com.telusko.demo.service.CustomUserDetailsService;
 import com.telusko.demo.service.loginservice;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -103,7 +104,6 @@ public class logincontroller {
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
         int userId = userDetails.getUser().getId();
         return repo.findById(userId);
-
     }
 
 
@@ -116,7 +116,10 @@ public class logincontroller {
 //            return ResponseEntity.ok(authentication.getPrincipal());
 //        }
 
-
+    @GetMapping("/user/{UserId}")
+    public UserDTO getuserbyid(@PathVariable int UserId){
+        return service.getUser(UserId);
+    }
 }
 
 

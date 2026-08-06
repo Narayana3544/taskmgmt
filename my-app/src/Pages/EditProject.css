@@ -8,6 +8,12 @@
   color: #000;
 }
 
+.edit-container h2 {
+  font-size: 1.6rem; /* smaller title */
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  color: #000;
+}
 .edit-form input,
 .edit-form textarea,
 .edit-form select {
@@ -16,15 +22,8 @@
   margin: 0.75rem 0;
   border-radius: 6px;
   border: 1px solid #ccc;
-}
-
-.edit-form .update-btn {
-  background-color: #3b82f6;
-  color: black;
-  padding: 10px 16px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
+  font-size: 14px;
+  color: #000;
 }
 
 .edit-form .char-count {
@@ -32,13 +31,16 @@
   color: #555;
   text-align: right;
 }
-.edit-input, .edit-textarea, .edit-select, .edit-multi-select {
+.edit-input,
+.edit-textarea,
+.edit-select,
+.edit-multi-select {
   width: 100%;
   padding: 10px;
   margin-bottom: 1rem;
   border-radius: 6px;
   border: 1px solid #ccc;
-  color:black;
+   color: #000;
 }
 
 .edit-multi-select {
@@ -56,8 +58,8 @@
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 6px;
-  background-color: #fff; /* dropdown background */
-  color: #000; /* text color */
+ background-color: #fff;
+  color: #000;
   font-size: 14px;
   margin-bottom: 15px;
 }
@@ -67,4 +69,28 @@
   background-color: #fff; /* background of options */
   color: #000; /* text color */
   padding: 5px;
+}
+/* 🔵 Unified Blue Buttons */
+.edit-buttons {
+  display: flex;
+  justify-content: flex-start;
+  gap: 10px;
+  margin-top: 1rem;
+}
+
+.edit-buttons button {
+  background-color: #2563eb; /* Blue */
+  color: white;
+  padding: 8px 18px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.edit-buttons button:hover {
+  background-color: #1e40af; /* darker blue */
+  transform: translateY(-1px);
 }

@@ -1,6 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from '../api';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { differenceInDays, addDays, format, isBefore, isSameDay } from "date-fns";
+import { sortAlphabetically, sortLatestFirst } from "../utils/sortUtils";
+import { isTaskLocked, getLockedReason } from "../utils/lockUtils";
+import { FaLock } from "react-icons/fa";
 import "./SprintOverview.css";
 
 export default function SprintOverview({ sprintId: propSprintId }) {
@@ -11,12 +16,15 @@ export default function SprintOverview({ sprintId: propSprintId }) {
   const [users, setUsers] = useState([]);
   const [statuses, setStatuses] = useState([]);
   const [tasks, setTasks] = useState({ todo: [], inProgress: [], done: [] });
+  const [bugs, setBugs] = useState({ todo: [], inProgress: [], done: [] });
+  const [filterAssignee, setFilterAssignee] = useState("All");
   const [loading, setLoading] = useState(true);
   const [managers, setManagers] = useState([]);
    const [error, setError] = useState(null);
   const navigate = useNavigate();
   // Add this state at the top
-const [allSprints, setAllSprints] = useState([]);
+  const [allSprints, setAllSprints] = useState([]);
+  const [lockedMsg, setLockedMsg] = useState(""); // popup message for locked tasks
 
 // Fetch all sprints in fetchData or a separate useEffect
 useEffect(() => {
@@ -26,7 +34,7 @@ useEffect(() => {
         `/sprints`,
         { withCredentials: true }
       );
-      setAllSprints(res.data);
+      setAllSprints(sortLatestFirst(res.data));
     } catch (err) {
       console.error("Error fetching all sprints:", err);
     }
@@ -51,28 +59,47 @@ useEffect(() => {
         `/sprint/users/${sprintId}`,
         { withCredentials: true }
       );
-      setUsers(usersRes.data);
+      setUsers(sortAlphabetically(usersRes.data));
 
       const ManagerRes = await api.get(
-        `/managers`,
+         `/users`,
         { withCredentials: true }
       );
-      setManagers(ManagerRes.data);
+      setManagers(sortAlphabetically(ManagerRes.data));
 
       const tasksRes = await api.get(
         `/sprint/viewtaskBySprintId/${sprintId}`,
         { withCredentials: true }
       );
-      const todo = tasksRes.data.filter(
+      const sortedTasks = sortLatestFirst(tasksRes.data);
+      const todo = sortedTasks.filter(
         (t) => t.taskStatus?.decription === "To Do"
       );
-      const inProgress = tasksRes.data.filter(
+      const inProgress = sortedTasks.filter(
         (t) => t.taskStatus?.decription === "In Progress"
       );
-      const done = tasksRes.data.filter(
+      const done = sortedTasks.filter(
         (t) => t.taskStatus?.decription === "Done"
       );
       setTasks({ todo, inProgress, done });
+
+      const bugsRes = await api.get(
+        `/sprints/${sprintId}/bugs`,
+        { withCredentials: true }
+      );
+      
+      const sortedBugs = sortLatestFirst(bugsRes.data);
+      const bugTodo = sortedBugs.filter(
+        (b) => b.status?.description === "To Do" || b.status?.description === "Open"
+      );
+      const bugInProgress = sortedBugs.filter(
+        (b) => b.status?.description === "In Progress"
+      );
+      const bugDone = sortedBugs.filter(
+        (b) => b.status?.description === "Done" || b.status?.description === "Closed"
+      );
+      setBugs({ todo: bugTodo, inProgress: bugInProgress, done: bugDone });
+
     } catch (err) {
       console.error("Error fetching sprint data:", err);
     } finally {
@@ -137,10 +164,10 @@ useEffect(() => {
       .catch((err) => console.error("Error fetching statuses:", err));
   }, []);
 
-  const handleStatusChange = (taskId, statusId) => {
+  const handleStatusChange = async (task, statusId) => {
   api
     .put(
-      `/tasks/${taskId}/status/${statusId}`,
+      `/tasks/${task.id}/status/${statusId}`,
       {},
       { withCredentials: true }
     )
@@ -150,20 +177,118 @@ useEffect(() => {
     .catch((err) => console.error("Error updating status:", err));
 };
 
+  const handleBugStatusChange = (bugId, statusId) => {
+    api
+      .put(
+        `/bugs/${bugId}/status/${statusId}`,
+        {},
+        { withCredentials: true }
+      )
+      .then(() => fetchData())
+      .catch((err) => console.error("Error updating bug status:", err));
+  };
+
+  const handleCloseSprint = async () => {
+    // Validation: Check if any task or bug is NOT 'Done' / 'Closed'
+    const hasOpenTasks = [...tasks.todo, ...tasks.inProgress].length > 0;
+    const hasOpenBugs = [...bugs.todo, ...bugs.inProgress].length > 0;
+
+    if (hasOpenTasks || hasOpenBugs) {
+      alert("Task status must be done.");
+      return;
+    }
+
+    if (window.confirm("Are you sure you want to close this sprint?")) {
+      try {
+        await api.patch(`/sprints/${sprintId}/complete`, {}, { withCredentials: true });
+        alert("Sprint closed successfully!");
+        fetchData();
+      } catch (err) {
+        console.error("Error closing sprint:", err);
+        alert("Failed to close sprint.");
+      }
+    }
+  };
 
   if (loading) return <div className="loading">Loading Sprint Overview...</div>;
 
+  // Compute day-by-day burndown chart data
+  const generateBurndownData = () => {
+    if (!sprint || !sprint.startDate || !sprint.endDate) return [];
+    
+    const start = new Date(sprint.startDate);
+    const end = new Date(sprint.endDate);
+    const totalDays = differenceInDays(end, start) + 1;
+    
+    const allTasks = [...tasks.todo, ...tasks.inProgress, ...tasks.done];
+    const filteredTasks = filterAssignee === "All" 
+        ? allTasks 
+        : allTasks.filter(t => t.user?.id.toString() === filterAssignee);
+        
+    const totalSP = filteredTasks.reduce((sum, t) => sum + (t.storypoints || 0), 0);
+    
+    let chartData = [];
+    let currentRemaining = totalSP;
+    
+    for (let i = 0; i < totalDays; i++) {
+        const currentDate = addDays(start, i);
+        
+        // Ideal burndown drops uniformly
+        const idealRemaining = totalSP - ((totalSP / (totalDays - 1 || 1)) * i);
+        
+        // Subtract SP of tasks that are "Done" and whose end_date is <= currentDate
+        const tasksCompletedOnThisDay = filteredTasks.filter(t => {
+            if (t.taskStatus?.decription !== "Done") return false;
+            const taskEndDate = t.end_date ? new Date(t.end_date) : start; 
+            return isSameDay(taskEndDate, currentDate);
+        });
+        
+        const spCompletedToday = tasksCompletedOnThisDay.reduce((sum, t) => sum + (t.storypoints || 0), 0);
+        currentRemaining -= spCompletedToday;
+        
+        // Plot actual up to today
+        const isFuture = isBefore(new Date(), currentDate) && !isSameDay(new Date(), currentDate);
+        
+        chartData.push({
+            name: format(currentDate, 'MMM dd'),
+            Ideal: parseFloat(Math.max(0, idealRemaining).toFixed(1)),
+            Actual: isFuture ? null : currentRemaining
+        });
+    }
+    
+    return chartData;
+  };
+
+  const chartData = generateBurndownData();
+
   return (
     <div className="sprint-overview">
-      <button className="back-btn" onClick={() => navigate(-1)}>
-        ⬅ Back
-      </button>
 
       {/* Sprint Header */}
       <div className="sprint-header">
-        <h2>
-          {sprint.name} (ID: {sprint.id})
-        </h2>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h2>
+            {sprint.name} (ID: {sprint.id})
+          </h2>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button 
+              onClick={() => navigate(-1)}
+              className="btn-global btn-secondary"
+              style={{ margin: 0 }}
+            >
+              Back
+            </button>
+            {sprint.status?.toLowerCase() !== 'completed' && sprint.status?.toLowerCase() !== 'closed' && (
+              <button 
+                onClick={handleCloseSprint}
+                className="btn-global btn-primary"
+                style={{ margin: 0 }}
+              >
+                Close Sprint
+              </button>
+            )}
+          </div>
+        </div>
         <p>
           Start: {sprint.startDate} | End: {sprint.endDate} | Duration:{" "}
           {Math.ceil(
@@ -177,6 +302,12 @@ useEffect(() => {
           SP: {sprint.achievedSP}
         </p>
       </div>
+      {sprint.sprintGoals && (
+        <div className="sprint-goals-block">
+          <h4>Sprint Goals</h4>
+          <p>{sprint.sprintGoals}</p>
+        </div>
+      )}
 
       {/* Users Section 
       <div className="users-section">
@@ -201,6 +332,31 @@ useEffect(() => {
         </table>
       </div>
       */}
+
+      {/* Burndown Chart Section */}
+      <div className="burndown-chart-section" style={{ background: '#fff', padding: '20px', borderRadius: '8px', marginBottom: '20px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+        <h3>Sprint Burndown (Story Points)</h3>
+        <div style={{ marginBottom: '15px' }}>
+          <label style={{ marginRight: '10px' }}>Filter by Assignee:</label>
+          <select value={filterAssignee} onChange={(e) => setFilterAssignee(e.target.value)} style={{ padding: '5px' }}>
+            <option value="All">All Users</option>
+            {users.map(u => (
+              <option key={u.id} value={u.id}>{u.preffered_name || u.name || u.first_name}</option>
+            ))}
+          </select>
+        </div>
+        <ResponsiveContainer width="100%" height={300}>
+          <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="name" />
+            <YAxis />
+            <Tooltip />
+            <Legend />
+            <Line type="monotone" dataKey="Ideal" stroke="#82ca9d" strokeWidth={2} dot={false} />
+            <Line type="stepAfter" dataKey="Actual" stroke="#8884d8" strokeWidth={3} />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
 
       {/* Tasks Section */}
       <div className="tasks-section">
@@ -230,77 +386,110 @@ useEffect(() => {
                     <tr key={task.id}>
                       <td>{task.userstory}</td>
 
-                      {/* Assignee dropdown (always available) */}
+                      {/* Assignee dropdown */}
+                      <td>
+                        {isTaskLocked(task) ? (
+                          <span style={{ color: '#aaa' }}><FaLock size={12}/> {task.user?.preffered_name || task.user?.name || "-"}</span>
+                        ) : (
+                          <select
+                            onChange={(e) => handleAssign(task.id, e.target.value)}
+                            value={task.user?.id || ""}
+                          >
+                            <option value="" disabled>Assign to...</option>
+                            {users.map((u) => (
+                              <option key={u.id} value={u.id}>{u.preffered_name || u.name}</option>
+                            ))}
+                          </select>
+                        )}
+                      </td>
+
+                      {/* Status */}
                       <td>
                         <select
-                          onChange={(e) =>
-                            handleAssign(task.id, e.target.value)
-                          }
-                          value={task.user?.id || ""}
+                          value={task.taskStatus?.id || ""}
+                          onChange={(e) => handleStatusChange(task, e.target.value)}
                         >
-                          <option value="" disabled>
-                            Assign to...
-                          </option>
-                          {users.map((u) => (
-                            <option key={u.id} value={u.id}>
-                              {u.preffered_name || u.name}
+                          <option value="">-- Select Status --</option>
+                          {statuses.map((status) => (
+                            <option key={status.id} value={status.id}>
+                              {status.decription}
                             </option>
                           ))}
                         </select>
                       </td>
-
-                     
-                      <td>
-                    <select
-                      value={task.taskStatus?.id || ""}
-                      onChange={(e) => handleStatusChange(task.id, e.target.value)}
-                    >
-                      <option value="">-- Select Status --</option>
-                      {statuses.map((status) => (
-                        <option key={status.id} value={status.id}>
-                          {status.decription}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
 
                       {/* Story points */}
                       <td>{task.storypoints}</td>
 
                       {/* Report To dropdown */}
                       <td>
+                        {isTaskLocked(task) ? (
+                          <span style={{ color: '#aaa' }}><FaLock size={12}/> {task.reportedTo?.preffered_name || task.reportedTo?.name || "-"}</span>
+                        ) : (
+                          <select
+                            onChange={(e) => handleAssignReport(task.id, e.target.value)}
+                            value={task.reportedTo?.id || ""}
+                          >
+                            <option value="" disabled>Report to...</option>
+                            {managers.map((m) => (
+                              <option key={m.id} value={m.id}>{m.preffered_name || m.name}</option>
+                            ))}
+                          </select>
+                        )}
+                      </td>
+
+                      {/* Move sprint */}
+                      <td>
                         <select
-                          onChange={(e) =>
-                            handleAssignReport(task.id, e.target.value)
-                          }
-                          value={task.reportedTo?.id || ""}
+                          onChange={(e) => handleMoveTask(task.id, e.target.value)}
+                          defaultValue=""
                         >
-                          <option value="" disabled>
-                            Report to...
-                          </option>
-                          {managers.map((m) => (
-                            <option key={m.id} value={m.id}>
-                              {m.preffered_name || m.name}
+                          <option value="" disabled>Move to sprint...</option>
+                          {allSprints
+                            .filter(s => s.id !== sprint.id)
+                            .map(s => (
+                              <option key={s.id} value={s.id}>{s.name}</option>
+                            ))}
+                        </select>
+                      </td>
+
+                    </tr>
+                  ))}
+                  {/* Bugs rendering */}
+                  {bugs[statusKey] && bugs[statusKey].map((bug) => (
+                    <tr key={`bug-${bug.id}`} style={{ backgroundColor: '#fff0f0' }}>
+                      <td><strong>[BUG]</strong> {bug.title}</td>
+
+                      {/* Assignee - readonly for bugs in this view or use bug assignedTo */}
+                      <td>
+                        <span style={{ color: '#555' }}>{bug.assignedUser?.first_name || "-"}</span>
+                      </td>
+
+                      {/* Bug Status dropdown */}
+                      <td>
+                        <select
+                          value={bug.status?.id || ""}
+                          onChange={(e) => handleBugStatusChange(bug.id, e.target.value)}
+                        >
+                          <option value="">-- Select Status --</option>
+                          {statuses.map((status) => (
+                            <option key={status.id} value={status.id}>
+                              {status.decription || status.description}
                             </option>
                           ))}
                         </select>
                       </td>
-                    <td>
-                      <select
-                        onChange={(e) => handleMoveTask(task.id, e.target.value)}
-                        defaultValue=""
-                      >
-                        <option value="" disabled>Move to sprint...</option>
-                        {allSprints
-                          .filter(s => s.id !== sprint.id)
-                          .map(s => (
-                            <option key={s.id} value={s.id}>
-                              {s.name}
-                            </option>
-                          ))}
-                      </select>
-                    </td>
 
+                      {/* Story points column repurposed for priority */}
+                      <td><span className="priority-badge">{bug.priority?.description || "-"}</span></td>
+
+                      {/* Reporter */}
+                      <td>
+                        <span style={{ color: '#555' }}>{bug.reportedUser?.first_name || "-"}</span>
+                      </td>
+
+                      {/* Move sprint (not applicable for bugs directly) */}
+                      <td>-</td>
                     </tr>
                   ))}
                 </tbody>
@@ -309,6 +498,27 @@ useEffect(() => {
           );
         })}
       </div>
+      
+      {/* 🔒 Locked Task Popup */}
+      {lockedMsg && (
+        <div className="popup-overlay" style={{ zIndex: 1000, position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="popup-card" style={{ background: '#fff', padding: '20px', borderRadius: '8px', maxWidth: '400px', width: '90%', textAlign: 'center', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+            <div style={{ color: '#dc2626', fontSize: '32px', marginBottom: '10px' }}>
+              <FaLock />
+            </div>
+            <h3 style={{ margin: '0 0 15px 0', color: '#1f2937' }}>Task Locked</h3>
+            <p style={{ color: '#4b5563', whiteSpace: 'pre-line', marginBottom: '20px', lineHeight: '1.5' }}>
+              {lockedMsg}
+            </p>
+            <button 
+              onClick={() => setLockedMsg("")} 
+              style={{ background: '#3b82f6', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

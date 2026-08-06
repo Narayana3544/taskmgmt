@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import './Profile.css';
 
 const Profile = () => {
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [error, setError] = useState('');
 
@@ -40,6 +42,9 @@ const Profile = () => {
           <label>Role</label>
           <p>{user.role.description}</p>
         </div>
+      </div>
+      <div className="btn-container full-width" style={{ marginTop: '20px' }}>
+        <button type="button" className="btn-global btn-secondary" onClick={() => navigate(-1)}>Back</button>
       </div>
     </div>
   );

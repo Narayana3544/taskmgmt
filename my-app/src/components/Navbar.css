@@ -1,56 +1,89 @@
-.main-navbar {
-display: flex;
-  justify-content: space-between;
-  margin-left: 35px;
+.top-navbar {
+  position: fixed;
+  top: 0;
+  left: 240px; /* Offset by sidebar width */
+  width: calc(100% - 240px);
+  height: 60px;
+  background-color: #000000;
+  display: flex;
   align-items: center;
-  background:  #1e1e2f;
-  padding: 10px 20px;
-  color: rgb(72, 202, 60);
-  position: relative;
+  justify-content: space-between; /* This pushes the profile to the right corner */
+  padding: 0 24px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
   z-index: 1000;
+  font-family: 'Segoe UI', sans-serif;
+  box-sizing: border-box;
+  transition: left 0.3s ease, width 0.3s ease;
 }
 
-.logo {
-  font-size: 1.5rem;
-  font-weight: bold;
+.top-navbar.collapsed {
+  left: 60px;
+  width: calc(100% - 60px);
 }
 
-.profile {
+.navbar-brand .company-logo {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  white-space: nowrap;
+}
+
+.navbar-right {
+  display: flex;
+  align-items: center;
+}
+
+.profile-btn {
+  background: none;
+  border: none;
+  color: white;
   cursor: pointer;
-  font-size: 1.8rem;
- color: rgb(72, 202, 60);
-  height: 30px;
-  align-items: end;
+  transition: background-color 0.2s;
 }
 
-.dropdown-menu {
+.profile-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.nav-dropdown-container {
+  position: relative;
+}
+
+.nav-dropdown-menu {
   position: absolute;
-  top: 60px;
-  right: 20px;
-  background: #004080;
+  top: 100%;
+  right: 0; /* Align to the right edge of the button */
+  margin-top: 10px;
+  background-color: #ffffff;
   border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  z-index: 100;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column; /* This makes items stack 1 by 1 downwards */
+  z-index: 1001;
+  border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .dropdown-item {
+  color: #333333;
+  text-decoration: none;
+  padding: 12px 20px;
+  font-size: 0.95rem;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px 16px;
-  color: white;
-  text-decoration: none;
-  transition: background 0.2s;
+  gap: 12px;
+  transition: background-color 0.2s;
 }
 
 .dropdown-item:hover {
-  background: #0059b3;
+  background-color: #f5f5f5;
+  color: var(--color-primary);
 }
-.subnav{
-  height: 3px;
+
+.logout-link {
+  color: #e74c3c;
 }
-.dropdown{
-font-size: 13px;
-padding-top: 4pxpx;
+
+.logout-link:hover {
+  background-color: #fdf5f5;
+  color: #c0392b;
 }

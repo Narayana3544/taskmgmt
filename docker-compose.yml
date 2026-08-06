@@ -28,11 +28,15 @@ services:
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SPRING_JPA_SHOW_SQL: "true"
       SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.PostgreSQLDialect
+      SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE: 50MB
+      SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE: 200MB
 
   frontend:
     build:
       context: ./my-app  # frontend folder
       dockerfile: Dockerfile
+      args:
+        REACT_APP_API_URL: ""   # empty = nginx will proxy API calls to backend
     container_name: taskmgmt-frontend
     depends_on:
       - backend

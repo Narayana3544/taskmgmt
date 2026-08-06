@@ -1,5 +1,5 @@
 package com.telusko.demo.Model;
-import javax.persistence.*;
+import jakarta.persistence.*;
 import lombok.Data;
 
 import java.sql.Date;
@@ -36,6 +36,17 @@ public class createsprint {
             inverseJoinColumns = @JoinColumn(name = "user_id")
     )
     private List<User> users;
+
+    private String sprintGoals;
+
+    public String getSprintGoals() {
+        return sprintGoals;
+    }
+
+    public void setSprintGoals(String sprintGoals) {
+        this.sprintGoals = sprintGoals;
+    }
+
 
     public List<User> getUsers() {
         return users;

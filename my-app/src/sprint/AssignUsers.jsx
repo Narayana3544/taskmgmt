@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import api from '../api';
 import { useParams, useNavigate } from 'react-router-dom';
+import { sortAlphabetically } from "../utils/sortUtils";
 import './AssignUsersToSprint.css';
 
 const AssignUsersToSprint = () => {
@@ -11,7 +12,7 @@ const AssignUsersToSprint = () => {
 
   useEffect(() => {
     api.get(`/sprints/${sprintId}/available-users`, { withCredentials: true })
-      .then((res) => setUsers(res.data))
+      .then((res) => setUsers(sortAlphabetically(res.data)))
       .catch((err) => console.error('Error fetching users:', err));
   }, []);
 

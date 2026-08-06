@@ -3,18 +3,19 @@
 .create-sprint-container {
   max-width: 600px;
   margin: 2rem auto;
-  padding: 2rem;
-  background: #ffffff;
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  color: black;
+  padding: var(--spacing-lg);
+  background-color: var(--bg-secondary);
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--box-shadow-md);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
 }
 
 .create-sprint-title {
   font-size: 1.8rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--spacing-md);
   text-align: center;
-  color: #333;
+  color: var(--color-primary);
 }
 
 .sprint-form .form-group {
@@ -26,45 +27,42 @@
 .sprint-form label {
   font-weight: bold;
   margin-bottom: 0.5rem;
-  color: #444;
+  color: var(--text-secondary);
 }
 
 .sprint-form input,
 .sprint-form select {
   padding: 0.6rem;
-  border: 1px solid #ccc;
-  border-radius: 5px;
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
   font-size: 1rem;
 }
 
 .sprint-form select:disabled {
-  background-color: #f5f5f5;
-  color: #999;
+  background-color: var(--bg-secondary);
+  color: var(--text-muted);
 }
 
-.submit-btn {
-  background-color: #007bff;
-  color: white;
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 5px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-  width: 100%;
-  /* margin-top: 1rem; */
-}
-
-.submit-btn:hover {
-  background-color: #0056b3;
-}
+/* global btn classes are used for submission */
 
 .success-message {
   margin-top: 1rem;
   padding: 0.75rem;
-  background-color: #d4edda;
-  color: #155724;
-  border-radius: 5px;
-  border: 1px solid #c3e6cb;
+  background-color: rgba(76, 175, 80, 0.2);
+  color: var(--color-success);
+  border-radius: var(--border-radius-sm);
+  border: 1px solid var(--color-success);
   text-align: center;
+}
+.sprint-form textarea {
+  width: 100%;
+  padding: 8px;
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  resize: vertical;
+  font-family: inherit;
 }

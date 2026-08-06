@@ -1,8 +1,7 @@
-
 .sidebar {
   width: 240px;
-  height:calc();
-  background-color: #11121a;
+  height: 100vh;
+  background-color: #000000;
   color: white;
   display: flex;
   flex-direction: column;
@@ -15,21 +14,34 @@
   z-index: 998; /* below navbar */
   border-right: 1px solid #222;
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  transition: width 0.3s ease;
 }
 
 .sidebar.collapsed {
   width: 60px;
+  background-color: #000000;
   overflow: hidden;
 }
 
 .sidebar-content {
   padding: 2rem;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  overflow-y: auto;
+  flex: 1;
+  padding-right: 8px;
 }
 
-.sidebar.collapsed .sidebar-content {
-  display: none;     /* Optional: hide inner content */
+.sidebar.collapsed .sidebar-content span,
+.sidebar.collapsed .sidebar-content .sub-nav {
+  display: none;
 }
-
+.sidebar.collapsed .nav-item {
+  justify-content: center;
+  padding: 10px 0;
+}
+.sidebar.collapsed .nav-item svg {
+  margin-right: 0;
+}
 
 .profile-section {
   display: flex;
@@ -138,26 +150,9 @@
   color: #ccc;
 }
 
-
 .nav-item, .nav-subitem, .message-item {
   padding: 8px 12px;
   font-size: 0.95rem;
-}
-.sidebar {
-  width: 240px;
-  transition: width 0.3s ease;
-}
-
-.sidebar.collapsed {
-  width: 60px;
-  background-color: #1e1e2f;
-  overflow: hidden;
-}
-
-
-.sidebar-content {
-  transition: opacity 0.3s ease, transform 0.3s ease;
-  overflow: hidden;
 }
 
 .expand-anim {
@@ -169,6 +164,7 @@
   opacity: 0;
   transform: translateX(-20px);
 }
+
 .sidebar-content::-webkit-scrollbar {
   width: 6px;
 }
@@ -177,9 +173,46 @@
   background-color: rgba(100, 100, 100, 0.3);
   border-radius: 4px;
 }
-.sidebar-content {
-  overflow-y: auto;
-  max-height: 100vh;
-  padding-right: 8px; /* Optional: add spacing for scrollbar */
+
+/* ChatGPT Style Bottom Profile */
+.sidebar-bottom-profile {
+  position: relative;
+  padding: 1rem;
+  border-top: 1px solid #222;
+  background-color: #000000;
+  z-index: 100;
 }
+
+.sidebar-bottom-profile .profile-section {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 8px;
+  transition: background-color 0.2s;
+  margin-bottom: 0;
+}
+
+.sidebar-bottom-profile .profile-section:hover {
+  background-color: #1a1b27;
+}
+
+.profile-popup-menu {
+  position: absolute;
+  bottom: 100%; /* Opens upwards */
+  left: 10px;
+  width: calc(100% - 20px);
+  background-color: #1a1b27;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 10px;
+  box-shadow: 0 -4px 12px rgba(0,0,0,0.5);
+  margin-bottom: 10px;
+  z-index: 101;
+}
+
+.profile-popup-menu .nav-item {
+  color: #fff;
+}
+
 

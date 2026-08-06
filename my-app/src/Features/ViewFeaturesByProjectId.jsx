@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import api from '../api';
 import { useNavigate, useParams } from 'react-router-dom';
 import { FaEdit } from "react-icons/fa";
+import { sortLatestFirst } from "../utils/sortUtils";
+import "./FeatureList.css";
 
 const ViewFeaturesByProjectId = () => {
   const [features, setFeatures] = useState([]);
@@ -15,8 +17,9 @@ const ViewFeaturesByProjectId = () => {
       api
         .get(`/features/project/${projectId}`, { withCredentials: true })
         .then((res) => {
-          setFeatures(res.data);
-          setFilteredFeatures(res.data); // ✅ initialize filteredFeatures as well
+          const sorted = sortLatestFirst(res.data);
+          setFeatures(sorted);
+          setFilteredFeatures(sorted); // ✅ initialize filteredFeatures as well
         })
         .catch((err) => console.error("Error fetching features:", err));
     }
@@ -45,34 +48,14 @@ const ViewFeaturesByProjectId = () => {
         .catch((err) => console.error('Error deleting feature:', err));
     }
   };
-  const [searchTerm, setSearchTerm] = useState('');
 
-useEffect(() => {
-  if (searchTerm.trim() === '') {
-    setFilteredFeatures(features);
-  } else {
-    const term = searchTerm.toLowerCase();
-    const filtered = features.filter(feature =>
-      JSON.stringify(feature).toLowerCase().includes(term)
-    );
-    setFilteredFeatures(filtered);
-  }
-}, [searchTerm, features]);
+
+  const projectName = features.length > 0 ? features[0].project?.name : projectId;
 
   return (
     <div className="features-list-page">
-       <button className="back-btn" onClick={() => navigate(-1)}>⬅ Back</button>
       <div className="header-bar">
-        
-        <h2>📋 Features for Project {projectId}</h2>
-      </div>
-      <div className="search-bar">
-        <input
-          type="text"
-      placeholder="Search..."
-      value={searchTerm}
-      onChange={e => setSearchTerm(e.target.value)}
-        />
+        <h2>Features for Project: {projectName}</h2>
       </div>
 
       {filteredFeatures.length === 0 ? (
@@ -81,12 +64,10 @@ useEffect(() => {
         <table className="features-table">
           <thead>
             <tr>
-              <th>Feature ID</th>
-              {/* <th>Project Name</th> */}
-              <th>Feature Name</th>
+              <th style={{ width: '110px', whiteSpace: 'nowrap' }}>Feature ID</th>
+              <th style={{ minWidth: '150px' }}>Feature Name</th>
               <th>Description</th>
-              <th>Status</th>
-              {/* <th>Actions</th> */}
+              <th style={{ width: '130px', whiteSpace: 'nowrap' }}>Status</th>
             </tr>
           </thead>
           <tbody>
@@ -98,7 +79,7 @@ useEffect(() => {
                 <td>{feature.description}</td>
                 <td>
                   <span
-                    className={`status-tag ${
+                    className={`status-tags ${
                       feature.status?.description?.toLowerCase().replace(/\s+/g, '-') || ''
                     }`}
                   >
@@ -118,6 +99,10 @@ useEffect(() => {
           </tbody>
         </table>
       )}
+
+      <div className="btn-container full-width" style={{ marginTop: '20px' }}>
+        <button type="button" className="btn-global btn-secondary" onClick={() => navigate(-1)}>Back</button>
+      </div>
     </div>
   );
 };

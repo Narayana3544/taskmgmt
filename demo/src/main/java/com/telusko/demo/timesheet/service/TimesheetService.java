@@ -208,8 +208,12 @@ public class TimesheetService {
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<com.telusko.demo.timesheet.dto.UserTimesheetOverviewDto> getTimesheetOverview(LocalDate startDate, LocalDate endDate, Pageable pageable) {
-        Page<com.telusko.demo.timesheet.dto.UserTimesheetOverviewDto> page = timesheetRepository.findUserTimesheetOverview(startDate, endDate, pageable);
+    public PageResponse<com.telusko.demo.timesheet.dto.UserTimesheetOverviewDto> getTimesheetOverview(
+            LocalDate startDate, LocalDate endDate, String statusCode, Pageable pageable) {
+        String safeStatus = (statusCode == null || statusCode.trim().isEmpty() || "ALL".equalsIgnoreCase(statusCode.trim())) 
+                ? "ALL" : statusCode.trim().toUpperCase();
+        Page<com.telusko.demo.timesheet.dto.UserTimesheetOverviewDto> page = 
+                timesheetRepository.findUserTimesheetOverview(startDate, endDate, safeStatus, pageable);
         return PageResponse.<com.telusko.demo.timesheet.dto.UserTimesheetOverviewDto>builder()
                 .content(page.getContent())
                 .page(page.getNumber())
@@ -221,8 +225,17 @@ public class TimesheetService {
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<TimesheetResponse> getUserTimesheetsReport(Long userId, LocalDate startDate, LocalDate endDate, Pageable pageable) {
-        Page<Timesheet> page = timesheetRepository.findTimesheetsByUserAndDateRange(userId, startDate, endDate, pageable);
+    public PageResponse<com.telusko.demo.timesheet.dto.UserTimesheetOverviewDto> getTimesheetOverview(
+            LocalDate startDate, LocalDate endDate, Pageable pageable) {
+        return getTimesheetOverview(startDate, endDate, "APPROVED", pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<TimesheetResponse> getUserTimesheetsReport(
+            Long userId, LocalDate startDate, LocalDate endDate, String statusCode, Pageable pageable) {
+        String safeStatus = (statusCode == null || statusCode.trim().isEmpty() || "ALL".equalsIgnoreCase(statusCode.trim())) 
+                ? "ALL" : statusCode.trim().toUpperCase();
+        Page<Timesheet> page = timesheetRepository.findTimesheetsByUserAndDateRange(userId, startDate, endDate, safeStatus, pageable);
         return PageResponse.<TimesheetResponse>builder()
                 .content(page.getContent().stream().map(this::mapToResponse).collect(Collectors.toList()))
                 .page(page.getNumber())
@@ -231,6 +244,12 @@ public class TimesheetService {
                 .totalPages(page.getTotalPages())
                 .last(page.isLast())
                 .build();
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<TimesheetResponse> getUserTimesheetsReport(
+            Long userId, LocalDate startDate, LocalDate endDate, Pageable pageable) {
+        return getUserTimesheetsReport(userId, startDate, endDate, "APPROVED", pageable);
     }
 
     @Transactional(readOnly = true)

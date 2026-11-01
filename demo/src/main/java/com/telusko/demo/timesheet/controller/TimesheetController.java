@@ -83,10 +83,11 @@ public class TimesheetController {
     public ResponseEntity<ApiResponse<PageResponse<com.telusko.demo.timesheet.dto.UserTimesheetOverviewDto>>> getTimesheetOverview(
             @RequestParam LocalDate startDate,
             @RequestParam LocalDate endDate,
+            @RequestParam(required = false, defaultValue = "APPROVED") String status,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "100") int size) {
         Pageable pageable = PageRequest.of(page, size);
-        return ResponseEntity.ok(ApiResponse.success(timesheetService.getTimesheetOverview(startDate, endDate, pageable)));
+        return ResponseEntity.ok(ApiResponse.success(timesheetService.getTimesheetOverview(startDate, endDate, status, pageable)));
     }
 
     @GetMapping("/report/user/{userId}")
@@ -94,10 +95,11 @@ public class TimesheetController {
             @PathVariable Long userId,
             @RequestParam LocalDate startDate,
             @RequestParam LocalDate endDate,
+            @RequestParam(required = false, defaultValue = "APPROVED") String status,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "100") int size) {
         Pageable pageable = PageRequest.of(page, size);
-        return ResponseEntity.ok(ApiResponse.success(timesheetService.getUserTimesheetsReport(userId, startDate, endDate, pageable)));
+        return ResponseEntity.ok(ApiResponse.success(timesheetService.getUserTimesheetsReport(userId, startDate, endDate, status, pageable)));
     }
 
 

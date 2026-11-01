@@ -1,19 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Clock } from 'lucide-react';
+import { ArrowLeft, Clock, Download, Filter } from 'lucide-react';
 import api from '../../api';
 import Layout from '../../components/Layout';
 import PageHeader from '../../components/PageHeader';
-import { format } from 'date-fns';
+
+const STATUS_OPTIONS = [
+    { value: 'APPROVED', label: 'Approved' },
+    { value: 'SUBMITTED', label: 'Submitted' },
+    { value: 'DRAFT', label: 'Draft' },
+    { value: 'REJECTED', label: 'Rejected' },
+    { value: 'ALL', label: 'All Statuses' },
+];
 
 const UserTimesheetDetails = () => {
     const { userId } = useParams();
-    const [searchParams] = useSearchParams();
+    const [searchParams, setSearchParams] = useSearchParams();
     const navigate = useNavigate();
 
     const startDate = searchParams.get('startDate') || '';
     const endDate = searchParams.get('endDate') || '';
+    const initialStatus = searchParams.get('status') || 'APPROVED';
 
+    const [status, setStatus] = useState(initialStatus);
     const [entries, setEntries] = useState([]);
     const [loading, setLoading] = useState(false);
     
@@ -23,10 +32,12 @@ const UserTimesheetDetails = () => {
     const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
 
+    const activeStatusLabel = STATUS_OPTIONS.find(o => o.value === status)?.label || status;
+
     const fetchDetails = async () => {
         setLoading(true);
         try {
-            const params = { startDate, endDate, page, size: 20 };
+            const params = { startDate, endDate, status, page, size: 20 };
             const res = await api.get(`/api/timesheets/report/user/${userId}`, { params });
             const dataContent = res.data?.data?.content || [];
             setEntries(dataContent);
@@ -47,17 +58,84 @@ const UserTimesheetDetails = () => {
             fetchDetails();
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [userId, startDate, endDate, page]);
+    }, [userId, startDate, endDate, status, page]);
+
+    const handleStatusChange = (newStatus) => {
+        setStatus(newStatus);
+        setPage(0);
+        setSearchParams({ startDate, endDate, status: newStatus });
+    };
+
+    const exportToCSV = () => {
+        if (!entries || entries.length === 0) return;
+
+        const parseHoursToFloat = (hStr) => {
+            if (!hStr) return 0;
+            const match = hStr.match(/(\d+)h\s*(\d*)m?/);
+            if (match) {
+                const hours = parseInt(match[1] || 0, 10);
+                const minutes = parseInt(match[2] || 0, 10);
+                return hours + (minutes / 60.0);
+            }
+            return parseFloat(hStr) || 0;
+        };
+
+        const totalHoursSum = entries.reduce((acc, row) => acc + parseHoursToFloat(row.totalHours), 0);
+
+        const lines = [
+            `"User Timesheet Detailed Report"`,
+            `"User: ${userName || userId}"`,
+            `"Active Status Filter: ${activeStatusLabel}"`,
+            `"Date Range: ${startDate} to ${endDate}"`,
+            `"Exported: ${new Date().toLocaleString()}"`,
+            '',
+            '"Date","Status","Total Hours"',
+            ...entries.map(r => `"${r.workDate || ''}","${r.statusName || r.statusCode || ''}","${r.totalHours || '0h 00m'}"`),
+            `"Total",,"${totalHoursSum.toFixed(1)}h"`
+        ];
+
+        const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', `timesheet-details-${userName || userId}-${status}-${startDate}-to-${endDate}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
 
     return (
         <Layout title="Details for Selected User">
-            <div style={{ marginBottom: 20 }}>
-                <button onClick={() => navigate('/timesheets/report')} className="btn btn-secondary flex items-center gap-2">
+            <div style={{ marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <button onClick={() => navigate(`/timesheets/report?status=${status}`)} className="btn btn-secondary flex items-center gap-2">
                     <ArrowLeft size={16} /> Back to Overview
                 </button>
+
+                <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <Filter size={16} color="var(--color-text-muted)" />
+                        <select 
+                            className="form-input"
+                            style={{ padding: '4px 8px', width: 'auto' }}
+                            value={status}
+                            onChange={e => handleStatusChange(e.target.value)}
+                        >
+                            {STATUS_OPTIONS.map(opt => (
+                                <option key={opt.value} value={opt.value}>{opt.label}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <button onClick={exportToCSV} className="btn btn-secondary flex items-center gap-2" disabled={loading || entries.length === 0}>
+                        <Download size={16} /> Export CSV
+                    </button>
+                </div>
             </div>
             
-            <PageHeader title="Details for Selected User" subtitle={userName ? `Timesheet Days Logged For: ${userName}` : ''} />
+            <PageHeader 
+                title="Details for Selected User" 
+                subtitle={`${userName ? `Timesheet Days Logged For: ${userName} | ` : ''}Active Status Filter: ${activeStatusLabel} | Range: ${startDate} to ${endDate}`} 
+            />
 
             <div className="card">
                 <div className="table-responsive">
@@ -80,7 +158,7 @@ const UserTimesheetDetails = () => {
                             ) : entries.length === 0 ? (
                                 <tr>
                                     <td colSpan="4" style={{ padding: '40px 0', color: 'var(--color-text-muted)' }}>
-                                        No entries found for this user in the specified date range.
+                                        No entries found for this user with status: {activeStatusLabel}.
                                     </td>
                                 </tr>
                             ) : (

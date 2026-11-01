@@ -7,6 +7,10 @@ import StatusBadge from '../../components/StatusBadge';
 
 const TimesheetApproval = () => {
     const navigate = useNavigate();
+    const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+    const currentUserId = Number(currentUser.userId || currentUser.id);
+    const isAdmin = currentUser.role === 'ADMIN' || currentUser.roleCode === 'ADMIN' || currentUser.role === 'SUPER_ADMIN';
+
     const [timesheets, setTimesheets] = useState([]);
     const [loading, setLoading] = useState(true);
     const [actionComment, setActionComment] = useState('');
@@ -59,26 +63,36 @@ const TimesheetApproval = () => {
                                     <tr><th>Employee</th><th>Date</th><th>Entries</th><th>Hours</th><th>Status</th><th>Actions</th></tr>
                                 </thead>
                                 <tbody>
-                                    {timesheets.map(ts => (
-                                        <tr key={ts.id}>
-                                            <td style={{ fontWeight: 500 }}>{ts.userName || ts.user?.fullName || '—'}</td>
-                                            <td style={{ whiteSpace: 'nowrap' }}>{ts.workDate}</td>
-                                            <td style={{ textAlign: 'center' }}>{ts.entryCount || ts.entries?.length || 0}</td>
-                                            <td style={{ textAlign: 'center', fontWeight: 500 }}>{ts.totalHours || '—'}</td>
-                                            <td><StatusBadge code={ts.statusCode || 'SUBMITTED'} label={ts.statusName || 'Submitted'} /></td>
-                                            <td>
-                                                <div className="flex gap-2">
-                                                    <button className="btn btn-sm btn-secondary" onClick={() => navigate(`/timesheets/${ts.id}`)}>View</button>
-                                                    <button className="btn btn-sm btn-primary" onClick={() => handleAction(ts.id, 'approve')}>
-                                                        <Check size={14} /> Approve
-                                                    </button>
-                                                    <button className="btn btn-sm btn-danger" onClick={() => handleAction(ts.id, 'reject')}>
-                                                        <X size={14} /> Reject
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
+                                    {timesheets.map(ts => {
+                                        const isOwner = Number(ts.userId) === currentUserId;
+                                        const isManager = Number(ts.managerId) === currentUserId;
+                                        const canAct = (isAdmin || isManager) && !isOwner;
+
+                                        return (
+                                            <tr key={ts.id}>
+                                                <td style={{ fontWeight: 500 }}>{ts.userName || ts.user?.fullName || '—'}</td>
+                                                <td style={{ whiteSpace: 'nowrap' }}>{ts.workDate}</td>
+                                                <td style={{ textAlign: 'center' }}>{ts.entryCount || ts.entries?.length || 0}</td>
+                                                <td style={{ textAlign: 'center', fontWeight: 500 }}>{ts.totalHours || '—'}</td>
+                                                <td><StatusBadge code={ts.statusCode || 'SUBMITTED'} label={ts.statusName || 'Submitted'} /></td>
+                                                <td>
+                                                    <div className="flex gap-2">
+                                                        <button className="btn btn-sm btn-secondary" onClick={() => navigate(`/timesheets/${ts.id}`)}>View</button>
+                                                        {canAct && (
+                                                            <>
+                                                                <button className="btn btn-sm btn-primary" onClick={() => handleAction(ts.id, 'approve')}>
+                                                                    <Check size={14} /> Approve
+                                                                </button>
+                                                                <button className="btn btn-sm btn-danger" onClick={() => handleAction(ts.id, 'reject')}>
+                                                                    <X size={14} /> Reject
+                                                                </button>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
                                 </tbody>
                             </table>
                         </div>

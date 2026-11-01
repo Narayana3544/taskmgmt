@@ -17,6 +17,8 @@ import com.telusko.demo.user.entity.User;
 import com.telusko.demo.user.repository.UserRepository;
 import com.telusko.demo.workitem.entity.WorkItem;
 import com.telusko.demo.workitem.repository.WorkItemRepository;
+import com.telusko.demo.project.repository.ProjectMemberRepository;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -37,6 +39,7 @@ public class TimesheetService {
     private final UserRepository userRepository;
     private final MasterValueRepository masterValueRepository;
     private final WorkItemRepository workItemRepository;
+    private final ProjectMemberRepository projectMemberRepository;
 
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
 
@@ -44,12 +47,14 @@ public class TimesheetService {
                             TimesheetEntryRepository timesheetEntryRepository,
                             UserRepository userRepository,
                             MasterValueRepository masterValueRepository,
-                            WorkItemRepository workItemRepository) {
+                            WorkItemRepository workItemRepository,
+                            ProjectMemberRepository projectMemberRepository) {
         this.timesheetRepository = timesheetRepository;
         this.timesheetEntryRepository = timesheetEntryRepository;
         this.userRepository = userRepository;
         this.masterValueRepository = masterValueRepository;
         this.workItemRepository = workItemRepository;
+        this.projectMemberRepository = projectMemberRepository;
     }
 
     @Transactional(readOnly = true)
@@ -257,15 +262,28 @@ public class TimesheetService {
             throw new BadRequestException("Only SUBMITTED timesheets can be processed");
         }
 
+        User owner = timesheet.getUser();
+        if (owner.getId().equals(managerId)) {
+            throw new AccessDeniedException("You cannot approve or reject your own timesheet");
+        }
+
         User manager = userRepository.findById(managerId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", managerId));
+
+        boolean isAdmin = manager.getRole() != null &&
+                ("ADMIN".equalsIgnoreCase(manager.getRole().getCode()) || "SUPER_ADMIN".equalsIgnoreCase(manager.getRole().getCode()));
+
+        boolean isReportingManager = (owner.getManager() != null && owner.getManager().getId().equals(managerId))
+                || projectMemberRepository.existsByUserIdAndManagerIdAndActiveTrue(owner.getId(), managerId);
+
+        if (!isAdmin && !isReportingManager) {
+            throw new AccessDeniedException("Only the timesheet owner's reporting manager or an Administrator can approve or reject this timesheet");
+        }
 
         String newStatusCode = approve ? "APPROVED" : "REJECTED";
         timesheet.setStatus(getMasterValue("TIMESHEET_STATUS", newStatusCode));
         timesheet.setApprovedBy(manager);
         timesheet.setApprovedAt(LocalDateTime.now());
-        // For actual enterprise systems, saving the comment in a history table is preferred.
-        // Doing minimal impact update.
         
         return mapToResponse(timesheetRepository.save(timesheet));
     }
@@ -301,6 +319,7 @@ public class TimesheetService {
                 .id(t.getId())
                 .userId(t.getUser().getId())
                 .userName(t.getUser().getFullName())
+                .managerId(t.getUser().getManager() != null ? t.getUser().getManager().getId() : null)
                 .workDate(t.getWorkDate())
                 .statusId(t.getStatus().getId())
                 .statusCode(t.getStatus().getCode())

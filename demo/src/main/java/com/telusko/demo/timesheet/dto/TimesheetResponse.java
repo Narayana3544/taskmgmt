@@ -13,6 +13,7 @@ public class TimesheetResponse {
     private Long id;
     private Long userId;
     private String userName;
+    private Long managerId;
     private LocalDate workDate;
     private Long statusId;
     private String statusCode;

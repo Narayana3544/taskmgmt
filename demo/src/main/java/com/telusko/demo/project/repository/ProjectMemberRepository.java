@@ -19,4 +19,11 @@ public interface ProjectMemberRepository extends JpaRepository<ProjectMember, Lo
 
     @Query("SELECT COUNT(pm) FROM ProjectMember pm WHERE pm.project.id = :projectId AND pm.endDate IS NULL")
     long countActiveMembers(@Param("projectId") Long projectId);
+
+    @Query("SELECT pm FROM ProjectMember pm WHERE pm.user.id = :userId AND pm.endDate IS NULL AND pm.active = true")
+    List<ProjectMember> findActiveMembershipsByUser(@Param("userId") Long userId);
+
+    boolean existsByProjectIdAndUserIdAndEndDateIsNull(Long projectId, Long userId);
+
+    boolean existsByUserIdAndManagerIdAndActiveTrue(Long userId, Long managerId);
 }

@@ -9,15 +9,19 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface TimesheetRepository extends JpaRepository<Timesheet, Long> {
-
     Optional<Timesheet> findByUserIdAndWorkDateAndActiveTrue(Long userId, LocalDate workDate);
+    List<Timesheet> findByUserIdAndActiveTrueOrderByWorkDateDesc(Long userId);
+    Page<Timesheet> findByUserIdAndActiveTrue(Long userId, Pageable pageable);
 
     @Query("SELECT t FROM Timesheet t INNER JOIN t.user u " +
-           "WHERE EXISTS (SELECT 1 FROM ProjectMember pm WHERE pm.user = u AND pm.manager.id = :managerId AND pm.active = true) " +
+           "WHERE (EXISTS (SELECT 1 FROM ProjectMember pm WHERE pm.user = u AND pm.manager.id = :managerId AND pm.active = true) " +
+           "       OR u.manager.id = :managerId) " +
+           "AND u.id <> :managerId " +
            "AND t.status.code = 'SUBMITTED' AND t.active = true " +
            "ORDER BY t.workDate ASC")
     Page<Timesheet> findPendingApprovalsByManager(@Param("managerId") Long managerId, Pageable pageable);
@@ -31,7 +35,7 @@ public interface TimesheetRepository extends JpaRepository<Timesheet, Long> {
            "WHERE t.status.code = 'APPROVED' AND t.active = true " +
            "AND t.workDate >= :startDate AND t.workDate <= :endDate " +
            "ORDER BY t.workDate ASC")
-    Page<Timesheet> findApprovedTimesheetsByDateRange(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate, Pageable pageable);
+    List<Timesheet> findApprovedByDateRange(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 
     // Overview: ALL users with their timesheet counts (all statuses)
     @Query("SELECT new com.telusko.demo.timesheet.dto.UserTimesheetOverviewDto(" +

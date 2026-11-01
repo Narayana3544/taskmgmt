@@ -108,7 +108,7 @@ public class TimesheetService {
                 .orElseThrow(() -> new ResourceNotFoundException("Timesheet", "id", timesheetId));
 
         if (!timesheet.getUser().getId().equals(userId)) {
-            throw new BadRequestException("You can only add entries to your own timesheet");
+            throw new AccessDeniedException("You can only add entries to your own timesheet");
         }
 
         if (!"DRAFT".equals(timesheet.getStatus().getCode()) && !"REJECTED".equals(timesheet.getStatus().getCode())) {
@@ -175,7 +175,7 @@ public class TimesheetService {
                 .orElseThrow(() -> new ResourceNotFoundException("Timesheet", "id", timesheetId));
 
         if (!timesheet.getUser().getId().equals(userId)) {
-            throw new BadRequestException("You can only submit your own timesheet");
+            throw new AccessDeniedException("You can only submit your own timesheet");
         }
 
         if (timesheet.getWorkDate().isBefore(LocalDate.now().minusDays(2))) {

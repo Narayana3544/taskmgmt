@@ -124,6 +124,15 @@ public class TimesheetService {
         }
 
         int durationMinutes = (int) ChronoUnit.MINUTES.between(request.getStartTime(), request.getEndTime());
+        if (durationMinutes <= 0) {
+            throw new BadRequestException("Timesheet entry duration must be greater than zero");
+        }
+
+        List<TimesheetEntry> existingEntries = timesheetEntryRepository.findByTimesheetIdOrderByStartTimeAsc(timesheetId);
+        int currentDayMinutes = existingEntries.stream().mapToInt(TimesheetEntry::getDurationMinutes).sum();
+        if (currentDayMinutes + durationMinutes > 24 * 60) {
+            throw new BadRequestException("Total timesheet duration cannot exceed 24 hours in a single day");
+        }
 
         WorkItem workItem = null;
         if ("WORK".equals(request.getEntryType()) && request.getWorkItemId() != null) {

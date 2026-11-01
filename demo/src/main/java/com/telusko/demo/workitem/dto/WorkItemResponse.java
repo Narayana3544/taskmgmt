@@ -20,13 +20,18 @@ public class WorkItemResponse {
     private String title;
     private String description;
 
-    // Type, Status, Priority — id + display name + code
+    // Type, Status, Priority
     private Long typeId;
     private String typeName;
     private String typeCode;
     private Long statusId;
     private String statusName;
     private String statusCode;
+
+    // Board Column
+    private Long boardColumnId;
+    private String boardColumnName;
+    private String boardColumnCategory;
     private Long priorityId;
     private String priorityName;
     private String priorityCode;
@@ -42,6 +47,7 @@ public class WorkItemResponse {
     private Integer storyPoints;
     private Long sprintId;
     private String sprintName;
+    private String sprintStatusCode;
     private LocalDate dueDate;
     private Boolean active;
     private LocalDateTime createdAt;

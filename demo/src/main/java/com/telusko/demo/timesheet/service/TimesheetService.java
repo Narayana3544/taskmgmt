@@ -13,6 +13,7 @@ import com.telusko.demo.timesheet.entity.Timesheet;
 import com.telusko.demo.timesheet.entity.TimesheetEntry;
 import com.telusko.demo.timesheet.repository.TimesheetEntryRepository;
 import com.telusko.demo.timesheet.repository.TimesheetRepository;
+import com.telusko.demo.sprint.repository.SprintWorkItemRepository;
 import com.telusko.demo.user.entity.User;
 import com.telusko.demo.user.repository.UserRepository;
 import com.telusko.demo.workitem.entity.WorkItem;
@@ -40,6 +41,7 @@ public class TimesheetService {
     private final MasterValueRepository masterValueRepository;
     private final WorkItemRepository workItemRepository;
     private final ProjectMemberRepository projectMemberRepository;
+    private final SprintWorkItemRepository sprintWorkItemRepository;
 
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
 
@@ -48,13 +50,15 @@ public class TimesheetService {
                             UserRepository userRepository,
                             MasterValueRepository masterValueRepository,
                             WorkItemRepository workItemRepository,
-                            ProjectMemberRepository projectMemberRepository) {
+                            ProjectMemberRepository projectMemberRepository,
+                            SprintWorkItemRepository sprintWorkItemRepository) {
         this.timesheetRepository = timesheetRepository;
         this.timesheetEntryRepository = timesheetEntryRepository;
         this.userRepository = userRepository;
         this.masterValueRepository = masterValueRepository;
         this.workItemRepository = workItemRepository;
         this.projectMemberRepository = projectMemberRepository;
+        this.sprintWorkItemRepository = sprintWorkItemRepository;
     }
 
     @Transactional(readOnly = true)
@@ -138,6 +142,9 @@ public class TimesheetService {
         if ("WORK".equals(request.getEntryType()) && request.getWorkItemId() != null) {
             workItem = workItemRepository.findById(request.getWorkItemId())
                     .orElseThrow(() -> new ResourceNotFoundException("WorkItem", "id", request.getWorkItemId()));
+            if (sprintWorkItemRepository.isWorkItemInClosedSprint(workItem.getId())) {
+                throw new BadRequestException("Cannot log time against work items belonging to a CLOSED sprint. Reopen the sprint to log time.");
+            }
         }
 
         TimesheetEntry entry = TimesheetEntry.builder()

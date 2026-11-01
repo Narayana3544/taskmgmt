@@ -29,6 +29,9 @@ public interface SprintWorkItemRepository extends JpaRepository<SprintWorkItem, 
     @Query("SELECT swi FROM SprintWorkItem swi WHERE swi.workItem.id = :workItemId AND swi.removedAt IS NULL")
     List<SprintWorkItem> findActiveByWorkItemId(@Param("workItemId") Long workItemId);
 
+    @Query("SELECT COUNT(swi) > 0 FROM SprintWorkItem swi WHERE swi.workItem.id = :workItemId AND swi.removedAt IS NULL AND swi.sprint.status.code = 'CLOSED'")
+    boolean isWorkItemInClosedSprint(@Param("workItemId") Long workItemId);
+
     @Query("SELECT new com.telusko.demo.sprint.dto.SprintOverviewResponse(" +
            "  COALESCE(SUM(CASE WHEN swi.removedAt IS NULL THEN 1L ELSE 0L END), 0L), " + // totalItems
            "  COALESCE(SUM(CASE WHEN w.status.code = 'DONE' AND swi.removedAt IS NULL THEN 1L ELSE 0L END), 0L), " + // completedItems

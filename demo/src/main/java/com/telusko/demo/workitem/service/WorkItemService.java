@@ -212,6 +212,10 @@ public class WorkItemService {
     public WorkItemResponse getWorkItemById(Long id) {
         WorkItem workItem = workItemRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("WorkItem", "id", id));
+
+        if (sprintWorkItemRepository.isWorkItemInClosedSprint(id)) {
+            throw new BadRequestException("Cannot edit work items belonging to a CLOSED sprint. Reopen the sprint to make changes.");
+        }
         return mapToResponse(workItem);
     }
 
@@ -234,6 +238,10 @@ public class WorkItemService {
 
         WorkItem workItem = workItemRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("WorkItem", "id", id));
+
+        if (sprintWorkItemRepository.isWorkItemInClosedSprint(id)) {
+            throw new BadRequestException("Cannot edit work items belonging to a CLOSED sprint. Reopen the sprint to make changes.");
+        }
 
         // RULE: Owner cannot be edited by Manager or Member; only Admin can edit the owner
         if (request.getOwnerId() != null && workItem.getOwner() != null
@@ -369,6 +377,10 @@ public class WorkItemService {
         WorkItem workItem = workItemRepository.findById(workItemId)
                 .orElseThrow(() -> new ResourceNotFoundException("WorkItem", "id", workItemId));
 
+        if (sprintWorkItemRepository.isWorkItemInClosedSprint(workItemId)) {
+            throw new BadRequestException("Cannot reassign work items belonging to a CLOSED sprint. Reopen the sprint to make changes.");
+        }
+
         User effectiveAssignee = workItem.getAssignee() != null ? workItem.getAssignee() : workItem.getOwner();
         boolean isOwner = workItem.getOwner() != null && workItem.getOwner().getId().equals(userId);
         boolean isAssignee = effectiveAssignee != null && effectiveAssignee.getId().equals(userId);
@@ -430,6 +442,10 @@ public class WorkItemService {
     public void updateWorkItemStatus(Long workItemId, String statusCode, Long userId) {
         WorkItem workItem = workItemRepository.findById(workItemId)
                 .orElseThrow(() -> new ResourceNotFoundException("WorkItem", "id", workItemId));
+
+        if (sprintWorkItemRepository.isWorkItemInClosedSprint(workItemId)) {
+            throw new BadRequestException("Cannot change status of work items belonging to a CLOSED sprint. Reopen the sprint to make changes.");
+        }
 
         MasterValue newStatus = masterValueRepository.findByMasterTypeCodeAndCode("WORK_ITEM_STATUS", statusCode)
                 .orElseThrow(() -> new BadRequestException("Status not configured: " + statusCode));
@@ -513,6 +529,10 @@ public class WorkItemService {
     public WorkItemResponse updateWorkItemColumn(Long workItemId, Long columnId, String reopenReason, Long userId) {
         WorkItem workItem = workItemRepository.findById(workItemId)
                 .orElseThrow(() -> new ResourceNotFoundException("WorkItem", "id", workItemId));
+
+        if (sprintWorkItemRepository.isWorkItemInClosedSprint(workItemId)) {
+            throw new BadRequestException("Cannot move work items belonging to a CLOSED sprint. Reopen the sprint to make changes.");
+        }
 
         BoardColumn newColumn = boardColumnRepository.findByIdAndActiveTrue(columnId)
                 .orElseThrow(() -> new ResourceNotFoundException("BoardColumn", "id", columnId));
@@ -819,6 +839,7 @@ public class WorkItemService {
     private WorkItemResponse mapToResponse(WorkItem w) {
         Long sprintId = null;
         String sprintName = null;
+        String sprintStatusCode = null;
         try {
             List<SprintWorkItem> swiList = sprintWorkItemRepository.findActiveByWorkItemId(w.getId());
             if (!swiList.isEmpty()) {
@@ -826,6 +847,7 @@ public class WorkItemService {
                 if (activeSwi.getSprint() != null) {
                     sprintId = activeSwi.getSprint().getId();
                     sprintName = activeSwi.getSprint().getName();
+                    sprintStatusCode = activeSwi.getSprint().getStatus() != null ? activeSwi.getSprint().getStatus().getCode() : null;
                 }
             }
         } catch (Exception e) {
@@ -876,6 +898,7 @@ public class WorkItemService {
                 .storyPoints(w.getStoryPoints())
                 .sprintId(sprintId)
                 .sprintName(sprintName)
+                .sprintStatusCode(sprintStatusCode)
                 .dueDate(w.getDueDate())
                 .attachments(w.getAttachments())
                 .active(w.getActive())

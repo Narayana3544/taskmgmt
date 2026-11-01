@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Send, User, Paperclip, MessageSquare, History, FileText, Upload, X, Eye, Trash2 } from 'lucide-react';
 import api from '../../api';
+import { resolveAttachmentUrl } from '../../api/apiClient';
 import Layout from '../../components/Layout';
 import StatusBadge from '../../components/StatusBadge';
 import { showToast } from '../../utils/toast';
-import { getUser } from '../../utils/user';
+import { getUser, isAdminOrManager } from '../../utils/user';
 
 const WorkItemDetails = () => {
     const { id } = useParams();
@@ -18,6 +19,10 @@ const WorkItemDetails = () => {
     const [attachments, setAttachments] = useState([]);
     const [projectMembers, setProjectMembers] = useState([]);
     const [projectSprints, setProjectSprints] = useState([]);
+    const [projectColumns, setProjectColumns] = useState([]);
+    const [showReopenModal, setShowReopenModal] = useState(false);
+    const [reopenReason, setReopenReason] = useState('');
+    const [reopening, setReopening] = useState(false);
     const [isAssigning, setIsAssigning] = useState(false);
     const [isChangingSprint, setIsChangingSprint] = useState(false);
     const [loading, setLoading] = useState(true);
@@ -47,12 +52,14 @@ const WorkItemDetails = () => {
             setAttachments(wi?.attachments || []);
 
             if (wi?.projectId) {
-                const [memRes, sprintRes] = await Promise.all([
+                const [memRes, sprintRes, colRes] = await Promise.all([
                     api.get(`/api/projects/${wi.projectId}/members`).catch(() => ({ data: { data: [] } })),
-                    api.get('/api/sprints', { params: { projectId: wi.projectId, page: 0, size: 100 } }).catch(() => ({ data: { data: { content: [] } } }))
+                    api.get('/api/sprints', { params: { projectId: wi.projectId, page: 0, size: 100 } }).catch(() => ({ data: { data: { content: [] } } })),
+                    api.get(`/api/projects/${wi.projectId}/columns`).catch(() => ({ data: { data: [] } }))
                 ]);
                 setProjectMembers(memRes.data?.data || []);
                 setProjectSprints(sprintRes.data?.data?.content || []);
+                setProjectColumns(colRes.data?.data || []);
             }
         } catch (err) { console.error(err); }
         finally { setLoading(false); }
@@ -94,6 +101,35 @@ const WorkItemDetails = () => {
             fetchAll();
         } catch (err) {
             showToast.error(err.response?.data?.message || 'Failed to change sprint');
+        }
+    };
+
+    const handleReopenTask = async (e) => {
+        e.preventDefault();
+        if (!reopenReason || !reopenReason.trim()) {
+            showToast.error('Please provide a reason for reopening this task');
+            return;
+        }
+        setReopening(true);
+        try {
+            const todoCol = projectColumns.find(c => c.statusCategory === 'TODO') || projectColumns[0];
+            if (!todoCol) {
+                showToast.error('No target column found for reopen');
+                setReopening(false);
+                return;
+            }
+            await api.patch(`/api/work-items/${id}/column`, {
+                columnId: todoCol.id,
+                reopenReason: reopenReason.trim()
+            });
+            showToast.success('Task reopened successfully');
+            setShowReopenModal(false);
+            setReopenReason('');
+            fetchAll();
+        } catch (err) {
+            showToast.error(err.response?.data?.message || 'Failed to reopen task');
+        } finally {
+            setReopening(false);
         }
     };
 
@@ -167,8 +203,12 @@ const WorkItemDetails = () => {
     if (loading) return <Layout title="Loading..."><div className="empty-state"><p>Loading...</p></div></Layout>;
     if (!item) return <Layout title="Not Found"><div className="empty-state"><h3>Work item not found</h3></div></Layout>;
 
-    const isAssignee = currentUser.userId === item.assigneeId;
-    const canHandoff = isAssignee && item.assigneeId !== item.ownerId;
+    const currentUserId = Number(currentUser.userId || currentUser.id);
+    const isAssignee = currentUserId === Number(item.assigneeId);
+    const isOwner = currentUserId === Number(item.ownerId);
+    const isClosedSprint = item?.sprintStatusCode === 'CLOSED';
+    const canAssign = !isClosedSprint && (isAdminOrManager() || isOwner || isAssignee);
+    const canHandoff = isAssignee && Number(item.assigneeId) !== Number(item.ownerId);
 
     const TABS = [
         { key: 'details', label: 'Details', icon: FileText },
@@ -219,7 +259,7 @@ const WorkItemDetails = () => {
                             </div>
                             <div>
                                 <div style={{ fontSize: 11, color: 'var(--color-text-muted)', marginBottom: 2 }}>Assignee</div>
-                                {isAssigning ? (
+                                {isAssigning && canAssign ? (
                                     <select
                                         className="form-select"
                                         style={{ padding: '4px 28px 4px 8px', fontSize: 13, height: 32, width: '100%', maxWidth: 200 }}
@@ -228,19 +268,25 @@ const WorkItemDetails = () => {
                                         onBlur={() => setIsAssigning(false)}
                                         autoFocus
                                     >
-                                        <option value="">Unassigned</option>
+                                        <option value="">Unassigned (Defaults to Owner)</option>
                                         {projectMembers.map(m => (
                                             <option key={m.userId || m.id} value={m.userId || m.id}>{m.fullName || m.userName || m.name || `User #${m.userId || m.id}`}</option>
                                         ))}
                                     </select>
                                 ) : (
                                     <div className="flex items-center gap-2"
-                                        style={{ cursor: 'pointer', padding: '2px 4px', margin: '-2px -4px', borderRadius: 4 }}
-                                        onClick={() => setIsAssigning(true)}
-                                        title="Click to assign">
+                                        style={{ cursor: canAssign ? 'pointer' : 'default', padding: '2px 4px', margin: '-2px -4px', borderRadius: 4 }}
+                                        onClick={() => {
+                                            if (canAssign) {
+                                                setIsAssigning(true);
+                                            } else {
+                                                showToast.error('Only the Owner, current Assignee, Manager, or Admin can assign or transfer this task');
+                                            }
+                                        }}
+                                        title={canAssign ? "Click to assign / transfer" : "Only the Owner, current Assignee, Manager, or Admin can assign or transfer this task"}>
                                         <User size={12} color="var(--color-text-muted)" />
-                                        <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--color-secondary)' }}>
-                                            {item.assigneeName || 'Unassigned'}
+                                        <span style={{ fontSize: 14, fontWeight: 500, color: canAssign ? 'var(--color-secondary)' : 'inherit' }}>
+                                            {item.assigneeName || item.ownerName || 'Unassigned'}
                                         </span>
                                     </div>
                                 )}
@@ -278,8 +324,13 @@ const WorkItemDetails = () => {
                             </div>
                         </div>
 
-                        {canHandoff && (
-                            <div style={{ paddingTop: 12, borderTop: '1px solid var(--color-border)' }}>
+                        {(canHandoff || item.statusCode === 'DONE') && (
+                            <div style={{ paddingTop: 12, borderTop: '1px solid var(--color-border)', display: 'flex', gap: 8, alignItems: 'center' }}>
+                                {item.statusCode === 'DONE' && (
+                                    <button className="btn btn-secondary btn-sm" onClick={() => setShowReopenModal(true)}>
+                                        🔄 Reopen Task
+                                    </button>
+                                )}
                                 {showHandoff ? (
                                     <div className="flex gap-2 items-end">
                                         <div style={{ flex: 1 }}>
@@ -549,6 +600,7 @@ const WorkItemDetails = () => {
                             ) : (
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                                     {attachments.map((url, i) => {
+                                        const resolvedUrl = resolveAttachmentUrl(url);
                                         const fileName = url.split('/').pop() || `Attachment ${i + 1}`;
                                         const isImage = isImageUrl(url);
                                         return (
@@ -560,7 +612,7 @@ const WorkItemDetails = () => {
                                             }}>
                                                 <div className="flex items-center gap-3">
                                                     {isImage ? (
-                                                        <img src={url} alt={fileName}
+                                                        <img src={resolvedUrl} alt={fileName}
                                                             style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 6, flexShrink: 0, border: '1px solid var(--color-border)' }} />
                                                     ) : (
                                                         <div style={{ width: 48, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--color-card)', borderRadius: 6, flexShrink: 0, border: '1px solid var(--color-border)' }}>
@@ -571,7 +623,7 @@ const WorkItemDetails = () => {
                                                         <div style={{ fontWeight: 500, fontSize: 13, wordBreak: 'break-all' }}>{fileName}</div>
                                                     </div>
                                                     <div className="flex gap-2">
-                                                        <a href={url} target="_blank" rel="noreferrer" className="btn btn-sm btn-secondary">
+                                                        <a href={resolvedUrl} target="_blank" rel="noreferrer" className="btn btn-sm btn-secondary">
                                                             <Eye size={14} /> Open
                                                         </a>
                                                         <button className="btn btn-sm btn-secondary" onClick={() => removeAttachment(i)}
@@ -585,6 +637,46 @@ const WorkItemDetails = () => {
                                     })}
                                 </div>
                             )}
+                        </div>
+                    </div>
+                )}
+                {/* Reopen Modal */}
+                {showReopenModal && (
+                    <div className="modal-backdrop" onClick={() => setShowReopenModal(false)}>
+                        <div className="modal" style={{ maxWidth: 480 }} onClick={e => e.stopPropagation()}>
+                            <div className="modal-header">
+                                <h3 style={{ margin: 0 }}>Reopen Work Item</h3>
+                                <button className="btn-close" onClick={() => setShowReopenModal(false)}>✕</button>
+                            </div>
+                            <form onSubmit={handleReopenTask}>
+                                <div className="modal-body">
+                                    <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginBottom: 12 }}>
+                                        Reopening this closed task will transition it back to the initial <strong>Open</strong> workflow phase.
+                                    </p>
+                                    <div className="form-group">
+                                        <label className="form-label" style={{ fontWeight: 600 }}>
+                                            Reason for Reopening <span style={{ color: 'var(--color-danger)' }}>*</span>
+                                        </label>
+                                        <textarea
+                                            className="form-textarea"
+                                            rows={3}
+                                            placeholder="Explain why this task is being reopened (mandatory)..."
+                                            value={reopenReason}
+                                            onChange={e => setReopenReason(e.target.value)}
+                                            required
+                                            autoFocus
+                                        />
+                                    </div>
+                                </div>
+                                <div className="modal-footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+                                    <button type="button" className="btn btn-secondary" onClick={() => setShowReopenModal(false)}>
+                                        Cancel
+                                    </button>
+                                    <button type="submit" className="btn btn-primary" disabled={reopening}>
+                                        {reopening ? 'Reopening...' : 'Confirm Reopen'}
+                                    </button>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 )}

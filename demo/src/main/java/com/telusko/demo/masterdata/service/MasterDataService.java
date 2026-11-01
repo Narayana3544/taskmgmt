@@ -1,5 +1,6 @@
 package com.telusko.demo.masterdata.service;
 
+import com.telusko.demo.common.exception.BadRequestException;
 import com.telusko.demo.common.exception.ResourceNotFoundException;
 import com.telusko.demo.masterdata.entity.MasterType;
 import com.telusko.demo.masterdata.entity.MasterValue;
@@ -119,8 +120,17 @@ public class MasterDataService {
      */
     @Transactional
     public MasterType updateType(Long typeId, String name, String description) {
+        return updateType(typeId, name, description, null);
+    }
+
+    @Transactional
+    public MasterType updateType(Long typeId, String name, String description, String code) {
         MasterType type = typeRepository.findById(typeId)
                 .orElseThrow(() -> new ResourceNotFoundException("MasterType", "id", typeId));
+
+        if (code != null && !code.isBlank() && !type.getCode().equalsIgnoreCase(code.trim())) {
+            throw new BadRequestException("Master data type code is immutable and cannot be changed.");
+        }
 
         if (name != null && !name.isBlank()) {
             type.setName(name);
@@ -139,8 +149,18 @@ public class MasterDataService {
     @Transactional
     public MasterValue updateValue(Long valueId, String displayName, String description,
                                     Integer sortOrder, Boolean isDefault, Boolean active) {
+        return updateValue(valueId, displayName, description, sortOrder, isDefault, active, null);
+    }
+
+    @Transactional
+    public MasterValue updateValue(Long valueId, String displayName, String description,
+                                    Integer sortOrder, Boolean isDefault, Boolean active, String code) {
         MasterValue value = valueRepository.findById(valueId)
                 .orElseThrow(() -> new ResourceNotFoundException("MasterValue", "id", valueId));
+
+        if (code != null && !code.isBlank() && !value.getCode().equalsIgnoreCase(code.trim())) {
+            throw new BadRequestException("Master data value code is immutable and cannot be changed.");
+        }
 
         if (displayName != null && !displayName.isBlank()) {
             value.setDisplayName(displayName);
@@ -203,6 +223,12 @@ public class MasterDataService {
         createValueIfNotExists(sprintStatus, "PLANNED", "Planned", 1, true);
         createValueIfNotExists(sprintStatus, "ACTIVE", "Active", 2, false);
         createValueIfNotExists(sprintStatus, "CLOSED", "Closed", 3, false);
+
+        // === Feature status (PROPOSED -> ACTIVE -> CLOSED) ===
+        MasterType featureStatus = createTypeIfNotExists(org, "FEATURE_STATUS", "Feature Status");
+        createValueIfNotExists(featureStatus, "PROPOSED", "Proposed", 1, true);
+        createValueIfNotExists(featureStatus, "ACTIVE", "Active", 2, false);
+        createValueIfNotExists(featureStatus, "CLOSED", "Closed", 3, false);
 
         // === Timesheet status ===
         MasterType tsStatus = createTypeIfNotExists(org, "TIMESHEET_STATUS", "Timesheet Status");
@@ -309,7 +335,7 @@ public class MasterDataService {
 
         // --- Features ---
         String[] features = { "WORK_ITEM", "PROJECT", "SPRINT", "TIMESHEET", "LEAVE", "USER", "MASTER_DATA", "AUDIT",
-                "NOTIFICATION", "HOLIDAY", "PERFORMANCE" };
+                "NOTIFICATION", "HOLIDAY", "PERFORMANCE", "FEATURE" };
         for (String fc : features) {
             featureRepository.findByCode(fc)
                     .orElseGet(() -> featureRepository.save(PermissionFeature.builder()
@@ -332,7 +358,7 @@ public class MasterDataService {
         }
 
         // --- Grant EMPLOYEE limited permissions ---
-        String[] empFeatures = { "WORK_ITEM", "PROJECT", "SPRINT", "TIMESHEET", "LEAVE", "NOTIFICATION" };
+        String[] empFeatures = { "WORK_ITEM", "PROJECT", "SPRINT", "TIMESHEET", "LEAVE", "NOTIFICATION", "FEATURE" };
         String[] empActions = { "VIEW", "CREATE", "UPDATE" };
         for (String fc : empFeatures) {
             for (String ac : empActions) {

@@ -30,6 +30,13 @@ const Sprints = () => {
     const [activeFeatures, setActiveFeatures] = useState([]);
     const [modalFeatures, setModalFeatures] = useState([]);
 
+    // Close Sprint Rollover Modal state
+    const [closeSprintModal, setCloseSprintModal] = useState(null);
+    const [unfinishedItems, setUnfinishedItems] = useState([]);
+    const [closeDestination, setCloseDestination] = useState('NEXT_SPRINT');
+    const [targetSprintId, setTargetSprintId] = useState('');
+    const [closingSprintLoading, setClosingSprintLoading] = useState(false);
+
     // Sprint Planning has been moved to a dedicated page
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -106,8 +113,25 @@ const Sprints = () => {
             return;
         }
         try {
-            const res = await api.get('/api/features/active', { params: { projectId: projId } });
-            setModalFeatures(res.data?.data || []);
+            let features = [];
+            try {
+                const res = await api.get('/api/features/active', { params: { projectId: projId } });
+                features = Array.isArray(res.data?.data) ? res.data.data : (res.data?.data?.content || []);
+            } catch (e) {
+                console.warn('Could not fetch /api/features/active', e);
+            }
+            if (features.length === 0) {
+                const res = await api.get('/api/features', { params: { projectId: projId, page: 0, size: 100 } });
+                const all = res.data?.data?.content || [];
+                features = all.filter(f => f.statusCode !== 'CLOSED');
+            }
+            setModalFeatures(features);
+            setForm(prev => {
+                if (!prev.featureId && features.length > 0) {
+                    return { ...prev, featureId: String(features[0].id) };
+                }
+                return prev;
+            });
         } catch (err) {
             console.error(err);
             setModalFeatures([]);
@@ -117,7 +141,17 @@ const Sprints = () => {
     const openCreate = () => {
         setEditSprint(null);
         const projId = selectedProject || '';
-        setForm({ name: '', goal: '', startDate: '', endDate: '', projectId: projId, featureId: '' });
+        const initialFeatures = (activeFeatures || []).filter(f => f.statusCode !== 'CLOSED');
+        setModalFeatures(initialFeatures);
+        const initialFeatureId = initialFeatures.length > 0 ? String(initialFeatures[0].id) : '';
+        setForm({ 
+            name: '', 
+            goal: '', 
+            startDate: '', 
+            endDate: '', 
+            projectId: projId, 
+            featureId: initialFeatureId 
+        });
         if (projId) fetchModalFeatures(projId);
         setShowCreate(true);
     };
@@ -192,14 +226,39 @@ const Sprints = () => {
         } catch (err) { showToast.error(err.response?.data?.message || 'Failed to start sprint'); }
     };
 
-    const closeSprint = async (id) => {
-        if (!window.confirm('Close this sprint? Non-done items will spill over to backlog.')) return;
+    const openCloseSprintModal = async (sprint) => {
         try {
-            await api.post(`/api/sprints/${id}/close`);
-            showToast.success('Sprint closed');
+            const res = await api.get(`/api/sprints/${sprint.id}/unfinished-items`);
+            const items = res.data?.data || [];
+            setUnfinishedItems(items);
+            setCloseSprintModal(sprint);
+
+            const planned = sprints.filter(s => s.id !== sprint.id && s.statusCode === 'PLANNED');
+            setTargetSprintId(planned.length > 0 ? String(planned[0].id) : '');
+            setCloseDestination(planned.length > 0 ? 'NEXT_SPRINT' : 'BACKLOG');
+        } catch (err) {
+            showToast.error(err.response?.data?.message || 'Failed to inspect sprint items');
+        }
+    };
+
+    const handleConfirmCloseSprint = async () => {
+        if (!closeSprintModal) return;
+        setClosingSprintLoading(true);
+        try {
+            const payload = {
+                defaultDestination: closeDestination,
+                targetSprintId: closeDestination === 'NEXT_SPRINT' && targetSprintId ? Number(targetSprintId) : null,
+            };
+            await api.post(`/api/sprints/${closeSprintModal.id}/close`, payload);
+            showToast.success('Sprint closed successfully');
+            setCloseSprintModal(null);
             const res = await api.get('/api/sprints', { params: { projectId: selectedProject, page: 0, size: 10 } });
             setSprints(res.data?.data?.content || []);
-        } catch (err) { showToast.error(err.response?.data?.message || 'Failed to close sprint'); }
+        } catch (err) {
+            showToast.error(err.response?.data?.message || 'Failed to close sprint');
+        } finally {
+            setClosingSprintLoading(false);
+        }
     };
 
 
@@ -262,7 +321,11 @@ const Sprints = () => {
                             <div className="card-body">
                                 <div className="flex items-center justify-between" style={{ marginBottom: 8 }}>
                                     <div className="flex items-center gap-3">
-                                        <h3 style={{ margin: 0 }}>{sprint.name}</h3>
+                                        <h3 style={{ margin: 0, cursor: 'pointer', color: 'var(--color-primary)' }}
+                                            onClick={() => navigate(`/sprints/${sprint.id}`)}
+                                            title="View Sprint details and task list">
+                                            {sprint.name}
+                                        </h3>
                                         <span className={`badge ${getStatusBadge(sprint.statusCode)}`}>{sprint.statusName}</span>
                                         {sprint.featureName && (
                                             <span className="badge badge-info" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
@@ -272,6 +335,9 @@ const Sprints = () => {
                                         )}
                                     </div>
                                     <div className="flex gap-2">
+                                        <button className="btn btn-sm btn-secondary" onClick={() => navigate(`/sprints/${sprint.id}`)}>
+                                            Details
+                                        </button>
                                         <button className="btn btn-sm btn-secondary" onClick={() => navigate(`/sprints/${sprint.id}/dashboard`)}>
                                             <BarChart3 size={14} /> Dashboard
                                         </button>
@@ -291,7 +357,7 @@ const Sprints = () => {
                                                 <button className="btn btn-sm btn-secondary" onClick={() => navigate(`/sprints/${sprint.id}/planning`)}>
                                                     <GripVertical size={14} /> Plan
                                                 </button>
-                                                <button className="btn btn-sm btn-danger" onClick={() => closeSprint(sprint.id)}>
+                                                <button className="btn btn-sm btn-danger" onClick={() => openCloseSprintModal(sprint)}>
                                                     <Square size={14} /> Close
                                                 </button>
                                             </>
@@ -407,6 +473,111 @@ const Sprints = () => {
                 </div>
             )}
 
+
+            {/* Close Sprint Rollover Modal */}
+            {closeSprintModal && (
+                <div className="modal-backdrop">
+                    <div className="modal" style={{ maxWidth: '520px' }}>
+                        <div className="modal-header">
+                            <h3 style={{ color: 'var(--color-danger)' }}>Close Sprint: {closeSprintModal.name}</h3>
+                            <button className="btn-close" onClick={() => setCloseSprintModal(null)}>✕</button>
+                        </div>
+                        <div className="modal-body">
+                            {unfinishedItems.length > 0 ? (
+                                <>
+                                    <div style={{ background: 'var(--color-warning-light)', padding: '12px 16px', borderRadius: '8px', marginBottom: '16px', border: '1px solid var(--color-warning)' }}>
+                                        <div style={{ fontWeight: 600, color: 'var(--color-warning)', fontSize: '13px' }}>
+                                            ⚠️ {unfinishedItems.length} unfinished item{unfinishedItems.length > 1 ? 's' : ''} in this sprint
+                                        </div>
+                                        <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)', marginTop: '4px' }}>
+                                            Completed items will remain archived in this sprint's history. Please select where to rollover the unfinished items.
+                                        </div>
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label className="form-label">Rollover Destination for Unfinished Items *</label>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '6px' }}>
+                                            {sprints.filter(s => s.id !== closeSprintModal.id && s.statusCode === 'PLANNED').length > 0 && (
+                                                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', cursor: 'pointer' }}>
+                                                    <input
+                                                        type="radio"
+                                                        name="closeDest"
+                                                        value="NEXT_SPRINT"
+                                                        checked={closeDestination === 'NEXT_SPRINT'}
+                                                        onChange={() => setCloseDestination('NEXT_SPRINT')}
+                                                    />
+                                                    Move to Next Planned Sprint
+                                                </label>
+                                            )}
+                                            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', cursor: 'pointer' }}>
+                                                <input
+                                                    type="radio"
+                                                    name="closeDest"
+                                                    value="BACKLOG"
+                                                    checked={closeDestination === 'BACKLOG'}
+                                                    onChange={() => setCloseDestination('BACKLOG')}
+                                                />
+                                                Move back to Project Backlog
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    {closeDestination === 'NEXT_SPRINT' && (
+                                        <div className="form-group" style={{ marginTop: '12px' }}>
+                                            <label className="form-label">Select Target Sprint *</label>
+                                            <select
+                                                className="form-input"
+                                                value={targetSprintId}
+                                                onChange={(e) => setTargetSprintId(e.target.value)}
+                                                required
+                                            >
+                                                {sprints.filter(s => s.id !== closeSprintModal.id && s.statusCode === 'PLANNED').map(s => (
+                                                    <option key={s.id} value={s.id}>{s.name} (Planned)</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    )}
+
+                                    <div style={{ marginTop: '14px' }}>
+                                        <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: '8px' }}>
+                                            Unfinished Items to be moved:
+                                        </div>
+                                        <div style={{ maxHeight: '160px', overflowY: 'auto', border: '1px solid var(--color-border)', borderRadius: '6px', background: 'var(--color-bg-alt)' }}>
+                                            {unfinishedItems.map(item => (
+                                                <div key={item.id} style={{ padding: '8px 12px', borderBottom: '1px solid var(--color-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px' }}>
+                                                    <span style={{ fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '300px' }}>
+                                                        #{item.id} {item.title}
+                                                    </span>
+                                                    <span className="badge badge-warning" style={{ fontSize: '10px' }}>
+                                                        {item.statusName || item.statusCode}
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </>
+                            ) : (
+                                <p style={{ fontSize: '14px', color: 'var(--color-text-secondary)', padding: '10px 0' }}>
+                                    All items in this sprint are completed! Are you sure you want to close this sprint? Closed sprints are preserved as history and become read-only.
+                                </p>
+                            )}
+                        </div>
+                        <div className="modal-footer">
+                            <button type="button" className="btn btn-secondary" onClick={() => setCloseSprintModal(null)}>
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                className="btn btn-danger"
+                                disabled={closingSprintLoading}
+                                onClick={handleConfirmCloseSprint}
+                            >
+                                {closingSprintLoading ? 'Closing...' : 'Confirm & Close Sprint'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
         </Layout>
     );

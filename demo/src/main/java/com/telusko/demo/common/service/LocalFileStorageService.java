@@ -20,9 +20,9 @@ public class LocalFileStorageService implements FileStorageService {
     private final String baseUrl;
 
     public LocalFileStorageService(@Value("${file.upload-dir:./uploads}") String uploadDir,
-                                   @Value("${file.base-url:http://localhost:8080/api/files}") String baseUrl) {
+                                   @Value("${file.base-url:/api/files}") String baseUrl) {
         this.rootLocation = Paths.get(uploadDir);
-        this.baseUrl = baseUrl;
+        this.baseUrl = baseUrl != null && !baseUrl.isBlank() ? baseUrl.replaceAll("/+$", "") : "/api/files";
         try {
             Files.createDirectories(this.rootLocation);
         } catch (IOException e) {

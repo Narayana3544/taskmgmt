@@ -1,3 +1,4 @@
+import * as XLSX from 'xlsx';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, Search, Download, Filter } from 'lucide-react';
@@ -46,6 +47,29 @@ const TimesheetOverview = () => {
     }, [page, status]);
 
     const activeStatusLabel = STATUS_OPTIONS.find(o => o.value === status)?.label || status;
+
+    const exportToExcel = () => {
+        if (!entries || entries.length === 0) return;
+        const totalHoursSum = entries.reduce((acc, row) => acc + (row.totalHours || 0), 0);
+        const data = [
+            ["Timesheet Overview Report"],
+            [`Active Status Filter: ${activeStatusLabel}`],
+            [`Date Range: ${startDate} to ${endDate}`],
+            [`Exported: ${new Date().toLocaleString()}`],
+            [],
+            ["User", "Email", "Total Days Filled", "Approved Days", "Pending Days", "Total Hours"],
+            ...entries.map(r => [r.userName || '', r.email || '', r.daysFilled || 0, r.approvedDays || 0, r.pendingDays || 0, parseFloat((r.totalHours || 0).toFixed(1))]),
+            ["Total", "", "", "", "", parseFloat(totalHoursSum.toFixed(1))]
+        ];
+        const ws = XLSX.utils.aoa_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Overview");
+        XLSX.writeFile(wb, `timesheet-overview-${status}-${startDate}-to-${endDate}.xlsx`);
+    };
+
+    const exportToPDF = () => {
+        window.print();
+    };
 
     const exportToCSV = () => {
         if (!entries || entries.length === 0) return;
@@ -121,8 +145,14 @@ const TimesheetOverview = () => {
                         <Search size={16} /> Fetch All
                     </button>
 
-                    <button onClick={exportToCSV} className="btn btn-secondary flex items-center gap-2" disabled={loading || entries.length === 0}>
-                        <Download size={16} /> Export CSV
+                    <button onClick={exportToCSV} className="btn btn-secondary flex items-center gap-2" disabled={loading || entries.length === 0} title="Export CSV">
+                        <Download size={16} /> CSV
+                    </button>
+                    <button onClick={exportToExcel} className="btn btn-secondary flex items-center gap-2" disabled={loading || entries.length === 0} title="Export Excel">
+                        <Download size={16} /> Excel
+                    </button>
+                    <button onClick={exportToPDF} className="btn btn-secondary flex items-center gap-2" disabled={loading || entries.length === 0} title="Print / PDF">
+                        <Download size={16} /> PDF
                     </button>
                 </div>
             </div>

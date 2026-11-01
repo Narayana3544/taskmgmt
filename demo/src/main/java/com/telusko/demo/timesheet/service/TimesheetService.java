@@ -142,8 +142,29 @@ public class TimesheetService {
         if ("WORK".equals(request.getEntryType()) && request.getWorkItemId() != null) {
             workItem = workItemRepository.findById(request.getWorkItemId())
                     .orElseThrow(() -> new ResourceNotFoundException("WorkItem", "id", request.getWorkItemId()));
+            
+            // 1. Closed sprint check
             if (sprintWorkItemRepository.isWorkItemInClosedSprint(workItem.getId())) {
                 throw new BadRequestException("Cannot log time against work items belonging to a CLOSED sprint. Reopen the sprint to log time.");
+            }
+
+            // 2. Project membership check
+            if (workItem.getProject() != null && !projectMemberRepository.existsByProjectIdAndUserIdAndEndDateIsNull(workItem.getProject().getId(), userId)) {
+                throw new BadRequestException("Cannot log time: you are not an active member of project " + workItem.getProject().getName());
+            }
+
+            // 3. Assignee or owner check
+            boolean isAssignee = workItem.getAssignee() != null && workItem.getAssignee().getId().equals(userId);
+            boolean isOwnerWhenUnassigned = workItem.getAssignee() == null && workItem.getOwner() != null && workItem.getOwner().getId().equals(userId);
+            if (!isAssignee && !isOwnerWhenUnassigned) {
+                throw new BadRequestException("Cannot log time on a work item not assigned to you");
+            }
+
+            // 4. Duplicate entry for same item and day check
+            Long targetWorkItemId = workItem.getId();
+            boolean isDuplicate = existingEntries.stream().anyMatch(e -> e.getWorkItem() != null && targetWorkItemId.equals(e.getWorkItem().getId()));
+            if (isDuplicate) {
+                throw new BadRequestException("Duplicate entry: time has already been logged for this work item on this day");
             }
         }
 
@@ -232,7 +253,34 @@ public class TimesheetService {
 
     @Transactional(readOnly = true)
     public PageResponse<TimesheetResponse> getUserTimesheetsReport(
-            Long userId, LocalDate startDate, LocalDate endDate, String statusCode, Pageable pageable) {
+            Long userId, LocalDate startDate, LocalDate endDate, String statusCode, Long callerId, Pageable pageable) {
+        if (callerId != null && !callerId.equals(userId)) {
+            User caller = userRepository.findById(callerId).orElse(null);
+            boolean isAdmin = caller != null && caller.getRole() != null &&
+                    ("ADMIN".equalsIgnoreCase(caller.getRole().getCode()) || "SUPER_ADMIN".equalsIgnoreCase(caller.getRole().getCode()));
+            
+            if (!isAdmin) {
+                User targetUser = userRepository.findById(userId)
+                        .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+                
+                boolean isReportingManager = false;
+                User current = targetUser.getManager();
+                while (current != null) {
+                    if (current.getId().equals(callerId)) {
+                        isReportingManager = true;
+                        break;
+                    }
+                    current = current.getManager();
+                }
+
+                boolean isProjectManager = projectMemberRepository.existsByUserIdAndManagerIdAndActiveTrue(userId, callerId);
+
+                if (!isReportingManager && !isProjectManager) {
+                    throw new AccessDeniedException("You do not have permission to view timesheets for this user");
+                }
+            }
+        }
+
         String safeStatus = (statusCode == null || statusCode.trim().isEmpty() || "ALL".equalsIgnoreCase(statusCode.trim())) 
                 ? "ALL" : statusCode.trim().toUpperCase();
         Page<Timesheet> page = timesheetRepository.findTimesheetsByUserAndDateRange(userId, startDate, endDate, safeStatus, pageable);
@@ -244,6 +292,12 @@ public class TimesheetService {
                 .totalPages(page.getTotalPages())
                 .last(page.isLast())
                 .build();
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<TimesheetResponse> getUserTimesheetsReport(
+            Long userId, LocalDate startDate, LocalDate endDate, String statusCode, Pageable pageable) {
+        return getUserTimesheetsReport(userId, startDate, endDate, statusCode, null, pageable);
     }
 
     @Transactional(readOnly = true)

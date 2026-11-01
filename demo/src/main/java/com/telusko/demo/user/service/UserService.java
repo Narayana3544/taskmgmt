@@ -163,8 +163,20 @@ public class UserService {
         }
 
         if (request.getManagerId() != null) {
+            if (request.getManagerId().equals(id)) {
+                throw new BadRequestException("A user cannot be their own manager");
+            }
             User manager = userRepository.findById(request.getManagerId())
                     .orElseThrow(() -> new ResourceNotFoundException("Manager User", "id", request.getManagerId()));
+
+            // Cycle prevention: walk up the manager chain
+            User current = manager;
+            while (current != null) {
+                if (current.getId().equals(id)) {
+                    throw new BadRequestException("Cyclic reporting hierarchy detected: cannot set a reportee as manager");
+                }
+                current = current.getManager();
+            }
             user.setManager(manager);
         } else {
             user.setManager(null);
@@ -189,6 +201,54 @@ public class UserService {
         }
 
         return mapToResponse(user);
+    }
+
+    @Transactional(readOnly = true)
+    public java.util.List<java.util.Map<String, Object>> getHierarchyByOrganization(Long orgId) {
+        java.util.List<User> allUsers = userRepository.findByOrganizationId(orgId);
+        java.util.Map<Long, java.util.Map<String, Object>> userMap = new java.util.LinkedHashMap<>();
+        for (User u : allUsers) {
+            java.util.Map<String, Object> node = new java.util.LinkedHashMap<>();
+            node.put("id", u.getId());
+            node.put("fullName", u.getFullName());
+            node.put("email", u.getEmail());
+            node.put("roleName", u.getRole() != null ? u.getRole().getName() : null);
+            node.put("designationName", u.getDesignation() != null ? u.getDesignation().getDisplayName() : null);
+            node.put("profileImageUrl", u.getProfileImageUrl());
+            node.put("status", u.getStatus());
+            node.put("managerId", u.getManager() != null ? u.getManager().getId() : null);
+            node.put("managerName", u.getManager() != null ? u.getManager().getFullName() : null);
+            node.put("reports", new java.util.ArrayList<java.util.Map<String, Object>>());
+            userMap.put(u.getId(), node);
+        }
+
+        java.util.List<java.util.Map<String, Object>> roots = new java.util.ArrayList<>();
+        for (java.util.Map<String, Object> node : userMap.values()) {
+            Long managerId = (Long) node.get("managerId");
+            if (managerId != null && userMap.containsKey(managerId)) {
+                @SuppressWarnings("unchecked")
+                java.util.List<java.util.Map<String, Object>> reports = 
+                        (java.util.List<java.util.Map<String, Object>>) userMap.get(managerId).get("reports");
+                reports.add(node);
+            } else {
+                roots.add(node);
+            }
+        }
+        return roots;
+    }
+
+    @Transactional(readOnly = true)
+    public java.util.Map<String, Object> getUserReportingChain(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
+        
+        java.util.Map<String, Object> result = new java.util.LinkedHashMap<>();
+        result.put("user", mapToResponse(user));
+        result.put("manager", user.getManager() != null ? mapToResponse(user.getManager()) : null);
+
+        java.util.List<User> directReports = userRepository.findByManagerId(id);
+        result.put("directReports", directReports.stream().map(this::mapToResponse).toList());
+        return result;
     }
 
     private UserResponse mapToResponse(User user) {

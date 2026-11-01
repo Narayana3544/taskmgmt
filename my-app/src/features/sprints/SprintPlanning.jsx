@@ -3,12 +3,18 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Plus, ChevronRight, GripVertical, Check, User as UserIcon } from 'lucide-react';
 import api from '../../api';
 import Layout from '../../components/Layout';
+import { getUser, isAdminOrManager } from '../../utils/user';
 import StatusBadge from '../../components/StatusBadge';
 
 const SimpleAssigneeSelect = ({ item, projectMembers, onAssign }) => {
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef(null);
     const currentAssignee = projectMembers?.find(m => (m.userId || m.id) === item.assigneeId);
+    const currentUser = getUser();
+    const currentUserId = Number(currentUser.userId || currentUser.id);
+    const isOwner = currentUserId === Number(item.ownerId);
+    const isAssignee = currentUserId === Number(item.assigneeId);
+    const canAssign = isAdminOrManager() || isOwner || isAssignee;
 
     // Close on click outside
     useEffect(() => {
@@ -36,7 +42,14 @@ const SimpleAssigneeSelect = ({ item, projectMembers, onAssign }) => {
             <button 
                 type="button"
                 className="btn btn-secondary btn-sm" 
-                onClick={() => setIsOpen(!isOpen)}
+                onClick={() => {
+                    if (canAssign) {
+                        setIsOpen(!isOpen);
+                    } else {
+                        alert('Only the Owner, current Assignee, Manager, or Admin can assign or transfer this task');
+                    }
+                }}
+                title={canAssign ? "Change Assignee" : "Only the Owner, current Assignee, Manager, or Admin can assign this task"}
                 style={{
                     padding: '4px 10px', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6,
                     background: currentAssignee ? 'var(--color-bg-alt)' : 'transparent',
@@ -170,21 +183,27 @@ const SprintPlanning = () => {
     const addItemToSprint = async (workItemId) => {
         try {
             await api.post(`/api/sprints/${id}/items/${workItemId}`);
-            const item = backlogItems.find(i => i.id === workItemId);
-            if (item) {
+            setBacklogItems(prev => prev.filter(i => i.id !== workItemId));
+            const res = await api.get(`/api/sprints/${id}/items`);
+            setSprintItems(res.data?.data || []);
+        } catch (err) {
+            if (err.response?.data?.message?.includes('already in this sprint')) {
                 setBacklogItems(prev => prev.filter(i => i.id !== workItemId));
-                setSprintItems(prev => [...prev, item]);
+                const res = await api.get(`/api/sprints/${id}/items`);
+                setSprintItems(res.data?.data || []);
+            } else {
+                alert(err.response?.data?.message || 'Failed to add item');
             }
-        } catch (err) { alert(err.response?.data?.message || 'Failed to add item'); }
+        }
     };
 
     const removeItemFromSprint = async (workItemId) => {
         try {
             await api.delete(`/api/sprints/${id}/items/${workItemId}`);
-            const item = sprintItems.find(i => i.id === workItemId);
-            if (item) {
-                setSprintItems(prev => prev.filter(i => i.id !== workItemId));
-                setBacklogItems(prev => [...prev, item]);
+            setSprintItems(prev => prev.filter(i => i.id !== workItemId));
+            if (sprint?.projectId) {
+                const bRes = await api.get('/api/work-items/backlog', { params: { projectId: sprint.projectId } });
+                setBacklogItems(bRes.data?.data || []);
             }
         } catch (err) { alert(err.response?.data?.message || 'Failed to remove item'); }
     };
@@ -194,12 +213,13 @@ const SprintPlanning = () => {
         setBacklogItems(prev => prev.map(item => item.id === itemId ? { ...item, assigneeId } : item));
     };
 
-    const backlogTotalPages = Math.max(1, Math.ceil(backlogItems.length / PAGE_SIZE));
+    const filteredBacklog = backlogItems.filter(b => !sprintItems.some(s => s.id === b.id));
+    const backlogTotalPages = Math.max(1, Math.ceil(filteredBacklog.length / PAGE_SIZE));
     const sprintTotalPages = Math.max(1, Math.ceil(sprintItems.length / PAGE_SIZE));
     const safeBacklogPage = Math.min(backlogPage, backlogTotalPages - 1);
     const safeSprintPage = Math.min(sprintPage, sprintTotalPages - 1);
 
-    const paginatedBacklog = backlogItems.slice(safeBacklogPage * PAGE_SIZE, (safeBacklogPage + 1) * PAGE_SIZE);
+    const paginatedBacklog = filteredBacklog.slice(safeBacklogPage * PAGE_SIZE, (safeBacklogPage + 1) * PAGE_SIZE);
     const paginatedSprint = sprintItems.slice(safeSprintPage * PAGE_SIZE, (safeSprintPage + 1) * PAGE_SIZE);
 
     if (loading) return <Layout title="Loading..."><div className="empty-state"><p>Loading planning data...</p></div></Layout>;

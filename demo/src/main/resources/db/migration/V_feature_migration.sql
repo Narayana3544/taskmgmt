@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS feature (
         REFERENCES public.project (id) MATCH SIMPLE
         ON UPDATE NO ACTION ON DELETE NO ACTION,
     CONSTRAINT fk8av0fvmje5k2diflmoc0vy5h3 FOREIGN KEY (status_id)
-        REFERENCES public.status (id) MATCH SIMPLE
+        REFERENCES public.master_value (id) MATCH SIMPLE
         ON UPDATE NO ACTION ON DELETE NO ACTION
 );
 

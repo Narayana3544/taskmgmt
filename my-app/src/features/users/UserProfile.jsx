@@ -10,17 +10,20 @@ const UserProfile = () => {
     const navigate = useNavigate();
     const [profile, setProfile] = useState(null);
     const [projects, setProjects] = useState([]);
+    const [reportingChain, setReportingChain] = useState({ manager: null, directReports: [] });
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetch = async () => {
             try {
-                const [userRes, projRes] = await Promise.all([
+                const [userRes, projRes, chainRes] = await Promise.all([
                     api.get(`/api/users/${id}`),
-                    api.get(`/api/users/${id}/projects`).catch(() => ({ data: { data: [] } }))
+                    api.get(`/api/users/${id}/projects`).catch(() => ({ data: { data: [] } })),
+                    api.get(`/api/users/${id}/reporting-chain`).catch(() => ({ data: { data: { manager: null, directReports: [] } } }))
                 ]);
                 setProfile(userRes.data?.data);
                 setProjects(projRes.data?.data || []);
+                setReportingChain(chainRes.data?.data || { manager: null, directReports: [] });
             } catch (err) { console.error(err); }
             finally { setLoading(false); }
         };
@@ -78,6 +81,81 @@ const UserProfile = () => {
                                 <div style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>Member Since</div>
                                 <div style={{ fontSize: 14 }}>{profile.createdAt ? new Date(profile.createdAt).toLocaleDateString() : '—'}</div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Reporting Hierarchy */}
+                <div className="card" style={{ marginBottom: 16 }}>
+                    <div className="card-header">
+                        <h3>Reporting Hierarchy</h3>
+                    </div>
+                    <div className="card-body">
+                        {/* Manager Section */}
+                        <div style={{ marginBottom: 20 }}>
+                            <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', marginBottom: 8 }}>
+                                Reports To (Manager)
+                            </div>
+                            {reportingChain.manager ? (
+                                <div style={{
+                                    display: 'flex', alignItems: 'center', gap: 12, padding: 12,
+                                    background: 'var(--color-bg-alt)', borderRadius: 8, border: '1px solid var(--color-border)'
+                                }}>
+                                    <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--color-primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, fontSize: 14 }}>
+                                        {(reportingChain.manager.fullName || 'M')[0]}
+                                    </div>
+                                    <div style={{ flex: 1 }}>
+                                        <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--color-primary)', cursor: 'pointer' }}
+                                            onClick={() => navigate(`/users/${reportingChain.manager.id}`)}>
+                                            {reportingChain.manager.fullName}
+                                        </div>
+                                        <div style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
+                                            {reportingChain.manager.email} • {reportingChain.manager.roleName || 'Manager'}
+                                        </div>
+                                    </div>
+                                    <button className="btn btn-sm btn-secondary" onClick={() => navigate(`/users/${reportingChain.manager.id}`)}>
+                                        View Profile
+                                    </button>
+                                </div>
+                            ) : (
+                                <p style={{ fontSize: 13, color: 'var(--color-text-muted)', fontStyle: 'italic', margin: 0 }}>
+                                    Top-level leader — Does not report to anyone
+                                </p>
+                            )}
+                        </div>
+
+                        {/* Direct Reports Section */}
+                        <div>
+                            <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', marginBottom: 8 }}>
+                                Direct Reports ({reportingChain.directReports?.length || 0})
+                            </div>
+                            {(!reportingChain.directReports || reportingChain.directReports.length === 0) ? (
+                                <p style={{ fontSize: 13, color: 'var(--color-text-muted)', fontStyle: 'italic', margin: 0 }}>
+                                    No direct reports currently assigned.
+                                </p>
+                            ) : (
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 10 }}>
+                                    {reportingChain.directReports.map(rep => (
+                                        <div key={rep.id} style={{
+                                            display: 'flex', alignItems: 'center', gap: 10, padding: 10,
+                                            background: 'var(--color-bg-alt)', borderRadius: 8, border: '1px solid var(--color-border)'
+                                        }}>
+                                            <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'var(--color-secondary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, fontSize: 13, flexShrink: 0 }}>
+                                                {(rep.fullName || 'U')[0]}
+                                            </div>
+                                            <div style={{ flex: 1, minWidth: 0 }}>
+                                                <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--color-secondary)', cursor: 'pointer', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                                                    onClick={() => navigate(`/users/${rep.id}`)}>
+                                                    {rep.fullName}
+                                                </div>
+                                                <div style={{ fontSize: 11, color: 'var(--color-text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                    {rep.roleName || 'Member'}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

@@ -19,6 +19,9 @@ const workItemsApi = {
   updateStatus: (id, statusCode) =>
     apiClient.patch(`/api/work-items/${id}/status`, { statusCode }),
 
+  updateColumn: (id, columnId, reopenReason) =>
+    apiClient.patch(`/api/work-items/${id}/column`, { columnId, reopenReason }),
+
   getComments: (id) =>
     apiClient.get(`/api/work-items/${id}/comments`),
 

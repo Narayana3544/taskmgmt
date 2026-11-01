@@ -64,16 +64,27 @@ const Projects = () => {
 
     const openCreate = () => {
         setEditProject(null);
-        setForm({ code: '', name: '', description: '', startDate: '', endDate: '', kanbanColumns: ['BACKLOG', 'OPEN', 'IN_PROGRESS', 'IN_REVIEW', 'DONE'] });
+        setForm({
+            code: '',
+            name: '',
+            description: '',
+            startDate: '',
+            endDate: '',
+            workflowTemplate: 'SIMPLE',
+            customColumnsText: 'To Do, In Progress, In Review, Done',
+        });
         setShowModal(true);
     };
 
     const openEdit = (project) => {
         setEditProject(project);
         setForm({
-            code: project.code, name: project.name, description: project.description || '',
-            startDate: project.startDate || '', endDate: project.endDate || '', statusId: project.statusId,
-            kanbanColumns: project.kanbanColumns || ['BACKLOG', 'OPEN', 'IN_PROGRESS', 'IN_REVIEW', 'DONE']
+            code: project.code,
+            name: project.name,
+            description: project.description || '',
+            startDate: project.startDate || '',
+            endDate: project.endDate || '',
+            statusId: project.statusId,
         });
         setShowModal(true);
     };
@@ -85,7 +96,20 @@ const Projects = () => {
             const payload = { ...form };
             if (!payload.startDate) delete payload.startDate;
             if (!payload.endDate) delete payload.endDate;
-            delete payload.organizationId; // Ensure it's not in body
+            delete payload.organizationId;
+
+            if (!editProject) {
+                payload.workflowTemplate = form.workflowTemplate || 'SIMPLE';
+                if (form.workflowTemplate === 'CUSTOM' && form.customColumnsText) {
+                    const names = form.customColumnsText.split(',').map(s => s.trim()).filter(Boolean);
+                    payload.customColumns = names.map((name, idx) => ({
+                        name,
+                        position: idx,
+                        statusCategory: idx === 0 ? 'TODO' : (idx === names.length - 1 ? 'DONE' : 'IN_PROGRESS'),
+                        isDefault: idx === 0,
+                    }));
+                }
+            }
 
             if (editProject) {
                 await api.put(`/api/projects/${editProject.id}`, payload);
@@ -249,32 +273,35 @@ const Projects = () => {
                                             onChange={(e) => setForm({ ...form, endDate: e.target.value })} />
                                     </div>
                                 </div>
-                                <div className="form-group" style={{ marginTop: 16 }}>
-                                    <label className="form-label">Kanban Columns</label>
-                                    <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                                        {[
-                                            { code: 'BACKLOG', label: 'Backlog' },
-                                            { code: 'OPEN', label: 'Open' },
-                                            { code: 'IN_PROGRESS', label: 'In Progress' },
-                                            { code: 'IN_REVIEW', label: 'In Review' },
-                                            { code: 'DONE', label: 'Done' }
-                                        ].map(col => (
-                                            <label key={col.code} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, cursor: 'pointer' }}>
-                                                <input type="checkbox" 
-                                                    checked={form.kanbanColumns?.includes(col.code) || false}
-                                                    onChange={(e) => {
-                                                        const newCols = e.target.checked 
-                                                            ? [...(form.kanbanColumns || []), col.code]
-                                                            : (form.kanbanColumns || []).filter(c => c !== col.code);
-                                                        setForm({ ...form, kanbanColumns: newCols });
-                                                    }}
+                                {!editProject && (
+                                    <div className="form-group" style={{ marginTop: 16 }}>
+                                        <label className="form-label">Workflow Template *</label>
+                                        <select
+                                            className="form-input"
+                                            value={form.workflowTemplate || 'SIMPLE'}
+                                            onChange={(e) => setForm({ ...form, workflowTemplate: e.target.value })}
+                                        >
+                                            <option value="SIMPLE">Simple (To Do, In Progress, Done)</option>
+                                            <option value="SCRUM">Scrum (Backlog, To Do, In Progress, In Review, Done)</option>
+                                            <option value="CUSTOM">Custom Workflow</option>
+                                        </select>
+                                        {form.workflowTemplate === 'CUSTOM' && (
+                                            <div style={{ marginTop: 10 }}>
+                                                <label className="form-label" style={{ fontSize: 12 }}>Custom Columns (comma separated)</label>
+                                                <input
+                                                    type="text"
+                                                    className="form-input"
+                                                    placeholder="e.g. Backlog, Dev, Review, QA, Done"
+                                                    value={form.customColumnsText || ''}
+                                                    onChange={(e) => setForm({ ...form, customColumnsText: e.target.value })}
                                                 />
-                                                {col.label}
-                                            </label>
-                                        ))}
+                                            </div>
+                                        )}
+                                        <p style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 4 }}>
+                                            Defines the Kanban board columns. You can add, rename, reorder, or delete columns anytime in the Kanban Board.
+                                        </p>
                                     </div>
-                                    <p style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 4 }}>Select the columns that will appear on the Kanban board for this project.</p>
-                                </div>
+                                )}
                             </div>
                             <div className="modal-footer">
                                 <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>

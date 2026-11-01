@@ -4,7 +4,29 @@
  */
 import axios from "axios";
 
-const baseURL = "http://localhost:8080";
+const getBaseURL = () => {
+  if (process.env.REACT_APP_API_BASE_URL) {
+    return process.env.REACT_APP_API_BASE_URL;
+  }
+  if (window.location.port === "3000") {
+    return "http://localhost:8080";
+  }
+  return window.location.origin;
+};
+
+export const baseURL = getBaseURL();
+
+export const resolveAttachmentUrl = (url) => {
+  if (!url) return "";
+  if (url.startsWith("http://localhost:8080/")) {
+    return url.replace("http://localhost:8080", baseURL);
+  }
+  if (url.startsWith("/api/")) {
+    return `${baseURL}${url}`;
+  }
+  return url;
+};
+
 const appBasePath = process.env.PUBLIC_URL || "";
 
 const toAppPath = (path) => `${appBasePath}${path}`;

@@ -23,6 +23,7 @@ public class ProjectResponse {
     private LocalDate startDate;
     private LocalDate endDate;
     private Integer memberCount;
+    private Integer openWorkItemCount;
     private LocalDateTime createdAt;
     private List<String> kanbanColumns;
 }

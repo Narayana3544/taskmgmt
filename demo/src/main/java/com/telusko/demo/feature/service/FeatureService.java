@@ -81,7 +81,7 @@ public class FeatureService {
             throw new BadRequestException("Cannot create features in a CLOSED project");
         }
 
-        // RULE: Default status is PROPOSED
+        // RULE: Default status is PROPOSED or OPEN or first available
         MasterValue status;
         if (request.getStatusId() != null) {
             status = masterValueRepository.findById(request.getStatusId())
@@ -89,6 +89,8 @@ public class FeatureService {
         } else {
             status = masterValueRepository
                     .findByMasterTypeCodeAndCode("FEATURE_STATUS", "PROPOSED")
+                    .or(() -> masterValueRepository.findByMasterTypeCodeAndCode("FEATURE_STATUS", "OPEN"))
+                    .or(() -> masterValueRepository.findByMasterTypeCodeAndActiveTrue("FEATURE_STATUS").stream().findFirst())
                     .orElse(null);
         }
 
@@ -195,13 +197,18 @@ public class FeatureService {
     public List<FeatureResponse> getActiveFeaturesForProject(Long projectId, Long userId) {
         permissionService.requirePermission(userId, "FEATURE", "VIEW");
 
-        return featureRepository.findByProjectIdAndStatusCodeAndActiveTrue(projectId, "ACTIVE")
+        return featureRepository.findActiveFeaturesForProject(projectId)
                 .stream().map(this::mapToResponse).toList();
     }
 
     // ==================== HELPERS ====================
     private FeatureResponse mapToResponse(Feature f) {
-        long sprintCount = sprintRepository.countByFeatureIdAndActiveTrue(f.getId());
+        long sprintCount = 0;
+        try {
+            sprintCount = sprintRepository.countByFeatureIdAndActiveTrue(f.getId());
+        } catch (Exception ex) {
+            log.warn("Could not query sprint count for feature {}: {}", f.getId(), ex.getMessage());
+        }
 
         return FeatureResponse.builder()
                 .id(f.getId())

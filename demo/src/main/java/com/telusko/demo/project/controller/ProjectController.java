@@ -38,6 +38,13 @@ public class ProjectController {
         return ResponseEntity.ok(ApiResponse.success(projectService.getProjects(orgId, search, pageable)));
     }
 
+    @GetMapping("/my-projects")
+    public ResponseEntity<ApiResponse<List<ProjectResponse>>> getMyProjects(
+            @RequestParam(required = false) Long orgId, Authentication auth) {
+        Long userId = Long.valueOf(auth.getName());
+        return ResponseEntity.ok(ApiResponse.success(projectService.getMyProjects(userId, orgId)));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<ProjectResponse>> getById(@PathVariable Long id) {
         return ResponseEntity.ok(ApiResponse.success(projectService.getProjectById(id)));

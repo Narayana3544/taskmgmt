@@ -16,8 +16,11 @@ const sprintsApi = {
   startSprint: (id) =>
     apiClient.post(`/api/sprints/${id}/start`),
 
-  closeSprint: (id) =>
-    apiClient.post(`/api/sprints/${id}/close`),
+  closeSprint: (id, data) =>
+    apiClient.post(`/api/sprints/${id}/close`, data || {}),
+
+  getUnfinishedItems: (id) =>
+    apiClient.get(`/api/sprints/${id}/unfinished-items`),
 
   getItems: (id) =>
     apiClient.get(`/api/sprints/${id}/items`),

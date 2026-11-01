@@ -89,6 +89,17 @@ public class WorkItemController {
         return ResponseEntity.ok(ApiResponse.success("Status updated", null));
     }
 
+    // Quick Column Update (drag-and-drop on Kanban Board)
+    @PatchMapping("/{id}/column")
+    public ResponseEntity<ApiResponse<WorkItemResponse>> updateColumn(
+            @PathVariable Long id, @RequestBody Map<String, Object> body, Authentication auth) {
+        Long userId = Long.valueOf(auth.getName());
+        Long columnId = body.get("columnId") != null ? Long.valueOf(body.get("columnId").toString()) : null;
+        String reopenReason = body.get("reopenReason") != null ? body.get("reopenReason").toString() : null;
+        WorkItemResponse res = workItemService.updateWorkItemColumn(id, columnId, reopenReason, userId);
+        return ResponseEntity.ok(ApiResponse.success("Column updated", res));
+    }
+
     // Handoff to Owner — mandatory comment
     @PostMapping("/{id}/handoff")
     public ResponseEntity<ApiResponse<WorkItemResponse>> handoff(

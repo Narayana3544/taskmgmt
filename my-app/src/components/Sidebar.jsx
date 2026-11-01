@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 import { getUser } from '../utils/user';
+import { resolveAttachmentUrl } from '../api/apiClient';
 
 const NAV_ITEMS = [
     {
@@ -125,7 +126,7 @@ const Sidebar = ({ collapsed, onToggle }) => {
                 {!collapsed && (
                     <div className="sidebar-user-info">
                         {user.profileImageUrl ? (
-                            <img src={user.profileImageUrl} alt="Avatar" style={{ width: 34, height: 34, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }} />
+                            <img src={resolveAttachmentUrl(user.profileImageUrl)} alt="Avatar" style={{ width: 34, height: 34, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }} />
                         ) : (
                             <div className="sidebar-user-avatar">
                                 {user.fullName ? user.fullName[0].toUpperCase() : 'U'}

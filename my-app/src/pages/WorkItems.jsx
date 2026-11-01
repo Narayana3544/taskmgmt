@@ -255,6 +255,13 @@ const WorkItems = () => {
                             style={{ paddingLeft: 34, height: 36 }}
                             value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
                     </div>
+                    <button
+                        className={`btn ${!projectFilter && !projectId ? 'btn-primary' : 'btn-secondary'}`}
+                        onClick={() => { setProjectFilter(''); setPage(0); }}
+                        title="Show tasks assigned to or owned by you across all projects"
+                    >
+                        My Work
+                    </button>
                     {!projectId && (
                         <button
                             className={`btn ${showFilters ? 'btn-primary' : 'btn-secondary'}`}
@@ -352,7 +359,11 @@ const WorkItems = () => {
                                                     <div style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>{item.sprintName}</div>
                                                 )}
                                             </td>
-                                            <td style={{ color: 'var(--color-text-secondary)', fontSize: 13 }}>{item.projectName || '—'}</td>
+                                            <td>
+                                                <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-primary)', background: 'var(--color-info-light)', padding: '2px 8px', borderRadius: 4 }}>
+                                                    {item.projectCode ? `${item.projectCode} · ` : ''}{item.projectName || '—'}
+                                                </span>
+                                            </td>
                                             <td><span className={`badge ${getBadgeClass(item.statusName)}`}>{item.statusName || '—'}</span></td>
                                             <td><span className={`badge ${getBadgeClass(item.priorityName)}`}>{item.priorityName || '—'}</span></td>
                                             <td style={{ color: 'var(--color-text-secondary)', fontSize: 13 }}>{item.ownerName || '—'}</td>
@@ -478,7 +489,10 @@ const WorkItems = () => {
                                         <div className="form-group">
                                             <label className="form-label">Assignee</label>
                                             <select className="form-select"
-                                                value={form.assigneeId} onChange={(e) => setForm({ ...form, assigneeId: e.target.value })}>
+                                                value={form.assigneeId} onChange={(e) => setForm({ ...form, assigneeId: e.target.value })}
+                                                disabled={!checkAdminOrManager() && Number(editItem.ownerId) !== Number(user.userId || user.id) && Number(editItem.assigneeId) !== Number(user.userId || user.id)}
+                                                title={(!checkAdminOrManager() && Number(editItem.ownerId) !== Number(user.userId || user.id) && Number(editItem.assigneeId) !== Number(user.userId || user.id)) ? "Only the Owner, Assignee, Manager, or Admin can change assignee" : ""}
+                                            >
                                                 <option value="">Select assignee</option>
                                                 {projectMembers.map(m => (
                                                     <option key={m.userId || m.id} value={m.userId || m.id}>

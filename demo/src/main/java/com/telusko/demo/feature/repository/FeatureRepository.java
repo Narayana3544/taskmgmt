@@ -39,5 +39,8 @@ public interface FeatureRepository extends JpaRepository<Feature, Long> {
             @Param("projectId") Long projectId,
             @Param("statusCode") String statusCode);
 
+    @Query("SELECT f FROM Feature f WHERE f.project.id = :projectId AND f.active = true AND (f.status IS NULL OR f.status.code != 'CLOSED') ORDER BY f.name")
+    List<Feature> findActiveFeaturesForProject(@Param("projectId") Long projectId);
+
     long countByProjectIdAndActiveTrue(Long projectId);
 }

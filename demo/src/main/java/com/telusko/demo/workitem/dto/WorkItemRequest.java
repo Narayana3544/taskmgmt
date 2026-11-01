@@ -18,6 +18,7 @@ public class WorkItemRequest {
     private String description;
     private Long typeId;
     private Long statusId;
+    private Long boardColumnId;
     private Long priorityId;
     private Long ownerId;
     private Long assigneeId;
@@ -25,4 +26,5 @@ public class WorkItemRequest {
     private LocalDate dueDate;
     private java.util.List<String> attachments;
     private Long sprintId;
+    private String reopenReason;
 }

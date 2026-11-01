@@ -49,7 +49,12 @@ const Features = () => {
         const fetchStatuses = async () => {
             try {
                 const res = await api.get('/api/master-data/values/by-code', { params: { typeCode: 'FEATURE_STATUS' } });
-                setFeatureStatuses(res.data?.data || []);
+                const list = res.data?.data || [];
+                setFeatureStatuses(list);
+                const def = list.find(s => s.isDefault) || (list.length > 0 ? list[0] : null);
+                if (def) {
+                    setForm(prev => prev.statusId ? prev : { ...prev, statusId: String(def.id) });
+                }
             } catch (err) { console.error(err); }
         };
         fetchStatuses();
@@ -90,7 +95,13 @@ const Features = () => {
 
     const openCreate = () => {
         setEditFeature(null);
-        setForm({ name: '', description: '', projectId: selectedProject || '', statusId: '' });
+        const def = featureStatuses.find(s => s.isDefault) || (featureStatuses.length > 0 ? featureStatuses[0] : null);
+        setForm({ 
+            name: '', 
+            description: '', 
+            projectId: selectedProject || '', 
+            statusId: def ? String(def.id) : '' 
+        });
         setShowModal(true);
     };
 
@@ -115,11 +126,13 @@ const Features = () => {
                 setSaving(false);
                 return;
             }
+            const defStatus = featureStatuses.find(s => s.isDefault) || (featureStatuses.length > 0 ? featureStatuses[0] : null);
+            const resolvedStatusId = form.statusId ? parseInt(form.statusId) : (defStatus ? defStatus.id : null);
             const payload = {
                 name: form.name,
                 description: form.description,
                 projectId: parseInt(projId),
-                statusId: form.statusId ? parseInt(form.statusId) : null
+                statusId: resolvedStatusId
             };
             if (editFeature) {
                 await api.put(`/api/features/${editFeature.id}`, payload);
@@ -143,7 +156,9 @@ const Features = () => {
         switch (code) {
             case 'ACTIVE': return 'badge-success';
             case 'CLOSED': return 'badge-default';
-            case 'PROPOSED': return 'badge-info';
+            case 'PROPOSED':
+            case 'OPEN':
+            case 'PENDING': return 'badge-info';
             default: return 'badge-info';
         }
     };
@@ -283,7 +298,7 @@ const Features = () => {
                                     <label className="form-label">Status</label>
                                     <select className="form-select" value={form.statusId}
                                         onChange={(e) => setForm({ ...form, statusId: e.target.value })}>
-                                        <option value="">-- Default (Proposed) --</option>
+                                        <option value="">-- Select Status --</option>
                                         {featureStatuses.map(s => <option key={s.id} value={s.id}>{s.displayName}</option>)}
                                     </select>
                                 </div>

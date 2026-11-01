@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ProjectRepository extends JpaRepository<Project, Long> {
     Page<Project> findByOrganizationIdAndActiveTrue(Long organizationId, Pageable pageable);
+    java.util.List<Project> findByOrganizationIdAndActiveTrue(Long organizationId);
 
     @Query("SELECT p FROM Project p WHERE p.organization.id = :orgId AND p.active = true " +
            "AND (LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(p.code) LIKE LOWER(CONCAT('%', :search, '%')))")

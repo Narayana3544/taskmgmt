@@ -29,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
+import com.telusko.demo.workitem.repository.WorkItemRepository;
 
 /**
  * Project lifecycle management.
@@ -47,6 +48,8 @@ public class ProjectService {
     private final MasterValueRepository masterValueRepository;
     private final PermissionService permissionService;
     private final AuditService auditService;
+    private final BoardColumnService boardColumnService;
+    private final WorkItemRepository workItemRepository;
 
     public ProjectService(ProjectRepository projectRepository,
             ProjectMemberRepository memberRepository,
@@ -54,7 +57,9 @@ public class ProjectService {
             UserRepository userRepository,
             MasterValueRepository masterValueRepository,
             PermissionService permissionService,
-            AuditService auditService) {
+            AuditService auditService,
+            BoardColumnService boardColumnService,
+            WorkItemRepository workItemRepository) {
         this.projectRepository = projectRepository;
         this.memberRepository = memberRepository;
         this.organizationRepository = organizationRepository;
@@ -62,6 +67,8 @@ public class ProjectService {
         this.masterValueRepository = masterValueRepository;
         this.permissionService = permissionService;
         this.auditService = auditService;
+        this.boardColumnService = boardColumnService;
+        this.workItemRepository = workItemRepository;
     }
 
     // ==================== PROJECT CRUD ====================
@@ -102,6 +109,20 @@ public class ProjectService {
                 .build();
         member.setCreatedBy(userId);
         memberRepository.save(member);
+
+        // Initialize board workflow columns
+        if ("CUSTOM".equalsIgnoreCase(request.getWorkflowTemplate()) && request.getCustomColumns() != null && !request.getCustomColumns().isEmpty()) {
+            for (int i = 0; i < request.getCustomColumns().size(); i++) {
+                var colReq = request.getCustomColumns().get(i);
+                if (colReq.getPosition() == null) {
+                    colReq.setPosition(i);
+                }
+                boardColumnService.createColumn(project.getId(), colReq);
+            }
+        } else {
+            String template = request.getWorkflowTemplate() != null ? request.getWorkflowTemplate() : "SIMPLE";
+            boardColumnService.initDefaultTemplate(project, template);
+        }
 
         auditService.logAction("PROJECT", project.getId(), "CREATED", null, project.getName(), userId);
 
@@ -165,6 +186,26 @@ public class ProjectService {
         Project project = projectRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Project", "id", id));
         return mapToResponse(project);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ProjectResponse> getMyProjects(Long userId, Long orgId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+
+        boolean isAdmin = user.getRole() != null && "ADMIN".equalsIgnoreCase(user.getRole().getCode());
+        List<Project> projects;
+        if (isAdmin) {
+            projects = projectRepository.findByOrganizationIdAndActiveTrue(orgId != null ? orgId : (user.getOrganization() != null ? user.getOrganization().getId() : 1L));
+        } else {
+            List<ProjectMember> memberships = memberRepository.findActiveMembershipsByUser(userId);
+            projects = memberships.stream()
+                    .map(ProjectMember::getProject)
+                    .filter(p -> p != null && Boolean.TRUE.equals(p.getActive()))
+                    .distinct()
+                    .toList();
+        }
+        return projects.stream().map(this::mapToResponse).toList();
     }
 
     // ==================== PROJECT MEMBERS ====================
@@ -253,7 +294,12 @@ public class ProjectService {
     // ==================== MAPPERS ====================
     private ProjectResponse mapToResponse(Project p) {
         long memberCount = memberRepository.countActiveMembers(p.getId());
+        long openCount = 0;
+        try {
+            openCount = workItemRepository.countOpenItemsByProjectId(p.getId());
+        } catch (Exception e) { /* ignore */ }
         return ProjectResponse.builder()
+                .openWorkItemCount((int) openCount)
                 .id(p.getId())
                 .code(p.getCode())
                 .name(p.getName())

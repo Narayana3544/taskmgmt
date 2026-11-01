@@ -33,7 +33,7 @@ public class Sprint extends BaseEntity {
     private Project project;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "feature_id", nullable = false)
+    @JoinColumn(name = "feature_id")
     private Feature feature;
 
     @Column(nullable = false, length = 100)

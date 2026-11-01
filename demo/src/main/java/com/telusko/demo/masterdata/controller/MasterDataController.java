@@ -93,7 +93,7 @@ public class MasterDataController {
     public ResponseEntity<ApiResponse<MasterType>> updateType(
             @PathVariable Long id, @RequestBody Map<String, String> body) {
         log.info("PUT /api/master-data/types/{} - name: {}", id, body.get("name"));
-        MasterType updated = masterDataService.updateType(id, body.get("name"), body.get("description"));
+        MasterType updated = masterDataService.updateType(id, body.get("name"), body.get("description"), body.get("code"));
         return ResponseEntity.ok(ApiResponse.success("Type updated", updated));
     }
 
@@ -107,7 +107,8 @@ public class MasterDataController {
                 (String) body.get("description"),
                 body.get("sortOrder") != null ? Integer.valueOf(body.get("sortOrder").toString()) : null,
                 body.get("isDefault") != null ? Boolean.valueOf(body.get("isDefault").toString()) : null,
-                body.get("active") != null ? Boolean.valueOf(body.get("active").toString()) : null);
+                body.get("active") != null ? Boolean.valueOf(body.get("active").toString()) : null,
+                body.get("code") != null ? body.get("code").toString() : null);
         return ResponseEntity.ok(ApiResponse.success("Value updated", updated));
     }
 

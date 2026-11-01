@@ -21,6 +21,26 @@ const projectsApi = {
 
   removeMember: (id, memberId) =>
     apiClient.delete(`/api/projects/${id}/members/${memberId}`),
+
+  getMyProjects: (params = {}) =>
+    apiClient.get("/api/projects/my-projects", { params }),
+
+  getColumns: (projectId) =>
+    apiClient.get(`/api/projects/${projectId}/columns`),
+
+  createColumn: (projectId, data) =>
+    apiClient.post(`/api/projects/${projectId}/columns`, data),
+
+  updateColumn: (projectId, columnId, data) =>
+    apiClient.put(`/api/projects/${projectId}/columns/${columnId}`, data),
+
+  reorderColumns: (projectId, columnIds) =>
+    apiClient.put(`/api/projects/${projectId}/columns/reorder`, { columnIds }),
+
+  deleteColumn: (projectId, columnId, targetColumnId) =>
+    apiClient.delete(`/api/projects/${projectId}/columns/${columnId}`, {
+      params: targetColumnId ? { targetColumnId } : {},
+    }),
 };
 
 export default projectsApi;

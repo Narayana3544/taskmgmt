@@ -74,6 +74,19 @@ public class PermissionService {
                 .findAllowedPermission(user.getRole().getId(), featureCode, actionCode)
                 .isEmpty();
 
+        // FALLBACK: If a custom role (like Tester, Developer) has no permissions configured at all in role_permission,
+        // fall back to default EMPLOYEE role permissions for the organization so they are not completely locked out
+        if (!allowed && rolePermissionRepository.findByRoleId(user.getRole().getId()).isEmpty()) {
+            if (user.getOrganization() != null) {
+                Role empRole = roleRepository.findByOrganizationIdAndCode(user.getOrganization().getId(), "EMPLOYEE").orElse(null);
+                if (empRole != null) {
+                    allowed = !rolePermissionRepository
+                            .findAllowedPermission(empRole.getId(), featureCode, actionCode)
+                            .isEmpty();
+                }
+            }
+        }
+
         log.debug("Permission check: userId={}, feature={}, action={}, allowed={}",
                 userId, featureCode, actionCode, allowed);
         return allowed;

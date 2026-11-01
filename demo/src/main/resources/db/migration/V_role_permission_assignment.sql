@@ -16,3 +16,4 @@ WHERE f.code = 'WORK_ITEM'
       SELECT 1 FROM role_permission rp 
       WHERE rp.role_id = r.id AND rp.feature_id = f.id AND rp.action_id = a.id
   );
+

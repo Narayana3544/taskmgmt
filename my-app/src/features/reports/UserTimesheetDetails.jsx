@@ -1,3 +1,4 @@
+import * as XLSX from 'xlsx';
 import React, { useState, useEffect } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Clock, Download, Filter } from 'lucide-react';
@@ -66,6 +67,40 @@ const UserTimesheetDetails = () => {
         setSearchParams({ startDate, endDate, status: newStatus });
     };
 
+    const exportToExcel = () => {
+        if (!entries || entries.length === 0) return;
+        const parseHoursToFloat = (hStr) => {
+            if (!hStr) return 0;
+            const match = hStr.match(/(\d+)h\s*(\d*)m?/);
+            if (match) {
+                const hours = parseInt(match[1] || 0, 10);
+                const minutes = parseInt(match[2] || 0, 10);
+                return hours + (minutes / 60.0);
+            }
+            return parseFloat(hStr) || 0;
+        };
+        const totalHoursSum = entries.reduce((acc, row) => acc + parseHoursToFloat(row.totalHours), 0);
+        const data = [
+            ["User Timesheet Detailed Report"],
+            [`User: ${userName || userId}`],
+            [`Active Status Filter: ${activeStatusLabel}`],
+            [`Date Range: ${startDate} to ${endDate}`],
+            [`Exported: ${new Date().toLocaleString()}`],
+            [],
+            ["Date", "Status", "Total Hours"],
+            ...entries.map(r => [r.workDate || '', r.statusName || r.statusCode || '', r.totalHours || '0h 00m']),
+            ["Total", "", `${totalHoursSum.toFixed(1)}h`]
+        ];
+        const ws = XLSX.utils.aoa_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Details");
+        XLSX.writeFile(wb, `timesheet-details-${userName || userId}-${status}-${startDate}-to-${endDate}.xlsx`);
+    };
+
+    const exportToPDF = () => {
+        window.print();
+    };
+
     const exportToCSV = () => {
         if (!entries || entries.length === 0) return;
 
@@ -126,8 +161,14 @@ const UserTimesheetDetails = () => {
                         </select>
                     </div>
 
-                    <button onClick={exportToCSV} className="btn btn-secondary flex items-center gap-2" disabled={loading || entries.length === 0}>
-                        <Download size={16} /> Export CSV
+                    <button onClick={exportToCSV} className="btn btn-secondary flex items-center gap-2" disabled={loading || entries.length === 0} title="Export CSV">
+                        <Download size={16} /> CSV
+                    </button>
+                    <button onClick={exportToExcel} className="btn btn-secondary flex items-center gap-2" disabled={loading || entries.length === 0} title="Export Excel">
+                        <Download size={16} /> Excel
+                    </button>
+                    <button onClick={exportToPDF} className="btn btn-secondary flex items-center gap-2" disabled={loading || entries.length === 0} title="Print / PDF">
+                        <Download size={16} /> PDF
                     </button>
                 </div>
             </div>

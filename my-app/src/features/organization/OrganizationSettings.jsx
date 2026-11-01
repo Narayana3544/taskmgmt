@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Building, Globe, Clock, Image as ImageIcon } from 'lucide-react';
 import api from '../../api';
+import { resolveAttachmentUrl } from '../../api/apiClient';
 import Layout from '../../components/Layout';
 
 const OrganizationSettings = () => {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     const orgId = user.organizationId;
-    
+
     const [org, setOrg] = useState({
         name: '',
         code: '',
@@ -93,18 +94,18 @@ const OrganizationSettings = () => {
 
                 <div className="card">
                     <form onSubmit={handleSave} className="card-body">
-                        
+
                         <div style={{ borderBottom: '1px solid var(--color-border)', paddingBottom: 24, marginBottom: 24 }}>
                             <h3 style={{ marginTop: 0, marginBottom: 16 }}>Organization Logo</h3>
                             <div className="flex gap-4 items-center">
-                                <div style={{ 
-                                    width: 80, height: 80, borderRadius: 'var(--radius-md)', 
+                                <div style={{
+                                    width: 80, height: 80, borderRadius: 'var(--radius-md)',
                                     border: '1px dashed var(--color-border)',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     background: 'var(--color-bg-alt)', overflow: 'hidden'
                                 }}>
                                     {org.logoUrl ? (
-                                        <img src={org.logoUrl} alt="Organization Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                                        <img src={resolveAttachmentUrl(org.logoUrl)} alt="Organization Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                                     ) : (
                                         <Building size={32} color="var(--color-text-muted)" />
                                     )}
@@ -128,14 +129,14 @@ const OrganizationSettings = () => {
                                     <Building size={14} style={{ display: 'inline', marginRight: 6, verticalAlign: 'middle' }} />
                                     Organization Name
                                 </label>
-                                <input type="text" className="form-input" 
-                                    value={org.name} onChange={(e) => setOrg({...org, name: e.target.value})} required />
+                                <input type="text" className="form-input"
+                                    value={org.name} onChange={(e) => setOrg({ ...org, name: e.target.value })} required />
                             </div>
 
                             <div className="form-group">
                                 <label className="form-label">Key/Code</label>
-                                <input type="text" className="form-input" 
-                                    value={org.code} onChange={(e) => setOrg({...org, code: e.target.value})} required />
+                                <input type="text" className="form-input"
+                                    value={org.code} onChange={(e) => setOrg({ ...org, code: e.target.value })} required />
                             </div>
 
                             <div className="form-group">
@@ -143,7 +144,7 @@ const OrganizationSettings = () => {
                                     <Globe size={14} style={{ display: 'inline', marginRight: 6, verticalAlign: 'middle' }} />
                                     Timezone
                                 </label>
-                                <select className="form-select" value={org.timezone} onChange={(e) => setOrg({...org, timezone: e.target.value})}>
+                                <select className="form-select" value={org.timezone} onChange={(e) => setOrg({ ...org, timezone: e.target.value })}>
                                     <option value="UTC">UTC</option>
                                     <option value="EST">EST</option>
                                     <option value="CST">CST</option>
@@ -158,10 +159,10 @@ const OrganizationSettings = () => {
                                     Working Days
                                 </label>
                                 <input type="text" className="form-input" placeholder="MON-FRI"
-                                    value={org.workingDays} onChange={(e) => setOrg({...org, workingDays: e.target.value})} />
+                                    value={org.workingDays} onChange={(e) => setOrg({ ...org, workingDays: e.target.value })} />
                             </div>
                         </div>
-                        
+
                         <div style={{ marginTop: 24, display: 'flex', justifyContent: 'flex-end' }}>
                             <button type="submit" className="btn btn-primary" disabled={saving}>
                                 {saving ? 'Saving...' : 'Save Changes'}

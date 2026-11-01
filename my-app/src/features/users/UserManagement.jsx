@@ -5,6 +5,93 @@ import api from '../../api';
 import Layout from '../../components/Layout';
 import StatusBadge from '../../components/StatusBadge';
 
+const OrgTreeNode = ({ node, level = 0, navigate }) => {
+    const [expanded, setExpanded] = useState(true);
+    const hasReports = node.reports && node.reports.length > 0;
+
+    return (
+        <div style={{ marginLeft: level > 0 ? 32 : 0, position: 'relative' }}>
+            {level > 0 && (
+                <div style={{
+                    position: 'absolute', left: -20, top: 24, width: 18, height: 2,
+                    background: 'var(--color-border)', borderTop: '2px solid var(--color-border)'
+                }} />
+            )}
+            <div style={{
+                background: 'var(--color-card)',
+                border: level === 0 ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
+                borderRadius: 8,
+                padding: '12px 16px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 12,
+                boxShadow: 'var(--shadow-sm)',
+                marginBottom: 8,
+                minWidth: 320,
+                maxWidth: 420
+            }}>
+                <div style={{
+                    width: 38, height: 38, borderRadius: '50%',
+                    background: level === 0 ? 'var(--color-primary)' : 'var(--color-secondary)',
+                    color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontWeight: 700, fontSize: 14, flexShrink: 0
+                }}>
+                    {(node.fullName || 'U')[0]}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span
+                            style={{ fontWeight: 600, fontSize: 14, color: 'var(--color-primary)', cursor: 'pointer' }}
+                            onClick={() => navigate(`/users/${node.id}`)}
+                            title="View Profile">
+                            {node.fullName}
+                        </span>
+                        {node.roleName && (
+                            <span className="badge badge-info" style={{ fontSize: 10, padding: '1px 6px' }}>
+                                {node.roleName}
+                            </span>
+                        )}
+                    </div>
+                    <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {node.email}
+                    </div>
+                    {node.designationName && (
+                        <div style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 2 }}>
+                            {node.designationName}
+                        </div>
+                    )}
+                </div>
+                {hasReports && (
+                    <button
+                        type="button"
+                        className="btn btn-sm btn-secondary"
+                        style={{ padding: '2px 8px', fontSize: 11, height: 24, display: 'flex', alignItems: 'center', gap: 4 }}
+                        onClick={() => setExpanded(!expanded)}
+                        title={expanded ? 'Collapse direct reports' : 'Expand direct reports'}>
+                        <span>{node.reports.length}</span>
+                        <span>{expanded ? '▲' : '▼'}</span>
+                    </button>
+                )}
+            </div>
+
+            {hasReports && expanded && (
+                <div style={{
+                    borderLeft: '2px solid var(--color-border)',
+                    marginLeft: 18,
+                    paddingLeft: 4,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 4
+                }}>
+                    {node.reports.map(child => (
+                        <OrgTreeNode key={child.id} node={child} level={level + 1} navigate={navigate} />
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+};
+
 const UserManagement = () => {
     const navigate = useNavigate();
     const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -18,6 +105,9 @@ const UserManagement = () => {
     const [roles, setRoles] = useState([]);
     const [designations, setDesignations] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
+    const [viewMode, setViewMode] = useState('table'); // 'table' | 'hierarchy'
+    const [hierarchyData, setHierarchyData] = useState([]);
+    const [hierarchyLoading, setHierarchyLoading] = useState(false);
 
     // Pagination
     const [page, setPage] = useState(0);
@@ -60,6 +150,39 @@ const UserManagement = () => {
             setDesignations(res.data?.data || []);
         } catch (err) { console.error(err); }
     };
+
+    // Fetch hierarchy
+    const fetchHierarchy = async () => {
+        setHierarchyLoading(true);
+        try {
+            const res = await api.get('/api/users/hierarchy', { params: { orgId: user.organizationId || 1 } });
+            setHierarchyData(res.data?.data || []);
+        } catch (err) {
+            console.error('Failed to load hierarchy:', err);
+            // Fallback: construct from allUsers
+            const map = {};
+            (allUsers || []).forEach(u => {
+                map[u.id] = { ...u, reports: [] };
+            });
+            const roots = [];
+            Object.values(map).forEach(node => {
+                if (node.managerId && map[node.managerId]) {
+                    map[node.managerId].reports.push(node);
+                } else {
+                    roots.push(node);
+                }
+            });
+            setHierarchyData(roots);
+        } finally {
+            setHierarchyLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (viewMode === 'hierarchy') {
+            fetchHierarchy();
+        }
+    }, [viewMode]);
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => { fetchAllUsers(); fetchRoles(); fetchDesignations(); }, []);
@@ -120,8 +243,24 @@ const UserManagement = () => {
                     <h1>User Management</h1>
                     <p className="page-header-subtitle">{filteredUsers.length} user{filteredUsers.length !== 1 ? 's' : ''}{searchTerm ? ` matching "${searchTerm}"` : ''}</p>
                 </div>
-                <div style={{ display: 'flex', gap: 12 }}>
-                    <div className="search-bar" style={{ position: 'relative', width: 250 }}>
+                <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                    <div style={{ display: 'flex', gap: 4, background: 'var(--color-bg-alt)', padding: 3, borderRadius: 6, border: '1px solid var(--color-border)' }}>
+                        <button
+                            type="button"
+                            className={`btn btn-sm ${viewMode === 'table' ? 'btn-primary' : 'btn-secondary'}`}
+                            style={{ border: 'none', padding: '4px 12px', fontSize: 13 }}
+                            onClick={() => setViewMode('table')}>
+                            Table View
+                        </button>
+                        <button
+                            type="button"
+                            className={`btn btn-sm ${viewMode === 'hierarchy' ? 'btn-primary' : 'btn-secondary'}`}
+                            style={{ border: 'none', padding: '4px 12px', fontSize: 13 }}
+                            onClick={() => setViewMode('hierarchy')}>
+                            Org Tree
+                        </button>
+                    </div>
+                    <div className="search-bar" style={{ position: 'relative', width: 220 }}>
                         <Search size={16} style={{ position: 'absolute', left: 10, top: 10, color: 'var(--color-text-muted)' }} />
                         <input type="text" className="form-input" placeholder="Search users..."
                             style={{ paddingLeft: 34, height: 36 }}
@@ -131,6 +270,32 @@ const UserManagement = () => {
                 </div>
             </div>
 
+            {viewMode === 'hierarchy' ? (
+                <div className="card">
+                    <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                            <h3 style={{ margin: 0 }}>Organization Reporting Structure</h3>
+                            <p style={{ margin: '4px 0 0 0', fontSize: 13, color: 'var(--color-text-secondary)' }}>
+                                Visualizing who reports to whom across your organization
+                            </p>
+                        </div>
+                        <button className="btn btn-secondary btn-sm" onClick={fetchHierarchy}>Refresh Tree</button>
+                    </div>
+                    <div className="card-body" style={{ padding: 24, background: 'var(--color-bg-alt)', minHeight: 400 }}>
+                        {hierarchyLoading ? (
+                            <div className="empty-state" style={{ padding: 40 }}><p>Loading organizational structure...</p></div>
+                        ) : hierarchyData.length === 0 ? (
+                            <div className="empty-state" style={{ padding: 40 }}><p>No reporting relationships found.</p></div>
+                        ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                                {hierarchyData.map(rootNode => (
+                                    <OrgTreeNode key={rootNode.id} node={rootNode} level={0} navigate={navigate} />
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            ) : (
             <div className="card">
                 <div className="card-body" style={{ padding: 0 }}>
                     {loading ? (
@@ -184,9 +349,10 @@ const UserManagement = () => {
                     )}
                 </div>
             </div>
+            )}
 
             {/* Pagination */}
-            {totalPages > 1 && (
+            {viewMode === 'table' && totalPages > 1 && (
                 <div className="flex justify-center items-center gap-4" style={{ marginTop: 24, marginBottom: 24 }}>
                     <button className="btn btn-secondary btn-sm" disabled={page === 0} onClick={() => setPage(p => p - 1)}>
                         <ChevronLeft size={16} /> Prev

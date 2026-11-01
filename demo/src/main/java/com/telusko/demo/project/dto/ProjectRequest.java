@@ -21,4 +21,6 @@ public class ProjectRequest {
     private LocalDate startDate;
     private LocalDate endDate;
     private List<String> kanbanColumns;
+    private String workflowTemplate;
+    private List<BoardColumnRequest> customColumns;
 }

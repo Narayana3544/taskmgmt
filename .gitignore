@@ -1,0 +1,26 @@
+# Dependency and build directories
+demo/target/
+target/
+my-app/node_modules/
+my-app/build/
+dist/
+
+# Logs and runtime artifacts
+logs/
+demo/logs/
+*.log
+*.log.gz
+pg_log.txt
+
+# Development and Scratch scripts
+scratch/
+test_results.json
+seed_data.sql
+cleanup_seed.sql
+
+# IDE and OS files
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db

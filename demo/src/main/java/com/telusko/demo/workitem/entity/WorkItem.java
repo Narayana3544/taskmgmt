@@ -2,6 +2,7 @@ package com.telusko.demo.workitem.entity;
 
 import com.telusko.demo.common.entity.BaseEntity;
 import com.telusko.demo.masterdata.entity.MasterValue;
+import com.telusko.demo.project.entity.BoardColumn;
 import com.telusko.demo.project.entity.Project;
 import com.telusko.demo.user.entity.User;
 import jakarta.persistence.*;
@@ -41,6 +42,10 @@ public class WorkItem extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "status_id")
     private MasterValue status;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "board_column_id")
+    private BoardColumn boardColumn;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "priority_id")

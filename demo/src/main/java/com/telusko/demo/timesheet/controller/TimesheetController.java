@@ -97,9 +97,12 @@ public class TimesheetController {
             @RequestParam LocalDate endDate,
             @RequestParam(required = false, defaultValue = "APPROVED") String status,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "100") int size) {
+            @RequestParam(defaultValue = "100") int size,
+            Authentication auth) {
+        Long callerId = (auth != null && auth.getName() != null && !auth.getName().equals("anonymousUser"))
+                ? Long.valueOf(auth.getName()) : null;
         Pageable pageable = PageRequest.of(page, size);
-        return ResponseEntity.ok(ApiResponse.success(timesheetService.getUserTimesheetsReport(userId, startDate, endDate, status, pageable)));
+        return ResponseEntity.ok(ApiResponse.success(timesheetService.getUserTimesheetsReport(userId, startDate, endDate, status, callerId, pageable)));
     }
 
 

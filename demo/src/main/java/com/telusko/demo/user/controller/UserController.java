@@ -47,6 +47,23 @@ public class UserController {
                 .body(ApiResponse.success("User created", userService.createUser(request)));
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<UserResponse>> getUserById(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.success(userService.getUserById(id)));
+    }
+
+    @GetMapping("/hierarchy")
+    public ResponseEntity<ApiResponse<java.util.List<java.util.Map<String, Object>>>> getHierarchy(
+            @RequestParam(required = false, defaultValue = "1") Long orgId) {
+        return ResponseEntity.ok(ApiResponse.success(userService.getHierarchyByOrganization(orgId)));
+    }
+
+    @GetMapping("/{id}/reporting-chain")
+    public ResponseEntity<ApiResponse<java.util.Map<String, Object>>> getReportingChain(
+            @PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.success(userService.getUserReportingChain(id)));
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<UserResponse>> updateUser(
             @PathVariable Long id, @Valid @RequestBody UserRequest request) {

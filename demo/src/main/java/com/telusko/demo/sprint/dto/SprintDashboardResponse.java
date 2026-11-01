@@ -1,5 +1,6 @@
 package com.telusko.demo.sprint.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -35,6 +36,11 @@ public class SprintDashboardResponse {
 
     // Burndown chart data (day-by-day)
     private List<BurndownPoint> burndownData;
+
+    @JsonProperty("burndown")
+    public List<BurndownPoint> getBurndown() {
+        return this.burndownData;
+    }
 
     // User performance
     private List<UserPerformance> userPerformance;

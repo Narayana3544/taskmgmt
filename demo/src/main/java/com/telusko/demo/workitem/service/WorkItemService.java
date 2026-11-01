@@ -7,7 +7,10 @@ import com.telusko.demo.common.exception.ResourceNotFoundException;
 import com.telusko.demo.masterdata.entity.MasterValue;
 import com.telusko.demo.masterdata.repository.MasterValueRepository;
 import com.telusko.demo.notification.service.NotificationService;
+import com.telusko.demo.project.entity.BoardColumn;
 import com.telusko.demo.project.entity.Project;
+import com.telusko.demo.project.repository.BoardColumnRepository;
+import com.telusko.demo.project.repository.ProjectMemberRepository;
 import com.telusko.demo.project.repository.ProjectRepository;
 import com.telusko.demo.rbac.service.PermissionService;
 import com.telusko.demo.user.entity.User;
@@ -62,6 +65,8 @@ public class WorkItemService {
     private final NotificationService notificationService;
     private final SprintWorkItemRepository sprintWorkItemRepository;
     private final SprintRepository sprintRepository;
+    private final BoardColumnRepository boardColumnRepository;
+    private final ProjectMemberRepository projectMemberRepository;
 
     public WorkItemService(WorkItemRepository workItemRepository,
             WorkItemCommentRepository commentRepository,
@@ -73,7 +78,9 @@ public class WorkItemService {
             AuditService auditService,
             NotificationService notificationService,
             SprintWorkItemRepository sprintWorkItemRepository,
-            SprintRepository sprintRepository) {
+            SprintRepository sprintRepository,
+            BoardColumnRepository boardColumnRepository,
+            ProjectMemberRepository projectMemberRepository) {
         this.workItemRepository = workItemRepository;
         this.commentRepository = commentRepository;
         this.historyRepository = historyRepository;
@@ -85,6 +92,8 @@ public class WorkItemService {
         this.notificationService = notificationService;
         this.sprintWorkItemRepository = sprintWorkItemRepository;
         this.sprintRepository = sprintRepository;
+        this.boardColumnRepository = boardColumnRepository;
+        this.projectMemberRepository = projectMemberRepository;
     }
 
     // ==================== CREATE ====================
@@ -118,6 +127,19 @@ public class WorkItemService {
 
         resolveType(workItem, request.getTypeId());
         resolvePriority(workItem, request.getPriorityId());
+
+        if (request.getBoardColumnId() != null) {
+            boardColumnRepository.findByIdAndActiveTrue(request.getBoardColumnId())
+                    .ifPresent(workItem::setBoardColumn);
+        }
+
+        if (request.getBoardColumnId() != null) {
+            boardColumnRepository.findByIdAndActiveTrue(request.getBoardColumnId())
+                    .ifPresent(workItem::setBoardColumn);
+        } else {
+            boardColumnRepository.findFirstByProjectIdAndIsDefaultTrueAndActiveTrue(project.getId())
+                    .ifPresent(workItem::setBoardColumn);
+        }
 
         // Owner can be set on creation (once set, it's immutable)
         if (request.getOwnerId() != null) {
@@ -195,8 +217,14 @@ public class WorkItemService {
 
     @Transactional(readOnly = true)
     public List<WorkItemResponse> getBacklogItems(Long projectId) {
-        return workItemRepository.findByProjectIdAndStatusCodeAndActiveTrue(projectId, "BACKLOG")
+        return workItemRepository.findBacklogItems(projectId)
                 .stream().map(this::mapToResponse).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<WorkItemResponse> getWorkItemsBySprint(Long sprintId) {
+        List<com.telusko.demo.sprint.entity.SprintWorkItem> swiList = sprintWorkItemRepository.findBySprintIdWithWorkItemDetails(sprintId);
+        return swiList.stream().map(swi -> mapToResponse(swi.getWorkItem())).toList();
     }
 
     // ==================== UPDATE ====================
@@ -207,11 +235,17 @@ public class WorkItemService {
         WorkItem workItem = workItemRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("WorkItem", "id", id));
 
-        // RULE: Owner is immutable once set
+        // RULE: Owner cannot be edited by Manager or Member; only Admin can edit the owner
         if (request.getOwnerId() != null && workItem.getOwner() != null
                 && !workItem.getOwner().getId().equals(request.getOwnerId())) {
-            throw new BadRequestException("Owner cannot be changed once set. Current owner: "
-                    + workItem.getOwner().getFullName());
+            boolean isAdmin = isUserAdmin(userId);
+            if (!isAdmin) {
+                throw new BadRequestException("Owner cannot be edited by a Manager or Member once set. Only an Administrator can change the owner.");
+            }
+            User newOwner = findUser(request.getOwnerId());
+            workItem.setOwner(newOwner);
+            recordHistory(workItem, "OWNER_CHANGED", workItem.getOwner(), newOwner, null, null, userId);
+            auditService.logAction("WORK_ITEM", id, "OWNER_CHANGED", workItem.getOwner().getFullName(), newOwner.getFullName(), userId);
         }
 
         // Set owner only if not already set
@@ -236,16 +270,41 @@ public class WorkItemService {
         resolveType(workItem, request.getTypeId());
         resolvePriority(workItem, request.getPriorityId());
 
+        if (request.getBoardColumnId() != null) {
+            boardColumnRepository.findByIdAndActiveTrue(request.getBoardColumnId())
+                    .ifPresent(workItem::setBoardColumn);
+        }
+
         // Track status change
         if (request.getStatusId() != null) {
             MasterValue oldStatus = workItem.getStatus();
             MasterValue newStatus = masterValueRepository.findById(request.getStatusId())
                     .orElseThrow(() -> new ResourceNotFoundException("Status", "id", request.getStatusId()));
 
-            // RULE: Only Owner can move to DONE
-            if ("DONE".equals(newStatus.getCode())) {
-                if (workItem.getOwner() == null || !workItem.getOwner().getId().equals(userId)) {
-                    throw new BadRequestException("Only the Owner can mark a work item as DONE");
+            boolean isOwner = workItem.getOwner() != null && workItem.getOwner().getId().equals(userId);
+            boolean isAssignee = workItem.getAssignee() != null && workItem.getAssignee().getId().equals(userId);
+            boolean isAdmin = isUserAdmin(userId);
+
+            if (oldStatus == null || !oldStatus.getId().equals(newStatus.getId())) {
+                if ("DONE".equals(newStatus.getCode())) {
+                    if (!isOwner && !isAdmin) {
+                        throw new BadRequestException("Only the Owner can mark a work item as DONE");
+                    }
+                } else {
+                    boolean isReopening = oldStatus != null && "DONE".equals(oldStatus.getCode());
+                    if (isReopening) {
+                        if (!isAssignee && !isOwner && !isAdmin) {
+                            throw new BadRequestException("Only the assignee, owner, or admin can reopen this task");
+                        }
+                    } else {
+                        if (!isAssignee && !isAdmin) {
+                            if (workItem.getAssignee() == null) {
+                                throw new BadRequestException("This task is unassigned. Only the assigned user can move it.");
+                            } else {
+                                throw new BadRequestException("Only the current assignee (" + workItem.getAssignee().getFullName() + ") can move this task forward or backward");
+                            }
+                        }
+                    }
                 }
             }
 
@@ -262,6 +321,24 @@ public class WorkItemService {
             User oldAssignee = workItem.getAssignee();
             User newAssignee = findUser(request.getAssigneeId());
             if (oldAssignee == null || !oldAssignee.getId().equals(newAssignee.getId())) {
+                User effectiveAssignee = workItem.getAssignee() != null ? workItem.getAssignee() : workItem.getOwner();
+                boolean isOwner = workItem.getOwner() != null && workItem.getOwner().getId().equals(userId);
+                boolean isAssignee = effectiveAssignee != null && effectiveAssignee.getId().equals(userId);
+                boolean isAdmin = isUserAdmin(userId);
+                boolean isManager = (effectiveAssignee != null && effectiveAssignee.getManager() != null && effectiveAssignee.getManager().getId().equals(userId))
+                        || isUserAdminOrManager(userId);
+
+                if (!isOwner && !isAssignee && !isManager && !isAdmin) {
+                    throw new BadRequestException("Only the Owner, current Assignee, Manager of that member, or Admin can assign or transfer this task");
+                }
+
+                if (newAssignee != null && !isAdmin) {
+                    boolean isMember = projectMemberRepository.existsByProjectIdAndUserIdAndEndDateIsNull(
+                            workItem.getProject().getId(), newAssignee.getId());
+                    if (!isMember) {
+                        throw new BadRequestException("Cannot assign: " + newAssignee.getFullName() + " is not an active member of project '" + workItem.getProject().getName() + "'");
+                    }
+                }
                 workItem.setAssignee(newAssignee);
                 recordHistory(workItem, "ASSIGNED", oldAssignee, newAssignee, null, null, userId);
                 auditService.logAction("WORK_ITEM", id, "ASSIGNED",
@@ -292,8 +369,28 @@ public class WorkItemService {
         WorkItem workItem = workItemRepository.findById(workItemId)
                 .orElseThrow(() -> new ResourceNotFoundException("WorkItem", "id", workItemId));
 
+        User effectiveAssignee = workItem.getAssignee() != null ? workItem.getAssignee() : workItem.getOwner();
+        boolean isOwner = workItem.getOwner() != null && workItem.getOwner().getId().equals(userId);
+        boolean isAssignee = effectiveAssignee != null && effectiveAssignee.getId().equals(userId);
+        boolean isAdmin = isUserAdmin(userId);
+        boolean isManager = (effectiveAssignee != null && effectiveAssignee.getManager() != null && effectiveAssignee.getManager().getId().equals(userId))
+                || isUserAdminOrManager(userId);
+
+        if (!isOwner && !isAssignee && !isManager && !isAdmin) {
+            throw new BadRequestException("Only the Owner, current Assignee, Manager of that member, or Admin can assign or transfer this task");
+        }
+
         User oldAssignee = workItem.getAssignee();
         User newAssignee = assigneeId != null ? findUser(assigneeId) : null;
+
+        // RULE: Owner, Assignee, and Manager can only assign to an active project member. Admin can assign to anyone.
+        if (newAssignee != null && !isAdmin) {
+            boolean isMember = projectMemberRepository.existsByProjectIdAndUserIdAndEndDateIsNull(
+                    workItem.getProject().getId(), newAssignee.getId());
+            if (!isMember) {
+                throw new BadRequestException("Cannot assign: " + newAssignee.getFullName() + " is not an active member of project '" + workItem.getProject().getName() + "'");
+            }
+        }
 
         if ((oldAssignee == null && newAssignee != null) ||
             (oldAssignee != null && (newAssignee == null || !oldAssignee.getId().equals(newAssignee.getId())))) {
@@ -331,8 +428,6 @@ public class WorkItemService {
     // ==================== QUICK STATUS UPDATE ====================
     @Transactional
     public void updateWorkItemStatus(Long workItemId, String statusCode, Long userId) {
-        permissionService.requirePermission(userId, "WORK_ITEM", "UPDATE");
-
         WorkItem workItem = workItemRepository.findById(workItemId)
                 .orElseThrow(() -> new ResourceNotFoundException("WorkItem", "id", workItemId));
 
@@ -343,17 +438,28 @@ public class WorkItemService {
         
         if (oldStatus == null || !oldStatus.getId().equals(newStatus.getId())) {
             
-            // RULE: Only Assignee or Owner can change the status
+            User effectiveAssignee = workItem.getAssignee() != null ? workItem.getAssignee() : workItem.getOwner();
             boolean isOwner = workItem.getOwner() != null && workItem.getOwner().getId().equals(userId);
-            boolean isAssignee = workItem.getAssignee() != null && workItem.getAssignee().getId().equals(userId);
-            
-            if (!isOwner && !isAssignee) {
-                throw new BadRequestException("Only the Assignee or Owner can change the status of this work item");
-            }
+            boolean isAssignee = effectiveAssignee != null && effectiveAssignee.getId().equals(userId);
+            boolean isAdmin = isUserAdmin(userId);
 
-            // RULE: Only Owner can move to DONE
-            if ("DONE".equals(newStatus.getCode()) && !isOwner) {
-                throw new BadRequestException("Only the Owner can mark a work item as DONE");
+            // RULE: Movement authorization
+            if ("DONE".equals(newStatus.getCode())) {
+                if (!isOwner && !isAdmin) {
+                    throw new BadRequestException("Only the Owner can mark a work item as DONE");
+                }
+            } else {
+                boolean isReopening = oldStatus != null && "DONE".equals(oldStatus.getCode());
+                if (isReopening) {
+                    if (!isAssignee && !isOwner && !isAdmin) {
+                        throw new BadRequestException("Only the assignee, owner, or admin can reopen this task");
+                    }
+                } else {
+                    if (!isAssignee && !isAdmin) {
+                        String assigneeName = effectiveAssignee != null ? effectiveAssignee.getFullName() : "the assigned user";
+                        throw new BadRequestException("Only the current assignee (" + assigneeName + ") can move this task forward or backward");
+                    }
+                }
             }
 
             workItem.setStatus(newStatus);
@@ -395,6 +501,115 @@ public class WorkItemService {
             
             workItemRepository.save(workItem);
         }
+    }
+
+    // ==================== QUICK COLUMN UPDATE (KANBAN BOARD) ====================
+    @Transactional
+    public WorkItemResponse updateWorkItemColumn(Long workItemId, Long columnId, Long userId) {
+        return updateWorkItemColumn(workItemId, columnId, null, userId);
+    }
+
+    @Transactional
+    public WorkItemResponse updateWorkItemColumn(Long workItemId, Long columnId, String reopenReason, Long userId) {
+        WorkItem workItem = workItemRepository.findById(workItemId)
+                .orElseThrow(() -> new ResourceNotFoundException("WorkItem", "id", workItemId));
+
+        BoardColumn newColumn = boardColumnRepository.findByIdAndActiveTrue(columnId)
+                .orElseThrow(() -> new ResourceNotFoundException("BoardColumn", "id", columnId));
+
+        if (!newColumn.getProject().getId().equals(workItem.getProject().getId())) {
+            throw new BadRequestException("Column does not belong to the same project as the work item");
+        }
+
+        BoardColumn oldColumn = workItem.getBoardColumn();
+        String oldColName = oldColumn != null ? oldColumn.getName() : "None";
+        String oldCategory = oldColumn != null ? oldColumn.getStatusCategory() :
+                (workItem.getStatus() != null && "DONE".equals(workItem.getStatus().getCode()) ? "DONE" :
+                 (workItem.getStatus() != null && "IN_PROGRESS".equals(workItem.getStatus().getCode()) ? "IN_PROGRESS" : "TODO"));
+        String newCategory = newColumn.getStatusCategory();
+
+        // RULE: Phase transition progression: Work items cannot jump directly from TODO to DONE
+        if ("TODO".equals(oldCategory) && "DONE".equals(newCategory)) {
+            throw new BadRequestException("Work items must move through In Progress before being marked as Done");
+        }
+
+        // Map status category
+        String targetStatusCode = switch (newCategory) {
+            case "DONE" -> "DONE";
+            case "IN_PROGRESS" -> "IN_PROGRESS";
+            default -> "OPEN";
+        };
+
+        // RULE: Reopening closed task validation
+        boolean isReopening = "DONE".equals(oldCategory) && !"DONE".equals(newCategory);
+        if (isReopening) {
+            if (reopenReason == null || reopenReason.trim().isEmpty()) {
+                throw new BadRequestException("A reason is mandatory when reopening a closed task");
+            }
+
+            // Check if item belongs to the project's active sprint
+            boolean isInActiveSprint = sprintWorkItemRepository.findActiveByWorkItemId(workItemId).stream()
+                    .anyMatch(swi -> swi.getSprint() != null && swi.getSprint().getStatus() != null 
+                            && "ACTIVE".equals(swi.getSprint().getStatus().getCode()));
+
+            // If not in active sprint, it can only be reopened to the initial Open / Backlog state
+            if (!isInActiveSprint && !"OPEN".equals(targetStatusCode)) {
+                throw new BadRequestException("Closed tasks not belonging to the current active sprint can only be reopened to Open/Backlog to be planned.");
+            }
+        }
+
+        // Check destination WIP limit
+        if (newColumn.getWipLimit() != null && newColumn.getWipLimit() > 0) {
+            long currentCount = workItemRepository.countByBoardColumnIdAndActiveTrue(newColumn.getId());
+            if (oldColumn == null || !oldColumn.getId().equals(newColumn.getId())) {
+                if (currentCount >= newColumn.getWipLimit()) {
+                    throw new BadRequestException("WIP limit of " + newColumn.getWipLimit() + " reached for column '" + newColumn.getName() + "'");
+                }
+            }
+        }
+
+        User effectiveAssignee = workItem.getAssignee() != null ? workItem.getAssignee() : workItem.getOwner();
+        boolean isOwner = workItem.getOwner() != null && workItem.getOwner().getId().equals(userId);
+        boolean isAssignee = effectiveAssignee != null && effectiveAssignee.getId().equals(userId);
+        boolean isAdmin = isUserAdmin(userId);
+
+        if ("DONE".equals(targetStatusCode)) {
+            if (!isOwner && !isAdmin) {
+                throw new BadRequestException("Only the Owner can mark a work item as DONE");
+            }
+        } else if (isReopening) {
+            if (!isAssignee && !isOwner && !isAdmin) {
+                String assigneeName = effectiveAssignee != null ? effectiveAssignee.getFullName() : "owner";
+                throw new BadRequestException("Only the current assignee (" + assigneeName + ") or owner can reopen this task");
+            }
+        } else {
+            if (!isAssignee && !isAdmin) {
+                String assigneeName = effectiveAssignee != null ? effectiveAssignee.getFullName() : "the assigned user";
+                throw new BadRequestException("Only the current assignee (" + assigneeName + ") can move this task forward or backward");
+            }
+        }
+
+        MasterValue oldStatus = workItem.getStatus();
+        MasterValue newStatus = masterValueRepository.findByMasterTypeCodeAndCode("WORK_ITEM_STATUS", targetStatusCode)
+                .orElse(oldStatus);
+
+        workItem.setBoardColumn(newColumn);
+        workItem.setStatus(newStatus);
+        workItem.setUpdatedBy(userId);
+        workItem = workItemRepository.save(workItem);
+
+        if (isReopening) {
+            recordHistory(workItem, "REOPENED", null, null, oldStatus, newStatus, reopenReason.trim(), userId);
+            auditService.logAction("WORK_ITEM", workItemId, "REOPENED", oldColName, newColumn.getName() + " - Reason: " + reopenReason.trim(), userId);
+        } else {
+            recordHistory(workItem, "COLUMN_CHANGED", null, null, oldStatus, newStatus, null, userId);
+            auditService.logAction("WORK_ITEM", workItemId, "COLUMN_CHANGED", oldColName, newColumn.getName(), userId);
+        }
+
+        log.info("Moved work item {} to column '{}' ({}) by user {}{}", 
+                workItem.getId(), newColumn.getName(), targetStatusCode, userId,
+                isReopening ? " (REOPENED: " + reopenReason.trim() + ")" : "");
+        return mapToResponse(workItem);
     }
 
     // ==================== HANDOFF TO OWNER ====================
@@ -544,6 +759,14 @@ public class WorkItemService {
             User fromUser, User toUser,
             MasterValue oldStatus, MasterValue newStatus,
             Long performedById) {
+        recordHistory(workItem, eventType, fromUser, toUser, oldStatus, newStatus, null, performedById);
+    }
+
+    private void recordHistory(WorkItem workItem, String eventType,
+            User fromUser, User toUser,
+            MasterValue oldStatus, MasterValue newStatus,
+            String comment,
+            Long performedById) {
         WorkItemHistory history = WorkItemHistory.builder()
                 .workItem(workItem)
                 .eventType(eventType)
@@ -551,6 +774,7 @@ public class WorkItemService {
                 .toUser(toUser)
                 .oldStatus(oldStatus)
                 .newStatus(newStatus)
+                .comment(comment)
                 .performedBy(findUser(performedById))
                 .performedAt(LocalDateTime.now())
                 .build();
@@ -566,6 +790,30 @@ public class WorkItemService {
                 .totalPages(page.getTotalPages())
                 .last(page.isLast())
                 .build();
+    }
+
+    
+    
+    public boolean isUserAdminOrManager(Long userId) {
+        if (userId == null) return false;
+        return userRepository.findById(userId)
+                .map(User::getRole)
+                .map(r -> {
+                    String code = r.getCode();
+                    return code != null && ("ADMIN".equalsIgnoreCase(code) || "SUPER_ADMIN".equalsIgnoreCase(code) || "MANAGER".equalsIgnoreCase(code));
+                })
+                .orElse(false);
+    }
+
+    public boolean isUserAdmin(Long userId) {
+        if (userId == null) return false;
+        return userRepository.findById(userId)
+                .map(User::getRole)
+                .map(r -> {
+                    String code = r.getCode();
+                    return code != null && ("ADMIN".equalsIgnoreCase(code) || "SUPER_ADMIN".equalsIgnoreCase(code));
+                })
+                .orElse(false);
     }
 
     private WorkItemResponse mapToResponse(WorkItem w) {
@@ -607,6 +855,9 @@ public class WorkItemService {
                 .projectCode(w.getProject().getCode())
                 .title(w.getTitle())
                 .description(w.getDescription())
+                .boardColumnId(w.getBoardColumn() != null ? w.getBoardColumn().getId() : null)
+                .boardColumnName(w.getBoardColumn() != null ? w.getBoardColumn().getName() : null)
+                .boardColumnCategory(w.getBoardColumn() != null ? w.getBoardColumn().getStatusCategory() : null)
                 .typeId(w.getType() != null ? w.getType().getId() : null)
                 .typeName(w.getType() != null ? w.getType().getDisplayName() : null)
                 .typeCode(w.getType() != null ? w.getType().getCode() : null)

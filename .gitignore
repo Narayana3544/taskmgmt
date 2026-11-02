@@ -17,6 +17,8 @@ scratch/
 test_results.json
 seed_data.sql
 cleanup_seed.sql
+backups/
+*.dump
 
 # IDE and OS files
 .idea/

@@ -57,7 +57,10 @@ public class FileUploadController {
 
     private ResponseEntity<Resource> serveResource(Path subPath) {
         try {
-            Path file = rootLocation.resolve(subPath);
+            Path file = rootLocation.resolve(subPath).normalize().toAbsolutePath();
+            if (!file.startsWith(rootLocation.normalize().toAbsolutePath())) {
+                return ResponseEntity.badRequest().build();
+            }
             Resource resource = new UrlResource(file.toUri());
 
             if (resource.exists() || resource.isReadable()) {

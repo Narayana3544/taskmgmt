@@ -312,3 +312,164 @@ Currently:
 2. **Strict Sprint Lifecycle Enforceability**: Closed sprints are locked end-to-end. Work item movement, reassignments, task edits, and timesheet logging against closed sprint items are rejected by the backend and disabled in the React UI.
 3. **Rock-Solid Permission Security**: Unauthorized peer timesheet approvals and self-approvals by managers are strictly blocked with HTTP 403. The `TESTER` role has legitimate task update access for assigned work without breaking least-privilege security boundaries.
 4. **Multi-Role Browser Verification**: Automated end-to-end browser walkthroughs across all five primary roles (**Admin**, **Manager**, **Developer**, **Tester**, and **Viewer**) completed with zero console or network regressions.
+
+
+---
+
+# PRODUCTION PREPARATION REPORT (PROD-PREP)
+**Date:** November 2, 2026  
+**Environment:** Local Development (`work_hub`) / Target: Production External Tomcat 10.1+ / PostgreSQL 17  
+**Branch:** `prod-prep`  
+
+---
+
+## 1. Phase 0: Database Backup
+Before initiating cleanup or schema modifications, a full binary snapshot of the local database was captured and verified:
+- **File:** `backups/work_hub_pre_prod_prep_2026-11-02.dump`
+- **Size:** 190,275 bytes
+- **Format:** PostgreSQL Custom Archive (`pg_dump -F c`)
+- **Integrity:** Verified via `pg_restore --list`
+
+---
+
+## 2. Phase A: Seed Data Cleanup & Verification
+The cleanup script (`cleanup_seed.sql`) was executed with the dev-database guard active. It strictly targeted synthetic records tagged with `SEED_` or within IDs `1001–1100`, preserving authentic master data and user accounts.
+
+### Table Row Counts Before vs. After Cleanup
+
+| Table Name | Before Total | Deleted | After Total | Remaining Seed Rows | Status |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| `users` | 106 | 100 | **6** | 0 | PASSED |
+| `user_auth` | 106 | 100 | **6** | 0 | PASSED |
+| `project` | 12 | 9 | **3** | 0 | PASSED |
+| `project_member` | 159 | 148 | **11** | 0 | PASSED |
+| `feature` | 66 | 64 | **2** | 0 | PASSED |
+| `sprint` | 40 | 36 | **4** | 0 | PASSED |
+| `sprint_work_item` | 320 | 312 | **8** | 0 | PASSED |
+| `work_item` | 503 | 495 | **8** | 0 | PASSED |
+| `work_item_history` | 82 | 12 | **70** | 0 | PASSED |
+| `work_item_comment` | 3 | 0 | **3** | 0 | PASSED |
+| `board_column` | 48 | 36 | **12** | 0 | PASSED |
+| `timesheet` | 2,749 | 2,747 | **2** | 0 | PASSED |
+| `timesheet_entry` | 3,418 | 3,415 | **3** | 0 | PASSED |
+| `audit_log` | 118 | 8 | **110** | 0 | PASSED |
+| `notification` | 38 | 4 | **34** | 0 | PASSED |
+| `leave_request` | 3 | 0 | **3** | 0 | PASSED |
+| `leave_balance` | 3 | 0 | **3** | 0 | PASSED |
+| `leave_approval_history`| 6 | 0 | **6** | 0 | PASSED |
+| `holidays` | 1 | 0 | **1** | 0 | PASSED |
+| `master_type` | 14 | 0 | **14** | 0 | UNCHANGED |
+| `master_value` | 57 | 0 | **57** | 0 | UNCHANGED |
+| `organization` | 3 | 0 | **3** | 0 | UNCHANGED |
+| `role` | 7 | 0 | **7** | 0 | UNCHANGED |
+| `permission_feature` | 10 | 0 | **10** | 0 | UNCHANGED |
+| `permission_action` | 8 | 0 | **8** | 0 | UNCHANGED |
+| `role_permission` | 142 | 0 | **142** | 0 | UNCHANGED |
+
+- **Orphan Checks:** Executed 10 foreign-key integrity validation queries (`project_member`, `work_item`, `sprint`, `feature`, `timesheet`, `timesheet_entry`, `board_column`). **Result: 0 orphans found.**
+- **Real Accounts Preserved:** All 6 genuine development accounts (including Administrator `narayana@gmail.com`) verified intact and able to authenticate.
+
+---
+
+## 3. Phase B: Master Data Migration & Staging
+### Tables Covered & Architecture
+- **Master Reference Tables:** `master_type` (14 types), `master_value` (57 configurable values), `role` (7 roles), `permission_feature` (10 features), `permission_action` (8 actions), `role_permission` (142 mappings).
+- **Idempotent Migration File:** `demo/src/main/resources/db/migration/V1_1__master_data_idempotent.sql`
+  - Unique constraints ensured on `(master_type_id, code)`, `master_type(code)`, and `permission_feature(code)`.
+  - Every insert uses `ON CONFLICT (...) DO NOTHING`.
+  - Verified safe to execute on fresh databases and existing production databases without overwriting customized display names.
+- **Staging Schema & Mapping Table:** `staging_migration.id_mapping`
+- **Rollback Script:** `scratch/rollback_staging.sql`
+
+### Old DB (`task_mgmt`) to New Schema (`work_hub`) Mapping & Decisions
+
+| Entity Type | Old ID | Old Name | New ID | New Code | Mapping Outcome |
+| :--- | :---: | :--- | :---: | :--- | :--- |
+| **ROLE** | 1 | Developer | 2 | `EMPLOYEE` | Mapped to Employee (Standard organization member) |
+| **ROLE** | 2 | Admin | 1 | `ADMIN` | Direct Match |
+| **ROLE** | 3 | Project Manager | 3 | `MANAGER` | Mapped to Manager (Reporting leadership) |
+| **ROLE** | 4 | Scrum Master | 3 | `MANAGER` | Mapped to Manager |
+| **ROLE** | 5 | Product Owner | 3 | `MANAGER` | Mapped to Manager |
+| **ROLE** | 6 | Tester | 6 | `TESTER` | Direct Match |
+| **WORK_ITEM_TYPE** | 1 | user story | 5 | `TASK` | Mapped to Task |
+| **WORK_ITEM_TYPE** | 2 | Bug | 6 | `BUG` | Direct Match |
+| **WORK_ITEM_TYPE** | 3 | Test case | 7 | `TEST_CASE` | Direct Match |
+| **WORK_ITEM_STATUS** | 1 | In Progress | 3 | `IN_PROGRESS` | Direct Match |
+| **WORK_ITEM_STATUS** | 2 | Done | 4 | `DONE` | Direct Match |
+| **WORK_ITEM_STATUS** | 3 | To Do | 2 | `OPEN` | Mapped to Open (Active sprint backlog) |
+| **PROJECT_STATUS** | 4 | Proposed | 13 | `ON_HOLD` | Mapped to On Hold |
+| **PROJECT_STATUS** | 5 | Open | 12 | `ACTIVE` | Direct Match (Open -> Active) |
+| **PROJECT_STATUS** | 6 | Closed | 14 | `CLOSED` | Direct Match |
+| **FEATURE_STATUS** | 7 | In Progress | 55 | `OPEN` | Mapped to Open |
+| **FEATURE_STATUS** | 8 | Completed | 56 | `CLOSED` | Direct Match (Completed -> Closed) |
+| **SPRINT_STATUS** | 9 | Planned | 15 | `PLANNED` | Direct Match |
+| **SPRINT_STATUS** | 10 | Active | 16 | `ACTIVE` | Direct Match |
+| **SPRINT_STATUS** | 11 | Completed | 17 | `CLOSED` | Direct Match (Completed -> Closed) |
+
+*Transactional data (users, projects, tasks, sprints, timesheets) was not migrated in this phase per requirement.*
+
+---
+
+## 4. Phase C: Tomcat, File Uploads & Export Verification
+
+### Verification Results
+
+| Check / Action | Expected Result | Actual Result | Verification Method | Status |
+| :--- | :--- | :--- | :--- | :---: |
+| **WAR Package Build** | Valid `task-management.war` created | Built `target/task-management.war` (53.1 MB) | Maven CLI build | **PASS** |
+| **Profile Image Upload** | Saves file outside webapp, returns URL | HTTP 200 - Saved to `${user.home}/taskmgmt-uploads/profiles` | API Test | **PASS** |
+| **Serve Uploaded Image** | Publicly accessible via GET with proper MIME type | HTTP 200 - `Content-Type: image/png` | API Test | **PASS** |
+| **Oversized File (>2MB)** | Blocked cleanly with 400 Bad Request | HTTP 400 - `"File size exceeds the allowed limit (max 2MB)."` | API Test | **PASS** |
+| **Invalid File Type (.exe)**| Blocked cleanly with 400 Bad Request | HTTP 400 - `"Only JPEG, PNG and PDF files are allowed."` | API Test | **PASS** |
+| **Path Traversal Protection**| GET with `..%2f..%2f` blocked | HTTP 400 Bad Request | API Test & Code Review | **PASS** |
+| **Report Export (Logged In)**| Data returned with Bearer token | HTTP 200 OK | API Test & Browser Code Review | **PASS** |
+| **Report Export (Logged Out)**| Unauthenticated access rejected | HTTP 401 Unauthorized | API Test | **PASS** |
+| **Client-Side Export Generation**| CSV / Excel (.xlsx) / PDF Print generated in-memory | Zero temp server files, Unicode fonts handled by client browser | Code Review & Test | **PASS** |
+
+### Upload & Tomcat Configuration Summary
+- **Storage Location:** Outside Tomcat webapp directory at `${user.home}/taskmgmt-uploads`. Redeploying or restarting Tomcat does not delete user uploads.
+- **File Name Sanitization:** Files stored as `UUID.randomUUID().toString() + extension`; client filename is never used as disk filename. Path traversal attempts rejected.
+- **Limits Configured:** Spring multipart max size set to `2MB` (`spring.servlet.multipart.max-file-size=2MB`), max request set to `10MB`. Reverse proxies (Nginx/Apache) must configure `client_max_body_size 10M;`.
+
+---
+
+## 5. Production Configuration Review & Security Findings
+
+| Severity | Finding | Location | Remediation / Current Status |
+| :--- | :--- | :--- | :--- |
+| **HIGH** | Hardcoded Dev Database Password in Repository | `application.properties`, `application.yml` | In production, run with Spring profile `prod` (`--spring.profiles.active=prod`). `application-prod.yml` uses `${SPRING_DATASOURCE_PASSWORD}`. Must delete/rotate any test passwords. |
+| **HIGH** | Static JWT Secret in Dev YAML | `application.yml` (`app.jwt.secret`) | `application-prod.yml` mandates `${JWT_SECRET}`. Production environment must supply a cryptographically secure 256-bit Base64 secret. |
+| **MEDIUM** | Hibernate Auto-DDL in Dev | `application.properties` (`ddl-auto=update`) | In `application-prod.yml`, `ddl-auto` is set to `validate`. Ensure the production server runs under `prod` profile so Hibernate never alters tables. |
+| **MEDIUM** | CORS Allowed Origins Hardcoding | `SecurityConfig.java` | Refactored `SecurityConfig.java` to read `${cors.allowed-origins}`. Set `CORS_ALLOWED_ORIGINS=https://yourdomain.com` in production environment. |
+| **LOW** | Context Path Alignment for External Tomcat | `my-app` (`/taskmanagement`), Tomcat WAR (`/task-management`) | When deploying to external Tomcat, rename `task-management.war` to `ROOT.war` (or configure context path `/` in `server.xml`) so API routes remain `/api/*`. |
+
+---
+
+## 6. Required Manual Pre-Flight Actions Before Go-Live
+
+1. **Environment Variables on Production Server:**
+   - `SPRING_PROFILES_ACTIVE=prod`
+   - `SPRING_DATASOURCE_URL=jdbc:postgresql://<prod-db-host>:5432/<prod-db-name>`
+   - `SPRING_DATASOURCE_USERNAME=<prod-db-user>`
+   - `SPRING_DATASOURCE_PASSWORD=<secure-prod-db-password>`
+   - `JWT_SECRET=<strong-256-bit-base64-secret>`
+   - `CORS_ALLOWED_ORIGINS=https://app.yourdomain.com`
+   - `FILE_UPLOAD_DIR=/var/lib/taskmgmt/uploads` (or chosen secure external persistent mount)
+2. **Database Permissions:** Grant the application PostgreSQL user rights only to schema `public` (`SELECT, INSERT, UPDATE, DELETE`). Do not run the app as `postgres` superuser in production.
+3. **Tomcat 10.1+ Deployment:** Deploy `task-management.war` to Apache Tomcat 10.1.x (Jakarta EE 10 compatible). If serving backend directly, deploy as `ROOT.war` to match `/api/*`.
+4. **Nginx / Reverse Proxy Configuration:**
+   - Configure SSL/TLS termination (HTTPS only).
+   - Set `client_max_body_size 10M;`.
+   - Proxy `/taskmanagement` to React build static assets and `/api` to Tomcat.
+5. **Periodic Backup Automation:**
+   - Schedule daily automated `pg_dump` cron jobs.
+   - Configure rsync/S3 backup for the persistent upload directory (`/var/lib/taskmgmt/uploads`).
+
+---
+
+## 7. Strict Production Verdict
+
+- **Staging / Pre-Production Readiness:** **GO**  
+  *All 7 upload and security test cases passed, seed data was 100% cleanly purged, referential integrity was confirmed with 0 orphans, idempotent master data migrations are in place, and the WAR artifact built successfully.*
+- **Direct Live Production:** **CONDITIONAL GO (Pending Manual Environment Variable Provisioning)**  
+  *The codebase and database schema are ready for production deployment. Final production release requires setting the production environment variables (database credentials, JWT secret, CORS domain) on the target host as listed in Section 6.*

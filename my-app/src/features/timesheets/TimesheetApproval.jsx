@@ -9,7 +9,8 @@ const TimesheetApproval = () => {
     const navigate = useNavigate();
     const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
     const currentUserId = Number(currentUser.userId || currentUser.id);
-    const isAdmin = currentUser.role === 'ADMIN' || currentUser.roleCode === 'ADMIN' || currentUser.role === 'SUPER_ADMIN';
+    const userRole = (currentUser.roleCode || currentUser.role || currentUser.roleName || '').toUpperCase();
+    const isAdmin = userRole === 'ADMIN' || userRole === 'ADMINISTRATOR' || userRole === 'SUPER_ADMIN';
 
     const [timesheets, setTimesheets] = useState([]);
     const [loading, setLoading] = useState(true);

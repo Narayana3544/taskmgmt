@@ -257,6 +257,7 @@ public class UserService {
                 .fullName(user.getFullName())
                 .email(user.getEmail())
                 .roleId(user.getRole() != null ? user.getRole().getId() : null)
+                .roleCode(user.getRole() != null ? user.getRole().getCode() : null)
                 .roleName(user.getRole() != null ? user.getRole().getName() : null)
                 .status(user.getStatus())
                 .phoneNumber(user.getPhoneNumber())

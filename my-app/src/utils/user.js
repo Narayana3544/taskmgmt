@@ -26,7 +26,9 @@ export const getUser = () => {
  */
 export const getUserRole = () => {
   const user = getUser();
-  return (user.roleCode || user.role || '').toUpperCase();
+  const raw = (user.roleCode || user.role || user.roleName || '').toUpperCase();
+  if (raw === 'ADMINISTRATOR') return 'ADMIN';
+  return raw;
 };
 
 /**

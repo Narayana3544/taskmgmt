@@ -212,7 +212,8 @@ public class TimesheetService {
     @Transactional(readOnly = true)
     public PageResponse<TimesheetResponse> getPendingApprovals(Long managerId, Pageable pageable) {
         User manager = userRepository.findById(managerId).orElse(null);
-        boolean isAdmin = manager != null && manager.getRole() != null && "ADMIN".equals(manager.getRole().getCode());
+        boolean isAdmin = manager != null && manager.getRole() != null &&
+                ("ADMIN".equalsIgnoreCase(manager.getRole().getCode()) || "SUPER_ADMIN".equalsIgnoreCase(manager.getRole().getCode()));
 
         Page<Timesheet> page = isAdmin
                 ? timesheetRepository.findAllPendingApprovals(pageable)
@@ -370,9 +371,19 @@ public class TimesheetService {
         }
 
         String newStatusCode = approve ? "APPROVED" : "REJECTED";
-        timesheet.setStatus(getMasterValue("TIMESHEET_STATUS", newStatusCode));
+        MasterValue newStatus = getMasterValue("TIMESHEET_STATUS", newStatusCode);
+        timesheet.setStatus(newStatus);
         timesheet.setApprovedBy(manager);
         timesheet.setApprovedAt(LocalDateTime.now());
+
+        // Cascade approval to all entries within this timesheet
+        List<TimesheetEntry> entries = timesheetEntryRepository.findByTimesheetIdOrderByStartTimeAsc(timesheetId);
+        for (TimesheetEntry entry : entries) {
+            entry.setApprovalStatus(newStatus);
+            entry.setApprovedBy(manager);
+            entry.setApprovedAt(timesheet.getApprovedAt());
+        }
+        timesheetEntryRepository.saveAll(entries);
         
         return mapToResponse(timesheetRepository.save(timesheet));
     }

@@ -19,20 +19,22 @@ CREATE UNIQUE INDEX IF NOT EXISTS uq_permission_feature_code ON permission_featu
 CREATE UNIQUE INDEX IF NOT EXISTS uq_permission_action_code ON permission_action (code);
 
 -- 5. Insert Master Types (Idempotent)
-INSERT INTO master_type (code, name, description, active, created_at) VALUES ('WORK_ITEM_STATUS', 'Work Item Status', '', true, NOW()) ON CONFLICT (code) DO NOTHING;
-INSERT INTO master_type (code, name, description, active, created_at) VALUES ('WORK_ITEM_TYPE', 'Work Item Type', '', true, NOW()) ON CONFLICT (code) DO NOTHING;
-INSERT INTO master_type (code, name, description, active, created_at) VALUES ('PRIORITY', 'Priority', '', true, NOW()) ON CONFLICT (code) DO NOTHING;
-INSERT INTO master_type (code, name, description, active, created_at) VALUES ('PROJECT_STATUS', 'Project Status', '', true, NOW()) ON CONFLICT (code) DO NOTHING;
-INSERT INTO master_type (code, name, description, active, created_at) VALUES ('SPRINT_STATUS', 'Sprint Status', '', true, NOW()) ON CONFLICT (code) DO NOTHING;
-INSERT INTO master_type (code, name, description, active, created_at) VALUES ('TIMESHEET_STATUS', 'Timesheet Status', '', true, NOW()) ON CONFLICT (code) DO NOTHING;
-INSERT INTO master_type (code, name, description, active, created_at) VALUES ('TIMESHEET_ENTRY_TYPE', 'Timesheet Entry Type', '', true, NOW()) ON CONFLICT (code) DO NOTHING;
-INSERT INTO master_type (code, name, description, active, created_at) VALUES ('LEAVE_TYPE', 'Leave Type', '', true, NOW()) ON CONFLICT (code) DO NOTHING;
-INSERT INTO master_type (code, name, description, active, created_at) VALUES ('LEAVE_STATUS', 'Leave Status', '', true, NOW()) ON CONFLICT (code) DO NOTHING;
-INSERT INTO master_type (code, name, description, active, created_at) VALUES ('NOTIFICATION_EVENT', 'Notification Event', '', true, NOW()) ON CONFLICT (code) DO NOTHING;
-INSERT INTO master_type (code, name, description, active, created_at) VALUES ('ROLE', 'Role', '', true, NOW()) ON CONFLICT (code) DO NOTHING;
-INSERT INTO master_type (code, name, description, active, created_at) VALUES ('LEAVE_REASON', 'Leave Reason', '', true, NOW()) ON CONFLICT (code) DO NOTHING;
-INSERT INTO master_type (code, name, description, active, created_at) VALUES ('PROJECT_CATEGORY', 'Project Category', '', true, NOW()) ON CONFLICT (code) DO NOTHING;
-INSERT INTO master_type (code, name, description, active, created_at) VALUES ('FEATURE_STATUS', 'feature status', 'Feature status', true, NOW()) ON CONFLICT (code) DO NOTHING;
+INSERT INTO master_type (organization_id, code, name, description, active, created_at) VALUES (1, 'WORK_ITEM_STATUS', 'Work Item Status', '', true, NOW()) ON CONFLICT (code) DO NOTHING;
+INSERT INTO master_type (organization_id, code, name, description, active, created_at) VALUES (1, 'WORK_ITEM_TYPE', 'Work Item Type', '', true, NOW()) ON CONFLICT (code) DO NOTHING;
+INSERT INTO master_type (organization_id, code, name, description, active, created_at) VALUES (1, 'PRIORITY', 'Priority', '', true, NOW()) ON CONFLICT (code) DO NOTHING;
+INSERT INTO master_type (organization_id, code, name, description, active, created_at) VALUES (1, 'PROJECT_STATUS', 'Project Status', '', true, NOW()) ON CONFLICT (code) DO NOTHING;
+INSERT INTO master_type (organization_id, code, name, description, active, created_at) VALUES (1, 'SPRINT_STATUS', 'Sprint Status', '', true, NOW()) ON CONFLICT (code) DO NOTHING;
+INSERT INTO master_type (organization_id, code, name, description, active, created_at) VALUES (1, 'TIMESHEET_STATUS', 'Timesheet Status', '', true, NOW()) ON CONFLICT (code) DO NOTHING;
+INSERT INTO master_type (organization_id, code, name, description, active, created_at) VALUES (1, 'TIMESHEET_ENTRY_TYPE', 'Timesheet Entry Type', '', true, NOW()) ON CONFLICT (code) DO NOTHING;
+INSERT INTO master_type (organization_id, code, name, description, active, created_at) VALUES (1, 'LEAVE_TYPE', 'Leave Type', '', true, NOW()) ON CONFLICT (code) DO NOTHING;
+INSERT INTO master_type (organization_id, code, name, description, active, created_at) VALUES (1, 'LEAVE_STATUS', 'Leave Status', '', true, NOW()) ON CONFLICT (code) DO NOTHING;
+INSERT INTO master_type (organization_id, code, name, description, active, created_at) VALUES (1, 'NOTIFICATION_EVENT', 'Notification Event', '', true, NOW()) ON CONFLICT (code) DO NOTHING;
+INSERT INTO master_type (organization_id, code, name, description, active, created_at) VALUES (1, 'ROLE', 'Role', '', true, NOW()) ON CONFLICT (code) DO NOTHING;
+INSERT INTO master_type (organization_id, code, name, description, active, created_at) VALUES (1, 'LEAVE_REASON', 'Leave Reason', '', true, NOW()) ON CONFLICT (code) DO NOTHING;
+INSERT INTO master_type (organization_id, code, name, description, active, created_at) VALUES (1, 'PROJECT_CATEGORY', 'Project Category', '', true, NOW()) ON CONFLICT (code) DO NOTHING;
+INSERT INTO master_type (organization_id, code, name, description, active, created_at) VALUES (1, 'FEATURE_STATUS', 'feature status', 'Feature status', true, NOW()) ON CONFLICT (code) DO NOTHING;
+
+UPDATE master_type SET organization_id = 1 WHERE organization_id IS NULL;
 
 -- 6. Insert Master Values (Idempotent: matches by type_id + code, preserves user edited display names)
 INSERT INTO master_value (master_type_id, code, display_name, description, sort_order, is_default, active, created_at)

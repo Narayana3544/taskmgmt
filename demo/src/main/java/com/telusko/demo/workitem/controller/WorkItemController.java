@@ -100,7 +100,7 @@ public class WorkItemController {
         return ResponseEntity.ok(ApiResponse.success("Column updated", res));
     }
 
-    // Handoff to Owner — mandatory comment
+    // Handoff to Owner â€” mandatory comment
     @PostMapping("/{id}/handoff")
     public ResponseEntity<ApiResponse<WorkItemResponse>> handoff(
             @PathVariable Long id, @RequestBody Map<String, String> body, Authentication auth) {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Edit2, Users, X, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Edit2, Users, X, Search, ChevronLeft, ChevronRight, LayoutDashboard, ListTodo } from 'lucide-react';
 import api from '../api';
 import Layout from '../components/Layout';
 import { showToast } from '../utils/toast';
@@ -195,12 +195,29 @@ const Projects = () => {
                                         {p.statusName || 'Active'}
                                     </span>
                                 </div>
-                                <h3 style={{ marginBottom: 8, cursor: 'pointer' }} onClick={() => navigate(`/work-items?projectId=${p.id}`)}>
+                                <h3 style={{ marginBottom: 8, cursor: 'pointer', color: 'var(--color-text)' }} onClick={() => navigate(`/projects/${p.id}/dashboard`)} title="Open Project Dashboard">
                                     {p.name}
                                 </h3>
                                 <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginBottom: 12, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                                     {p.description || 'No description'}
                                 </p>
+                                <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+                                    <button
+                                        className="btn btn-sm btn-primary"
+                                        style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontSize: 12 }}
+                                        onClick={() => navigate(`/projects/${p.id}/dashboard`)}
+                                    >
+                                        <LayoutDashboard size={13} /> Dashboard
+                                    </button>
+                                    <button
+                                        className="btn btn-sm btn-secondary"
+                                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontSize: 12 }}
+                                        onClick={() => navigate(`/work-items?projectId=${p.id}`)}
+                                        title="View Work Items"
+                                    >
+                                        <ListTodo size={13} /> Items
+                                    </button>
+                                </div>
                                 <div className="flex items-center justify-between" style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
                                     <span>{p.memberCount || 0} members</span>
                                     <div className="flex gap-2">
@@ -240,7 +257,7 @@ const Projects = () => {
                     <div className="modal" onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
                             <h2>{editProject ? 'Edit Project' : 'Create Project'}</h2>
-                            <button className="navbar-icon-btn" onClick={() => setShowModal(false)}>✕</button>
+                            <button className="navbar-icon-btn" onClick={() => setShowModal(false)}>âœ•</button>
                         </div>
                         <form onSubmit={handleSave}>
                             <div className="modal-body">
@@ -319,8 +336,8 @@ const Projects = () => {
                 <div className="modal-overlay" onClick={() => setShowMembers(null)}>
                     <div className="modal" style={{ maxWidth: 600 }} onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
-                            <h2>Members — {showMembers.name}</h2>
-                            <button className="navbar-icon-btn" onClick={() => setShowMembers(null)}>✕</button>
+                            <h2>Members â€” {showMembers.name}</h2>
+                            <button className="navbar-icon-btn" onClick={() => setShowMembers(null)}>âœ•</button>
                         </div>
                         <div className="modal-body">
                             {/* Add member */}
@@ -345,7 +362,7 @@ const Projects = () => {
                                                 <tr key={m.id}>
                                                     <td style={{ fontWeight: 500 }}>{m.userName}</td>
                                                     <td style={{ color: 'var(--color-text-secondary)' }}>{m.userEmail}</td>
-                                                    <td style={{ color: 'var(--color-text-secondary)' }}>{m.reportingManagerName || '—'}</td>
+                                                    <td style={{ color: 'var(--color-text-secondary)' }}>{m.reportingManagerName || 'â€”'}</td>
                                                     <td>
                                                         <button className="btn btn-sm btn-danger" onClick={() => removeMember(m.id)}>
                                                             <X size={14} />

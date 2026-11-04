@@ -3,6 +3,7 @@ import { Folder, CheckSquare, Layers, TrendingUp, ArrowRight } from 'lucide-reac
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import Layout from '../components/Layout';
+import StatusBadge from '../components/StatusBadge';
 import { getUser } from '../utils/user';
 
 const Dashboard = () => {
@@ -10,6 +11,7 @@ const Dashboard = () => {
     const user = getUser();
     const organizationId = user.organizationId;
     const [stats, setStats] = useState({ projects: 0, myItems: 0, sprints: 0, notifications: 0 });
+    const [activeProjects, setActiveProjects] = useState([]);
     const [recentItems, setRecentItems] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -28,19 +30,11 @@ const Dashboard = () => {
 
                 // Fetch projects and active sprints
                 if (organizationId) {
-                    const projRes = await api.get('/api/projects', { params: { orgId: organizationId, page: 0, size: 1 } });
-                    setStats(prev => ({ ...prev, projects: projRes.data?.data?.totalElements || 0 }));
-                    
-                    // Fetch active sprints across all projects in org
-                    // Since the backend doesn't have an endpoint for 'all active sprints by org',
-                    // we might need to count them or skip if not supported.
-                    // Wait, let's just fetch sprints with statusCode=ACTIVE if supported, or just
-                    // use a generic call. Actually, the backend might not support global sprints count.
-                    // For now, let's fetch /api/sprints without projectId if allowed, or set to 0.
-                    // Let's assume there's an endpoint or we just leave it 0 if not supported.
-                    // Let's check Sprints API. Usually it requires projectId. If we don't have it, we can't get it easily without N+1 calls.
-                    // For the sake of fixing BUG-08, let's see if we can get sprints for the user's projects.
-                    // If not, we will leave it as a comment or try without projectId.
+                    const projRes = await api.get('/api/projects', { params: { orgId: organizationId, page: 0, size: 8 } });
+                    const projectsList = projRes.data?.data?.content || [];
+                    setActiveProjects(projectsList);
+                    setStats(prev => ({ ...prev, projects: projRes.data?.data?.totalElements || projectsList.length }));
+
                     try {
                         const sprintsRes = await api.get('/api/sprints', { params: { statusCode: 'ACTIVE', size: 1 } });
                         setStats(prev => ({ ...prev, sprints: sprintsRes.data?.data?.totalElements || 0 }));
@@ -86,7 +80,7 @@ const Dashboard = () => {
             </div>
 
             {/* Stats Grid */}
-            <div className="stat-grid">
+            <div className="stat-grid" style={{ marginBottom: 24 }}>
                 <div className="stat-card" onClick={() => navigate('/projects')} style={{ cursor: 'pointer' }}>
                     <div className="flex items-center gap-3" style={{ marginBottom: '12px' }}>
                         <div style={{ padding: '8px', background: 'var(--color-info-light)', borderRadius: 'var(--radius-md)' }}>
@@ -125,6 +119,107 @@ const Dashboard = () => {
                     </div>
                     <div className="stat-card-value">{loading ? '...' : stats.notifications}</div>
                     <div className="stat-card-label">Unread Notifications</div>
+                </div>
+            </div>
+
+            {/* Active Projects — Direct Links to Project Dashboards */}
+            <div className="card" style={{ marginBottom: 24 }}>
+                <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                        <h3 style={{ margin: 0 }}>Active Projects</h3>
+                        <p style={{ margin: '2px 0 0 0', fontSize: 12, color: 'var(--color-text-secondary)' }}>
+                            Select any active project to view its dynamic project dashboard
+                        </p>
+                    </div>
+                    <button className="btn btn-sm btn-secondary" onClick={() => navigate('/projects')}>
+                        View All Projects <ArrowRight size={14} />
+                    </button>
+                </div>
+                <div className="card-body" style={{ padding: 16 }}>
+                    {loading ? (
+                        <p style={{ color: 'var(--color-text-muted)', fontSize: 13, margin: 0 }}>Loading projects...</p>
+                    ) : activeProjects.length === 0 ? (
+                        <div className="empty-state" style={{ padding: 24 }}>
+                            <Folder size={32} color="var(--color-text-muted)" style={{ marginBottom: 8 }} />
+                            <p style={{ margin: 0 }}>No active projects found.</p>
+                        </div>
+                    ) : (
+                        <div style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
+                            gap: 14
+                        }}>
+                            {activeProjects.map(p => (
+                                <div
+                                    key={p.id}
+                                    onClick={() => navigate(`/projects/${p.id}/dashboard`)}
+                                    style={{
+                                        border: '1px solid var(--color-border)',
+                                        borderRadius: 8,
+                                        padding: '14px 16px',
+                                        background: 'var(--color-card)',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.15s ease',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        justifyContent: 'space-between'
+                                    }}
+                                    onMouseEnter={e => {
+                                        e.currentTarget.style.borderColor = 'var(--color-primary)';
+                                        e.currentTarget.style.transform = 'translateY(-2px)';
+                                    }}
+                                    onMouseLeave={e => {
+                                        e.currentTarget.style.borderColor = 'var(--color-border)';
+                                        e.currentTarget.style.transform = 'none';
+                                    }}
+                                >
+                                    <div>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                                            <span style={{
+                                                fontSize: 11,
+                                                fontWeight: 700,
+                                                color: 'var(--color-primary)',
+                                                background: 'var(--color-info-light)',
+                                                padding: '2px 8px',
+                                                borderRadius: 4
+                                            }}>
+                                                {p.code}
+                                            </span>
+                                            <StatusBadge code={p.statusCode || 'ACTIVE'} label={p.statusName || 'Active'} />
+                                        </div>
+                                        <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 4, color: 'var(--color-text)' }}>
+                                            {p.name}
+                                        </div>
+                                        <p style={{
+                                            fontSize: 12,
+                                            color: 'var(--color-text-secondary)',
+                                            margin: '0 0 12px 0',
+                                            display: '-webkit-box',
+                                            WebkitLineClamp: 2,
+                                            WebkitBoxOrient: 'vertical',
+                                            overflow: 'hidden'
+                                        }}>
+                                            {p.description || 'No description provided.'}
+                                        </p>
+                                    </div>
+
+                                    <div style={{
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center',
+                                        fontSize: 12,
+                                        color: 'var(--color-primary)',
+                                        fontWeight: 500,
+                                        borderTop: '1px solid var(--color-border-light)',
+                                        paddingTop: 8
+                                    }}>
+                                        <span>Open Dashboard</span>
+                                        <ArrowRight size={13} />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
 

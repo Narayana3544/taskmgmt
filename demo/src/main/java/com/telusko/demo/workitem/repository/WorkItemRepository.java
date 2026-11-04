@@ -4,7 +4,10 @@ import com.telusko.demo.project.entity.BoardColumn;
 import com.telusko.demo.workitem.entity.WorkItem;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,7 +16,16 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface WorkItemRepository extends JpaRepository<WorkItem, Long> {
+public interface WorkItemRepository extends JpaRepository<WorkItem, Long>, JpaSpecificationExecutor<WorkItem> {
+
+    @Override
+    @EntityGraph(attributePaths = {"project", "status", "priority", "type", "owner", "assignee", "boardColumn"})
+    Page<WorkItem> findAll(Specification<WorkItem> spec, Pageable pageable);
+
+    @Override
+    @EntityGraph(attributePaths = {"project", "status", "priority", "type", "owner", "assignee", "boardColumn"})
+    List<WorkItem> findAll(Specification<WorkItem> spec);
+
     Page<WorkItem> findByProjectIdAndActiveTrue(Long projectId, Pageable pageable);
 
     @Query("SELECT w FROM WorkItem w WHERE w.project.id = :projectId AND w.active = true " +

@@ -36,6 +36,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import com.telusko.demo.workitem.specification.WorkItemSpecification;
+import org.springframework.data.jpa.domain.Specification;
+import java.util.Map;
+import java.util.LinkedHashMap;
+import java.util.stream.Collectors;
+import java.util.Comparator;
 
 /**
  * Work item lifecycle management with full WorkHub rule enforcement.
@@ -639,7 +645,7 @@ public class WorkItemService {
                 .orElseThrow(() -> new ResourceNotFoundException("WorkItem", "id", workItemId));
 
         if (workItem.getOwner() == null) {
-            throw new BadRequestException("Cannot handoff — no owner set on this work item");
+            throw new BadRequestException("Cannot handoff â€” no owner set on this work item");
         }
 
         // RULE: Comment is mandatory for handoff
@@ -891,8 +897,8 @@ public class WorkItemService {
                 .priorityCode(w.getPriority() != null ? w.getPriority().getCode() : null)
                 .ownerId(w.getOwner() != null ? w.getOwner().getId() : null)
                 .ownerName(w.getOwner() != null ? w.getOwner().getFullName() : null)
-                .assigneeId(w.getAssignee() != null ? w.getAssignee().getId() : (w.getOwner() != null ? w.getOwner().getId() : null))
-                .assigneeName(w.getAssignee() != null ? w.getAssignee().getFullName() : (w.getOwner() != null ? w.getOwner().getFullName() : null))
+                .assigneeId(w.getAssignee() != null ? w.getAssignee().getId() : null)
+                .assigneeName(w.getAssignee() != null ? w.getAssignee().getFullName() : null)
                 .reportedById(w.getReportedBy() != null ? w.getReportedBy().getId() : null)
                 .reportedByName(w.getReportedBy() != null ? w.getReportedBy().getFullName() : null)
                 .storyPoints(w.getStoryPoints())

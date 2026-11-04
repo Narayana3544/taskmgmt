@@ -7,6 +7,9 @@ const workItemsApi = {
   getMyWorkItems: (params = {}) =>
     apiClient.get("/api/work-items/my", { params }),
 
+  getStats: (projectId) =>
+    apiClient.get("/api/work-items/stats", { params: projectId ? { projectId } : {} }),
+
   getWorkItem: (id) =>
     apiClient.get(`/api/work-items/${id}`),
 
